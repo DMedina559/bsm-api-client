@@ -1,0 +1,35 @@
+# pyproject.toml
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pybedrock_server_manager"
+version = "0.1.0"
+authors = [
+    { name="ZVortex11325", email="zvortex11325-github@outlook.com" },
+]
+description = "A Python client library for the Bedrock Server Manager API"
+readme = "README.md"
+license = { text = "Apache-2.0" }
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+    "Intended Audience :: Developers",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Framework :: AsyncIO",
+]
+dependencies = [
+    "aiohttp>=3.8.0,<4.0.0",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/DMedina559/bsm-api-client"
+"Bug Tracker" = "https://github.com/DMedina559/bsm-api-client/issues"
