@@ -35,7 +35,7 @@ pip install pybedrock-server-manager
 Or, for development, install from source:
 
 ```bash
-git clone https://github.com/dmedina559/bsm-api-client.git # Replace with your actual repo URL if different
+git clone https://github.com/dmedina559/bsm-api-client.git
 cd bsm-api-client
 pip install -e .
 ```
@@ -59,7 +59,7 @@ from pybedrock_server_manager import (
 
 # --- Configuration ---
 BSM_HOST = "your_bsm_host_or_ip"  # e.g., "localhost" or "bsm.example.com"
-BSM_PORT = 11325                  # Default BSM v3 API port. Adjust if different (e.g., 19135 for older versions)
+BSM_PORT = 11325                  # Default BSM API port. Adjust if different
 BSM_USERNAME = "your_bsm_username"
 BSM_PASSWORD = "your_bsm_password"
 BSM_USE_SSL = False               # Set to True if BSM is served over HTTPS

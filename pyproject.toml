@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pybedrock_server_manager"
-version = "0.1.0"
+version = "0.2.0"
 authors = [
     { name="ZVortex11325", email="zvortex11325-github@outlook.com" },
 ]
@@ -36,3 +36,4 @@ where = ["src"]
 [project.urls]
 "Homepage" = "https://github.com/DMedina559/bsm-api-client"
 "Bug Tracker" = "https://github.com/DMedina559/bsm-api-client/issues"
+"Changelog" = "https://github.com/DMedina559/bsm-api-client/blob/main/docs/CHANGELOG.md"
