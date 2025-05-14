@@ -1,5 +1,7 @@
 # src/pybedrock_server_manager/__init__.py
 """Python client library for the Bedrock Server Manager API."""
+import logging
+from importlib import metadata
 
 from .exceptions import (
     APIError,
@@ -10,7 +12,6 @@ from .exceptions import (
 )
 from .api_client import BedrockServerManagerApi
 
-# Define what is available directly on import 'pybedrock_server_manager'
 __all__ = [
     "BedrockServerManagerApi",
     "APIError",
@@ -18,13 +19,15 @@ __all__ = [
     "ServerNotFoundError",
     "ServerNotRunningError",
     "CannotConnectError",
+    "__version__",
 ]
 
-# You might want to add a package version here later, often synced from pyproject.toml
-# Example using importlib.metadata (requires Python 3.8+):
-# from importlib import metadata
-# try:
-#     __version__ = metadata.version(__name__)
-# except metadata.PackageNotFoundError:
-#     # package is not installed
-#     __version__ = "0.0.0" # Or some other placeholder
+try:
+    __version__ = metadata.version(__name__)
+except metadata.PackageNotFoundError:
+    __version__ = "0.0.0"
+
+# Add a NullHandler to the root logger of the library.
+# This prevents log messages from being output by default if the
+# consuming application/script doesn't configure logging.
+logging.getLogger(__name__).addHandler(logging.NullHandler())

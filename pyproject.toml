@@ -5,13 +5,13 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pybedrock_server_manager"
-version = "0.1.0"
+version = "0.2.0"
 authors = [
     { name="ZVortex11325", email="zvortex11325-github@outlook.com" },
 ]
 description = "A Python client library for the Bedrock Server Manager API"
 readme = "README.md"
-license = { text = "MIT" }
+license = { file = "LICENSE" }
 requires-python = ">=3.8"
 classifiers = [
     "Programming Language :: Python :: 3",
@@ -28,7 +28,12 @@ classifiers = [
 dependencies = [
     "aiohttp>=3.8.0,<4.0.0",
 ]
+keywords = ["minecraft", "bedrock", "server", "manager", "api", "client", "asyncio", "aiohttp", "bsm"]
+
+[tool.setuptools.packages.find]
+where = ["src"] 
 
 [project.urls]
 "Homepage" = "https://github.com/DMedina559/bsm-api-client"
 "Bug Tracker" = "https://github.com/DMedina559/bsm-api-client/issues"
+"Changelog" = "https://github.com/DMedina559/bsm-api-client/blob/main/docs/CHANGELOG.md"
