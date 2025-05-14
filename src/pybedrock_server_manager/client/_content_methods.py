@@ -19,25 +19,28 @@ class ContentMethodsMixin:
         _LOGGER.debug(
             "Fetching '%s' backups list for server '%s'", backup_type, server_name
         )
+
         return await self._request(
             "GET",
-            f"{self._base_path}/server/{server_name}/backups/list/{backup_type}",
+            f"/server/{server_name}/backups/list/{backup_type}",
             authenticated=True,
         )
 
     async def async_get_content_worlds(self) -> Dict[str, Any]:
         """Lists available .mcworld files. Calls GET /api/content/worlds."""
-        _LOGGER.debug("Fetching available world files from /api/content/worlds")
-        return await self._request(
-            "GET", f"{self._base_path}/content/worlds", authenticated=True
-        )
+        _LOGGER.debug(
+            "Fetching available world files from /content/worlds"
+        )  # Path in log updated for clarity
+
+        return await self._request("GET", "/content/worlds", authenticated=True)
 
     async def async_get_content_addons(self) -> Dict[str, Any]:
         """Lists available .mcpack/.mcaddon files. Calls GET /api/content/addons."""
-        _LOGGER.debug("Fetching available addon files from /api/content/addons")
-        return await self._request(
-            "GET", f"{self._base_path}/content/addons", authenticated=True
-        )
+        _LOGGER.debug(
+            "Fetching available addon files from /content/addons"
+        )  # Path in log updated for clarity
+
+        return await self._request("GET", "/content/addons", authenticated=True)
 
     async def async_trigger_server_backup(
         self,
@@ -65,9 +68,10 @@ class ContentMethodsMixin:
                 file_to_backup,
                 backup_type,
             )
+
         return await self._request(
             "POST",
-            f"{self._base_path}/server/{server_name}/backup/action",
+            f"/server/{server_name}/backup/action",
             data=payload,
             authenticated=True,
         )
@@ -75,9 +79,10 @@ class ContentMethodsMixin:
     async def async_export_server_world(self, server_name: str) -> Dict[str, Any]:
         """Triggers world export for a server. Calls POST /api/server/{server_name}/world/export."""
         _LOGGER.info("Triggering world export for server '%s'", server_name)
+
         return await self._request(
             "POST",
-            f"{self._base_path}/server/{server_name}/world/export",
+            f"/server/{server_name}/world/export",
             data=None,
             authenticated=True,
         )
@@ -94,9 +99,10 @@ class ContentMethodsMixin:
         payload: Optional[Dict[str, Any]] = None
         if keep is not None:
             payload = {"keep": keep}
+
         return await self._request(
             "POST",
-            f"{self._base_path}/server/{server_name}/backups/prune",
+            f"/server/{server_name}/backups/prune",
             data=payload,
             authenticated=True,
         )
@@ -112,9 +118,10 @@ class ContentMethodsMixin:
             backup_file,
         )
         payload = {"restore_type": restore_type, "backup_file": backup_file}
+
         return await self._request(
             "POST",
-            f"{self._base_path}/server/{server_name}/restore/action",
+            f"/server/{server_name}/restore/action",
             data=payload,
             authenticated=True,
         )
@@ -122,9 +129,10 @@ class ContentMethodsMixin:
     async def async_restore_server_latest_all(self, server_name: str) -> Dict[str, Any]:
         """Restores the latest 'all' backup. Calls POST /api/server/{server_name}/restore/all."""
         _LOGGER.info("Requesting restore latest all for server '%s'", server_name)
+
         return await self._request(
             "POST",
-            f"{self._base_path}/server/{server_name}/restore/all",
+            f"/server/{server_name}/restore/all",
             data=None,
             authenticated=True,
         )
@@ -139,9 +147,10 @@ class ContentMethodsMixin:
             filename,
         )
         payload = {"filename": filename}
+
         return await self._request(
             "POST",
-            f"{self._base_path}/server/{server_name}/world/install",
+            f"/server/{server_name}/world/install",
             data=payload,
             authenticated=True,
         )
@@ -156,9 +165,10 @@ class ContentMethodsMixin:
             filename,
         )
         payload = {"filename": filename}
+
         return await self._request(
             "POST",
-            f"{self._base_path}/server/{server_name}/addon/install",
+            f"/server/{server_name}/addon/install",
             data=payload,
             authenticated=True,
         )

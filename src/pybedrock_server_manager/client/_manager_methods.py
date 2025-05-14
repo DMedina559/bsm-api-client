@@ -12,30 +12,33 @@ class ManagerMethodsMixin:
     async def async_get_info(self) -> Dict[str, Any]:
         """Gets system and application information from the manager. Calls GET /api/info."""
         _LOGGER.debug("Fetching manager system and application information from /info")
-        return await self._request(
-            method="GET", path=f"{self._base_path}/info", authenticated=False
-        )
+
+        return await self._request(method="GET", path="/info", authenticated=False)
 
     async def async_scan_players(self) -> Dict[str, Any]:
         """Triggers scanning of player logs. Calls POST /api/players/scan."""
         _LOGGER.info("Triggering player log scan")
-        return await self._request(
-            "POST", f"{self._base_path}/players/scan", authenticated=True
-        )
+
+        return await self._request("POST", path="/players/scan", authenticated=True)
 
     async def async_get_players(self) -> Dict[str, Any]:
         """Gets the global list of known players. Calls GET /api/players/get."""
-        _LOGGER.debug("Fetching global player list")
-        return await self._request(
-            "GET", f"{self._base_path}/players/get", authenticated=True
-        )
+        _LOGGER.debug(
+            "Fetching global player list from /players/get"
+        )  # Updated log message
+
+        return await self._request("GET", path="/players/get", authenticated=True)
 
     async def async_add_players(self, players_data: List[str]) -> Dict[str, Any]:
         """Adds players to the global list. Calls POST /api/players/add."""
         _LOGGER.info("Adding/updating global players: %s", players_data)
         payload = {"players": players_data}
+
         return await self._request(
-            "POST", f"{self._base_path}/players/add", data=payload, authenticated=True
+            "POST",
+            path="/players/add",
+            data=payload,
+            authenticated=True,
         )
 
     async def async_prune_downloads(
@@ -50,9 +53,10 @@ class ManagerMethodsMixin:
         payload: Dict[str, Any] = {"directory": directory}
         if keep is not None:
             payload["keep"] = keep
+
         return await self._request(
             "POST",
-            f"{self._base_path}/downloads/prune",
+            path="/downloads/prune",
             data=payload,
             authenticated=True,
         )
@@ -72,9 +76,10 @@ class ManagerMethodsMixin:
             "server_version": server_version,
             "overwrite": overwrite,
         }
+
         return await self._request(
             "POST",
-            f"{self._base_path}/server/install",
+            path="/server/install",
             data=payload,
             authenticated=True,
         )

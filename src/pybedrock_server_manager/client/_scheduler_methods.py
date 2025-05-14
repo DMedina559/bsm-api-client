@@ -15,9 +15,10 @@ class SchedulerMethodsMixin:
         """Adds a new cron job (Linux Only). Calls POST /api/server/{server_name}/cron_scheduler/add."""
         _LOGGER.info("Adding cron job for server '%s': %s", server_name, new_cron_job)
         payload = {"new_cron_job": new_cron_job}
+
         return await self._request(
             "POST",
-            f"{self._base_path}/server/{server_name}/cron_scheduler/add",
+            f"/server/{server_name}/cron_scheduler/add",
             data=payload,
             authenticated=True,
         )
@@ -33,9 +34,10 @@ class SchedulerMethodsMixin:
             new_cron_job,
         )
         payload = {"old_cron_job": old_cron_job, "new_cron_job": new_cron_job}
+
         return await self._request(
             "POST",
-            f"{self._base_path}/server/{server_name}/cron_scheduler/modify",
+            f"/server/{server_name}/cron_scheduler/modify",
             data=payload,
             authenticated=True,
         )
@@ -45,10 +47,10 @@ class SchedulerMethodsMixin:
     ) -> Dict[str, Any]:
         """Deletes a cron job (Linux Only). Calls DELETE /api/server/{server_name}/cron_scheduler/delete."""
         _LOGGER.info("Deleting cron job for server '%s': %s", server_name, cron_string)
-        # cron_string is expected as a query parameter by the API
+
         return await self._request(
             "DELETE",
-            f"{self._base_path}/server/{server_name}/cron_scheduler/delete",
+            f"/server/{server_name}/cron_scheduler/delete",
             params={"cron_string": cron_string},
             authenticated=True,
         )
@@ -61,9 +63,10 @@ class SchedulerMethodsMixin:
             "Adding Windows task for server '%s', command: '%s'", server_name, command
         )
         payload = {"command": command, "triggers": triggers}
+
         return await self._request(
             "POST",
-            f"{self._base_path}/server/{server_name}/task_scheduler/add",
+            f"/server/{server_name}/task_scheduler/add",
             data=payload,
             authenticated=True,
         )
@@ -78,9 +81,10 @@ class SchedulerMethodsMixin:
             task_name,
         )
         payload = {"task_name": task_name}
+
         return await self._request(
-            "POST",
-            f"{self._base_path}/server/{server_name}/task_scheduler/details",
+            "POST",  # Assuming POST is correct as per API docs, though GET seems more logical for "get details"
+            f"/server/{server_name}/task_scheduler/details",
             data=payload,
             authenticated=True,
         )
@@ -100,9 +104,10 @@ class SchedulerMethodsMixin:
             command,
         )
         payload = {"command": command, "triggers": triggers}
+
         return await self._request(
             "PUT",
-            f"{self._base_path}/server/{server_name}/task_scheduler/task/{task_name}",
+            f"/server/{server_name}/task_scheduler/task/{task_name}",
             data=payload,
             authenticated=True,
         )
@@ -114,8 +119,9 @@ class SchedulerMethodsMixin:
         _LOGGER.info(
             "Deleting Windows task '%s' for server '%s'", task_name, server_name
         )
+
         return await self._request(
             "DELETE",
-            f"{self._base_path}/server/{server_name}/task_scheduler/task/{task_name}",
+            f"/server/{server_name}/task_scheduler/task/{task_name}",
             authenticated=True,
         )

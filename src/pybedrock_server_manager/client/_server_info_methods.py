@@ -14,9 +14,8 @@ class ServerInfoMethodsMixin:
         """Fetches the list of server names from the API. Calls GET /api/servers."""
         _LOGGER.debug("Fetching server list from API endpoint /servers")
         try:
-            response_data = await self._request(
-                "GET", f"{self._base_path}/servers", authenticated=True
-            )
+
+            response_data = await self._request("GET", "/servers", authenticated=True)
             servers_raw = response_data.get("servers")
             if not isinstance(servers_raw, list):
                 _LOGGER.error(
@@ -41,13 +40,11 @@ class ServerInfoMethodsMixin:
                 else:
                     _LOGGER.warning("Skipping invalid item in server list: %s", item)
 
-            if (
-                not server_list and servers_raw
-            ):  # If original raw list was not empty but processed list is
+            if not server_list and servers_raw:
                 _LOGGER.warning(
                     "API returned server data but no valid server names could be extracted."
                 )
-            elif not server_list:  # If raw list was also empty
+            elif not server_list:
                 _LOGGER.info("API returned an empty server list.")
             return sorted(server_list)
         except APIError as e:
@@ -58,9 +55,10 @@ class ServerInfoMethodsMixin:
         """Checks if a server configuration exists. Calls GET /api/server/{server_name}/validate."""
         _LOGGER.debug("Validating existence of server: %s", server_name)
         try:
+
             await self._request(
                 "GET",
-                f"{self._base_path}/server/{server_name}/validate",
+                f"/server/{server_name}/validate",
                 authenticated=True,
             )
             return True
@@ -76,27 +74,30 @@ class ServerInfoMethodsMixin:
     async def async_get_server_status_info(self, server_name: str) -> Dict[str, Any]:
         """Gets runtime status info for a server. Calls GET /api/server/{server_name}/status_info."""
         _LOGGER.debug("Fetching status info for server '%s'", server_name)
+
         return await self._request(
             "GET",
-            f"{self._base_path}/server/{server_name}/status_info",
+            f"/server/{server_name}/status_info",
             authenticated=True,
         )
 
     async def async_get_server_running_status(self, server_name: str) -> Dict[str, Any]:
         """Gets running status for a server. Calls GET /api/server/{server_name}/running_status."""
         _LOGGER.debug("Fetching running status for server '%s'", server_name)
+
         return await self._request(
             "GET",
-            f"{self._base_path}/server/{server_name}/running_status",
+            f"/server/{server_name}/running_status",
             authenticated=True,
         )
 
     async def async_get_server_config_status(self, server_name: str) -> Dict[str, Any]:
         """Gets config status for a server. Calls GET /api/server/{server_name}/config_status."""
         _LOGGER.debug("Fetching config status for server '%s'", server_name)
+
         return await self._request(
             "GET",
-            f"{self._base_path}/server/{server_name}/config_status",
+            f"/server/{server_name}/config_status",
             authenticated=True,
         )
 
@@ -104,9 +105,10 @@ class ServerInfoMethodsMixin:
         """Gets the installed version for a server. Calls GET /api/server/{server_name}/version."""
         _LOGGER.debug("Fetching version for server '%s'", server_name)
         try:
+
             data = await self._request(
                 "GET",
-                f"{self._base_path}/server/{server_name}/version",
+                f"/server/{server_name}/version",
                 authenticated=True,
             )
             version = data.get("installed_version")
@@ -121,9 +123,10 @@ class ServerInfoMethodsMixin:
         """Gets the configured world name for a server. Calls GET /api/server/{server_name}/world_name."""
         _LOGGER.debug("Fetching world name for server '%s'", server_name)
         try:
+
             data = await self._request(
                 "GET",
-                f"{self._base_path}/server/{server_name}/world_name",
+                f"/server/{server_name}/world_name",
                 authenticated=True,
             )
             world = data.get("world_name")
@@ -137,9 +140,10 @@ class ServerInfoMethodsMixin:
     async def async_get_server_properties(self, server_name: str) -> Dict[str, Any]:
         """Gets server.properties content. Calls GET /api/server/{server_name}/read_properties."""
         _LOGGER.debug("Fetching server properties for server '%s'", server_name)
+
         return await self._request(
             "GET",
-            f"{self._base_path}/server/{server_name}/read_properties",
+            f"/server/{server_name}/read_properties",
             authenticated=True,
         )
 
@@ -148,17 +152,19 @@ class ServerInfoMethodsMixin:
     ) -> Dict[str, Any]:
         """Gets permissions.json content for a server. Calls GET /api/server/{server_name}/permissions_data."""
         _LOGGER.debug("Fetching server permissions data for server '%s'", server_name)
+
         return await self._request(
             "GET",
-            f"{self._base_path}/server/{server_name}/permissions_data",
+            f"/server/{server_name}/permissions_data",
             authenticated=True,
         )
 
     async def async_get_server_allowlist(self, server_name: str) -> Dict[str, Any]:
         """Gets the current allowlist for a server. Calls GET /api/server/{server_name}/allowlist."""
         _LOGGER.debug("Fetching allowlist for server '%s'", server_name)
+
         return await self._request(
             "GET",
-            f"{self._base_path}/server/{server_name}/allowlist",
+            f"/server/{server_name}/allowlist",
             authenticated=True,
         )

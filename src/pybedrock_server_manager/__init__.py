@@ -8,7 +8,7 @@ from .exceptions import (
     ServerNotRunningError,
     CannotConnectError,
 )
-from .client import BedrockServerManagerApi
+from .api_client import BedrockServerManagerApi
 
 # Define what is available directly on import 'pybedrock_server_manager'
 __all__ = [

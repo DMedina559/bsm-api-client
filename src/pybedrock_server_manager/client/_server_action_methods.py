@@ -12,23 +12,30 @@ class ServerActionMethodsMixin:
     async def async_start_server(self, server_name: str) -> Dict[str, Any]:
         """Starts the server. Calls POST /api/server/{server_name}/start."""
         _LOGGER.info("Requesting start for server '%s'", server_name)
+
         return await self._request(
-            "POST", f"{self._base_path}/server/{server_name}/start", authenticated=True
+            "POST",
+            f"/server/{server_name}/start",
+            authenticated=True,
         )
 
     async def async_stop_server(self, server_name: str) -> Dict[str, Any]:
         """Stops the server. Calls POST /api/server/{server_name}/stop."""
         _LOGGER.info("Requesting stop for server '%s'", server_name)
+
         return await self._request(
-            "POST", f"{self._base_path}/server/{server_name}/stop", authenticated=True
+            "POST",
+            f"/server/{server_name}/stop",
+            authenticated=True,
         )
 
     async def async_restart_server(self, server_name: str) -> Dict[str, Any]:
         """Restarts the server. Calls POST /api/server/{server_name}/restart."""
         _LOGGER.info("Requesting restart for server '%s'", server_name)
+
         return await self._request(
             "POST",
-            f"{self._base_path}/server/{server_name}/restart",
+            f"/server/{server_name}/restart",
             authenticated=True,
         )
 
@@ -38,9 +45,10 @@ class ServerActionMethodsMixin:
         """Sends a command to the server. Calls POST /api/server/{server_name}/send_command."""
         _LOGGER.info("Sending command to server '%s': %s", server_name, command)
         payload = {"command": command}
+
         return await self._request(
             "POST",
-            f"{self._base_path}/server/{server_name}/send_command",
+            f"/server/{server_name}/send_command",
             data=payload,
             authenticated=True,
         )
@@ -48,8 +56,11 @@ class ServerActionMethodsMixin:
     async def async_update_server(self, server_name: str) -> Dict[str, Any]:
         """Triggers the server update process. Calls POST /api/server/{server_name}/update."""
         _LOGGER.info("Requesting update for server '%s'", server_name)
+
         return await self._request(
-            "POST", f"{self._base_path}/server/{server_name}/update", authenticated=True
+            "POST",
+            f"/server/{server_name}/update",
+            authenticated=True,
         )
 
     async def async_add_server_allowlist(
@@ -60,9 +71,10 @@ class ServerActionMethodsMixin:
             "Adding players %s to allowlist for server '%s'", players, server_name
         )
         payload = {"players": players, "ignoresPlayerLimit": ignores_player_limit}
+
         return await self._request(
             "POST",
-            f"{self._base_path}/server/{server_name}/allowlist/add",
+            f"/server/{server_name}/allowlist/add",
             data=payload,
             authenticated=True,
         )
@@ -76,9 +88,10 @@ class ServerActionMethodsMixin:
             player_name,
             server_name,
         )
+
         return await self._request(
             "DELETE",
-            f"{self._base_path}/server/{server_name}/allowlist/player/{player_name}",
+            f"/server/{server_name}/allowlist/player/{player_name}",
             data=None,
             authenticated=True,
         )
@@ -91,9 +104,10 @@ class ServerActionMethodsMixin:
             "Setting permissions for server '%s': %s", server_name, permissions_dict
         )
         payload = {"permissions": permissions_dict}
+
         return await self._request(
             "PUT",
-            f"{self._base_path}/server/{server_name}/permissions",
+            f"/server/{server_name}/permissions",
             data=payload,
             authenticated=True,
         )
@@ -105,10 +119,11 @@ class ServerActionMethodsMixin:
         _LOGGER.info(
             "Updating properties for server '%s': %s", server_name, properties_dict
         )
-        payload = properties_dict  # API expects the dictionary directly
+        payload = properties_dict
+
         return await self._request(
             "POST",
-            f"{self._base_path}/server/{server_name}/properties",
+            f"/server/{server_name}/properties",
             data=payload,
             authenticated=True,
         )
@@ -122,9 +137,10 @@ class ServerActionMethodsMixin:
             server_name,
             payload,
         )
+
         return await self._request(
             "POST",
-            f"{self._base_path}/server/{server_name}/service",
+            f"/server/{server_name}/service",
             data=payload,
             authenticated=True,
         )
@@ -134,9 +150,10 @@ class ServerActionMethodsMixin:
         _LOGGER.warning(
             "Requesting deletion of server '%s'. This is irreversible.", server_name
         )
+
         return await self._request(
             "DELETE",
-            f"{self._base_path}/server/{server_name}/delete",
+            f"/server/{server_name}/delete",
             data=None,
             authenticated=True,
         )
