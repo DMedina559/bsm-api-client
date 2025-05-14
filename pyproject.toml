@@ -11,7 +11,7 @@ authors = [
 ]
 description = "A Python client library for the Bedrock Server Manager API"
 readme = "README.md"
-license = { text = "MIT" }
+license = { file = "LICENSE" }
 requires-python = ">=3.8"
 classifiers = [
     "Programming Language :: Python :: 3",
@@ -28,6 +28,10 @@ classifiers = [
 dependencies = [
     "aiohttp>=3.8.0,<4.0.0",
 ]
+keywords = ["minecraft", "bedrock", "server", "manager", "api", "client", "asyncio", "aiohttp", "bsm"]
+
+[tool.setuptools.packages.find]
+where = ["src"] 
 
 [project.urls]
 "Homepage" = "https://github.com/DMedina559/bsm-api-client"
