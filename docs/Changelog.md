@@ -1,5 +1,8 @@
 # pybedrock-server-manager Changelog
 
+# 0.4.0
+1. Added verify ssl option
+
 # 0.3.0
 1. Added missing imports
 
