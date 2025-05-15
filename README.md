@@ -63,6 +63,7 @@ BSM_PORT = 11325                  # Default BSM API port. Adjust if different
 BSM_USERNAME = "your_bsm_username"
 BSM_PASSWORD = "your_bsm_password"
 BSM_USE_SSL = False               # Set to True if BSM is served over HTTPS
+BSM_VERIFY_SSL = True                   # Set to False if using HTTPS with a self-signed cert
 
 # --- Optional: Setup Logging ---
 # Basic logging configuration
@@ -83,7 +84,8 @@ async def main():
         port=BSM_PORT,
         username=BSM_USERNAME,
         password=BSM_PASSWORD,
-        use_ssl=BSM_USE_SSL
+        use_ssl=BSM_USE_SSL,
+        verify_ssl=BSM_VERIFY_SSL
     ) as api:
         try:
             # Authentication is handled automatically on the first authenticated call.
