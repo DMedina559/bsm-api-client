@@ -73,7 +73,7 @@ This document provides detailed documentation for `pybedrock_server_manager`, a 
 
 This library aims to mirror the functionalities exposed by the API, offering methods for server lifecycle management, configuration, backups, player interactions, and more.
 
-**Library Version:** `0.3.0`
+**Library Version:** `0.4.0`
 
 ## Features
 

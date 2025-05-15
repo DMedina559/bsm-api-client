@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pybedrock_server_manager"
-version = "0.3.0"
+version = "0.4.0"
 authors = [
     { name="ZVortex11325", email="zvortex11325-github@outlook.com" },
 ]
