@@ -46,6 +46,7 @@ class ClientBase:
         base_path: str = "/api",
         request_timeout: int = 10,
         use_ssl: bool = False,
+        verify_ssl: bool = True,
     ):
         """Initialize the base API client."""
         protocol = "https" if use_ssl else "http"
@@ -62,18 +63,33 @@ class ClientBase:
         self._username = username
         self._password = password
         self._request_timeout = request_timeout
+        self._use_ssl = use_ssl  # Store use_ssl for connector logic
+        self._verify_ssl = verify_ssl  # Store verify_ssl
 
         if session is None:
-            # If using SSL and you want to skip SSL verification (e.g., self-signed certs)
-            # connector = aiohttp.TCPConnector(ssl=False if not use_ssl else None) # Or configure SSLContext
-            # self._session = aiohttp.ClientSession(connector=connector)
-            self._session = (
-                aiohttp.ClientSession()
-            )  # Default SSL verification will apply if use_ssl=True
+            connector = None  # Default connector
+            if self._use_ssl:  # Only apply SSL logic if use_ssl is True
+                if not self._verify_ssl:
+                    _LOGGER.warning(
+                        "SSL certificate verification is DISABLED. "
+                        "This is insecure and not recommended for production environments."
+                    )
+                    # For aiohttp, ssl=False in TCPConnector disables certificate verification for HTTPS
+                    connector = aiohttp.TCPConnector(ssl=False)
+                # If self._verify_ssl is True (default for HTTPS),
+                # connector remains None, and ClientSession uses its default secure connector.
+
+            self._session = aiohttp.ClientSession(connector=connector)
             self._close_session = True
         else:
             self._session = session
             self._close_session = False
+            if self._use_ssl and not self._verify_ssl:
+                _LOGGER.warning(
+                    "An external ClientSession is provided, but verify_ssl=False was also requested. "
+                    "The external session's SSL verification behavior will take precedence. "
+                    "Ensure the provided session is configured to disable SSL verification if that's intended."
+                )
 
         self._jwt_token: Optional[str] = None
         # Default headers; Content-Type can be overridden by specific requests if needed (e.g., file uploads)
