@@ -12,7 +12,7 @@ from .exceptions import (
     CannotConnectError,
     InvalidInputError,
     OperationFailedError,
-    APIServerSideError, 
+    APIServerSideError,
 )
 from .api_client import BedrockServerManagerApi
 
@@ -25,7 +25,7 @@ __all__ = [
     "CannotConnectError",
     "InvalidInputError",
     "OperationFailedError",
-    "APIServerSideError",    
+    "APIServerSideError",
     "__version__",
 ]
 
