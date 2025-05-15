@@ -6,9 +6,13 @@ from importlib import metadata
 from .exceptions import (
     APIError,
     AuthError,
+    NotFoundError,
     ServerNotFoundError,
     ServerNotRunningError,
     CannotConnectError,
+    InvalidInputError,
+    OperationFailedError,
+    APIServerSideError,
 )
 from .api_client import BedrockServerManagerApi
 
@@ -19,6 +23,9 @@ __all__ = [
     "ServerNotFoundError",
     "ServerNotRunningError",
     "CannotConnectError",
+    "InvalidInputError",
+    "OperationFailedError",
+    "APIServerSideError",
     "__version__",
 ]
 

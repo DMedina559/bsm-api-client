@@ -1,5 +1,8 @@
 # pybedrock-server-manager Changelog
 
+# 0.3.0
+1. Added missing imports
+
 # 0.2.0
 1. Added use_ssl parameter to __init__ for HTTPS connections
 2. Method Renames for Clarity:
