@@ -1,5 +1,11 @@
 # pybedrock-server-manager Changelog
 
+# 0.5.0
+1. Made port optional
+
+# 0.4.0
+1. Add verify ssl option
+
 # 0.3.0
 1. Added missing imports
 
