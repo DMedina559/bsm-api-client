@@ -26,14 +26,6 @@
 *   Custom exceptions for specific API errors, providing context like status codes and API messages.
 *   Supports connecting via HTTP or HTTPS.
 
-## Features
-
-*   Asynchronous operations using `aiohttp`.
-*   Automatic handling of API authentication (JWT token acquisition and renewal).
-*   Structured error handling with custom exceptions mapped from API responses.
-*   Methods for all major API endpoints, organized logically.
-*   Context manager support for session management.
-
 ## Installation
 
 Install the library using pip:
