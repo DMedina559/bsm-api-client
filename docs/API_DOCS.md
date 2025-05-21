@@ -1,13 +1,14 @@
+<div style="text-align: center;">
+    <img src="https://raw.githubusercontent.com/dmedina559/bedrock-server-manager/main/bedrock_server_manager/web/static/image/icon/favicon.svg" alt="BSM Logo" width="150">
+</div>
+
 # pybedrock_server_manager - Python Client for Bedrock Server Manager API
 
-This document provides detailed documentation for `pybedrock_server_manager`, a Python client library designed to interact with the Bedrock Server Manager HTTP API. It allows developers to programmatically manage Bedrock server instances.
+API documentation and examples for the `pybedrock_server_manager` library.
+
+**Doc Version:** `0.4.0`
 
 ## Table of Contents
-
-- [Introduction](#introduction)
-- [Features](#features)
-- [Installation](#installation)
-- [Quick Start](#quick-start)
 - [Asynchronous Nature](#asynchronous-nature)
 - [Client Initialization (`BedrockServerManagerApi`)](#client-initialization-bedrockservermanagerapi)
 - [Authentication](#authentication)
@@ -67,95 +68,6 @@ This document provides detailed documentation for `pybedrock_server_manager`, a 
       - [`async_modify_server_windows_task(server_name, task_name, command, triggers)`](#async_modify_server_windows_taskserver_name-task_name-command-triggers)
       - [`async_delete_server_windows_task(server_name, task_name)`](#async_delete_server_windows_taskserver_name-task_name)
 
-## Introduction
-
-`pybedrock_server_manager` is an asynchronous Python client library for interacting with the Bedrock Server Manager API. It provides a convenient way to manage Minecraft Bedrock Dedicated Servers through the manager's HTTP API.
-
-This library aims to mirror the functionalities exposed by the API, offering methods for server lifecycle management, configuration, backups, player interactions, and more.
-
-**Library Version:** `0.4.0`
-
-## Features
-
-*   Asynchronous operations using `aiohttp`.
-*   Automatic handling of API authentication (JWT token acquisition and renewal).
-*   Structured error handling with custom exceptions mapped from API responses.
-*   Methods for all major API endpoints, organized logically.
-*   Context manager support for session management.
-
-## Installation
-
-Install the library using pip:
-
-```bash
-pip install pybedrock_server_manager
-```
-
-## Quick Start
-
-Here's a basic example of how to initialize the client and fetch server information:
-
-```python
-import asyncio
-from pybedrock_server_manager import BedrockServerManagerApi, APIError, CannotConnectError
-
-async def main():
-    client = BedrockServerManagerApi(
-        host="your_manager_host",      # e.g., "localhost" or "manager.example.com"
-        port=11325,                    # Default Bedrock Server Manager port
-        username="your_api_username",  # Username for BSM login
-        password="your_api_password",  # Password for BSM login
-        use_ssl=False                  # Set to True if your manager uses HTTPS
-        verify_ssl=True                # Set to False if using HTTPS with a self-signed cert
-    )
-
-    try:
-        async with client: # Handles session and token management
-            # Get manager info (no auth needed for this specific call, but client handles it)
-            manager_info = await client.async_get_info()
-            print(f"Manager OS: {manager_info.get('data', {}).get('os_type')}, Version: {manager_info.get('data', {}).get('app_version')}")
-
-            # Get list of all servers
-            servers = await client.async_get_servers_details()
-            if servers:
-                print("\nManaged Servers:")
-                for server in servers:
-                    print(f"  - Name: {server['name']}, Status: {server['status']}, Version: {server['version']}")
-            else:
-                print("No servers found.")
-
-            # Example: Start a specific server (replace 'MyServer' with an actual server name)
-            # server_name_to_start = "MyServer"
-            # if any(s['name'] == server_name_to_start for s in servers):
-            #     print(f"\nAttempting to start server: {server_name_to_start}")
-            #     start_response = await client.async_start_server(server_name_to_start)
-            #     print(f"Start response: {start_response.get('message')}")
-            # else:
-            #     print(f"\nServer '{server_name_to_start}' not found, cannot start.")
-
-    except AuthError as e:
-        print(f"Authentication Error: {e}")
-    except ServerNotFoundError as e:
-        print(f"Server Not Found Error: {e}")
-    except APIError as e:
-        print(f"An API Error occurred: {e}")
-        print(f"  Status Code: {e.status_code}")
-        print(f"  API Message: {e.api_message}")
-        print(f"  API Errors: {e.api_errors}")
-    except CannotConnectError as e:
-        print(f"Connection Error: {e}")
-    except ValueError as e:
-        print(f"Input Error: {e}")
-    finally:
-        # The `async with client:` block handles closing the session.
-        # If not using context manager, you would call:
-        # await client.close()
-        pass
-
-if __name__ == "__main__":
-    asyncio.run(main())
-```
-
 ## Asynchronous Nature
 
 All API interaction methods in this library are `async` and must be `await`ed. This makes the library suitable for use in asynchronous applications (e.g., those built with `asyncio`, `FastAPI`, etc.). Ensure your application runs an asyncio event loop.
@@ -168,24 +80,24 @@ The main entry point to the library is the `BedrockServerManagerApi` class.
 from pybedrock_server_manager import BedrockServerManagerApi
 
 client = BedrockServerManagerApi(
-    host="localhost",
-    port=11325,
-    username="your_username",
-    password="your_password",
-    session=None,            # Optional: Pass an existing aiohttp.ClientSession
-    base_path="/api",        # Default API base path
-    request_timeout=10,      # Seconds
-    use_ssl=False            # Set to True for HTTPS
-    verify_ssl=True          # Set to False to disable SSL cert verification (HTTPS only)
+    host="host",                   # e.g., "127.0.0.1" or "bsm.example.internal"
+    username="username",           # Username for BSM login
+    password="password",           # Password for BSM login
+    port=11325,                    # Optional: Not required for example if using domain such as bsm.example.internal
+    session=None,                  # Optional: Pass an existing aiohttp.ClientSession
+    base_path="/api",              # Default API base path
+    request_timeout=10,            # Seconds
+    use_ssl=False                  # Set to True for HTTPS
+    verify_ssl=True                # Set to False to disable SSL cert verification (HTTPS only)
 )
 ```
 
 ### Constructor Parameters
 
 *   **`host`** (*str*, required): The hostname or IP address of the Bedrock Server Manager.
-*   **`port`** (*int*, required): The port number on which the Bedrock Server Manager API is listening.
 *   **`username`** (*str*, required): The username for API authentication.
 *   **`password`** (*str*, required): The password for API authentication.
+*   **`port`** (*int*, Optional): The port number on which the Bedrock Server Manager API is listening.
 *   **`session`** (*Optional[aiohttp.ClientSession]*, optional): An optional, pre-existing `aiohttp.ClientSession` to use for requests. If `None` (default), the client will create and manage its own session.
 *   **`base_path`** (*str*, optional): The base path for the API endpoints on the server. Defaults to `"/api"`.
 *   **`request_timeout`** (*int*, optional): The timeout in seconds for API requests. Defaults to `10`.
