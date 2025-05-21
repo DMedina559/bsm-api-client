@@ -2,11 +2,11 @@
     <img src="https://raw.githubusercontent.com/dmedina559/bedrock-server-manager/main/bedrock_server_manager/web/static/image/icon/favicon.svg" alt="BSM Logo" width="150">
 </div>
 
-# pybedrock_server_manager - Python Client for Bedrock Server Manager API
+# pybedrock_server_manager - API Documentation & Examples
 
 API documentation and examples for the `pybedrock_server_manager` library.
 
-**Doc Version:** `0.4.0`
+**Doc Version:** `0.5.1`
 
 ## Table of Contents
 - [Asynchronous Nature](#asynchronous-nature)
