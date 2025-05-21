@@ -93,24 +93,24 @@ class ClientBase:
         self._verify_ssl = verify_ssl
 
         if session is None:
+            _LOGGER.debug("No session provided, creating an internal ClientSession.")
             connector = None
-            if self._use_ssl:
-                if not self._verify_ssl:
-                    _LOGGER.warning(
-                        "SSL certificate verification is DISABLED. "
-                        "This is insecure and not recommended for production environments."
-                    )
-                    connector = aiohttp.TCPConnector(ssl=False)
+            if self._use_ssl and not self._verify_ssl:
+                _LOGGER.warning(
+                    "Creating internal session with SSL certificate verification DISABLED. "
+                    "This is insecure for production."
+                )
+                connector = aiohttp.TCPConnector(ssl=False)
             self._session = aiohttp.ClientSession(connector=connector)
             self._close_session = True
         else:
             self._session = session
             self._close_session = False
             if self._use_ssl and not self._verify_ssl:
-                _LOGGER.warning(
-                    "An external ClientSession is provided, but verify_ssl=False was also requested. "
-                    "The external session's SSL verification behavior will take precedence. "
-                    "Ensure the provided session is configured to disable SSL verification if that's intended."
+                _LOGGER.info(
+                    "An external ClientSession is provided, and verify_ssl=False was requested by user. "
+                    "The provided session's SSL verification behavior (ideally configured via verify_ssl to async_get_clientsession) "
+                    "will take precedence."
                 )
 
         self._jwt_token: Optional[str] = None
