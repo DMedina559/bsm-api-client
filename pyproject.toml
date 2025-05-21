@@ -7,7 +7,7 @@ build-backend = "setuptools.build_meta"
 name = "pybedrock_server_manager"
 version = "0.5.1"
 authors = [
-    { name="DMedina559", email="zvortex11325-github@outlook.com" },
+    { name="DMedina559", email="dmedina559-github@outlook.com" },
 ]
 description = "A Python client library for the Bedrock Server Manager API"
 readme = "README.md"
