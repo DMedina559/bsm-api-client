@@ -1,5 +1,9 @@
 # pybedrock-server-manager Changelog
 
+# 0.5.1
+
+1. Logger changes for when using ssl
+
 # 0.5.0
 1. Made port optional
 
