@@ -2,11 +2,11 @@
     <img src="https://raw.githubusercontent.com/dmedina559/bedrock-server-manager/main/bedrock_server_manager/web/static/image/icon/favicon.svg" alt="BSM Logo" width="150">
 </div>
 
-# pybedrock-server-manager
+# bsm-api-client
 
-[![PyPI version](https://img.shields.io/pypi/v/pybedrock-server-manager.svg)](https://pypi.org/project/pybedrock-server-manager/)
-[![Python Versions](https://img.shields.io/pypi/pyversions/pybedrock-server-manager.svg)](https://pypi.org/project/pybedrock-server-manager/)
-[![License](https://img.shields.io/pypi/l/pybedrock-server-manager.svg)](https://github.com/dmedina559/bsm-api-client/blob/main/LICENSE)
+[![PyPI version](https://img.shields.io/pypi/v/bsm-api-client.svg)](https://pypi.org/project/bsm-api-client/)
+[![Python Versions](https://img.shields.io/pypi/pyversions/bsm_api_client.svg)](https://pypi.org/project/bsm-api-client/)
+[![License](https://img.shields.io/pypi/l/bsm-api-client.svg)](https://github.com/dmedina559/bsm-api-client/blob/main/LICENSE)
 
 ## Introduction
 

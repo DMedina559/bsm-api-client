@@ -2,9 +2,9 @@
     <img src="https://raw.githubusercontent.com/dmedina559/bedrock-server-manager/main/bedrock_server_manager/web/static/image/icon/favicon.svg" alt="BSM Logo" width="150">
 </div>
 
-# pybedrock_server_manager - API Documentation & Examples
+# bsm-api-client - API Documentation & Examples
 
-API documentation and examples for the `pybedrock_server_manager` library.
+API documentation and examples for the `bsm-api-client` library.
 
 **Doc Version:** `0.6.0`
 
