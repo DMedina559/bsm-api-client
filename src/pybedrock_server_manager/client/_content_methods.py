@@ -9,7 +9,7 @@ if TYPE_CHECKING:
 _LOGGER = logging.getLogger(__name__.split(".")[0] + ".client.content")
 
 # Define allowed types for validation to avoid magic strings
-ALLOWED_BACKUP_LIST_TYPES = ["world", "config"]
+ALLOWED_BACKUP_LIST_TYPES = ["world", "properties", "allowlist", "permissions"]
 ALLOWED_BACKUP_ACTION_TYPES = ["world", "config", "all"]
 ALLOWED_RESTORE_TYPES = ["world", "config"]
 
@@ -41,7 +41,7 @@ class ContentMethodsMixin:
 
         Args:
             server_name: The name of the server.
-            backup_type: The type of backups to list (e.g., "world", "config").
+            backup_type: The type of backups to list (e.g., "world", "properties", "allowlist", "permissions", "all").
         """
         bt_lower = backup_type.lower()
         if bt_lower not in ALLOWED_BACKUP_LIST_TYPES:
@@ -152,6 +152,24 @@ class ContentMethodsMixin:
         return await self._request(
             "POST",
             f"/server/{server_name}/world/export",
+            json_data=None,
+            authenticated=True,
+        )
+
+    async def async_reset_server_world(self, server_name: str) -> Dict[str, Any]:
+        """
+        Resets the current world of a server.
+
+        Corresponds to `DELETE /api/server/{server_name}/world/reset`.
+        Requires authentication.
+
+        Args:
+            server_name: The name of the server whose world to export.
+        """
+        _LOGGER.warning("Triggering world reset for server '%s'", server_name)
+        return await self._request(
+            "DELETE",
+            f"/server/{server_name}/world/reset",
             json_data=None,
             authenticated=True,
         )

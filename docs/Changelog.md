@@ -1,5 +1,18 @@
 # pybedrock-server-manager Changelog
 
+# 0.6.0
+
+> [!IMPORTANT]
+> BREAKING CHANGES:
+>  - Renamed pybedrock-server-manager to bsm-api-client
+>     * Point your imports from `pybedrock_server_manager` to `bsm-api-client`
+>  - The variables `async_list_server_backups` accepts for `backup_type` has been changed to `allowlist`, `permissions`,`properties`,`world`, `all`
+>     * You should lock your curently installed version to 0.5.1 or lower if you want to keep using the old values until you update to BSM 3.3.0+
+
+1. Added support for Bedrock Server Manager (BSM) 3.3.0
+2. Added `async_reset_server_world`
+   - Corresponds to `DELETE /api/server/{server_name}/world/reset`. 
+
 # 0.5.1
 
 1. Logger changes for when using ssl
