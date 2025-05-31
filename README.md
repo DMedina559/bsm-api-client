@@ -10,6 +10,10 @@
 
 ## Introduction
 
+> [!IMPORTANT]
+> RENAMED TO:
+> bsm-api-client
+
 `pybedrock_server_manager` is an asynchronous Python client library for interacting with the Bedrock Server Manager API. It provides a convenient way to manage Minecraft Bedrock Dedicated Servers through the manager's HTTP API.
 
 ## Features
