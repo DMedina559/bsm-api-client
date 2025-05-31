@@ -11,7 +11,7 @@ _LOGGER = logging.getLogger(__name__.split(".")[0] + ".client.content")
 # Define allowed types for validation to avoid magic strings
 ALLOWED_BACKUP_LIST_TYPES = ["world", "properties", "allowlist", "permissions"]
 ALLOWED_BACKUP_ACTION_TYPES = ["world", "config", "all"]
-ALLOWED_RESTORE_TYPES = ["world", "config"]
+ALLOWED_RESTORE_TYPES = ["world", "properties", "allowlist", "permissions"]
 
 
 class ContentMethodsMixin:
@@ -217,7 +217,7 @@ class ContentMethodsMixin:
 
         Args:
             server_name: The name of the server.
-            restore_type: Type of restore ("world" or "config").
+            restore_type: Type of restore ("world", "allowlist", "properties", "permissions").
             backup_file: The filename of the backup to restore (relative to server's backup dir).
         """
         rt_lower = restore_type.lower()
