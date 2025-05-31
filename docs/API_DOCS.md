@@ -78,7 +78,7 @@ All API interaction methods in this library are `async` and must be `await`ed. T
 The main entry point to the library is the `BedrockServerManagerApi` class.
 
 ```python
-from pybedrock_server_manager import BedrockServerManagerApi
+from bsm_api_client import BedrockServerManagerApi
 
 client = BedrockServerManagerApi(
     host="host",                   # e.g., "127.0.0.1" or "bsm.example.internal"

@@ -42,7 +42,7 @@ For a complete list of endpoints and examples, see [API_DOCS.md](https://github.
 
 ```python
 import asyncio
-from bsm-api-client import BedrockServerManagerApi, APIError, CannotConnectError
+from bsm_api_client import BedrockServerManagerApi, APIError, CannotConnectError
 
 async def main():
     client = BedrockServerManagerApi(
