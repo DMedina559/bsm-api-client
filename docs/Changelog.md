@@ -1,6 +1,6 @@
 # pybedrock-server-manager Changelog
 
-# 0.6.0
+# 1.0.0
 
 > [!IMPORTANT]
 > BREAKING CHANGES:

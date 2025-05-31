@@ -1,4 +1,4 @@
-# src/pybedrock_server_manager/client_base.py
+# src/bsm_api_client/client_base.py
 """Base class for the Bedrock Server Manager API Client.
 
 Handles initialization, session management, authentication, and the core request logic.

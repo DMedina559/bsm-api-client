@@ -1,4 +1,4 @@
-# src/pybedrock_server_manager/client/_server_info_methods.py
+# src/bsm_api_client/client/_server_info_methods.py
 """Mixin class containing server information retrieval methods."""
 import logging
 from typing import Any, Dict, Optional, List, TYPE_CHECKING

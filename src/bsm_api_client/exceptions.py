@@ -1,5 +1,5 @@
-# src/pybedrock_server_manager/exceptions.py
-"""Custom Exceptions for the pybedrock_server_manager library."""
+# src/bsm_api_client/exceptions.py
+"""Custom Exceptions for the bsm_api_client library."""
 
 from typing import Optional, Dict, Any
 

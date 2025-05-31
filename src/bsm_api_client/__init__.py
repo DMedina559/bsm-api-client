@@ -1,4 +1,4 @@
-# src/pybedrock_server_manager/__init__.py
+# src/bsm_api_client/__init__.py
 """Python client library for the Bedrock Server Manager API."""
 import logging
 from importlib import metadata

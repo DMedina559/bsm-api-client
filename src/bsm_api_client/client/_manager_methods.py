@@ -1,4 +1,4 @@
-# src/pybedrock_server_manager/client/_manager_methods.py
+# src/bsm_api_client/client/_manager_methods.py
 """Mixin class containing manager-level API methods."""
 import logging
 from typing import Any, Dict, Optional, List, TYPE_CHECKING

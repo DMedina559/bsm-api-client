@@ -1,4 +1,4 @@
-# src/pybedrock_server_manager/client/_scheduler_methods.py
+# src/bsm_api_client/client/_scheduler_methods.py
 """Mixin class containing OS-specific task scheduler methods."""
 import logging
 from typing import Any, Dict, List, Optional, TYPE_CHECKING

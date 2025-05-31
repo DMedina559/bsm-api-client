@@ -1,4 +1,4 @@
-# src/pybedrock_server_manager/client.py
+# src/bsm_api_client/client.py
 """Main API client class for Bedrock Server Manager.
 Combines the base client logic with specific endpoint method mixins.
 """
