@@ -2,19 +2,15 @@
     <img src="https://raw.githubusercontent.com/dmedina559/bedrock-server-manager/main/bedrock_server_manager/web/static/image/icon/favicon.svg" alt="BSM Logo" width="150">
 </div>
 
-# pybedrock-server-manager
+# bsm-api-client
 
-[![PyPI version](https://img.shields.io/pypi/v/pybedrock-server-manager.svg)](https://pypi.org/project/pybedrock-server-manager/)
-[![Python Versions](https://img.shields.io/pypi/pyversions/pybedrock-server-manager.svg)](https://pypi.org/project/pybedrock-server-manager/)
-[![License](https://img.shields.io/pypi/l/pybedrock-server-manager.svg)](https://github.com/dmedina559/bsm-api-client/blob/main/LICENSE)
+[![PyPI version](https://img.shields.io/pypi/v/bsm-api-client.svg)](https://pypi.org/project/bsm-api-client/)
+[![Python Versions](https://img.shields.io/pypi/pyversions/bsm_api_client.svg)](https://pypi.org/project/bsm-api-client/)
+[![License](https://img.shields.io/pypi/l/bsm-api-client.svg)](https://github.com/dmedina559/bsm-api-client/blob/main/LICENSE)
 
 ## Introduction
 
-> [!IMPORTANT]
-> RENAMED TO:
-> bsm-api-client
-
-`pybedrock_server_manager` is an asynchronous Python client library for interacting with the Bedrock Server Manager API. It provides a convenient way to manage Minecraft Bedrock Dedicated Servers through the manager's HTTP API.
+`bsm-api-client` is an asynchronous Python client library for interacting with the Bedrock Server Manager API. It provides a convenient way to manage Minecraft Bedrock Dedicated Servers through the manager's HTTP API.
 
 ## Features
 
@@ -35,7 +31,7 @@
 Install the library using pip:
 
 ```bash
-pip install pybedrock_server_manager
+pip install bsm-api-client
 ```
 
 ## Quick Start
@@ -46,7 +42,7 @@ For a complete list of endpoints and examples, see [API_DOCS.md](https://github.
 
 ```python
 import asyncio
-from pybedrock_server_manager import BedrockServerManagerApi, APIError, CannotConnectError
+from bsm-api-client import BedrockServerManagerApi, APIError, CannotConnectError
 
 async def main():
     client = BedrockServerManagerApi(

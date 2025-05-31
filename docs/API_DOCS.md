@@ -2,11 +2,11 @@
     <img src="https://raw.githubusercontent.com/dmedina559/bedrock-server-manager/main/bedrock_server_manager/web/static/image/icon/favicon.svg" alt="BSM Logo" width="150">
 </div>
 
-# pybedrock_server_manager - API Documentation & Examples
+# bsm-api-client - API Documentation & Examples
 
-API documentation and examples for the `pybedrock_server_manager` library.
+API documentation and examples for the `bsm-api-client` library.
 
-**Doc Version:** `0.5.1`
+**Doc Version:** `0.6.0`
 
 ## Table of Contents
 - [Asynchronous Nature](#asynchronous-nature)
@@ -52,6 +52,7 @@ API documentation and examples for the `pybedrock_server_manager` library.
     - [`async_get_content_addons()`](#async_get_content_addons)
     - [`async_trigger_server_backup(server_name, backup_type, file_to_backup)`](#async_trigger_server_backupserver_name-backup_type-file_to_backup)
     - [`async_export_server_world(server_name)`](#async_export_server_worldserver_name)
+    - [`async_reset_server_world(server_name)`](#async_reset_server_worldserver_name)
     - [`async_prune_server_backups(server_name, keep)`](#async_prune_server_backupsserver_name-keep)
     - [`async_restore_server_backup(server_name, restore_type, backup_file)`](#async_restore_server_backupserver_name-restore_type-backup_file)
     - [`async_restore_server_latest_all(server_name)`](#async_restore_server_latest_allserver_name)
@@ -1159,20 +1160,45 @@ Lists available backup filenames (basenames only) for a specified server and bac
 *   **Authentication:** Required.
 *   **Arguments:**
     *   `server_name` (*str*, required): The name of the server.
-    *   `backup_type` (*str*, required): The type of backups to list. Must be `"world"` or `"config"` (case-insensitive).
+    *   `backup_type` (*str*, required): The type of backups to list. Must be `"world"`, `"properties"`, `"allowlist"`, `"permissions"`, or `"all"` (case-insensitive).
 *   **Returns:**
     *   *Type:* `Dict[str, Any]`
     *   *Description:* A dictionary containing the list of backup filenames.
-        ```json
-        {
-            "status": "success",
-            "backups": [
-                "world_backup_20231027103000.mcworld",
-                // ... more filenames
-            ]
-        }
-        ```
-        Returns `{"status": "success", "backups": []}` if no backups are found.
+        * If `backup_type` is `"world"`, `"properties"`, `"allowlist"`, or `"permissions"`, the `backups` key will contain a `List[str]` of filenames:
+            ```json
+            {
+                "status": "success",
+                "backups": [
+                    "world_backup_20231027103000.mcworld",
+                    // ... more filenames
+                ]
+            }
+            ```
+            Returns `{"status": "success", "backups": []}` if no backups of the specified type are found.
+        * If `backup_type` is `"all"`, the `backups` key will contain a `Dict[str, List[str]]` with categorized filenames. Categories will only be included if files are found for them:
+            ```json
+            {
+                "status": "success",
+                "backups": {
+                    "allowlist_backups": [
+                        "allowlist_backup_20240115080000.json",
+                        "allowlist_backup_20231201120000.json"
+                    ],
+                    "permissions_backups": [
+                        "permissions_backup_20240115080000.json"
+                    ],
+                    "properties_backups": [
+                        "server_backup_20240115080000.properties",
+                        "server_backup_20231201120000.properties"
+                    ],
+                    "world_backups": [
+                        "my_world.mcworld",
+                        "my_other_world.mcworld"
+                    ]
+                }
+            }
+            ```
+            Returns `{"status": "success", "backups": {}}` if `backup_type="all"` but no backups of any type are found.
 *   **Raises:**
     *   `ValueError`: If `backup_type` is not one of the allowed values (client-side).
     *   `CannotConnectError`: If connection to the API fails.
@@ -1323,6 +1349,37 @@ Exports the currently active world directory of the specified server into a `.mc
 *   **Example:**
     ```python
     response = await client.async_export_server_world("MyServer")
+    print(response['message'])
+    ```
+
+---
+#### `async_reset_server_world(server_name)`
+
+Resets the currently active world directory of the specified server.
+
+*   **Corresponds to:** `DELETE /api/server/{server_name}/world/reset`
+*   **Authentication:** Required.
+*   **Arguments:**
+    *   `server_name` (*str*, required): The name of the server instance whose world should be reset.
+*   **Returns:**
+    *   *Type:* `Dict[str, Any]`
+    *   *Description:* A dictionary confirming the reset.
+        ```json
+        {
+            "status": "success",
+            "message": "World for server '<server_name>' reset successfully."
+        }
+        ```
+*   **Raises:**
+    *   `CannotConnectError`: If connection to the API fails.
+    *   `AuthError`: If authentication fails.
+    *   `ServerNotFoundError`: If the server does not exist.
+    *   `InvalidInputError`: If `server_name` is invalid.
+    *   `APIServerSideError`: If the resett process fails (config errors, cannot determine world name, world directory not found).
+    *   `APIError`: For other API response issues.
+*   **Example:**
+    ```python
+    response = await client.async_reset_server_world("MyServer")
     print(response['message'])
     ```
 
