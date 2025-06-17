@@ -1,5 +1,5 @@
 <div style="text-align: center;">
-    <img src="https://raw.githubusercontent.com/dmedina559/bedrock-server-manager/main/bedrock_server_manager/web/static/image/icon/favicon.svg" alt="BSM Logo" width="150">
+    <img src="https://raw.githubusercontent.com/dmedina559/bedrock-server-manager/main/src/bedrock_server_manager/web/static/image/icon/favicon.svg" alt="BSM Logo" width="150">
 </div>
 
 # bsm-api-client - API Documentation & Examples
@@ -963,33 +963,51 @@ Adds players to the server's `allowlist.json` file.
     ```
 
 ---
-#### `async_remove_server_allowlist_player(server_name, player_name)`
+#### `async_remove_server_allowlist_players(server_name, player_names)`
 
-Removes a specific player from the server's `allowlist.json` file. Player name matching is case-insensitive on the API side.
+Removes one or more players from the server's `allowlist.json` file. The operation is atomic on the server side, and player name matching is case-insensitive.
 
-*   **Corresponds to:** `DELETE /api/server/{server_name}/allowlist/player/{player_name}`
+*   **Corresponds to:** `DELETE /api/server/{server_name}/allowlist/remove`
 *   **Authentication:** Required.
 *   **Arguments:**
     *   `server_name` (*str*, required): The unique name of the server instance.
-    *   `player_name` (*str*, required): The name of the player to remove. This will be URL-encoded.
+    *   `player_names` (*List[str]*, required): A list of player names to remove. These are sent in the JSON request body.
 *   **Returns:**
     *   *Type:* `Dict[str, Any]`
-    *   *Description:* A dictionary confirming the action.
-        *   If player removed: `{"status": "success", "message": "Player '<player_name>' removed..."}`
-        *   If player not found: `{"status": "success", "message": "Player '<player_name>' not found..."}`
+    *   *Description:* A dictionary detailing the results of the operation. The `details` key categorizes which players were successfully removed and which were not found in the allowlist.
+        *   *Example Success Response:*
+            ```json
+            {
+                "status": "success",
+                "message": "Allowlist update process completed.",
+                "details": {
+                    "removed": [
+                        "Steve",
+                        "Alex"
+                    ],
+                    "not_found": [
+                        "NonExistentPlayer"
+                    ]
+                }
+            }
+            ```
 *   **Raises:**
-    *   `ValueError`: If `player_name` is empty or whitespace (client-side validation).
+    *   `ValueError`: If the `player_names` list is empty or contains any names that are empty or whitespace (client-side validation).
     *   `CannotConnectError`: If connection to the API fails.
     *   `AuthError`: If authentication fails.
     *   `ServerNotFoundError`: If the server directory doesn't exist.
-    *   `InvalidInputError`: If `server_name` or `player_name` is invalid as per API.
+    *   `InvalidInputError`: If `server_name` is invalid or the request body is malformed as per the API.
     *   `APIServerSideError`: If reading/writing `allowlist.json` fails on the server.
     *   `APIError`: For other API response issues.
 *   **Example:**
     ```python
     try:
-        response = await client.async_remove_server_allowlist_player("MyServer", "OldPlayer")
-        print(response['message'])
+        response = await client.async_remove_server_allowlist_players(
+            "MyServer", ["Steve", "OldPlayer", "NonExistent"]
+        )
+        print(f"Allowlist update message: {response['message']}")
+        print(f"Successfully removed: {response['details']['removed']}")
+        print(f"Players not found: {response['details']['not_found']}")
     except ValueError as e:
         print(f"Input error: {e}")
     ```
@@ -1429,7 +1447,7 @@ Restores a server's world or a specific configuration file from a specified back
 *   **Authentication:** Required.
 *   **Arguments:**
     *   `server_name` (*str*, required): The name of the server instance to restore to.
-    *   `restore_type` (*str*, required): Type of restore. Must be `"world"` or `"config"` (case-insensitive).
+    *   `restore_type` (*str*, required): Type of restore. Must be `"world"`, `"allowlist"`, `"permissions"`, or `"properties"` (case-insensitive).
     *   `backup_file` (*str*, required): The filename of the backup to restore (relative to the server's backup subdirectory within `BACKUP_DIR`).
 *   **Returns:**
     *   *Type:* `Dict[str, Any]`
