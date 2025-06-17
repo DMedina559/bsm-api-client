@@ -195,14 +195,16 @@ class ServerActionMethodsMixin:
         Returns:
             A dictionary with the results of the operation, detailing which
             players were removed and which were not found.
-            
+
         Raises:
             ValueError: If the player_names list is empty or contains invalid entries.
         """
         if not player_names:
             raise ValueError("Player names list cannot be empty.")
         if any(not name or name.isspace() for name in player_names):
-            raise ValueError("Player names in the list cannot be empty or just whitespace.")
+            raise ValueError(
+                "Player names in the list cannot be empty or just whitespace."
+            )
 
         payload = {"players": player_names}
 
