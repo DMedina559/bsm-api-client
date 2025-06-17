@@ -4,6 +4,17 @@
 
 # bsm-api-client Changelog
 
+# 1.0.1
+
+1. Changed allowlist remove to use updated route from BSM 3.3.0.
+   - Corresponds to `DELETE /api/server/{server_name}/allowlist/remove`.
+	- Allows removing multiple players from the allowlist at once.
+2. Updated restore methods to use the new BSM 3.3.0 types for `restore_type`:
+   - `world` -> `world`
+   - `config` -> `permissions`
+   - `config` -> `properties`
+   - `config` -> `allowlist`
+
 # 1.0.0
 
 > [!IMPORTANT]
