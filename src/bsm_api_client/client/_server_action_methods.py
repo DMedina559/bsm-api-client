@@ -178,33 +178,45 @@ class ServerActionMethodsMixin:
             authenticated=True,
         )
 
-    async def async_remove_server_allowlist_player(
-        self, server_name: str, player_name: str
+    async def async_remove_server_allowlist_players(
+        self, server_name: str, player_names: List[str]
     ) -> Dict[str, Any]:
         """
-        Removes a specific player from the server's allowlist.json.
-        The player_name in the path will be URL-encoded.
+        Removes one or more players from the server's allowlist.json.
+        The operation is atomic on the server side.
 
-        Corresponds to `DELETE /api/server/{server_name}/allowlist/player/{player_name}`.
+        Corresponds to `DELETE /api/server/{server_name}/allowlist/remove`.
         Requires authentication.
 
         Args:
             server_name: The name of the server.
-            player_name: The name of the player to remove (case-insensitive on API side).
+            player_names: A list of player names to remove (case-insensitive on API side).
+
+        Returns:
+            A dictionary with the results of the operation, detailing which
+            players were removed and which were not found.
+            
+        Raises:
+            ValueError: If the player_names list is empty or contains invalid entries.
         """
-        if not player_name or player_name.isspace():
-            raise ValueError("Player name cannot be empty or just whitespace.")
+        if not player_names:
+            raise ValueError("Player names list cannot be empty.")
+        if any(not name or name.isspace() for name in player_names):
+            raise ValueError("Player names in the list cannot be empty or just whitespace.")
+
+        payload = {"players": player_names}
 
         _LOGGER.info(
-            "Removing player '%s' from allowlist for server '%s'",
-            player_name,
+            "Removing %d players from allowlist for server '%s': %s",
+            len(player_names),
             server_name,
+            player_names,
         )
-        encoded_player_name = quote(player_name)
 
         return await self._request(
             "DELETE",
-            f"/server/{server_name}/allowlist/player/{encoded_player_name}",
+            f"/server/{server_name}/allowlist/remove",
+            json_data=payload,  # Sending data in the request body
             authenticated=True,
         )
 
