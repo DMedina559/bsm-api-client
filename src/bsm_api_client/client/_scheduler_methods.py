@@ -11,12 +11,11 @@ _LOGGER = logging.getLogger(__name__.split(".")[0] + ".client.scheduler")
 
 # Define allowed commands for Windows tasks for client-side validation
 ALLOWED_WINDOWS_TASK_COMMANDS = [
-    "update-server",
-    "backup-all",
-    "start-server",
-    "stop-server",
-    "restart-server",
-    "scan-players",
+    "server update",
+    "backup create --type all",
+    "server start",
+    "server stop",
+    "server restart",
 ]
 
 
