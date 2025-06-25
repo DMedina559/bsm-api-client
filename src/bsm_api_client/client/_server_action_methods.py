@@ -1,43 +1,21 @@
 # src/bsm_api_client/client/_server_action_methods.py
-"""Mixin class containing server action methods."""
+"""Mixin class containing server action and backup/restore methods."""
 import logging
-from typing import Any, Dict, Optional, List, TYPE_CHECKING
-from urllib.parse import quote  # For URL encoding path parameters
+from typing import Any, Dict, Optional, List, TYPE_CHECKING, Union
+from urllib.parse import quote
 
 if TYPE_CHECKING:
-    from ..client_base import ClientBase  # For type hinting _request
+    from ..client_base import ClientBase
+    from ..exceptions import APIError, InvalidInputError
 
 _LOGGER = logging.getLogger(__name__.split(".")[0] + ".client.server_actions")
 
-ALLOWED_PERMISSION_LEVELS = ["visitor", "member", "operator"]
-ALLOWED_SERVER_PROPERTIES_TO_UPDATE = [
-    "server-name",
-    "level-name",
-    "gamemode",
-    "difficulty",
-    "allow-cheats",
-    "max-players",
-    "server-port",
-    "server-portv6",
-    "enable-lan-visibility",
-    "allow-list",
-    "default-player-permission-level",
-    "view-distance",
-    "tick-distance",
-    "level-seed",
-    "online-mode",
-    "texturepack-required",
-]
-
 
 class ServerActionMethodsMixin:
-    """Mixin for server action endpoints."""
+    """Mixin for server action and backup/restore endpoints."""
 
     _request: callable
     if TYPE_CHECKING:
-
-        def is_linux_server(self: "ClientBase") -> bool: ...
-        def is_windows_server(self: "ClientBase") -> bool: ...
 
         async def _request(
             self: "ClientBase",
@@ -58,11 +36,14 @@ class ServerActionMethodsMixin:
 
         Args:
             server_name: The unique name of the server instance to start.
+        Returns:
+            API response dictionary.
         """
         _LOGGER.info("Requesting start for server '%s'", server_name)
+        encoded_server_name = quote(server_name)
         return await self._request(
             "POST",
-            f"/server/{server_name}/start",
+            f"/server/{encoded_server_name}/start",
             authenticated=True,
         )
 
@@ -75,11 +56,14 @@ class ServerActionMethodsMixin:
 
         Args:
             server_name: The unique name of the server instance to stop.
+        Returns:
+            API response dictionary.
         """
         _LOGGER.info("Requesting stop for server '%s'", server_name)
+        encoded_server_name = quote(server_name)
         return await self._request(
             "POST",
-            f"/server/{server_name}/stop",
+            f"/server/{encoded_server_name}/stop",
             authenticated=True,
         )
 
@@ -92,11 +76,14 @@ class ServerActionMethodsMixin:
 
         Args:
             server_name: The unique name of the server instance to restart.
+        Returns:
+            API response dictionary.
         """
         _LOGGER.info("Requesting restart for server '%s'", server_name)
+        encoded_server_name = quote(server_name)
         return await self._request(
             "POST",
-            f"/server/{server_name}/restart",
+            f"/server/{encoded_server_name}/restart",
             authenticated=True,
         )
 
@@ -112,15 +99,20 @@ class ServerActionMethodsMixin:
         Args:
             server_name: The unique name of the target server instance.
             command: The command string to send.
+        Returns:
+            API response dictionary.
         """
         if not command or command.isspace():
-            raise ValueError("Command cannot be empty or just whitespace.")
+            # Consider using InvalidInputError from .exceptions
+            from ..exceptions import InvalidInputError  # Local import for clarity
+
+            raise InvalidInputError("Command cannot be empty or just whitespace.")
         _LOGGER.info("Sending command to server '%s': '%s'", server_name, command)
         payload = {"command": command}
-
+        encoded_server_name = quote(server_name)
         return await self._request(
             "POST",
-            f"/server/{server_name}/send_command",
+            f"/server/{encoded_server_name}/send_command",
             json_data=payload,
             authenticated=True,
         )
@@ -128,220 +120,22 @@ class ServerActionMethodsMixin:
     async def async_update_server(self, server_name: str) -> Dict[str, Any]:
         """
         Checks for and applies updates to the specified server instance.
+        The response indicates if an update was performed and the new version.
+        E.g., {"status": "success", "updated": true, "new_version": "1.20.81.01", "message": "..."}
 
         Corresponds to `POST /api/server/{server_name}/update`.
         Requires authentication.
 
         Args:
             server_name: The unique name of the server instance to update.
+        Returns:
+            API response dictionary, including 'updated' (bool) and 'new_version' (str).
         """
         _LOGGER.info("Requesting update for server '%s'", server_name)
+        encoded_server_name = quote(server_name)
         return await self._request(
             "POST",
-            f"/server/{server_name}/update",
-            authenticated=True,
-        )
-
-    async def async_add_server_allowlist(
-        self, server_name: str, players: List[str], ignores_player_limit: bool = False
-    ) -> Dict[str, Any]:
-        """
-        Adds players to the server's allowlist.json file.
-
-        Corresponds to `POST /api/server/{server_name}/allowlist/add`.
-        Requires authentication.
-
-        Args:
-            server_name: The name of the server.
-            players: A list of player names (Gamertags) to add.
-            ignores_player_limit: Sets the 'ignoresPlayerLimit' flag for added players.
-        """
-        if not isinstance(players, list):
-            raise TypeError("Players must be a list of strings.")
-        if (
-            not all(isinstance(p, str) and p.strip() for p in players) and players
-        ):  # Allow empty list, but not list with empty/invalid names
-            raise ValueError("All player names in the list must be non-empty strings.")
-
-        _LOGGER.info(
-            "Adding players %s to allowlist for server '%s' (ignores limit: %s)",
-            players,
-            server_name,
-            ignores_player_limit,
-        )
-        payload = {"players": players, "ignoresPlayerLimit": ignores_player_limit}
-
-        return await self._request(
-            "POST",
-            f"/server/{server_name}/allowlist/add",
-            json_data=payload,
-            authenticated=True,
-        )
-
-    async def async_remove_server_allowlist_players(
-        self, server_name: str, player_names: List[str]
-    ) -> Dict[str, Any]:
-        """
-        Removes one or more players from the server's allowlist.json.
-        The operation is atomic on the server side.
-
-        Corresponds to `DELETE /api/server/{server_name}/allowlist/remove`.
-        Requires authentication.
-
-        Args:
-            server_name: The name of the server.
-            player_names: A list of player names to remove (case-insensitive on API side).
-
-        Returns:
-            A dictionary with the results of the operation, detailing which
-            players were removed and which were not found.
-
-        Raises:
-            ValueError: If the player_names list is empty or contains invalid entries.
-        """
-        if not player_names:
-            raise ValueError("Player names list cannot be empty.")
-        if any(not name or name.isspace() for name in player_names):
-            raise ValueError(
-                "Player names in the list cannot be empty or just whitespace."
-            )
-
-        payload = {"players": player_names}
-
-        _LOGGER.info(
-            "Removing %d players from allowlist for server '%s': %s",
-            len(player_names),
-            server_name,
-            player_names,
-        )
-
-        return await self._request(
-            "DELETE",
-            f"/server/{server_name}/allowlist/remove",
-            json_data=payload,  # Sending data in the request body
-            authenticated=True,
-        )
-
-    async def async_set_server_permissions(
-        self, server_name: str, permissions_dict: Dict[str, str]
-    ) -> Dict[str, Any]:
-        """
-        Updates permission levels for players in the server's permissions.json.
-
-        Corresponds to `PUT /api/server/{server_name}/permissions`.
-        Requires authentication.
-
-        Args:
-            server_name: The name of the server.
-            permissions_dict: A dictionary mapping player XUIDs (strings) to
-                              permission levels ("visitor", "member", "operator").
-        """
-        if not isinstance(permissions_dict, dict):
-            raise TypeError("permissions_dict must be a dictionary.")
-
-        processed_permissions: Dict[str, str] = {}
-        for xuid, level in permissions_dict.items():
-            if (
-                not isinstance(level, str)
-                or level.lower() not in ALLOWED_PERMISSION_LEVELS
-            ):
-                _LOGGER.error(
-                    "Invalid permission level '%s' for XUID '%s'. Allowed: %s",
-                    level,
-                    xuid,
-                    ALLOWED_PERMISSION_LEVELS,
-                )
-                raise ValueError(
-                    f"Invalid permission level '{level}' for XUID '{xuid}'. "
-                    f"Allowed levels are: {', '.join(ALLOWED_PERMISSION_LEVELS)}"
-                )
-            processed_permissions[xuid] = level.lower()  # API stores lowercase
-
-        _LOGGER.info(
-            "Setting permissions for server '%s': %s",
-            server_name,
-            processed_permissions,
-        )
-        payload = {"permissions": processed_permissions}
-
-        return await self._request(
-            "PUT",
-            f"/server/{server_name}/permissions",
-            json_data=payload,
-            authenticated=True,
-        )
-
-    async def async_update_server_properties(
-        self, server_name: str, properties_dict: Dict[str, Any]
-    ) -> Dict[str, Any]:
-        """
-        Updates specified key-value pairs in the server's server.properties file.
-        Only allowed properties will be modified by the API.
-
-        Corresponds to `POST /api/server/{server_name}/properties`.
-        Requires authentication.
-
-        Args:
-            server_name: The name of the server.
-            properties_dict: A dictionary of properties to update.
-        """
-        if not isinstance(properties_dict, dict):
-            raise TypeError("properties_dict must be a dictionary.")
-
-        for key_provided in properties_dict.keys():
-            if key_provided not in ALLOWED_SERVER_PROPERTIES_TO_UPDATE:
-                _LOGGER.warning(
-                    "Property '%s' is not in the list of API-allowed modifiable properties and might be ignored by the API.",
-                    key_provided,
-                )
-
-        _LOGGER.info(
-            "Updating properties for server '%s': %s", server_name, properties_dict
-        )
-        # The API expects the properties directly as the JSON body, not nested under a key.
-        payload = properties_dict
-
-        return await self._request(
-            "POST",
-            f"/server/{server_name}/properties",
-            json_data=payload,
-            authenticated=True,
-        )
-
-    async def async_configure_server_os_service(
-        self, server_name: str, service_config: Dict[str, bool]
-    ) -> Dict[str, Any]:
-        """
-        Configures OS-specific service settings (e.g., systemd, autoupdate flag).
-        The exact keys required in `service_config` depend on the server's OS.
-        Linux: {"autoupdate": bool, "autostart": bool}
-        Windows: {"autoupdate": bool}
-
-        Corresponds to `POST /api/server/{server_name}/service`.
-        Requires authentication.
-
-        Args:
-            server_name: The name of the server.
-            service_config: A dictionary with OS-specific boolean flags.
-        """
-        if not isinstance(service_config, dict):
-            raise TypeError("service_config must be a dictionary.")
-        for key, value in service_config.items():
-            if not isinstance(value, bool):
-                raise ValueError(
-                    f"Value for service config key '{key}' must be a boolean."
-                )
-
-        _LOGGER.info(
-            "Requesting OS service config for server '%s' with payload: %s",
-            server_name,
-            service_config,
-        )
-
-        return await self._request(
-            "POST",
-            f"/server/{server_name}/service",
-            json_data=service_config,
+            f"/server/{encoded_server_name}/update",
             authenticated=True,
         )
 
@@ -355,12 +149,218 @@ class ServerActionMethodsMixin:
 
         Args:
             server_name: The unique name of the server instance to delete.
+        Returns:
+            API response dictionary.
         """
         _LOGGER.warning(
             "Requesting DELETION of server '%s'. THIS IS IRREVERSIBLE.", server_name
         )
+        encoded_server_name = quote(server_name)
         return await self._request(
             "DELETE",
-            f"/server/{server_name}/delete",
+            f"/server/{encoded_server_name}/delete",
+            authenticated=True,
+        )
+
+    # --- Backup & Restore Methods ---
+
+    async def async_prune_server_backups(
+        self, server_name: str, keep: Optional[int] = None
+    ) -> Dict[str, Any]:
+        """
+        Prunes older backups for a specific server.
+
+        Corresponds to `POST /api/server/{server_name}/backups/prune`.
+        Requires authentication.
+
+        Args:
+            server_name: The server whose backups to prune.
+            keep: Optional. Number of recent backups of each type to retain.
+                  If None, API uses server-side default.
+        Returns:
+            API response dictionary.
+        """
+        _LOGGER.info(
+            "Requesting backup pruning for server '%s', keep: %s", server_name, keep
+        )
+        payload: Dict[str, Any] = {}
+        if keep is not None:
+            if not isinstance(keep, int) or keep < 0:
+                from ..exceptions import InvalidInputError
+
+                raise InvalidInputError("Keep must be a non-negative integer.")
+            payload["keep"] = keep
+
+        encoded_server_name = quote(server_name)
+        return await self._request(
+            "POST",
+            f"/server/{encoded_server_name}/backups/prune",
+            json_data=payload if payload else None,  # Send empty body if keep is None
+            authenticated=True,
+        )
+
+    async def async_list_server_backups(
+        self, server_name: str, backup_type: str
+    ) -> List[str]:
+        """
+        Lists available backup filenames for a server and backup type.
+
+        Corresponds to `GET /api/server/{server_name}/backups/list/{backup_type}`.
+        Requires authentication.
+
+        Args:
+            server_name: The server for which to list backups.
+            backup_type: Type of backups ("world" or "config").
+
+        Returns:
+            A list of backup filenames (basenames).
+
+        Raises:
+            InvalidInputError: if backup_type is invalid.
+            APIError: For other API communication or processing errors.
+        """
+        if backup_type not in ["world", "config"]:
+            from ..exceptions import InvalidInputError
+
+            raise InvalidInputError("backup_type must be 'world' or 'config'.")
+        _LOGGER.debug("Listing '%s' backups for server '%s'", backup_type, server_name)
+
+        encoded_server_name = quote(server_name)
+        encoded_backup_type = quote(backup_type)
+
+        try:
+            response_data = await self._request(
+                "GET",
+                f"/server/{encoded_server_name}/backups/list/{encoded_backup_type}",
+                authenticated=True,
+            )
+            if (
+                isinstance(response_data, dict)
+                and response_data.get("status") == "success"
+                and isinstance(response_data.get("backups"), list)
+            ):
+                # Ensure all items in backups list are strings
+                return [str(b) for b in response_data["backups"] if isinstance(b, str)]
+
+            _LOGGER.error(
+                "Received non-success or unexpected structure for backup list: %s",
+                response_data,
+            )
+            from ..exceptions import APIError  # Local import
+
+            raise APIError(  # type: ignore
+                f"Failed to list backups, API response: {response_data.get('status') if isinstance(response_data, dict) else 'N/A'}",
+                response_data=(
+                    response_data
+                    if isinstance(response_data, dict)
+                    else {"raw": response_data}
+                ),
+            )
+        except APIError as e:
+            _LOGGER.error(
+                "API error listing backups for '%s' (type %s): %s",
+                server_name,
+                backup_type,
+                e,
+            )
+            raise
+        except Exception as e:
+            _LOGGER.exception(
+                "Unexpected error processing backup list for '%s': %s", server_name, e
+            )
+            from ..exceptions import APIError  # Local import
+
+            raise APIError(f"Unexpected error processing backup list for '{server_name}': {e}")  # type: ignore
+
+    async def async_trigger_server_backup(
+        self,
+        server_name: str,
+        backup_type: str,
+        file_to_backup: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """
+        Triggers a backup operation for the specified server.
+
+        Corresponds to `POST /api/server/{server_name}/backup/action`.
+        Requires authentication.
+
+        Args:
+            server_name: The server to back up.
+            backup_type: Type of backup ("world", "config", "all").
+            file_to_backup: Required if backup_type is "config". Relative path of the config file.
+
+        Returns:
+            API response dictionary.
+        """
+        _LOGGER.info("Triggering '%s' backup for server '%s'", backup_type, server_name)
+        if backup_type not in ["world", "config", "all"]:
+            from ..exceptions import InvalidInputError
+
+            raise InvalidInputError("backup_type must be 'world', 'config', or 'all'.")
+
+        payload: Dict[str, Any] = {"backup_type": backup_type}
+        if backup_type == "config":
+            if not file_to_backup or not isinstance(file_to_backup, str):
+                from ..exceptions import InvalidInputError
+
+                raise InvalidInputError(
+                    "'file_to_backup' is required for 'config' backup type."
+                )
+            payload["file_to_backup"] = file_to_backup
+            _LOGGER.info("Config file to backup: %s", file_to_backup)
+
+        encoded_server_name = quote(server_name)
+        return await self._request(
+            "POST",
+            f"/server/{encoded_server_name}/backup/action",
+            json_data=payload,
+            authenticated=True,
+        )
+
+    async def async_trigger_server_restore(
+        self,
+        server_name: str,
+        restore_type: str,
+        backup_file: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """
+        Triggers a restore operation for the specified server.
+
+        Corresponds to `POST /api/server/{server_name}/restore/action`.
+        Requires authentication.
+
+        Args:
+            server_name: The server to restore to.
+            restore_type: Type of restore ("world", "config", "all").
+            backup_file: Required if restore_type is "world" or "config".
+                         The relative path to the backup file.
+
+        Returns:
+            API response dictionary.
+        """
+        _LOGGER.info(
+            "Triggering '%s' restore for server '%s'", restore_type, server_name
+        )
+        if restore_type not in ["world", "config", "all"]:
+            from ..exceptions import InvalidInputError
+
+            raise InvalidInputError("restore_type must be 'world', 'config', or 'all'.")
+
+        payload: Dict[str, Any] = {"restore_type": restore_type}
+        if restore_type in ["world", "config"]:
+            if not backup_file or not isinstance(backup_file, str):
+                from ..exceptions import InvalidInputError
+
+                raise InvalidInputError(
+                    "'backup_file' is required for 'world' or 'config' restore type."
+                )
+            payload["backup_file"] = backup_file
+            _LOGGER.info("Backup file to restore: %s", backup_file)
+
+        encoded_server_name = quote(server_name)
+        return await self._request(
+            "POST",
+            f"/server/{encoded_server_name}/restore/action",
+            json_data=payload,
             authenticated=True,
         )

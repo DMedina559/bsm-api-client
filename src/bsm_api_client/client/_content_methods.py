@@ -1,21 +1,18 @@
 # src/bsm_api_client/client/_content_methods.py
-"""Mixin class containing content management methods (backups, worlds, addons)."""
+"""Mixin class containing content management methods (worlds, addons)."""
 import logging
 from typing import Any, Dict, Optional, List, TYPE_CHECKING
+from urllib.parse import quote  # For URL encoding path parameters
 
 if TYPE_CHECKING:
     from ..client_base import ClientBase
+    from ..exceptions import APIError  # For type hinting
 
 _LOGGER = logging.getLogger(__name__.split(".")[0] + ".client.content")
 
-# Define allowed types for validation to avoid magic strings
-ALLOWED_BACKUP_LIST_TYPES = ["world", "properties", "allowlist", "permissions"]
-ALLOWED_BACKUP_ACTION_TYPES = ["world", "config", "all"]
-ALLOWED_RESTORE_TYPES = ["world", "properties", "allowlist", "permissions"]
-
 
 class ContentMethodsMixin:
-    """Mixin for content management endpoints (backups, worlds, addons)."""
+    """Mixin for content management endpoints (worlds, addons)."""
 
     _request: callable
     if TYPE_CHECKING:
@@ -30,129 +27,126 @@ class ContentMethodsMixin:
             is_retry: bool = False,
         ) -> Any: ...
 
-    async def async_list_server_backups(
-        self, server_name: str, backup_type: str
-    ) -> Dict[str, Any]:
-        """
-        Lists backup filenames for a specific server and backup type.
-
-        Corresponds to `GET /api/server/{server_name}/backups/list/{backup_type}`.
-        Requires authentication.
-
-        Args:
-            server_name: The name of the server.
-            backup_type: The type of backups to list (e.g., "world", "properties", "allowlist", "permissions", "all").
-        """
-        bt_lower = backup_type.lower()
-        if bt_lower not in ALLOWED_BACKUP_LIST_TYPES:
-            _LOGGER.error(
-                "Invalid backup_type '%s' for listing backups. Allowed: %s",
-                backup_type,
-                ALLOWED_BACKUP_LIST_TYPES,
-            )
-            raise ValueError(
-                f"Invalid backup_type '{backup_type}' provided. Allowed types are: {', '.join(ALLOWED_BACKUP_LIST_TYPES)}"
-            )
-        _LOGGER.debug(
-            "Fetching '%s' backups list for server '%s'", bt_lower, server_name
-        )
-
-        return await self._request(
-            "GET",
-            f"/server/{server_name}/backups/list/{bt_lower}",
-            authenticated=True,
-        )
-
-    async def async_get_content_worlds(self) -> Dict[str, Any]:
+    async def async_get_content_worlds(self) -> List[str]:
         """
         Lists available world template files (.mcworld) from the manager's content directory.
 
         Corresponds to `GET /api/content/worlds`.
         Requires authentication.
+
+        Returns:
+            A list of world filenames (basenames).
+
+        Raises:
+            APIError: For API communication or processing errors.
         """
         _LOGGER.debug("Fetching available world files from /content/worlds")
-        return await self._request("GET", "/content/worlds", authenticated=True)
+        try:
+            response_data = await self._request(
+                "GET", "/content/worlds", authenticated=True
+            )
+            if (
+                isinstance(response_data, dict)
+                and response_data.get("status") == "success"
+                and isinstance(response_data.get("files"), list)
+            ):
+                return [str(f) for f in response_data["files"] if isinstance(f, str)]
 
-    async def async_get_content_addons(self) -> Dict[str, Any]:
+            _LOGGER.error(
+                "Received non-success or unexpected structure for content worlds: %s",
+                response_data,
+            )
+            # Ensure APIError is available
+            from ..exceptions import APIError as ClientAPIError  # Use an alias
+
+            raise ClientAPIError(
+                f"Failed to get content worlds, API response: {response_data.get('status') if isinstance(response_data, dict) else 'N/A'}",
+                response_data=(
+                    response_data
+                    if isinstance(response_data, dict)
+                    else {"raw": response_data}
+                ),
+            )
+        except APIError as e:  # type: ignore
+            _LOGGER.error("API error fetching content worlds: %s", e)
+            raise
+        except Exception as e:
+            _LOGGER.exception(
+                "Unexpected error processing content worlds response: %s", e
+            )
+            from ..exceptions import APIError as ClientAPIError
+
+            raise ClientAPIError(f"Unexpected error processing content worlds: {e}")
+
+    async def async_get_content_addons(self) -> List[str]:
         """
         Lists available addon files (.mcpack, .mcaddon) from the manager's content directory.
 
         Corresponds to `GET /api/content/addons`.
         Requires authentication.
+
+        Returns:
+            A list of addon filenames (basenames).
+
+        Raises:
+            APIError: For API communication or processing errors.
         """
         _LOGGER.debug("Fetching available addon files from /content/addons")
-        return await self._request("GET", "/content/addons", authenticated=True)
+        try:
+            response_data = await self._request(
+                "GET", "/content/addons", authenticated=True
+            )
+            if (
+                isinstance(response_data, dict)
+                and response_data.get("status") == "success"
+                and isinstance(response_data.get("files"), list)
+            ):
+                return [str(f) for f in response_data["files"] if isinstance(f, str)]
 
-    async def async_trigger_server_backup(
-        self,
-        server_name: str,
-        backup_type: str = "all",
-        file_to_backup: Optional[str] = None,
-    ) -> Dict[str, Any]:
-        """
-        Triggers a backup operation for a specific server.
-
-        Corresponds to `POST /api/server/{server_name}/backup/action`.
-        Requires authentication.
-
-        Args:
-            server_name: The name of the server to back up.
-            backup_type: Type of backup ("world", "config", "all"). Defaults to "all".
-            file_to_backup: Required if backup_type is "config". Specifies the config file.
-        """
-        bt_lower = backup_type.lower()
-        if bt_lower not in ALLOWED_BACKUP_ACTION_TYPES:
             _LOGGER.error(
-                "Invalid backup_type '%s' for triggering backup. Allowed: %s",
-                backup_type,
-                ALLOWED_BACKUP_ACTION_TYPES,
+                "Received non-success or unexpected structure for content addons: %s",
+                response_data,
             )
-            raise ValueError(
-                f"Invalid backup_type '{backup_type}' provided. Allowed types are: {', '.join(ALLOWED_BACKUP_ACTION_TYPES)}"
-            )
+            from ..exceptions import APIError as ClientAPIError
 
-        _LOGGER.info(
-            "Triggering backup for server '%s', type: %s, file: %s",
-            server_name,
-            bt_lower,
-            file_to_backup or "N/A",
-        )
-        payload: Dict[str, str] = {"backup_type": bt_lower}
-        if bt_lower == "config":
-            if not file_to_backup:
-                raise ValueError(
-                    "file_to_backup is required when backup_type is 'config'"
-                )
-            payload["file_to_backup"] = file_to_backup
-        elif file_to_backup:
-            _LOGGER.warning(
-                "file_to_backup ('%s') provided but will be ignored for backup_type '%s'",
-                file_to_backup,
-                bt_lower,
+            raise ClientAPIError(
+                f"Failed to get content addons, API response: {response_data.get('status') if isinstance(response_data, dict) else 'N/A'}",
+                response_data=(
+                    response_data
+                    if isinstance(response_data, dict)
+                    else {"raw": response_data}
+                ),
             )
+        except APIError as e:  # type: ignore
+            _LOGGER.error("API error fetching content addons: %s", e)
+            raise
+        except Exception as e:
+            _LOGGER.exception(
+                "Unexpected error processing content addons response: %s", e
+            )
+            from ..exceptions import APIError as ClientAPIError
 
-        return await self._request(
-            "POST",
-            f"/server/{server_name}/backup/action",
-            json_data=payload,
-            authenticated=True,
-        )
+            raise ClientAPIError(f"Unexpected error processing content addons: {e}")
 
     async def async_export_server_world(self, server_name: str) -> Dict[str, Any]:
         """
         Exports the current world of a server to a .mcworld file in the content directory.
+        Response includes `{"export_file": "/full/path/..."}`.
 
         Corresponds to `POST /api/server/{server_name}/world/export`.
         Requires authentication.
 
         Args:
             server_name: The name of the server whose world to export.
+        Returns:
+            API response dictionary.
         """
         _LOGGER.info("Triggering world export for server '%s'", server_name)
+        encoded_server_name = quote(server_name)
         return await self._request(
             "POST",
-            f"/server/{server_name}/world/export",
-            json_data=None,
+            f"/server/{encoded_server_name}/world/export",
+            json_data=None,  # No body for this POST
             authenticated=True,
         )
 
@@ -164,105 +158,16 @@ class ContentMethodsMixin:
         Requires authentication.
 
         Args:
-            server_name: The name of the server whose world to export.
+            server_name: The name of the server whose world to reset.
+        Returns:
+            API response dictionary.
         """
         _LOGGER.warning("Triggering world reset for server '%s'", server_name)
+        encoded_server_name = quote(server_name)
         return await self._request(
             "DELETE",
-            f"/server/{server_name}/world/reset",
-            json_data=None,
-            authenticated=True,
-        )
-
-    async def async_prune_server_backups(
-        self, server_name: str, keep: Optional[int] = None
-    ) -> Dict[str, Any]:
-        """
-        Prunes older backups for a specific server.
-
-        Corresponds to `POST /api/server/{server_name}/backups/prune`.
-        Requires authentication.
-
-        Args:
-            server_name: The name of the server whose backups to prune.
-            keep: The number of recent backups of each type to retain.
-                  If None, uses the manager's default setting.
-        """
-        _LOGGER.info(
-            "Triggering backup pruning for server '%s', keep: %s",
-            server_name,
-            keep if keep is not None else "manager default",
-        )
-        payload: Optional[Dict[str, Any]] = None
-        if keep is not None:
-            if not isinstance(keep, int) or keep < 0:
-                raise ValueError("keep must be a non-negative integer if provided.")
-            payload = {"keep": keep}
-
-        return await self._request(
-            "POST",
-            f"/server/{server_name}/backups/prune",
-            json_data=payload,
-            authenticated=True,
-        )
-
-    async def async_restore_server_backup(
-        self, server_name: str, restore_type: str, backup_file: str
-    ) -> Dict[str, Any]:
-        """
-        Restores a server's world or a specific configuration file from a backup.
-
-        Corresponds to `POST /api/server/{server_name}/restore/action`.
-        Requires authentication.
-
-        Args:
-            server_name: The name of the server.
-            restore_type: Type of restore ("world", "allowlist", "properties", "permissions").
-            backup_file: The filename of the backup to restore (relative to server's backup dir).
-        """
-        rt_lower = restore_type.lower()
-        if rt_lower not in ALLOWED_RESTORE_TYPES:
-            _LOGGER.error(
-                "Invalid restore_type '%s'. Allowed: %s",
-                restore_type,
-                ALLOWED_RESTORE_TYPES,
-            )
-            raise ValueError(
-                f"Invalid restore_type '{restore_type}' provided. Allowed types are: {', '.join(ALLOWED_RESTORE_TYPES)}"
-            )
-
-        _LOGGER.info(
-            "Requesting restore for server '%s', type: %s, file: '%s'",
-            server_name,
-            rt_lower,
-            backup_file,
-        )
-        payload = {"restore_type": rt_lower, "backup_file": backup_file}
-
-        return await self._request(
-            "POST",
-            f"/server/{server_name}/restore/action",
-            json_data=payload,
-            authenticated=True,
-        )
-
-    async def async_restore_server_latest_all(self, server_name: str) -> Dict[str, Any]:
-        """
-        Restores the server's world AND standard configuration files from their latest backups.
-
-        Corresponds to `POST /api/server/{server_name}/restore/all`.
-        Requires authentication.
-
-        Args:
-            server_name: The name of the server to restore.
-        """
-        _LOGGER.info(
-            "Requesting restore of latest 'all' backup for server '%s'", server_name
-        )
-        return await self._request(
-            "POST",
-            f"/server/{server_name}/restore/all",
-            json_data=None,
+            f"/server/{encoded_server_name}/world/reset",
+            json_data=None,  # No body for this DELETE
             authenticated=True,
         )
 
@@ -278,17 +183,24 @@ class ContentMethodsMixin:
         Args:
             server_name: The name of the server.
             filename: The name of the .mcworld file (relative to content/worlds dir).
+        Returns:
+            API response dictionary.
         """
         _LOGGER.info(
             "Requesting world install for server '%s' from file '%s'",
             server_name,
             filename,
         )
-        payload = {"filename": filename}
+        if not filename or not isinstance(filename, str):
+            from ..exceptions import InvalidInputError  # Local import
 
+            raise InvalidInputError("Filename must be a non-empty string.")
+
+        payload = {"filename": filename}
+        encoded_server_name = quote(server_name)
         return await self._request(
             "POST",
-            f"/server/{server_name}/world/install",
+            f"/server/{encoded_server_name}/world/install",
             json_data=payload,
             authenticated=True,
         )
@@ -305,17 +217,24 @@ class ContentMethodsMixin:
         Args:
             server_name: The name of the server.
             filename: The name of the addon file (relative to content/addons dir).
+        Returns:
+            API response dictionary.
         """
         _LOGGER.info(
             "Requesting addon install for server '%s' from file '%s'",
             server_name,
             filename,
         )
-        payload = {"filename": filename}
+        if not filename or not isinstance(filename, str):
+            from ..exceptions import InvalidInputError  # Local import
 
+            raise InvalidInputError("Filename must be a non-empty string.")
+
+        payload = {"filename": filename}
+        encoded_server_name = quote(server_name)
         return await self._request(
             "POST",
-            f"/server/{server_name}/addon/install",
+            f"/server/{encoded_server_name}/addon/install",
             json_data=payload,
             authenticated=True,
         )

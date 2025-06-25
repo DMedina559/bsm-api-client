@@ -1,4 +1,4 @@
-# src/bsm_api_client/client.py
+# src/bsm_api_client/api_client.py
 """Main API client class for Bedrock Server Manager.
 Combines the base client logic with specific endpoint method mixins.
 """
@@ -9,6 +9,8 @@ from .client._server_info_methods import ServerInfoMethodsMixin
 from .client._server_action_methods import ServerActionMethodsMixin
 from .client._content_methods import ContentMethodsMixin
 from .client._scheduler_methods import SchedulerMethodsMixin
+from .client._player_management_methods import PlayerManagementMethodsMixin
+from .client._server_config_methods import ServerConfigMethodsMixin
 
 _LOGGER = logging.getLogger(__name__.split(".")[0] + ".client")
 
@@ -17,9 +19,11 @@ class BedrockServerManagerApi(
     ClientBase,
     ManagerMethodsMixin,
     ServerInfoMethodsMixin,
+    ServerConfigMethodsMixin,
     ServerActionMethodsMixin,
     ContentMethodsMixin,
     SchedulerMethodsMixin,
+    PlayerManagementMethodsMixin,
 ):
     """
     API Client for the Bedrock Server Manager.
