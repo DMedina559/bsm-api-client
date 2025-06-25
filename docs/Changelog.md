@@ -4,6 +4,8 @@
 
 # bsm-api-client Changelog
 
+# 1.1.0
+
 # 1.0.1
 
 1. Changed allowlist remove to use updated route from BSM 3.3.0.

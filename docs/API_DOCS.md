@@ -6,7 +6,7 @@
 
 API documentation and examples for the `bsm-api-client` library.
 
-**Doc Version:** `0.6.0`
+**Doc Version:** `1.1.0`
 
 ## Table of Contents
 - [Asynchronous Nature](#asynchronous-nature)
@@ -22,40 +22,47 @@ API documentation and examples for the `bsm-api-client` library.
     - [`async_add_players(players_data)`](#async_add_playersplayers_data)
     - [`async_prune_downloads(directory, keep)`](#async_prune_downloadsdirectory-keep)
     - [`async_install_new_server(server_name, server_version, overwrite)`](#async_install_new_serverserver_name-server_version-overwrite)
+    - [`async_get_panorama()`](#async_get_panorama)
+    - [Plugin Management](#plugin-management)
+      - [`async_get_plugins_status()`](#async_get_plugins_status)
+      - [`async_set_plugin_enabled(plugin_name, enabled)`](#async_set_plugin_enabledplugin_name-enabled)
+      - [`async_reload_plugins()`](#async_reload_plugins)
+      - [`async_trigger_plugin_event(event_name, payload)`](#async_trigger_plugin_eventevent_name-payload)
   - [Server Information Methods](#server-information-methods)
     - [`async_get_servers_details()`](#async_get_servers_details)
     - [`async_get_server_names()`](#async_get_server_names)
     - [`async_get_server_validate(server_name)`](#async_get_server_validateserver_name)
-    - [`async_get_server_status_info(server_name)`](#async_get_server_status_infoserver_name)
-    - [`async_get_server_running_status(server_name)`](#async_get_server_running_statusserver_name)
+    - [`async_get_server_process_info(server_name)`](#async_get_server_process_infoserver_name)
+    - [`async_get_server_is_running(server_name)`](#async_get_server_is_runningserver_name)
     - [`async_get_server_config_status(server_name)`](#async_get_server_config_statusserver_name)
     - [`async_get_server_version(server_name)`](#async_get_server_versionserver_name)
-    - [`async_get_server_world_name(server_name)`](#async_get_server_world_nameserver_name)
     - [`async_get_server_properties(server_name)`](#async_get_server_propertiesserver_name)
-    - [`async_get_server_permissions_data(server_name)`](#async_get_server_permissions_dataserver_name)
-    - [`async_get_server_allowlist(server_name)`](#async_get_server_allowlistserver_name)
-  - [Server Action Methods](#server-action-methods)
+    - [`async_get_server_world_icon(server_name)`](#async_get_server_world_iconserver_name)
+  - [Server Action and Backup/Restore Methods](#server-action-and-backuprestore-methods)
     - [`async_start_server(server_name)`](#async_start_serverserver_name)
     - [`async_stop_server(server_name)`](#async_stop_serverserver_name)
     - [`async_restart_server(server_name)`](#async_restart_serverserver_name)
     - [`async_send_server_command(server_name, command)`](#async_send_server_commandserver_name-command)
     - [`async_update_server(server_name)`](#async_update_serverserver_name)
-    - [`async_add_server_allowlist(server_name, players, ignores_player_limit)`](#async_add_server_allowlistserver_name-players-ignores_player_limit)
-    - [`async_remove_server_allowlist_player(server_name, player_name)`](#async_remove_server_allowlist_playerserver_name-player_name)
-    - [`async_set_server_permissions(server_name, permissions_dict)`](#async_set_server_permissionsserver_name-permissions_dict)
-    - [`async_update_server_properties(server_name, properties_dict)`](#async_update_server_propertiesserver_name-properties_dict)
-    - [`async_configure_server_os_service(server_name, service_config)`](#async_configure_server_os_serviceserver_name-service_config)
     - [`async_delete_server(server_name)`](#async_delete_serverserver_name)
-  - [Content Management Methods](#content-management-methods)
+    - [`async_prune_server_backups(server_name, keep)`](#async_prune_server_backupsserver_name-keep)
     - [`async_list_server_backups(server_name, backup_type)`](#async_list_server_backupsserver_name-backup_type)
+    - [`async_trigger_server_backup(server_name, backup_type, file_to_backup)`](#async_trigger_server_backupserver_name-backup_type-file_to_backup)
+    - [`async_trigger_server_restore(server_name, restore_type, backup_file)`](#async_trigger_server_restoreserver_name-restore_type-backup_file)
+  - [Player Management Methods](#player-management-methods)
+    - [`async_get_server_allowlist(server_name)`](#async_get_server_allowlistserver_name)
+    - [`async_add_to_server_allowlist(server_name, players, ignores_player_limit)`](#async_add_to_server_allowlistserver_name-players-ignores_player_limit)
+    - [`async_remove_from_server_allowlist(server_name, players)`](#async_remove_from_server_allowlistserver_name-players)
+    - [`async_get_server_player_permissions(server_name)`](#async_get_server_player_permissionsserver_name)
+    - [`async_set_server_player_permissions(server_name, permissions_map)`](#async_set_server_player_permissionsserver_name-permissions_map)
+  - [Server Configuration Methods](#server-configuration-methods)
+    - [`async_set_server_properties(server_name, properties_dict)`](#async_set_server_propertiesserver_name-properties_dict)
+    - [`async_update_server_service_config(server_name, service_config)`](#async_update_server_service_configserver_name-service_config)
+  - [Content Management Methods](#content-management-methods)
     - [`async_get_content_worlds()`](#async_get_content_worlds)
     - [`async_get_content_addons()`](#async_get_content_addons)
-    - [`async_trigger_server_backup(server_name, backup_type, file_to_backup)`](#async_trigger_server_backupserver_name-backup_type-file_to_backup)
     - [`async_export_server_world(server_name)`](#async_export_server_worldserver_name)
     - [`async_reset_server_world(server_name)`](#async_reset_server_worldserver_name)
-    - [`async_prune_server_backups(server_name, keep)`](#async_prune_server_backupsserver_name-keep)
-    - [`async_restore_server_backup(server_name, restore_type, backup_file)`](#async_restore_server_backupserver_name-restore_type-backup_file)
-    - [`async_restore_server_latest_all(server_name)`](#async_restore_server_latest_allserver_name)
     - [`async_install_server_world(server_name, filename)`](#async_install_server_worldserver_name-filename)
     - [`async_install_server_addon(server_name, filename)`](#async_install_server_addonserver_name-filename)
   - [Scheduler Methods](#scheduler-methods)
@@ -204,25 +211,22 @@ Retrieves basic system information (OS type) and the current version of the Bedr
 *   **Authentication:** None required.
 *   **Arguments:** None.
 *   **Returns:**
-    *   *Type:* `Dict[str, Any]`
-    *   *Description:* A dictionary containing the API response. On success, this includes a `data` key with `os_type` and `app_version`.
+    *   *Type:* `Dict[str, str]` (Effectively, as os_type and app_version are strings)
+    *   *Description:* A dictionary containing `os_type` and `app_version`.
         ```json
         {
-            "status": "success",
-            "data": {
-                "os_type": "Linux", // or "Windows"
-                "app_version": "3.2.1"
-            }
+            "os_type": "Linux", // or "Windows"
+            "app_version": "3.2.1"
         }
         ```
 *   **Raises:**
     *   `CannotConnectError`: If connection to the API fails.
     *   `APIServerSideError`: If the API encounters an internal error retrieving the info.
-    *   `APIError`: For other unexpected API response issues.
+    *   `APIError`: If the response format is unexpected or for other API errors.
 *   **Example:**
     ```python
     info = await client.async_get_info()
-    print(f"OS: {info['data']['os_type']}, App Version: {info['data']['app_version']}")
+    print(f"OS: {info['os_type']}, App Version: {info['app_version']}")
     ```
 
 ---
@@ -263,27 +267,21 @@ Retrieves the global list of all known players (name and XUID) from the manager'
 *   **Authentication:** Required.
 *   **Arguments:** None.
 *   **Returns:**
-    *   *Type:* `Dict[str, Any]`
-    *   *Description:* A dictionary containing the list of players.
+    *   *Type:* `List[Dict[str, Any]]`
+    *   *Description:* A list of player dictionaries. Each dictionary contains player information like 'name', 'xuid', and any other custom fields stored in `players.json`. Returns an empty list if the player file is not found or is empty.
+        *Example entry in the list:*
         ```json
-        {
-            "status": "success",
-            "players": [
-                {"name": "PlayerOne", "xuid": "253..."},
-                {"name": "PlayerTwo", "xuid": "253..."}
-            ]
-            // "message": "Player file not found." if applicable
-        }
+        {"name": "PlayerOne", "xuid": "253...", "notes": "Optional notes"}
         ```
 *   **Raises:**
     *   `CannotConnectError`: If connection to the API fails.
     *   `AuthError`: If authentication fails.
     *   `APIServerSideError`: If the API has issues reading/parsing `players.json`.
-    *   `APIError`: For other API response issues (e.g., invalid JSON format from API).
+    *   `APIError`: For other API response issues (e.g., invalid JSON format from API or unexpected structure).
 *   **Example:**
     ```python
-    player_data = await client.async_get_players()
-    for player in player_data.get('players', []):
+    players_list = await client.async_get_players()
+    for player in players_list:
         print(f"Name: {player['name']}, XUID: {player['xuid']}")
     ```
 
@@ -407,6 +405,151 @@ Requests the installation of a new Bedrock server instance on the manager.
     ```
 
 ---
+#### `async_get_panorama()`
+
+Retrieves the custom (or default) panorama JPEG image used for the Web UI background.
+
+*   **Corresponds to:** `GET /api/panorama`
+*   **Authentication:** None required.
+*   **Arguments:** None.
+*   **Returns:**
+    *   *Type:* `bytes`
+    *   *Description:* The raw bytes of the JPEG image.
+*   **Raises:**
+    *   `CannotConnectError`: If connection to the API fails.
+    *   `NotFoundError`: If the panorama image (and fallback) cannot be found by the API.
+    *   `APIServerSideError`: If the API encounters an internal error.
+    *   `APIError`: For other unexpected API response issues.
+*   **Example:**
+    ```python
+    image_bytes = await client.async_get_panorama()
+    with open("panorama.jpg", "wb") as f:
+        f.write(image_bytes)
+    print("Panorama image saved as panorama.jpg")
+    ```
+
+---
+### Plugin Management
+
+Methods for interacting with the plugin system of the Bedrock Server Manager.
+
+#### `async_get_plugins_status()`
+
+Retrieves the status (enabled/disabled), version, and description of all discovered plugins.
+
+*   **Corresponds to:** `GET /api/plugins`
+*   **Authentication:** Required.
+*   **Arguments:** None.
+*   **Returns:**
+    *   *Type:* `Dict[str, Dict[str, Any]]`
+    *   *Description:* A dictionary where keys are plugin names and values are dictionaries containing plugin details.
+        ```json
+        {
+            "MyPlugin": {
+                "enabled": True,
+                "version": "1.0.0",
+                "description": "This is my awesome plugin."
+            },
+            "AnotherPlugin": {
+                "enabled": False,
+                "version": "0.5.2",
+                "description": "Does something else cool."
+            }
+        }
+        ```
+*   **Raises:**
+    *   `CannotConnectError`, `AuthError`, `APIServerSideError`, `APIError`.
+*   **Example:**
+    ```python
+    plugins = await client.async_get_plugins_status()
+    for name, details in plugins.items():
+        print(f"Plugin: {name}, Enabled: {details['enabled']}, Version: {details['version']}")
+    ```
+
+---
+#### `async_set_plugin_enabled(plugin_name, enabled)`
+
+Enables or disables a specific plugin.
+
+*   **Corresponds to:** `POST /api/plugins/{plugin_name}`
+*   **Authentication:** Required.
+*   **Arguments:**
+    *   `plugin_name` (*str*, required): The name of the plugin (typically filename without `.py`).
+    *   `enabled` (*bool*, required): `True` to enable the plugin, `False` to disable it.
+*   **Returns:**
+    *   *Type:* `Dict[str, Any]`
+    *   *Description:* API response dictionary.
+        ```json
+        {
+            "status": "success",
+            "message": "Plugin 'MyPlugin' has been enabled. Reload plugins for changes to take full effect."
+        }
+        ```
+*   **Raises:**
+    *   `InvalidInputError`: If `plugin_name` is empty or `enabled` is not a boolean.
+    *   `NotFoundError`: If `plugin_name` does not correspond to a discovered plugin.
+    *   `CannotConnectError`, `AuthError`, `APIServerSideError`, `APIError`.
+*   **Example:**
+    ```python
+    response = await client.async_set_plugin_enabled("MyPlugin", True)
+    print(response["message"])
+    ```
+
+---
+#### `async_reload_plugins()`
+
+Triggers a full reload of all plugins by the Bedrock Server Manager.
+
+*   **Corresponds to:** `POST /api/plugins/reload`
+*   **Authentication:** Required.
+*   **Arguments:** None.
+*   **Returns:**
+    *   *Type:* `Dict[str, Any]`
+    *   *Description:* API response dictionary.
+        ```json
+        {
+            "status": "success",
+            "message": "Plugins have been reloaded successfully."
+        }
+        ```
+*   **Raises:**
+    *   `CannotConnectError`, `AuthError`, `APIServerSideError`, `APIError`.
+*   **Example:**
+    ```python
+    response = await client.async_reload_plugins()
+    print(response["message"])
+    ```
+
+---
+#### `async_trigger_plugin_event(event_name, payload)`
+
+Allows triggering a custom plugin event that other plugins might be listening to.
+
+*   **Corresponds to:** `POST /api/plugins/trigger_event`
+*   **Authentication:** Required.
+*   **Arguments:**
+    *   `event_name` (*str*, required): The namespaced name of the custom event to trigger (e.g., `"my_plugin:custom_action"`).
+    *   `payload` (*Optional[Dict[str, Any]]*, optional): A JSON serializable dictionary containing data to pass to the event listeners.
+*   **Returns:**
+    *   *Type:* `Dict[str, Any]`
+    *   *Description:* API response dictionary.
+        ```json
+        {
+            "status": "success",
+            "message": "Event 'my_plugin:custom_action' triggered."
+        }
+        ```
+*   **Raises:**
+    *   `InvalidInputError`: If `event_name` is empty or `payload` (if provided) is not a dictionary.
+    *   `CannotConnectError`, `AuthError`, `APIServerSideError`, `APIError`.
+*   **Example:**
+    ```python
+    event_payload = {"user_id": 123, "action_details": "Button clicked"}
+    response = await client.async_trigger_plugin_event("my_ui_plugin:user_action", event_payload)
+    print(response["message"])
+    ```
+
+---
 
 ### Server Information Methods
 
@@ -488,35 +631,24 @@ Validates if the server directory and the main executable (`bedrock_server`) exi
     ```
 
 ---
-#### `async_get_server_status_info(server_name)`
+#### `async_get_server_process_info(server_name)`
 
-Retrieves runtime status information for a specific server process, including running state and basic resource usage (PID, CPU, Memory, Uptime) if the process is active.
+Retrieves runtime status information for a specific server process, including running state and basic resource usage (PID, CPU, Memory, Uptime) if the process is active. The `process_info` key in the response will be `null` if the server is not running.
 
-*   **Corresponds to:** `GET /api/server/{server_name}/status_info`
+*   **Corresponds to:** `GET /api/server/{server_name}/process_info`
 *   **Authentication:** Required.
 *   **Arguments:**
     *   `server_name` (*str*, required): The unique name of the server instance.
 *   **Returns:**
-    *   *Type:* `Dict[str, Any]`
-    *   *Description:* A dictionary containing the server's process information.
-        *   If server is running:
+    *   *Type:* `Optional[Dict[str, Any]]`
+    *   *Description:* A dictionary containing the server's process information if running, or `None` if the server is not running or an error occurs preventing retrieval of this specific data (though a higher-level `APIError` might be raised for general API issues).
+        *   Example if running:
             ```json
             {
-                "status": "success",
-                "process_info": {
-                    "pid": 12345,
-                    "cpu_percent": 10.5,
-                    "memory_mb": 512.5,
-                    "uptime": "1:00:00"
-                }
-            }
-            ```
-        *   If server is not running:
-            ```json
-            {
-                "status": "success",
-                "process_info": null,
-                "message": "Server '<server_name>' is not running."
+                "pid": 12345,
+                "cpu_percent": 10.5,
+                "memory_mb": 512.5,
+                "uptime": "1:00:00"
             }
             ```
 *   **Raises:**
@@ -525,45 +657,39 @@ Retrieves runtime status information for a specific server process, including ru
     *   `ServerNotFoundError`: If the API determines the server itself doesn't exist (pre-request validation).
     *   `InvalidInputError`: If `server_name` is invalid.
     *   `APIServerSideError`: If the API has configuration issues (e.g., `BASE_DIR` missing) or errors with `psutil`.
-    *   `APIError`: For other API response issues.
+    *   `APIError`: If the response format is unexpected or for other API errors.
 *   **Example:**
     ```python
-    status_info = await client.async_get_server_status_info("MyServer")
-    if status_info.get("process_info"):
-        print(f"PID: {status_info['process_info']['pid']}")
+    process_details = await client.async_get_server_process_info("MyServer")
+    if process_details:
+        print(f"PID: {process_details['pid']}")
     else:
-        print(status_info.get("message", "Server not running or info unavailable."))
+        print("Server not running or process info unavailable.")
     ```
 
 ---
-#### `async_get_server_running_status(server_name)`
+#### `async_get_server_is_running(server_name)`
 
 Checks if the Bedrock server process for the specified server instance is currently running.
 
-*   **Corresponds to:** `GET /api/server/{server_name}/running_status`
+*   **Corresponds to:** `GET /api/server/{server_name}/status`
 *   **Authentication:** Required.
 *   **Arguments:**
     *   `server_name` (*str*, required): The unique name of the server instance.
 *   **Returns:**
-    *   *Type:* `Dict[str, Any]`
-    *   *Description:* A dictionary indicating the running status.
-        ```json
-        {
-            "status": "success",
-            "is_running": true // or false
-        }
-        ```
+    *   *Type:* `bool`
+    *   *Description:* `True` if the server is running, `False` otherwise.
 *   **Raises:**
     *   `CannotConnectError`: If connection to the API fails.
     *   `AuthError`: If authentication fails.
     *   `ServerNotFoundError`: If the API determines the server itself doesn't exist.
     *   `InvalidInputError`: If `server_name` is invalid.
     *   `APIServerSideError`: If the API has configuration or `psutil` issues.
-    *   `APIError`: For other API response issues.
+    *   `APIError`: If the response format is unexpected or for other API errors.
 *   **Example:**
     ```python
-    running_status = await client.async_get_server_running_status("MyServer")
-    print(f"Server is running: {running_status.get('is_running')}")
+    is_running = await client.async_get_server_is_running("MyServer")
+    print(f"Server is running: {is_running}")
     ```
 
 ---
@@ -576,25 +702,19 @@ Gets the status string stored within the server's specific configuration file (e
 *   **Arguments:**
     *   `server_name` (*str*, required): The unique name of the server instance.
 *   **Returns:**
-    *   *Type:* `Dict[str, Any]`
-    *   *Description:* A dictionary containing the config status.
-        ```json
-        {
-            "status": "success",
-            "config_status": "Installed" // Example status
-        }
-        ```
+    *   *Type:* `str`
+    *   *Description:* The configuration status string (e.g., `"Installed"`, `"Running"`).
 *   **Raises:**
     *   `CannotConnectError`: If connection to the API fails.
     *   `AuthError`: If authentication fails.
     *   `ServerNotFoundError`: If the API determines the server itself doesn't exist.
     *   `InvalidInputError`: If `server_name` is invalid.
     *   `APIServerSideError`: If the API cannot access or read the server's config file.
-    *   `APIError`: For other API response issues.
+    *   `APIError`: If the response format is unexpected or for other API errors.
 *   **Example:**
     ```python
-    config_stat = await client.async_get_server_config_status("MyServer")
-    print(f"Config status: {config_stat.get('config_status')}")
+    config_status_string = await client.async_get_server_config_status("MyServer")
+    print(f"Config status: {config_status_string}")
     ```
 
 ---
@@ -607,42 +727,17 @@ Gets the installed Bedrock server version string stored within the server's spec
 *   **Arguments:**
     *   `server_name` (*str*, required): The unique name of the server instance.
 *   **Returns:**
-    *   *Type:* `Optional[str]`
-    *   *Description:* The installed version string (e.g., `"1.20.81.01"`) if found and the API call is successful. Returns `None` if the version cannot be determined (e.g., API error, "installed_version" key missing or null in response).
-*   **Raises:** (Note: This method catches `APIError` and returns `None` instead. `CannotConnectError` would still propagate if it occurs before `_request` completes.)
+    *   *Type:* `str`
+    *   *Description:* The installed version string (e.g., `"1.20.81.01"`).
+*   **Raises:**
     *   `CannotConnectError`: If connection to the API fails.
-    *   `AuthError`: If authentication fails (would be caught and result in `None`).
+    *   `AuthError`: If authentication fails.
+    *   `ServerNotFoundError`: If the server does not exist.
+    *   `APIError`: If the version cannot be determined or the response format is unexpected.
 *   **Example:**
     ```python
     version = await client.async_get_server_version("MyServer")
-    if version:
-        print(f"Installed version: {version}")
-    else:
-        print("Could not retrieve server version.")
-    ```
-
----
-#### `async_get_server_world_name(server_name)`
-
-Gets the configured world name (`level-name` property) from the `server.properties` file for the specified server.
-
-*   **Corresponds to:** `GET /api/server/{server_name}/world_name`
-*   **Authentication:** Required.
-*   **Arguments:**
-    *   `server_name` (*str*, required): The unique name of the server instance.
-*   **Returns:**
-    *   *Type:* `Optional[str]`
-    *   *Description:* The world name string (e.g., `"Bedrock level"`) if found and the API call is successful. Returns `None` if the world name cannot be determined (e.g., API error, "world_name" key missing or null in response).
-*   **Raises:** (Note: Catches `APIError` and returns `None`. `CannotConnectError` would still propagate.)
-    *   `CannotConnectError`: If connection to the API fails.
-    *   `AuthError`: If authentication fails (would be caught and result in `None`).
-*   **Example:**
-    ```python
-    world_name = await client.async_get_server_world_name("MyServer")
-    if world_name:
-        print(f"World name: {world_name}")
-    else:
-        print("Could not retrieve world name.")
+    print(f"Installed version: {version}")
     ```
 
 ---
@@ -650,21 +745,18 @@ Gets the configured world name (`level-name` property) from the `server.properti
 
 Retrieves the parsed content of the server's `server.properties` file.
 
-*   **Corresponds to:** `GET /api/server/{server_name}/read_properties`
+*   **Corresponds to:** `GET /api/server/{server_name}/properties/get`
 *   **Authentication:** Required.
 *   **Arguments:**
     *   `server_name` (*str*, required): The unique name of the server instance.
 *   **Returns:**
-    *   *Type:* `Dict[str, Any]`
-    *   *Description:* A dictionary representing the API response. The actual server properties are within the `properties` key of this dictionary.
+    *   *Type:* `Dict[str, str]`
+    *   *Description:* A dictionary of all key-value pairs found in the server's `server.properties` file.
         ```json
         {
-            "status": "success",
-            "properties": {
-                "server-name": "My Bedrock Server",
-                "gamemode": "survival",
-                // ... other properties
-            }
+            "server-name": "My Bedrock Server",
+            "gamemode": "survival",
+            // ... other properties
         }
         ```
 *   **Raises:**
@@ -673,95 +765,43 @@ Retrieves the parsed content of the server's `server.properties` file.
     *   `ServerNotFoundError`: If the API determines the server itself or its `server.properties` file doesn't exist.
     *   `InvalidInputError`: If `server_name` is invalid.
     *   `APIServerSideError`: If the API has issues reading the file.
-    *   `APIError`: For other API response issues.
+    *   `APIError`: If the response format is unexpected or for other API errors.
 *   **Example:**
     ```python
-    response = await client.async_get_server_properties("MyServer")
-    server_props = response.get("properties", {})
+    server_props = await client.async_get_server_properties("MyServer")
     print(f"Max players: {server_props.get('max-players')}")
     ```
 
 ---
-#### `async_get_server_permissions_data(server_name)`
+#### `async_get_server_world_icon(server_name)`
 
-Retrieves player permissions from the server's `permissions.json` file, optionally enriched with names from the global `players.json`.
+Gets the server's world icon as JPEG image data.
 
-*   **Corresponds to:** `GET /api/server/{server_name}/permissions_data`
+*   **Corresponds to:** `GET /api/server/{server_name}/world/icon`
 *   **Authentication:** Required.
 *   **Arguments:**
-    *   `server_name` (*str*, required): The unique name of the server instance.
+    *   `server_name` (*str*, required): The name of the server.
 *   **Returns:**
-    *   *Type:* `Dict[str, Any]`
-    *   *Description:* A dictionary representing the API response. The player permissions list is within `data.permissions`.
-        ```json
-        {
-            "status": "success",
-            "data": {
-                "permissions": [
-                    {"xuid": "...", "name": "...", "permission_level": "operator"},
-                    // ... more players
-                ]
-            },
-            "message": "Successfully retrieved server permissions." // Optional
-        }
-        ```
+    *   *Type:* `bytes`
+    *   *Description:* The raw bytes of the JPEG image.
 *   **Raises:**
     *   `CannotConnectError`: If connection to the API fails.
     *   `AuthError`: If authentication fails.
-    *   `ServerNotFoundError`: If the API determines the server directory doesn't exist.
-    *   `InvalidInputError`: If `server_name` is invalid.
-    *   `APIServerSideError`: If the API has issues reading or parsing `permissions.json`.
-    *   `APIError`: For other API response issues.
+    *   `ServerNotFoundError`: If the server does not exist.
+    *   `APIError`: If the icon cannot be retrieved or for other API errors (e.g., file not found on server, non-JPEG content type).
 *   **Example:**
     ```python
-    response = await client.async_get_server_permissions_data("MyServer")
-    permissions_list = response.get("data", {}).get("permissions", [])
-    for p_data in permissions_list:
-        print(f"{p_data['name']} ({p_data['xuid']}): {p_data['permission_level']}")
-    ```
-
----
-#### `async_get_server_allowlist(server_name)`
-
-Retrieves the current list of players from the server's `allowlist.json` file.
-
-*   **Corresponds to:** `GET /api/server/{server_name}/allowlist`
-*   **Authentication:** Required.
-*   **Arguments:**
-    *   `server_name` (*str*, required): The unique name of the server instance.
-*   **Returns:**
-    *   *Type:* `Dict[str, Any]`
-    *   *Description:* A dictionary representing the API response. The allowlist players are within the `existing_players` key.
-        ```json
-        {
-            "status": "success",
-            "existing_players": [
-                {"ignoresPlayerLimit": false, "name": "PlayerOne"},
-                // ... more players
-            ],
-            "message": "Successfully retrieved X players from allowlist."
-        }
-        ```
-*   **Raises:**
-    *   `CannotConnectError`: If connection to the API fails.
-    *   `AuthError`: If authentication fails.
-    *   `ServerNotFoundError`: If the API determines the server directory doesn't exist.
-    *   `InvalidInputError`: If `server_name` is invalid.
-    *   `APIServerSideError`: If the API has issues reading or parsing `allowlist.json`.
-    *   `APIError`: For other API response issues.
-*   **Example:**
-    ```python
-    response = await client.async_get_server_allowlist("MyServer")
-    allowlisted_players = response.get("existing_players", [])
-    for player in allowlisted_players:
-        print(f"Allowlisted: {player['name']}")
+    image_bytes = await client.async_get_server_world_icon("MyServer")
+    with open(f"MyServer_icon.jpg", "wb") as f:
+        f.write(image_bytes)
+    print("Server icon saved.")
     ```
 
 ---
 
-### Server Action Methods
+### Server Action and Backup/Restore Methods
 
-These methods perform actions on specific server instances, such as starting, stopping, or configuring them.
+These methods perform actions on specific server instances, such as starting, stopping, configuring them, and managing backups.
 
 #### `async_start_server(server_name)`
 
@@ -925,212 +965,6 @@ Checks for the latest Bedrock Dedicated Server version and updates the specified
     ```
 
 ---
-#### `async_add_server_allowlist(server_name, players, ignores_player_limit)`
-
-Adds players to the server's `allowlist.json` file.
-
-*   **Corresponds to:** `POST /api/server/{server_name}/allowlist/add`
-*   **Authentication:** Required.
-*   **Arguments:**
-    *   `server_name` (*str*, required): The name of the server instance.
-    *   `players` (*List[str]*, required): A list of player names (Gamertags) to add.
-    *   `ignores_player_limit` (*bool*, optional): Sets the `ignoresPlayerLimit` flag for all players being added. Defaults to `False`.
-*   **Returns:**
-    *   *Type:* `Dict[str, Any]`
-    *   *Description:* A dictionary confirming the action.
-        ```json
-        {
-            "status": "success",
-            "message": "Allowlist saved successfully with X player(s)." // Or "No new players..."
-        }
-        ```
-*   **Raises:**
-    *   `TypeError`: If `players` is not a list (client-side validation).
-    *   `ValueError`: If any player name in `players` is not a non-empty string (client-side validation).
-    *   `CannotConnectError`: If connection to the API fails.
-    *   `AuthError`: If authentication fails.
-    *   `ServerNotFoundError`: If the server directory doesn't exist.
-    *   `InvalidInputError`: If `server_name` is invalid or JSON body is malformed (e.g., `ignoresPlayerLimit` not boolean).
-    *   `APIServerSideError`: If reading/writing `allowlist.json` fails on the server.
-    *   `APIError`: For other API response issues.
-*   **Example:**
-    ```python
-    try:
-        response = await client.async_add_server_allowlist("MyServer", ["NewPlayer1", "VIP_User"], ignores_player_limit=True)
-        print(response['message'])
-    except (TypeError, ValueError) as e:
-        print(f"Input error: {e}")
-    ```
-
----
-#### `async_remove_server_allowlist_players(server_name, player_names)`
-
-Removes one or more players from the server's `allowlist.json` file. The operation is atomic on the server side, and player name matching is case-insensitive.
-
-*   **Corresponds to:** `DELETE /api/server/{server_name}/allowlist/remove`
-*   **Authentication:** Required.
-*   **Arguments:**
-    *   `server_name` (*str*, required): The unique name of the server instance.
-    *   `player_names` (*List[str]*, required): A list of player names to remove. These are sent in the JSON request body.
-*   **Returns:**
-    *   *Type:* `Dict[str, Any]`
-    *   *Description:* A dictionary detailing the results of the operation. The `details` key categorizes which players were successfully removed and which were not found in the allowlist.
-        *   *Example Success Response:*
-            ```json
-            {
-                "status": "success",
-                "message": "Allowlist update process completed.",
-                "details": {
-                    "removed": [
-                        "Steve",
-                        "Alex"
-                    ],
-                    "not_found": [
-                        "NonExistentPlayer"
-                    ]
-                }
-            }
-            ```
-*   **Raises:**
-    *   `ValueError`: If the `player_names` list is empty or contains any names that are empty or whitespace (client-side validation).
-    *   `CannotConnectError`: If connection to the API fails.
-    *   `AuthError`: If authentication fails.
-    *   `ServerNotFoundError`: If the server directory doesn't exist.
-    *   `InvalidInputError`: If `server_name` is invalid or the request body is malformed as per the API.
-    *   `APIServerSideError`: If reading/writing `allowlist.json` fails on the server.
-    *   `APIError`: For other API response issues.
-*   **Example:**
-    ```python
-    try:
-        response = await client.async_remove_server_allowlist_players(
-            "MyServer", ["Steve", "OldPlayer", "NonExistent"]
-        )
-        print(f"Allowlist update message: {response['message']}")
-        print(f"Successfully removed: {response['details']['removed']}")
-        print(f"Players not found: {response['details']['not_found']}")
-    except ValueError as e:
-        print(f"Input error: {e}")
-    ```
-
----
-#### `async_set_server_permissions(server_name, permissions_dict)`
-
-Updates permission levels for one or more players in the server's `permissions.json` file.
-
-*   **Corresponds to:** `PUT /api/server/{server_name}/permissions`
-*   **Authentication:** Required.
-*   **Arguments:**
-    *   `server_name` (*str*, required): The name of the server instance.
-    *   `permissions_dict` (*Dict[str, str]*, required): A dictionary mapping player XUIDs (strings) to desired permission level strings (`"visitor"`, `"member"`, or `"operator"`). Invalid levels will cause a `ValueError`.
-*   **Returns:**
-    *   *Type:* `Dict[str, Any]`
-    *   *Description:* A dictionary confirming the action.
-        ```json
-        {
-            "status": "success",
-            "message": "Permissions updated successfully for X player(s)..." // Or "No valid permission changes..."
-        }
-        ```
-*   **Raises:**
-    *   `TypeError`: If `permissions_dict` is not a dictionary (client-side).
-    *   `ValueError`: If any permission level in `permissions_dict` is invalid (client-side).
-    *   `CannotConnectError`: If connection to the API fails.
-    *   `AuthError`: If authentication fails.
-    *   `ServerNotFoundError`: If the server directory doesn't exist.
-    *   `InvalidInputError`: If the API rejects the input (e.g., malformed JSON, `server_name` invalid, or server-side validation of levels if different from client).
-    *   `APIServerSideError`: If reading/writing `permissions.json` fails on the server.
-    *   `APIError`: For other API response issues.
-*   **Example:**
-    ```python
-    permissions_to_set = {
-        "2535416409681153": "operator",
-        "2535457894355891": "member"
-    }
-    try:
-        response = await client.async_set_server_permissions("MyServer", permissions_to_set)
-        print(response['message'])
-    except (TypeError, ValueError) as e:
-        print(f"Input error: {e}")
-    ```
-
----
-#### `async_update_server_properties(server_name, properties_dict)`
-
-Updates specified key-value pairs in the `server.properties` file for the given server. Only properties present in a predefined API allowlist can be modified.
-
-*   **Corresponds to:** `POST /api/server/{server_name}/properties`
-*   **Authentication:** Required.
-*   **Arguments:**
-    *   `server_name` (*str*, required): The name of the server instance.
-    *   `properties_dict` (*Dict[str, Any]*, required): A dictionary where keys are `server.properties` keys and values are their new desired values. Values are typically strings, but numbers are accepted by the API for relevant fields.
-*   **Returns:**
-    *   *Type:* `Dict[str, Any]`
-    *   *Description:* A dictionary confirming the action.
-        ```json
-        {
-            "status": "success",
-            "message": "Server properties for '<server_name>' updated successfully." // Or "No valid properties..."
-        }
-        ```
-*   **Raises:**
-    *   `TypeError`: If `properties_dict` is not a dictionary (client-side).
-    *   `CannotConnectError`: If connection to the API fails.
-    *   `AuthError`: If authentication fails.
-    *   `ServerNotFoundError`: If the server's `server.properties` file is not found.
-    *   `InvalidInputError`: If `server_name` is invalid, or if API validation fails for any property value (type, range, format). The `api_errors` attribute of the exception may detail specific failures.
-    *   `APIServerSideError`: If reading/writing `server.properties` fails on the server.
-    *   `APIError`: For other API response issues.
-*   **Example:**
-    ```python
-    properties_to_update = {
-        "max-players": "15",
-        "difficulty": "hard",
-        "level-name": "My Awesome World" # API will clean this to "My_Awesome_World"
-    }
-    try:
-        response = await client.async_update_server_properties("MyServer", properties_to_update)
-        print(response['message'])
-    except TypeError as e:
-        print(f"Input error: {e}")
-    ```
-
----
-#### `async_configure_server_os_service(server_name, service_config)`
-
-Configures OS-specific service settings for the server instance (e.g., systemd on Linux, `autoupdate` flag in config on Windows).
-
-*   **Corresponds to:** `POST /api/server/{server_name}/service`
-*   **Authentication:** Required.
-*   **Arguments:**
-    *   `server_name` (*str*, required): The name of the server instance.
-    *   `service_config` (*Dict[str, bool]*, required): A dictionary with OS-specific boolean flags.
-        *   **Linux:** `{"autoupdate": bool, "autostart": bool}`
-        *   **Windows:** `{"autoupdate": bool}`
-*   **Returns:**
-    *   *Type:* `Dict[str, Any]`
-    *   *Description:* A dictionary confirming the action, with OS-specific message.
-        *   Linux: `{"status": "success", "message": "Systemd service created and enabled successfully."}`
-        *   Windows: `{"status": "success", "message": "Autoupdate setting for '<server_name>' updated to true."}`
-*   **Raises:**
-    *   `TypeError`: If `service_config` is not a dictionary (client-side).
-    *   `ValueError`: If any value in `service_config` is not a boolean (client-side).
-    *   `CannotConnectError`: If connection to the API fails.
-    *   `AuthError`: If authentication fails.
-    *   `InvalidInputError`: If `server_name` is invalid, JSON body is malformed, or keys/values are not boolean as per API.
-    *   `OperationFailedError` (HTTP 403/500 from API): If called on an unsupported OS by the manager.
-    *   `APIServerSideError`: If underlying OS operations fail (e.g., `systemctl` errors, config file write errors).
-    *   `APIError`: For other API response issues.
-*   **Example (assuming manager is on Linux):**
-    ```python
-    linux_service_config = {"autoupdate": True, "autostart": True}
-    try:
-        response = await client.async_configure_server_os_service("MyLinuxServer", linux_service_config)
-        print(response['message'])
-    except (TypeError, ValueError) as e:
-        print(f"Input error: {e}")
-    ```
-
----
 #### `async_delete_server(server_name)`
 
 Permanently deletes all data associated with the specified server instance (installation, config, backups). **This action is irreversible.**
@@ -1165,7 +999,308 @@ Permanently deletes all data associated with the specified server instance (inst
     ```
 
 ---
+#### `async_prune_server_backups(server_name, keep)`
 
+Deletes older backups for a specific server from its subdirectory within the configured `BACKUP_DIR`. It prunes world backups (`*.mcworld`), server properties backups (`server_backup_*.properties`), and other JSON configuration backups (`*_backup_*.json`) separately.
+
+*   **Corresponds to:** `POST /api/server/{server_name}/backups/prune`
+*   **Authentication:** Required.
+*   **Arguments:**
+    *   `server_name` (*str*, required): The name of the server whose backups to prune.
+    *   `keep` (*Optional[int]*, optional): The number of the most recent backups of *each type* to retain. If `None`, the manager's default setting (`BACKUP_KEEP`) is used. Must be a non-negative integer if provided.
+*   **Returns:**
+    *   *Type:* `Dict[str, Any]`
+    *   *Description:* A dictionary confirming the pruning operation.
+        ```json
+        {
+            "status": "success",
+            "message": "Backup pruning completed for server '<server_name>'."
+            // Or "No backup directory found, nothing to prune."
+        }
+        ```
+*   **Raises:**
+    *   `InvalidInputError`: If `keep` is provided but is not a non-negative integer.
+    *   `CannotConnectError`, `AuthError`, `ServerNotFoundError`, `APIServerSideError`, `APIError`.
+*   **Example:**
+    ```python
+    try:
+        response = await client.async_prune_server_backups("MyServer", keep=5)
+        print(response['message'])
+    except InvalidInputError as e:
+        print(f"Input error: {e}")
+    ```
+
+---
+#### `async_list_server_backups(server_name, backup_type)`
+
+Lists available backup filenames (basenames only) for a specified server and a given backup type. Backups are sorted by modification time (newest first).
+
+*   **Corresponds to:** `GET /api/server/{server_name}/backups/list/{backup_type}`
+*   **Authentication:** Required.
+*   **Arguments:**
+    *   `server_name` (*str*, required): The name of the server.
+    *   `backup_type` (*str*, required): The type of backups to list. Must be `"world"` or `"config"`.
+*   **Returns:**
+    *   *Type:* `List[str]`
+    *   *Description:* A list of backup filenames (basenames). Returns an empty list if no matching backups are found.
+*   **Raises:**
+    *   `InvalidInputError`: If `backup_type` is not `"world"` or `"config"`.
+    *   `CannotConnectError`, `AuthError`, `ServerNotFoundError`, `APIServerSideError`, `APIError`.
+*   **Example:**
+    ```python
+    try:
+        world_backups = await client.async_list_server_backups("MyServer", "world")
+        print("World backups:", world_backups)
+        config_backups = await client.async_list_server_backups("MyServer", "config")
+        print("Config backups:", config_backups)
+    except InvalidInputError as e:
+        print(f"Input error: {e}")
+    ```
+
+---
+#### `async_trigger_server_backup(server_name, backup_type, file_to_backup)`
+
+Triggers a backup operation (world, specific config file, or all) for the specified server.
+
+*   **Corresponds to:** `POST /api/server/{server_name}/backup/action`
+*   **Authentication:** Required.
+*   **Arguments:**
+    *   `server_name` (*str*, required): The name of the server to back up.
+    *   `backup_type` (*str*): Type of backup. Must be `"world"`, `"config"`, or `"all"`.
+    *   `file_to_backup` (*Optional[str]*, optional): Required if `backup_type` is `"config"`. Specifies the relative path of the configuration file to back up within the server's directory (e.g., `"server.properties"`).
+*   **Returns:**
+    *   *Type:* `Dict[str, Any]`
+    *   *Description:* A dictionary confirming the backup operation.
+        ```json
+        {
+            "status": "success",
+            "message": "World backup completed successfully for server '<server_name>'." // Message varies
+        }
+        ```
+*   **Raises:**
+    *   `InvalidInputError`: If `backup_type` is invalid, or if `backup_type` is "config" and `file_to_backup` is not provided/invalid.
+    *   `CannotConnectError`, `AuthError`, `ServerNotFoundError`, `APIServerSideError`, `APIError`.
+*   **Example (backup all):**
+    ```python
+    response = await client.async_trigger_server_backup("MyServer", backup_type="all")
+    print(response['message'])
+    ```
+*   **Example (backup specific config):**
+    ```python
+    try:
+        response = await client.async_trigger_server_backup("MyServer", backup_type="config", file_to_backup="server.properties")
+        print(response['message'])
+    except InvalidInputError as e:
+        print(f"Input error: {e}")
+    ```
+
+---
+#### `async_trigger_server_restore(server_name, restore_type, backup_file)`
+
+Restores a server's world, a specific configuration file, or all standard components from backup.
+For `"all"` restore_type, the system attempts to find the latest backup for the world and each standard config file.
+**Warning: This overwrites current files.**
+
+*   **Corresponds to:** `POST /api/server/{server_name}/restore/action`
+*   **Authentication:** Required.
+*   **Arguments:**
+    *   `server_name` (*str*, required): The name of the server instance to restore to.
+    *   `restore_type` (*str*, required): Type of restore. Must be `"world"`, `"config"`, or `"all"`.
+    *   `backup_file` (*Optional[str]*, optional): Required if `restore_type` is `"world"` or `"config"`. The relative path to the backup file to restore (inside the server's backup directory). Ignored if `restore_type` is `"all"`.
+*   **Returns:**
+    *   *Type:* `Dict[str, Any]`
+    *   *Description:* A dictionary confirming the restore operation.
+        ```json
+        {
+            "status": "success",
+            "message": "Restoration from '<backup_file>' (type: <type>) completed successfully." // Message varies
+        }
+        ```
+*   **Raises:**
+    *   `InvalidInputError`: If `restore_type` is invalid, or if `backup_file` is required but not provided/invalid.
+    *   `CannotConnectError`, `AuthError`, `ServerNotFoundError`, `NotFoundError` (if `backup_file` not found), `APIServerSideError`, `APIError`.
+*   **Example (restore specific world backup):**
+    ```python
+    try:
+        response = await client.async_trigger_server_restore("MyServer", "world", "my_world_backup.mcworld")
+        print(response['message'])
+    except InvalidInputError as e:
+        print(f"Input error: {e}")
+    ```
+*   **Example (restore latest of all components):**
+    ```python
+    response = await client.async_trigger_server_restore("MyServer", restore_type="all")
+    print(response['message'])
+    ```
+
+---
+
+### Player Management Methods
+
+These methods interact with player data, allowlists, and permissions for specific servers.
+
+#### `async_get_server_allowlist(server_name)`
+
+Retrieves the current list of players from the server's `allowlist.json` file.
+
+*   **Corresponds to:** `GET /api/server/{server_name}/allowlist/get`
+*   **Authentication:** Required.
+*   **Arguments:**
+    *   `server_name` (*str*, required): The name of the server.
+*   **Returns:**
+    *   *Type:* `List[Dict[str, Union[str, bool]]]`
+    *   *Description:* A list of player objects from the allowlist. E.g.,
+        `[{"ignoresPlayerLimit": false, "name": "PlayerName"}]`
+*   **Raises:**
+    *   `CannotConnectError`, `AuthError`, `ServerNotFoundError`, `APIError`.
+*   **Example:**
+    ```python
+    allowlist = await client.async_get_server_allowlist("MyServer")
+    for player in allowlist:
+        print(f"Allowlisted: {player['name']}")
+    ```
+
+---
+#### `async_add_to_server_allowlist(server_name, players, ignores_player_limit)`
+
+Adds players to the server's `allowlist.json` file.
+
+*   **Corresponds to:** `POST /api/server/{server_name}/allowlist/add`
+*   **Authentication:** Required.
+*   **Arguments:**
+    *   `server_name` (*str*, required): The name of the server.
+    *   `players` (*List[str]*, required): A list of player names (Gamertags) to add.
+    *   `ignores_player_limit` (*bool*, optional): Sets the `ignoresPlayerLimit` flag for added players. Defaults to `False`.
+*   **Returns:**
+    *   *Type:* `Dict[str, Any]`
+    *   *Description:* API response dictionary.
+*   **Raises:**
+    *   `InvalidInputError`: If `players` list is invalid.
+    *   `CannotConnectError`, `AuthError`, `ServerNotFoundError`, `APIServerSideError`, `APIError`.
+*   **Example:**
+    ```python
+    response = await client.async_add_to_server_allowlist("MyServer", ["Player3", "Player4"])
+    print(response["message"])
+    ```
+
+---
+#### `async_remove_from_server_allowlist(server_name, players)`
+
+Removes one or more players from the server's `allowlist.json`.
+
+*   **Corresponds to:** `DELETE /api/server/{server_name}/allowlist/remove`
+*   **Authentication:** Required.
+*   **Arguments:**
+    *   `server_name` (*str*, required): The name of the server.
+    *   `players` (*List[str]*, required): A list of player names to remove.
+*   **Returns:**
+    *   *Type:* `Dict[str, Any]`
+    *   *Description:* API response dictionary including details of removed/not_found players.
+*   **Raises:**
+    *   `InvalidInputError`: If `players` list is empty or invalid.
+    *   `CannotConnectError`, `AuthError`, `ServerNotFoundError`, `APIServerSideError`, `APIError`.
+*   **Example:**
+    ```python
+    response = await client.async_remove_from_server_allowlist("MyServer", ["Player1"])
+    print(response["message"])
+    ```
+
+---
+#### `async_get_server_player_permissions(server_name)`
+
+Retrieves player permissions from the server's `permissions.json` file.
+
+*   **Corresponds to:** `GET /api/server/{server_name}/permissions/get`
+*   **Authentication:** Required.
+*   **Arguments:**
+    *   `server_name` (*str*, required): The name of the server.
+*   **Returns:**
+    *   *Type:* `List[Dict[str, Union[str, bool]]]`
+    *   *Description:* A list of player permission objects (e.g., `[{"xuid": "...", "name": "...", "permission_level": "..."}]`).
+*   **Raises:**
+    *   `CannotConnectError`, `AuthError`, `ServerNotFoundError`, `APIError`.
+*   **Example:**
+    ```python
+    permissions = await client.async_get_server_player_permissions("MyServer")
+    for p in permissions:
+        print(f"{p['name']}: {p['permission_level']}")
+    ```
+
+---
+#### `async_set_server_player_permissions(server_name, permissions_map)`
+
+Updates permission levels for players in the server's `permissions.json`.
+
+*   **Corresponds to:** `PUT /api/server/{server_name}/permissions/set`
+*   **Authentication:** Required.
+*   **Arguments:**
+    *   `server_name` (*str*, required): The name of the server.
+    *   `permissions_map` (*Dict[str, str]*, required): Player XUIDs to permission levels (e.g., `{"xuid1": "operator"}`).
+*   **Returns:**
+    *   *Type:* `Dict[str, Any]`
+    *   *Description:* API response dictionary.
+*   **Raises:**
+    *   `InvalidInputError`: If `permissions_map` or its contents are invalid.
+    *   `CannotConnectError`, `AuthError`, `ServerNotFoundError`, `APIServerSideError`, `APIError`.
+*   **Example:**
+    ```python
+    perms = {"253xxxxxxxxxxxx1": "operator", "253xxxxxxxxxxxx2": "member"}
+    response = await client.async_set_server_player_permissions("MyServer", perms)
+    print(response["message"])
+    ```
+
+---
+### Server Configuration Methods
+
+Methods for setting server-specific configurations like properties and OS service settings.
+
+#### `async_set_server_properties(server_name, properties_dict)`
+
+Updates specified key-value pairs in the server's `server.properties` file.
+
+*   **Corresponds to:** `POST /api/server/{server_name}/properties/set`
+*   **Authentication:** Required.
+*   **Arguments:**
+    *   `server_name` (*str*, required): The name of the server.
+    *   `properties_dict` (*Dict[str, Any]*, required): Dictionary of properties to update.
+*   **Returns:**
+    *   *Type:* `Dict[str, Any]`
+    *   *Description:* API response dictionary.
+*   **Raises:**
+    *   `InvalidInputError`: If `properties_dict` is not a dictionary or contains invalid values according to API validation.
+    *   `CannotConnectError`, `AuthError`, `ServerNotFoundError` (if server.properties not found), `APIServerSideError`, `APIError`.
+*   **Example:**
+    ```python
+    props = {"max-players": 15, "difficulty": "hard"}
+    response = await client.async_set_server_properties("MyServer", props)
+    print(response["message"])
+    ```
+
+---
+#### `async_update_server_service_config(server_name, service_config)`
+
+Configures OS-specific service settings for the server instance.
+
+*   **Corresponds to:** `POST /api/server/{server_name}/service/update`
+*   **Authentication:** Required.
+*   **Arguments:**
+    *   `server_name` (*str*, required): The name of the server.
+    *   `service_config` (*Dict[str, bool]*, required): OS-specific boolean flags (e.g., `{"autoupdate": True}`).
+*   **Returns:**
+    *   *Type:* `Dict[str, Any]`
+    *   *Description:* API response dictionary.
+*   **Raises:**
+    *   `InvalidInputError`: If `service_config` is invalid.
+    *   `OperationFailedError`: If attempted on an unsupported OS by the manager.
+    *   `CannotConnectError`, `AuthError`, `ServerNotFoundError`, `APIServerSideError`, `APIError`.
+*   **Example (Linux):**
+    ```python
+    config = {"autoupdate": True, "autostart": True}
+    response = await client.async_update_server_service_config("MyLinuxServer", config)
+    print(response["message"])
+    ```
+
+---
 ### Content Management Methods
 
 These methods deal with managing server content like backups, worlds, and addons.
@@ -1243,28 +1378,18 @@ Lists available world template files (`.mcworld`) found in the manager's configu
 *   **Authentication:** Required.
 *   **Arguments:** None.
 *   **Returns:**
-    *   *Type:* `Dict[str, Any]`
-    *   *Description:* A dictionary containing a list of world filenames.
-        ```json
-        {
-            "status": "success",
-            "files": [
-                "MyAwesomeWorld.mcworld",
-                // ... more filenames
-            ]
-            // "message": "No matching files found." if applicable
-        }
-        ```
+    *   *Type:* `List[str]`
+    *   *Description:* A list of world filenames (basenames). Returns an empty list if no files are found.
 *   **Raises:**
     *   `CannotConnectError`: If connection to the API fails.
     *   `AuthError`: If authentication fails.
     *   `NotFoundError`: If the API reports the content directory itself is not found.
     *   `APIServerSideError`: If `CONTENT_DIR` is not configured or inaccessible on the manager.
-    *   `APIError`: For other API response issues.
+    *   `APIError`: If the response format is unexpected or for other API errors.
 *   **Example:**
     ```python
-    response = await client.async_get_content_worlds()
-    print("Available world templates:", response.get("files", []))
+    world_files = await client.async_get_content_worlds()
+    print("Available world templates:", world_files)
     ```
 
 ---
@@ -1276,24 +1401,14 @@ Lists available addon files (`.mcpack`, `.mcaddon`) found in the manager's confi
 *   **Authentication:** Required.
 *   **Arguments:** None.
 *   **Returns:**
-    *   *Type:* `Dict[str, Any]`
-    *   *Description:* A dictionary containing a list of addon filenames.
-        ```json
-        {
-            "status": "success",
-            "files": [
-                "AwesomeBehaviorPack.mcpack",
-                // ... more filenames
-            ]
-            // "message": "No matching files found." if applicable
-        }
-        ```
+    *   *Type:* `List[str]`
+    *   *Description:* A list of addon filenames (basenames). Returns an empty list if no files are found.
 *   **Raises:** (Similar to `async_get_content_worlds()`)
     *   `CannotConnectError`, `AuthError`, `NotFoundError`, `APIServerSideError`, `APIError`.
 *   **Example:**
     ```python
-    response = await client.async_get_content_addons()
-    print("Available addon files:", response.get("files", []))
+    addon_files = await client.async_get_content_addons()
+    print("Available addon files:", addon_files)
     ```
 
 ---
