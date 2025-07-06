@@ -173,12 +173,12 @@ class ServerInfoMethodsMixin:
             )
             raise
 
-    async def async_get_server_status_info(self, server_name: str) -> Dict[str, Any]:
+    async def async_get_server_process_info(self, server_name: str) -> Dict[str, Any]:
         """
         Gets runtime status information (PID, CPU, Memory, Uptime) for a server.
         The 'process_info' key in the response will be null if the server is not running.
 
-        Corresponds to `GET /api/server/{server_name}/status_info`.
+        Corresponds to `GET /api/server/{server_name}/process_info`.
         Requires authentication.
 
         Args:
@@ -188,7 +188,7 @@ class ServerInfoMethodsMixin:
         encoded_server_name = quote(server_name)
         return await self._request(
             "GET",
-            f"/server/{encoded_server_name}/status_info",
+            f"/server/{encoded_server_name}/process_info",
             authenticated=True,
         )
 
@@ -263,45 +263,12 @@ class ServerInfoMethodsMixin:
             )
             return None
 
-    async def async_get_server_world_name(self, server_name: str) -> Optional[str]:
-        """
-        Gets the configured world name (level-name) from server.properties.
-        Returns the world name string or None if not found/error.
-
-        Corresponds to `GET /api/server/{server_name}/world_name`.
-        Requires authentication.
-
-        Args:
-            server_name: The name of the server.
-        """
-        _LOGGER.debug("Fetching world name for server '%s'", server_name)
-        encoded_server_name = quote(server_name)
-        try:
-            data = await self._request(
-                "GET",
-                f"/server/{encoded_server_name}/world_name",
-                authenticated=True,
-            )
-            # API returns {"status": "success", "world_name": "..."}
-            if isinstance(data, dict) and data.get("status") == "success":
-                world = data.get("world_name")
-                return str(world) if world is not None else None
-            _LOGGER.warning(
-                "Unexpected response structure for server world name: %s", data
-            )
-            return None
-        except APIError as e:
-            _LOGGER.warning(
-                "Could not fetch world name for server '%s': %s", server_name, e
-            )
-            return None
-
     async def async_get_server_properties(self, server_name: str) -> Dict[str, Any]:
         """
         Retrieves the parsed content of the server's server.properties file.
         The actual properties are under the "properties" key in the response.
 
-        Corresponds to `GET /api/server/{server_name}/read_properties`.
+        Corresponds to `GET /api/server/{server_name}/properties/get`.
         Requires authentication.
 
         Args:
@@ -311,7 +278,7 @@ class ServerInfoMethodsMixin:
         encoded_server_name = quote(server_name)
         return await self._request(
             "GET",
-            f"/server/{encoded_server_name}/read_properties",
+            f"/server/{encoded_server_name}/properties/get",
             authenticated=True,
         )
 
@@ -322,7 +289,7 @@ class ServerInfoMethodsMixin:
         Retrieves player permissions from the server's permissions.json file.
         The actual permissions list is under the "data.permissions" key in the response.
 
-        Corresponds to `GET /api/server/{server_name}/permissions_data`.
+        Corresponds to `GET /api/server/{server_name}/permissions/get`.
         Requires authentication.
 
         Args:
@@ -332,7 +299,7 @@ class ServerInfoMethodsMixin:
         encoded_server_name = quote(server_name)
         return await self._request(
             "GET",
-            f"/server/{encoded_server_name}/permissions_data",
+            f"/server/{encoded_server_name}/permissions/get",
             authenticated=True,
         )
 
@@ -341,7 +308,7 @@ class ServerInfoMethodsMixin:
         Retrieves the list of players from the server's allowlist.json file.
         The player list is under the "existing_players" key in the response.
 
-        Corresponds to `GET /api/server/{server_name}/allowlist`.
+        Corresponds to `GET /api/server/{server_name}/allowlist/get`.
         Requires authentication.
 
         Args:
@@ -351,6 +318,6 @@ class ServerInfoMethodsMixin:
         encoded_server_name = quote(server_name)
         return await self._request(
             "GET",
-            f"/server/{encoded_server_name}/allowlist",
+            f"/server/{encoded_server_name}/allowlist/get",
             authenticated=True,
         )

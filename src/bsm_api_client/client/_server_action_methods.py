@@ -228,7 +228,7 @@ class ServerActionMethodsMixin:
         """
         Updates permission levels for players in the server's permissions.json.
 
-        Corresponds to `PUT /api/server/{server_name}/permissions`.
+        Corresponds to `PUT /api/server/{server_name}/permissions/set`.
         Requires authentication.
 
         Args:
@@ -266,7 +266,7 @@ class ServerActionMethodsMixin:
 
         return await self._request(
             "PUT",
-            f"/server/{server_name}/permissions",
+            f"/server/{server_name}/permissions/set",
             json_data=payload,
             authenticated=True,
         )
@@ -278,7 +278,7 @@ class ServerActionMethodsMixin:
         Updates specified key-value pairs in the server's server.properties file.
         Only allowed properties will be modified by the API.
 
-        Corresponds to `POST /api/server/{server_name}/properties`.
+        Corresponds to `POST /api/server/{server_name}/properties/set`.
         Requires authentication.
 
         Args:
@@ -303,7 +303,7 @@ class ServerActionMethodsMixin:
 
         return await self._request(
             "POST",
-            f"/server/{server_name}/properties",
+            f"/server/{server_name}/properties/set",
             json_data=payload,
             authenticated=True,
         )
@@ -317,7 +317,7 @@ class ServerActionMethodsMixin:
         Linux: {"autoupdate": bool, "autostart": bool}
         Windows: {"autoupdate": bool}
 
-        Corresponds to `POST /api/server/{server_name}/service`.
+        Corresponds to `POST /api/server/{server_name}/service/update`.
         Requires authentication.
 
         Args:
@@ -340,7 +340,7 @@ class ServerActionMethodsMixin:
 
         return await self._request(
             "POST",
-            f"/server/{server_name}/service",
+            f"/server/{server_name}/service/update",
             json_data=service_config,
             authenticated=True,
         )
