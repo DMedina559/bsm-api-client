@@ -36,7 +36,7 @@ class ContentMethodsMixin:
         """
         Lists backup filenames for a specific server and backup type.
 
-        Corresponds to `GET /api/server/{server_name}/backups/list/{backup_type}`.
+        Corresponds to `GET /api/server/{server_name}/backup/list/{backup_type}`.
         Requires authentication.
 
         Args:
@@ -59,7 +59,7 @@ class ContentMethodsMixin:
 
         return await self._request(
             "GET",
-            f"/server/{server_name}/backups/list/{bt_lower}",
+            f"/server/{server_name}/backup/list/{bt_lower}",
             authenticated=True,
         )
 
