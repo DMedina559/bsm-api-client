@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "bsm-api-client"
-version = "1.0.1"
+version = "1.1.0"
 authors = [
     { name="DMedina559", email="dmedina559-github@outlook.com" },
 ]
