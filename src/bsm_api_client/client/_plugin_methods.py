@@ -79,9 +79,7 @@ class PluginMethodsMixin:
             _LOGGER.error("Plugin name cannot be empty for set_plugin_enabled.")
             raise ValueError("Plugin name cannot be empty.")
 
-        _LOGGER.info(
-            "Setting plugin '%s' to enabled state: %s.", plugin_name, enabled
-        )
+        _LOGGER.info("Setting plugin '%s' to enabled state: %s.", plugin_name, enabled)
         return await self._request(
             method="POST",
             path=f"/plugins/{plugin_name}",
