@@ -226,6 +226,175 @@ Retrieves basic system information (OS type) and the current version of the Bedr
     ```
 
 ---
+
+### Plugin Management Methods
+
+Endpoints for managing plugins. These typically mirror the functionality of the bedrock-server-manager plugin CLI commands.
+
+All plugin management endpoints require authentication.
+
+---
+#### `async_get_plugin_statuses()`
+
+Retrieves the status (enabled/disabled), version, and description of all discovered plugins.
+
+*   **Corresponds to:** `GET /api/plugins`
+*   **Authentication:** Required (JWT or Web UI Session).
+*   **Arguments:** None.
+*   **Returns:**
+    *   *Type:* `Dict[str, Any]`
+    *   *Description:* A dictionary containing the API response. On success, this includes a `plugins` key.
+        ```json
+        {
+            "status": "success",
+            "plugins": {
+                "MyPlugin": {
+                    "enabled": true,
+                    "version": "1.0.0",
+                    "description": "This is my awesome plugin."
+                },
+                "AnotherPlugin": {
+                    "enabled": false,
+                    "version": "0.5.2",
+                    "description": "Does something else cool."
+                }
+            }
+        }
+        ```
+*   **Raises:**
+    *   `CannotConnectError`: If connection to the API fails.
+    *   `AuthError`: If authentication fails (HTTP 401).
+    *   `APIServerSideError`: If there's an issue reading plugin configurations (HTTP 500).
+    *   `APIError`: For other unexpected API response issues.
+*   **Example:**
+    ```python
+    try:
+        plugin_info = await client.async_get_plugin_statuses()
+        if plugin_info.get("status") == "success":
+            for name, details in plugin_info.get("plugins", {}).items():
+                print(f"Plugin: {name}")
+                print(f"  Enabled: {details.get('enabled')}")
+                print(f"  Version: {details.get('version')}")
+                print(f"  Description: {details.get('description')}")
+    except APIError as e:
+        print(f"Error getting plugin statuses: {e}")
+    ```
+
+---
+#### `async_set_plugin_enabled(plugin_name, enabled)`
+
+Enables or disables a specific plugin.
+
+*   **Corresponds to:** `POST /api/plugins/{plugin_name}`
+*   **Authentication:** Required (JWT or Web UI Session).
+*   **Arguments:**
+    *   `plugin_name` (*str*, required): The name of the plugin (filename without .py).
+    *   `enabled` (*bool*, required): Set to `True` to enable, `False` to disable.
+*   **Returns:**
+    *   *Type:* `Dict[str, Any]`
+    *   *Description:* A dictionary confirming the action.
+        ```json
+        {
+            "status": "success",
+            "message": "Plugin 'MyPlugin' has been enabled. Reload plugins for changes to take full effect."
+        }
+        ```
+*   **Raises:**
+    *   `ValueError`: If `plugin_name` is empty (client-side validation).
+    *   `CannotConnectError`: If connection to the API fails.
+    *   `AuthError`: If authentication fails (HTTP 401).
+    *   `InvalidInputError`: If the JSON body is invalid or missing the `enabled` field (HTTP 400).
+    *   `NotFoundError`: If `plugin_name` does not exist (HTTP 404).
+    *   `APIServerSideError`: If saving the configuration fails (HTTP 500).
+    *   `APIError`: For other API response issues.
+*   **Example (Enable):**
+    ```python
+    try:
+        response = await client.async_set_plugin_enabled("MyPlugin", True)
+        print(response.get("message"))
+    except APIError as e:
+        print(f"Error enabling plugin: {e}")
+    ```
+*   **Example (Disable):**
+    ```python
+    try:
+        response = await client.async_set_plugin_enabled("AnotherPlugin", False)
+        print(response.get("message"))
+    except APIError as e:
+        print(f"Error disabling plugin: {e}")
+    ```
+
+---
+#### `async_reload_plugins()`
+
+Triggers a full reload of all plugins. This involves unloading all current plugins and then re-discovering and loading plugins based on the latest configuration and files on disk.
+
+*   **Corresponds to:** `POST /api/plugins/reload`
+*   **Authentication:** Required (JWT or Web UI Session).
+*   **Arguments:** None.
+*   **Returns:**
+    *   *Type:* `Dict[str, Any]`
+    *   *Description:* A dictionary confirming the action.
+        ```json
+        {
+            "status": "success",
+            "message": "Plugins have been reloaded successfully."
+        }
+        ```
+*   **Raises:**
+    *   `CannotConnectError`: If connection to the API fails.
+    *   `AuthError`: If authentication fails (HTTP 401).
+    *   `APIServerSideError`: If the reload process encounters an error (HTTP 500).
+    *   `APIError`: For other API response issues.
+*   **Example:**
+    ```python
+    try:
+        response = await client.async_reload_plugins()
+        print(response.get("message"))
+    except APIError as e:
+        print(f"Error reloading plugins: {e}")
+    ```
+
+---
+#### `async_trigger_plugin_event(event_name, payload=None)`
+
+Allows an external source (like the Web UI or another API client) to trigger a custom plugin event that other plugins might be listening to.
+
+*   **Corresponds to:** `POST /api/plugins/trigger_event`
+*   **Authentication:** Required (JWT or Web UI Session).
+*   **Arguments:**
+    *   `event_name` (*str*, required): The namespaced name of the custom event to trigger (e.g., `"my_custom_plugin:some_action"`).
+    *   `payload` (*Optional[Dict[str, Any]]*, optional): A JSON object containing data to pass to the event listeners.
+*   **Returns:**
+    *   *Type:* `Dict[str, Any]`
+    *   *Description:* A dictionary confirming the action.
+        ```json
+        {
+            "status": "success",
+            "message": "Event 'my_custom_plugin:some_action' triggered."
+        }
+        ```
+*   **Raises:**
+    *   `ValueError`: If `event_name` is empty (client-side validation).
+    *   `CannotConnectError`: If connection to the API fails.
+    *   `AuthError`: If authentication fails (HTTP 401).
+    *   `InvalidInputError`: If `event_name` is missing or `payload` is not an object (HTTP 400).
+    *   `APIServerSideError`: If an error occurs while triggering the event (HTTP 500).
+    *   `APIError`: For other API response issues.
+*   **Example:**
+    ```python
+    try:
+        event_payload = {"key1": "value1", "count": 10}
+        response = await client.async_trigger_plugin_event(
+            "my_plugin:custom_action",
+            payload=event_payload
+        )
+        print(response.get("message"))
+    except APIError as e:
+        print(f"Error triggering plugin event: {e}")
+    ```
+
+---
 #### `async_scan_players()`
 
 Triggers a scan of all server log files (`server_output.txt`) to find player connection entries and update the central `players.json` file.
