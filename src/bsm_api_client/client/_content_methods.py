@@ -175,34 +175,29 @@ class ContentMethodsMixin:
         )
 
     async def async_prune_server_backups(
-        self, server_name: str, keep: Optional[int] = None
+        self, server_name: str
     ) -> Dict[str, Any]:
         """
-        Prunes older backups for a specific server.
+        Prunes older backups for a specific server based on server-defined retention policies.
+        NOTE: The `keep` parameter was removed from this client method as the corresponding
+        new FastAPI endpoint (`POST /api/server/{server_name}/backups/prune`)
+        does not accept a request body or `keep` parameter; retention is solely managed by server-side settings.
 
         Corresponds to `POST /api/server/{server_name}/backups/prune`.
         Requires authentication.
 
         Args:
             server_name: The name of the server whose backups to prune.
-            keep: The number of recent backups of each type to retain.
-                  If None, uses the manager's default setting.
         """
         _LOGGER.info(
-            "Triggering backup pruning for server '%s', keep: %s",
+            "Triggering backup pruning for server '%s' (using server-defined retention)",
             server_name,
-            keep if keep is not None else "manager default",
         )
-        payload: Optional[Dict[str, Any]] = None
-        if keep is not None:
-            if not isinstance(keep, int) or keep < 0:
-                raise ValueError("keep must be a non-negative integer if provided.")
-            payload = {"keep": keep}
-
+        # New API endpoint does not take a payload for this action.
         return await self._request(
             "POST",
             f"/server/{server_name}/backups/prune",
-            json_data=payload,
+            json_data=None, # Explicitly None
             authenticated=True,
         )
 
@@ -249,8 +244,12 @@ class ContentMethodsMixin:
     async def async_restore_server_latest_all(self, server_name: str) -> Dict[str, Any]:
         """
         Restores the server's world AND standard configuration files from their latest backups.
+        NOTE: This method's behavior was updated for the new API. It now calls the
+        generic restore action endpoint (`POST /api/server/{server_name}/restore/action`)
+        with a payload of `{"restore_type": "all"}`. The dedicated `/restore/all`
+        endpoint from the old API is no longer used.
 
-        Corresponds to `POST /api/server/{server_name}/restore/all`.
+        Corresponds to `POST /api/server/{server_name}/restore/action` with `{"restore_type": "all"}`.
         Requires authentication.
 
         Args:
@@ -259,10 +258,11 @@ class ContentMethodsMixin:
         _LOGGER.info(
             "Requesting restore of latest 'all' backup for server '%s'", server_name
         )
+        payload = {"restore_type": "all"}
         return await self._request(
             "POST",
-            f"/server/{server_name}/restore/all",
-            json_data=None,
+            f"/server/{server_name}/restore/action", # Path targets the generic restore action endpoint
+            json_data=payload, 
             authenticated=True,
         )
 

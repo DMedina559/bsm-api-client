@@ -90,8 +90,9 @@ class PluginMethodsMixin:
     async def async_reload_plugins(self) -> Dict[str, Any]:
         """
         Triggers a full reload of all plugins.
+        NOTE: The HTTP method for this endpoint was changed from POST to PUT in the new FastAPI backend.
 
-        Corresponds to: POST /api/plugins/reload
+        Corresponds to: PUT /api/plugins/reload
         Authentication: Required.
 
         Returns:
@@ -110,7 +111,7 @@ class PluginMethodsMixin:
         """
         _LOGGER.info("Requesting reload of all plugins.")
         return await self._request(
-            method="POST", path="/plugins/reload", authenticated=True
+            method="PUT", path="/plugins/reload", authenticated=True
         )
 
     async def async_trigger_plugin_event(

@@ -195,9 +195,11 @@ class ServerInfoMethodsMixin:
     async def async_get_server_running_status(self, server_name: str) -> Dict[str, Any]:
         """
         Checks if the Bedrock server process is currently running.
-        Response contains `{"is_running": true/false}`.
+        Path changed from `.../running_status` to `.../status` for the new API.
+        The new API (FastAPI) returns a GeneralApiResponse, so the running status
+        is expected in `response.get("data", {}).get("running")`.
 
-        Corresponds to `GET /api/server/{server_name}/running_status`.
+        Corresponds to `GET /api/server/{server_name}/status`.
         Requires authentication.
 
         Args:
@@ -205,9 +207,10 @@ class ServerInfoMethodsMixin:
         """
         _LOGGER.debug("Fetching running status for server '%s'", server_name)
         encoded_server_name = quote(server_name)
+        # Path changed from /running_status to /status for the new API.
         return await self._request(
             "GET",
-            f"/server/{encoded_server_name}/running_status",
+            f"/server/{encoded_server_name}/status", 
             authenticated=True,
         )
 

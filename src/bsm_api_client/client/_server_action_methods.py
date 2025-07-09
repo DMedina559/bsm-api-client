@@ -223,28 +223,30 @@ class ServerActionMethodsMixin:
         )
 
     async def async_set_server_permissions(
-        self, server_name: str, permissions_dict: Dict[str, str]
+        self, server_name: str, permissions_input: Dict[str, str]
     ) -> Dict[str, Any]:
         """
         Updates permission levels for players in the server's permissions.json.
+        NOTE: The new API (FastAPI) expects a `PermissionsSetPayload` which is a list of objects,
+        each containing `xuid`, `name`, and `permission_level`. This method transforms
+        the input dictionary to this format. The `name` field, not present in the original
+        client's input, is set to "Unknown" as a placeholder.
 
         Corresponds to `PUT /api/server/{server_name}/permissions/set`.
         Requires authentication.
 
         Args:
             server_name: The name of the server.
-            permissions_dict: A dictionary mapping player XUIDs (strings) to
-                              permission levels ("visitor", "member", "operator").
+            permissions_input: A dictionary mapping player XUIDs (strings) to
+                               permission levels ("visitor", "member", "operator").
         """
-        if not isinstance(permissions_dict, dict):
-            raise TypeError("permissions_dict must be a dictionary.")
+        if not isinstance(permissions_input, dict):
+            raise TypeError("permissions_input must be a dictionary.")
 
-        processed_permissions: Dict[str, str] = {}
-        for xuid, level in permissions_dict.items():
-            if (
-                not isinstance(level, str)
-                or level.lower() not in ALLOWED_PERMISSION_LEVELS
-            ):
+        permissions_payload_list: List[Dict[str, str]] = []
+        for xuid, level in permissions_input.items():
+            level_lower = level.lower()
+            if level_lower not in ALLOWED_PERMISSION_LEVELS:
                 _LOGGER.error(
                     "Invalid permission level '%s' for XUID '%s'. Allowed: %s",
                     level,
@@ -255,17 +257,22 @@ class ServerActionMethodsMixin:
                     f"Invalid permission level '{level}' for XUID '{xuid}'. "
                     f"Allowed levels are: {', '.join(ALLOWED_PERMISSION_LEVELS)}"
                 )
-            processed_permissions[xuid] = level.lower()  # API stores lowercase
+            permissions_payload_list.append({
+                "xuid": xuid,
+                "name": "Unknown",  # Name is required by new Pydantic model, using placeholder
+                "permission_level": level_lower
+            })
 
         _LOGGER.info(
             "Setting permissions for server '%s': %s",
             server_name,
-            processed_permissions,
+            permissions_payload_list,
         )
-        payload = {"permissions": processed_permissions}
+        # New payload structure: {"permissions": [list of objects]}
+        payload = {"permissions": permissions_payload_list}
 
         return await self._request(
-            "PUT",
+            "PUT",  # This was already PUT, which is correct for the new API
             f"/server/{server_name}/permissions/set",
             json_data=payload,
             authenticated=True,
@@ -276,7 +283,10 @@ class ServerActionMethodsMixin:
     ) -> Dict[str, Any]:
         """
         Updates specified key-value pairs in the server's server.properties file.
-        Only allowed properties will be modified by the API.
+        Only allowed properties (as defined by the server-side API logic) will be modified.
+        NOTE: The new API (FastAPI) expects the payload to be a `PropertiesPayload`,
+        meaning the dictionary of properties should be wrapped under a "properties" key.
+        This method handles that wrapping.
 
         Corresponds to `POST /api/server/{server_name}/properties/set`.
         Requires authentication.
@@ -298,13 +308,13 @@ class ServerActionMethodsMixin:
         _LOGGER.info(
             "Updating properties for server '%s': %s", server_name, properties_dict
         )
-        # The API expects the properties directly as the JSON body, not nested under a key.
-        payload = properties_dict
+        # New API expects properties nested under a "properties" key.
+        payload = {"properties": properties_dict}
 
         return await self._request(
             "POST",
             f"/server/{server_name}/properties/set",
-            json_data=payload,
+            json_data=payload, # Payload is now wrapped
             authenticated=True,
         )
 

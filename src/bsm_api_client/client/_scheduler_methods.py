@@ -151,33 +151,40 @@ class SchedulerMethodsMixin:
             authenticated=True,
         )
 
-    async def async_get_server_windows_task_details(
-        self, server_name: str, task_name: str
-    ) -> Dict[str, Any]:
-        """
-        Retrieves details of a specific Windows scheduled task.
-        **Windows Only.**
-
-        Corresponds to `POST /api/server/{server_name}/task_scheduler/details`.
-        Requires authentication.
-
-        Args:
-            server_name: The server context.
-            task_name: The full name of the task.
-        """
-        _LOGGER.info(
-            "Getting Windows task details for server '%s', task: '%s'",
-            server_name,
-            task_name,
-        )
-        payload = {"task_name": task_name}
-
-        return await self._request(
-            "POST",
-            f"/server/{server_name}/task_scheduler/details",
-            json_data=payload,
-            authenticated=True,
-        )
+    # TODO: The new FastAPI specification does not have a direct equivalent for
+    #  `POST /api/server/{server_name}/task_scheduler/details` to get details
+    #  of a *single* task by name via POST body.
+    #  The new API has PUT and DELETE for `/api/server/{server_name}/task_scheduler/task/{task_name}`.
+    #  This method might need to be removed or re-implemented if a "list all tasks"
+    #  endpoint becomes available and client-side filtering is acceptable.
+    #  Commenting out for now.
+    # async def async_get_server_windows_task_details(
+    #     self, server_name: str, task_name: str
+    # ) -> Dict[str, Any]:
+    #     """
+    #     Retrieves details of a specific Windows scheduled task.
+    #     **Windows Only.**
+    #
+    #     Corresponds to `POST /api/server/{server_name}/task_scheduler/details`.
+    #     Requires authentication.
+    #
+    #     Args:
+    #         server_name: The server context.
+    #         task_name: The full name of the task.
+    #     """
+    #     _LOGGER.info(
+    #         "Getting Windows task details for server '%s', task: '%s'",
+    #         server_name,
+    #         task_name,
+    #     )
+    #     payload = {"task_name": task_name}
+    #
+    #     return await self._request(
+    #         "POST",
+    #         f"/server/{server_name}/task_scheduler/details",
+    #         json_data=payload,
+    #         authenticated=True,
+    #     )
 
     async def async_modify_server_windows_task(
         self,
