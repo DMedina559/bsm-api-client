@@ -174,33 +174,46 @@ class ClientBase:
         # Prioritize "detail" for FastAPI standard errors (often a string),
         # then "message" (custom in this app), then "error" (generic).
         message = error_data.get("detail", "")
-        if not isinstance(message, str) or not message : # FastAPI's detail can sometimes be a list/dict for validation
-            if isinstance(message, (list, dict)) and message: # If detail is complex, try to serialize it
-                 try:
+        if (
+            not isinstance(message, str) or not message
+        ):  # FastAPI's detail can sometimes be a list/dict for validation
+            if (
+                isinstance(message, (list, dict)) and message
+            ):  # If detail is complex, try to serialize it
+                try:
                     message = str(message)
-                 except: # Fallback if str conversion fails
+                except:  # Fallback if str conversion fails
                     message = ""
             else:
                 message = ""
 
-        if not message: # If detail was not a usable string
+        if not message:  # If detail was not a usable string
             message = error_data.get("message", "")
         if not message:
             message = error_data.get("error", "")
-        
+
         # Fallback if none of the common keys yield a non-empty string message
         if not message:
             # If 'errors' field exists (like in some custom validation responses), try to summarize it
-            if "errors" in error_data and isinstance(error_data["errors"], dict) and error_data["errors"]:
+            if (
+                "errors" in error_data
+                and isinstance(error_data["errors"], dict)
+                and error_data["errors"]
+            ):
                 try:
-                    message = "; ".join([f"{k}: {v}" for k, v in error_data["errors"].items()])
-                except Exception: # In case items are not simple k:v strings
-                    message = str(error_data["errors"]) # fallback to string representation
-            elif "raw_error" in error_data: # If we stored raw text due to parsing failure
-                 message = error_data["raw_error"]
-            else: # Absolute fallback
+                    message = "; ".join(
+                        [f"{k}: {v}" for k, v in error_data["errors"].items()]
+                    )
+                except Exception:  # In case items are not simple k:v strings
+                    message = str(
+                        error_data["errors"]
+                    )  # fallback to string representation
+            elif (
+                "raw_error" in error_data
+            ):  # If we stored raw text due to parsing failure
+                message = error_data["raw_error"]
+            else:  # Absolute fallback
                 message = response.reason or "Unknown API error"
-
 
         return str(message), error_data
 
@@ -214,40 +227,52 @@ class ClientBase:
         message, error_data = await self._extract_error_details(response)
         status = response.status
 
-        if status == 400: # Bad Request
+        if status == 400:  # Bad Request
             raise InvalidInputError(
                 message, status_code=status, response_data=error_data
             )
-        if status == 401: # Unauthorized
+        if status == 401:  # Unauthorized
             # Check if it's a login attempt specifically, to give a more specific error.
             # Note: /auth/token is the new login path.
             if (
-                (request_path_for_log.endswith("/login") or request_path_for_log.endswith("/auth/token"))
-                and ("bad username or password" in message.lower() or "incorrect username or password" in message.lower())
+                request_path_for_log.endswith("/login")
+                or request_path_for_log.endswith("/auth/token")
+            ) and (
+                "bad username or password" in message.lower()
+                or "incorrect username or password" in message.lower()
             ):
                 raise AuthError(
-                    "Bad username or password", # Keep generic message for this case
+                    "Bad username or password",  # Keep generic message for this case
                     status_code=status,
                     response_data=error_data,
                 )
             raise AuthError(message, status_code=status, response_data=error_data)
-        if status == 403: # Forbidden
-            raise AuthError(message, status_code=status, response_data=error_data) # AuthError is suitable for 403 too
-        if status == 404: # Not Found
-            if request_path_for_log.startswith("/server/") or "/server/" in request_path_for_log : # More general check
-                raise ServerNotFoundError( # Specific error for server-related 404s
+        if status == 403:  # Forbidden
+            raise AuthError(
+                message, status_code=status, response_data=error_data
+            )  # AuthError is suitable for 403 too
+        if status == 404:  # Not Found
+            if (
+                request_path_for_log.startswith("/server/")
+                or "/server/" in request_path_for_log
+            ):  # More general check
+                raise ServerNotFoundError(  # Specific error for server-related 404s
                     message, status_code=status, response_data=error_data
                 )
-            raise NotFoundError(message, status_code=status, response_data=error_data) # Generic 404
-        if status == 422: # Unprocessable Entity (Common for FastAPI validation errors)
+            raise NotFoundError(
+                message, status_code=status, response_data=error_data
+            )  # Generic 404
+        if status == 422:  # Unprocessable Entity (Common for FastAPI validation errors)
             # HTTPValidationError from FastAPI will often have details in error_data["detail"]
             # (which _extract_error_details attempts to capture in 'message').
             # 'error_data' contains the full validation error structure from FastAPI.
             # Prefixing message for clarity that it's a validation issue.
-            raise InvalidInputError( 
-                f"Validation Error: {message}", status_code=status, response_data=error_data
+            raise InvalidInputError(
+                f"Validation Error: {message}",
+                status_code=status,
+                response_data=error_data,
             )
-        if status == 501: # Not Implemented
+        if status == 501:  # Not Implemented
             raise OperationFailedError(
                 message, status_code=status, response_data=error_data
             )
@@ -255,7 +280,7 @@ class ClientBase:
         # Check message content for ServerNotRunningError, as this can come with various status codes
         # (e.g., 409 Conflict, or even 200 OK with error in body from older API versions)
         # For new FastAPI, 409 is more standard for "server not running" if it's a prerequisite.
-        msg_lower = str(message).lower() # Ensure message is string for lower()
+        msg_lower = str(message).lower()  # Ensure message is string for lower()
         if (
             "is not running" in msg_lower
             or ("screen session" in msg_lower and "not found" in msg_lower)
@@ -492,30 +517,39 @@ class ClientBase:
                 headers=headers,
                 timeout=aiohttp.ClientTimeout(total=self._request_timeout),
             ) as response:
-                _LOGGER.debug(
-                    "Response Status for POST %s: %s", url, response.status
-                )
+                _LOGGER.debug("Response Status for POST %s: %s", url, response.status)
                 if not response.ok:
                     # Use _handle_api_error for consistent error raising based on status
                     await self._handle_api_error(response, "/auth/token")
                     # Should be unreachable if _handle_api_error raises
-                    raise AuthError(f"Authentication failed with status {response.status}")
+                    raise AuthError(
+                        f"Authentication failed with status {response.status}"
+                    )
 
                 try:
                     response_data = await response.json(content_type=None)
-                except (aiohttp.ContentTypeError, ValueError, asyncio.TimeoutError) as json_error:
+                except (
+                    aiohttp.ContentTypeError,
+                    ValueError,
+                    asyncio.TimeoutError,
+                ) as json_error:
                     resp_text = await response.text()
                     _LOGGER.error(
-                        "Auth response was not valid JSON: %s. Raw: %s", json_error, resp_text[:200]
+                        "Auth response was not valid JSON: %s. Raw: %s",
+                        json_error,
+                        resp_text[:200],
                     )
-                    raise AuthError(f"Authentication response was not valid JSON: {json_error}")
-
+                    raise AuthError(
+                        f"Authentication response was not valid JSON: {json_error}"
+                    )
 
             if not isinstance(response_data, dict):
                 _LOGGER.error(
                     "Auth response was not a dictionary: %s", type(response_data)
                 )
-                raise AuthError("Login response was not in the expected dictionary format.")
+                raise AuthError(
+                    "Login response was not in the expected dictionary format."
+                )
 
             token = response_data.get("access_token")
             token_type = response_data.get("token_type", "").lower()
@@ -528,32 +562,39 @@ class ClientBase:
                 raise AuthError(
                     "Login response missing or contained an invalid access_token."
                 )
-            
+
             if token_type != "bearer":
                 _LOGGER.warning(
-                    "Auth successful but token_type is '%s', expected 'bearer'. Using token anyway.", token_type
+                    "Auth successful but token_type is '%s', expected 'bearer'. Using token anyway.",
+                    token_type,
                 )
 
             _LOGGER.info("Authentication successful, token received.")
             self._jwt_token = token
             return True
 
-        except AuthError: # Re-raise specific AuthErrors
+        except AuthError:  # Re-raise specific AuthErrors
             _LOGGER.error("Authentication failed.")
             self._jwt_token = None
             raise
-        except APIError as e: # Catch errors from _handle_api_error
+        except APIError as e:  # Catch errors from _handle_api_error
             _LOGGER.error("API error during authentication: %s", e)
             self._jwt_token = None
             # Wrap it in AuthError if it's not already one (e.g. 400 from _handle_api_error)
             if not isinstance(e, AuthError):
-                 raise AuthError(f"API error during login: {e.args[0]}") from e
+                raise AuthError(f"API error during login: {e.args[0]}") from e
             raise e
         except aiohttp.ClientConnectionError as e:
-            target_address = f"{self._host}{f':{self._port}' if self._port is not None else ''}"
-            _LOGGER.error("Connection error during authentication to %s: %s", target_address, e)
+            target_address = (
+                f"{self._host}{f':{self._port}' if self._port is not None else ''}"
+            )
+            _LOGGER.error(
+                "Connection error during authentication to %s: %s", target_address, e
+            )
             self._jwt_token = None
-            raise AuthError(f"Connection error during login to {target_address}: {e}") from e
+            raise AuthError(
+                f"Connection error during login to {target_address}: {e}"
+            ) from e
         except asyncio.TimeoutError as e:
             _LOGGER.error("Timeout during authentication: %s", e)
             self._jwt_token = None
@@ -578,7 +619,9 @@ class ClientBase:
             # Called directly using _session.get for consistency with authenticate().
             url = f"{self._server_root_url}/auth/logout"
             headers = dict(self._default_headers)
-            if self._jwt_token: # Should be present if authenticated=True logic was to be mimicked
+            if (
+                self._jwt_token
+            ):  # Should be present if authenticated=True logic was to be mimicked
                 headers["Authorization"] = f"Bearer {self._jwt_token}"
 
             _LOGGER.debug("Request: GET %s (Logout to root path)", url)
@@ -587,32 +630,42 @@ class ClientBase:
                 headers=headers,
                 timeout=aiohttp.ClientTimeout(total=self._request_timeout),
             ) as response:
-                _LOGGER.debug(
-                    "Response Status for GET %s: %s", url, response.status
-                )
+                _LOGGER.debug("Response Status for GET %s: %s", url, response.status)
                 if not response.ok:
                     await self._handle_api_error(response, "/auth/logout")
                     # Should be unreachable
                     raise APIError(f"Logout failed with status {response.status}")
-                
+
                 try:
-                    response_data = await response.json(content_type=None) if response.content_length !=0 else {}
-                except (aiohttp.ContentTypeError, ValueError, asyncio.TimeoutError) as json_error:
+                    response_data = (
+                        await response.json(content_type=None)
+                        if response.content_length != 0
+                        else {}
+                    )
+                except (
+                    aiohttp.ContentTypeError,
+                    ValueError,
+                    asyncio.TimeoutError,
+                ) as json_error:
                     resp_text = await response.text()
                     _LOGGER.warning(
-                        "Logout response was not valid JSON: %s. Raw: %s", json_error, resp_text[:200]
+                        "Logout response was not valid JSON: %s. Raw: %s",
+                        json_error,
+                        resp_text[:200],
                     )
                     # Still consider logout successful on server if HTTP 200 OK, even if response body is weird
-                    response_data = {"status": "success_with_parsing_issue", "message": "Logout successful, but response parsing failed."}
-
+                    response_data = {
+                        "status": "success_with_parsing_issue",
+                        "message": "Logout successful, but response parsing failed.",
+                    }
 
             # Clear local token regardless of exact response content, if HTTP call was ok
-            self._jwt_token = None 
+            self._jwt_token = None
             _LOGGER.info("Logout request successful. Local token cleared.")
-            return response_data # Typically an empty dict or success message
+            return response_data  # Typically an empty dict or success message
         except APIError as e:
             _LOGGER.error("API error during logout: %s", e)
-            # Decide if to clear local token even on error. 
+            # Decide if to clear local token even on error.
             # If auth error (401), token might be invalid anyway.
             if isinstance(e, AuthError):
                 self._jwt_token = None

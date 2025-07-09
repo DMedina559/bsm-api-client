@@ -80,6 +80,100 @@ class ManagerMethodsMixin:
             authenticated=True,
         )
 
+    async def async_get_all_settings(self) -> Dict[str, Any]:
+        """
+        Retrieves all global application settings.
+
+        Corresponds to `GET /api/settings`.
+        Requires authentication.
+        Expected response model: SettingsResponse
+        """
+        _LOGGER.info("Fetching all global application settings.")
+        return await self._request(method="GET", path="/settings", authenticated=True)
+
+    async def async_set_setting(self, key: str, value: Any) -> Dict[str, Any]:
+        """
+        Sets a specific global application setting.
+
+        Corresponds to `POST /api/settings`.
+        Requires authentication.
+        Request body model: SettingItem
+        Expected response model: SettingsResponse
+
+        Args:
+            key: The dot-notation key of the setting (e.g., 'web.port').
+            value: The new value for the setting.
+        """
+        if not key or not isinstance(key, str):
+            raise ValueError("Setting key must be a non-empty string.")
+        _LOGGER.info("Setting global application setting '%s' to: %s", key, value)
+        payload = {"key": key, "value": value}
+        return await self._request(
+            method="POST", path="/settings", json_data=payload, authenticated=True
+        )
+
+    async def async_reload_settings(self) -> Dict[str, Any]:
+        """
+        Forces a reload of global application settings and logging configuration.
+
+        Corresponds to `POST /api/settings/reload`.
+        Requires authentication.
+        Expected response model: SettingsResponse
+        """
+        _LOGGER.info("Requesting reload of global settings and logging configuration.")
+        return await self._request(
+            method="POST", path="/settings/reload", authenticated=True
+        )
+
+    async def async_get_panorama_image(self) -> bytes:
+        """
+        Serves a custom panorama.jpeg background image if available, otherwise a default.
+        Returns the raw image bytes.
+
+        Corresponds to `GET /api/panorama`.
+        Does not require authentication as per OpenAPI spec (no security scheme listed).
+        """
+        _LOGGER.info("Fetching panorama image.")
+        # This request might return non-JSON data.
+        # The _request method expects JSON or handleable errors.
+        # We need to make a raw request or adapt _request.
+        # For now, let's assume _request can handle non-JSON if status is OK
+        # by returning the raw response object or its content.
+        # However, current _request tries to parse JSON.
+        # A direct session call is safer for binary data.
+
+        url = f"{self._server_root_url}/api/panorama"  # Assuming /api prefix is appropriate here
+        if "/api" not in self._api_base_segment:  # If base_path was not /api
+            url = f"{self._base_url}/panorama"
+
+        _LOGGER.debug("Request: GET %s for panorama image", url)
+        try:
+            async with self._session.get(
+                url,
+                headers={"Accept": "image/jpeg, */*"},  # Accept jpeg primarily
+                timeout=aiohttp.ClientTimeout(total=self._request_timeout),
+            ) as response:
+                _LOGGER.debug("Response Status for GET %s: %s", url, response.status)
+                if not response.ok:
+                    await self._handle_api_error(response, "/api/panorama")
+                    # Should be unreachable
+                    raise APIError(
+                        f"Panorama image request failed with status {response.status}"
+                    )
+                return await response.read()  # Returns bytes
+        except aiohttp.ClientError as e:
+            _LOGGER.error("AIOHTTP client error fetching panorama: %s", e)
+            raise CannotConnectError(
+                f"AIOHTTP Client Error fetching panorama: {e}", original_exception=e
+            ) from e
+        except APIError:  # Re-raise APIError from _handle_api_error
+            raise
+        except Exception as e:
+            _LOGGER.exception("Unexpected error fetching panorama: %s", e)
+            raise APIError(
+                f"An unexpected error occurred fetching panorama: {e}"
+            ) from e
+
     async def async_prune_downloads(
         self, directory: str, keep: Optional[int] = None
     ) -> Dict[str, Any]:

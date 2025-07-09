@@ -63,6 +63,40 @@ class ContentMethodsMixin:
             authenticated=True,
         )
 
+    async def async_restore_select_backup_type(
+        self, server_name: str, restore_type: str
+    ) -> Dict[str, Any]:
+        """
+        Handles the API request for selecting a restore type and provides a redirect URL
+        to the page where specific backup files of that type can be chosen.
+
+        Corresponds to `POST /api/server/{server_name}/restore/select_backup_type`.
+        Requires authentication.
+        Request body model: RestoreTypePayload
+        Expected response model: BackupRestoreResponse
+
+        Args:
+            server_name: The name of the server.
+            restore_type: The type of restore to perform (e.g., 'world', 'properties').
+        """
+        if not server_name:
+            raise ValueError("Server name cannot be empty.")
+        if not restore_type:
+            raise ValueError("Restore type cannot be empty.")
+
+        _LOGGER.info(
+            "Selecting restore backup type '%s' for server '%s'",
+            restore_type,
+            server_name,
+        )
+        payload = {"restore_type": restore_type}
+        return await self._request(
+            method="POST",
+            path=f"/server/{server_name}/restore/select_backup_type",
+            json_data=payload,
+            authenticated=True,
+        )
+
     async def async_get_content_worlds(self) -> Dict[str, Any]:
         """
         Lists available world template files (.mcworld) from the manager's content directory.
@@ -174,9 +208,7 @@ class ContentMethodsMixin:
             authenticated=True,
         )
 
-    async def async_prune_server_backups(
-        self, server_name: str
-    ) -> Dict[str, Any]:
+    async def async_prune_server_backups(self, server_name: str) -> Dict[str, Any]:
         """
         Prunes older backups for a specific server based on server-defined retention policies.
         NOTE: The `keep` parameter was removed from this client method as the corresponding
@@ -197,7 +229,7 @@ class ContentMethodsMixin:
         return await self._request(
             "POST",
             f"/server/{server_name}/backups/prune",
-            json_data=None, # Explicitly None
+            json_data=None,  # Explicitly None
             authenticated=True,
         )
 
@@ -261,8 +293,8 @@ class ContentMethodsMixin:
         payload = {"restore_type": "all"}
         return await self._request(
             "POST",
-            f"/server/{server_name}/restore/action", # Path targets the generic restore action endpoint
-            json_data=payload, 
+            f"/server/{server_name}/restore/action",  # Path targets the generic restore action endpoint
+            json_data=payload,
             authenticated=True,
         )
 

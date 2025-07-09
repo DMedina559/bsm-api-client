@@ -192,6 +192,100 @@ class ServerInfoMethodsMixin:
             authenticated=True,
         )
 
+    async def async_get_world_icon_image(self, server_name: str) -> bytes:
+        """
+        Serves the world_icon.jpeg for a server, or a default icon if not found.
+        Returns the raw image bytes.
+
+        Corresponds to `GET /api/server/{server_name}/world/icon`.
+        Requires authentication.
+
+        Args:
+            server_name: The name of the server.
+        """
+        if not server_name:
+            raise ValueError("Server name cannot be empty.")
+        _LOGGER.info("Fetching world icon for server '%s'.", server_name)
+
+        encoded_server_name = quote(server_name)
+        # Path is /api/server/{server_name}/world/icon.
+        # self._base_url already contains /api, so path for _request should be server/...
+        # However, for direct session call for binary data:
+        url = f"{self._base_url}/server/{encoded_server_name}/world/icon"
+
+        headers = {"Accept": "image/jpeg, */*"}
+        if self._jwt_token:
+            headers["Authorization"] = f"Bearer {self._jwt_token}"
+
+        _LOGGER.debug("Request: GET %s for world icon", url)
+        try:
+            async with self._session.get(
+                url,
+                headers=headers,
+                timeout=aiohttp.ClientTimeout(total=self._request_timeout),
+            ) as response:
+                _LOGGER.debug("Response Status for GET %s: %s", url, response.status)
+                if not response.ok:
+                    # Attempt re-authentication for 401, then retry or raise.
+                    # This logic is complex to duplicate from _request.
+                    # For simplicity in this direct call, we'll handle common errors directly.
+                    if (
+                        response.status == 401 and self._jwt_token
+                    ):  # Check if token was used
+                        _LOGGER.warning(
+                            "Received 401 for world icon, attempting token refresh and retry once."
+                        )
+                        async with self._auth_lock:  # Ensure only one refresh attempt
+                            self._jwt_token = None  # Clear potentially invalid token
+                            await self.authenticate()  # Attempt to get a new token
+
+                        if self._jwt_token:  # If new token obtained, retry the request
+                            headers["Authorization"] = f"Bearer {self._jwt_token}"
+                            async with self._session.get(
+                                url,
+                                headers=headers,
+                                timeout=aiohttp.ClientTimeout(
+                                    total=self._request_timeout
+                                ),
+                            ) as retry_response:
+                                if not retry_response.ok:
+                                    await self._handle_api_error(
+                                        retry_response,
+                                        f"/server/{encoded_server_name}/world/icon",
+                                    )
+                                    raise APIError(
+                                        f"World icon request failed with status {retry_response.status} after retry."
+                                    )
+                                return await retry_response.read()
+                        else:  # Failed to get new token
+                            raise AuthError(
+                                "Failed to re-authenticate for world icon request."
+                            )
+
+                    await self._handle_api_error(
+                        response, f"/server/{encoded_server_name}/world/icon"
+                    )
+                    raise APIError(
+                        f"World icon request failed with status {response.status}"
+                    )  # Should be caught by _handle_api_error
+                return await response.read()  # Returns bytes
+        except aiohttp.ClientError as e:
+            _LOGGER.error(
+                "AIOHTTP client error fetching world icon for '%s': %s", server_name, e
+            )
+            raise CannotConnectError(
+                f"AIOHTTP Client Error fetching world icon: {e}", original_exception=e
+            ) from e
+        except APIError:  # Re-raise APIError from _handle_api_error or auth failure
+            raise
+        except Exception as e:
+            _LOGGER.exception(
+                "Unexpected error fetching world icon for '%s': %s", server_name, e
+            )
+            raise APIError(
+                f"An unexpected error occurred fetching world icon: {e}"
+            ) from e
+
     async def async_get_server_running_status(self, server_name: str) -> Dict[str, Any]:
         """
         Checks if the Bedrock server process is currently running.
@@ -210,7 +304,7 @@ class ServerInfoMethodsMixin:
         # Path changed from /running_status to /status for the new API.
         return await self._request(
             "GET",
-            f"/server/{encoded_server_name}/status", 
+            f"/server/{encoded_server_name}/status",
             authenticated=True,
         )
 

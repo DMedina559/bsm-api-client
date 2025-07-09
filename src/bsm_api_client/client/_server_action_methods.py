@@ -257,11 +257,13 @@ class ServerActionMethodsMixin:
                     f"Invalid permission level '{level}' for XUID '{xuid}'. "
                     f"Allowed levels are: {', '.join(ALLOWED_PERMISSION_LEVELS)}"
                 )
-            permissions_payload_list.append({
-                "xuid": xuid,
-                "name": "Unknown",  # Name is required by new Pydantic model, using placeholder
-                "permission_level": level_lower
-            })
+            permissions_payload_list.append(
+                {
+                    "xuid": xuid,
+                    "name": "Unknown",  # Name is required by new Pydantic model, using placeholder
+                    "permission_level": level_lower,
+                }
+            )
 
         _LOGGER.info(
             "Setting permissions for server '%s': %s",
@@ -314,7 +316,7 @@ class ServerActionMethodsMixin:
         return await self._request(
             "POST",
             f"/server/{server_name}/properties/set",
-            json_data=payload, # Payload is now wrapped
+            json_data=payload,  # Payload is now wrapped
             authenticated=True,
         )
 
