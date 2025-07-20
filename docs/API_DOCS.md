@@ -463,13 +463,6 @@ Methods for managing scheduled tasks (OS-specific).
 *   **API Endpoint**: `DELETE /api/server/{server_name}/task_scheduler/task/{task_name}`
 *   **Returns**: `Dict[str, Any]` - API response (model: `TaskApiResponse`).
 
-<!--
-    TODO: The method `async_get_server_windows_task_details` was commented out
-    in the client as its direct API endpoint equivalent
-    (POST /api/server/{server_name}/task_scheduler/details)
-    is not present in the new FastAPI specification.
--->
-
 ## Plugin Methods
 
 Methods for managing plugins.
