@@ -30,6 +30,7 @@ from .exceptions import (
     OperationFailedError,
     APIServerSideError,
 )
+from .models import Token
 
 _LOGGER = logging.getLogger(__name__.split(".")[0] + ".client.base")
 
@@ -489,7 +490,7 @@ class ClientBase:
                 f"An unexpected error occurred during request to {url}: {e}"
             ) from e
 
-    async def authenticate(self) -> bool:
+    async def authenticate(self) -> Token:
         """
         Authenticates with the API (POST /auth/token) using username and password (form data)
         and stores the JWT token.
@@ -543,35 +544,10 @@ class ClientBase:
                         f"Authentication response was not valid JSON: {json_error}"
                     )
 
-            if not isinstance(response_data, dict):
-                _LOGGER.error(
-                    "Auth response was not a dictionary: %s", type(response_data)
-                )
-                raise AuthError(
-                    "Login response was not in the expected dictionary format."
-                )
-
-            token = response_data.get("access_token")
-            token_type = response_data.get("token_type", "").lower()
-
-            if not token or not isinstance(token, str):
-                _LOGGER.error(
-                    "Auth successful but 'access_token' missing/invalid in response: %s",
-                    response_data,
-                )
-                raise AuthError(
-                    "Login response missing or contained an invalid access_token."
-                )
-
-            if token_type != "bearer":
-                _LOGGER.warning(
-                    "Auth successful but token_type is '%s', expected 'bearer'. Using token anyway.",
-                    token_type,
-                )
-
+            token = Token.model_validate(response_data)
+            self._jwt_token = token.access_token
             _LOGGER.info("Authentication successful, token received.")
-            self._jwt_token = token
-            return True
+            return token
 
         except AuthError:  # Re-raise specific AuthErrors
             _LOGGER.error("Authentication failed.")

@@ -3,6 +3,7 @@
 
 import logging
 from typing import Any, Dict, Optional, List
+from ..models import PluginStatusSetPayload, TriggerEventPayload, PluginApiResponse
 
 _LOGGER = logging.getLogger(__name__.split(".")[0] + ".client.plugins")
 
@@ -10,7 +11,7 @@ _LOGGER = logging.getLogger(__name__.split(".")[0] + ".client.plugins")
 class PluginMethodsMixin:
     """Mixin containing methods for interacting with Plugin Management API endpoints."""
 
-    async def async_get_plugin_statuses(self) -> Dict[str, Any]:
+    async def async_get_plugin_statuses(self) -> PluginApiResponse:
         """
         Retrieves the status, version, and description of all discovered plugins.
 
@@ -43,11 +44,12 @@ class PluginMethodsMixin:
             APIError: For other API response issues.
         """
         _LOGGER.info("Requesting status of all plugins.")
-        return await self._request(method="GET", path="/plugins", authenticated=True)
+        response = await self._request(method="GET", path="/plugins", authenticated=True)
+        return PluginApiResponse.model_validate(response)
 
     async def async_set_plugin_status(
-        self, plugin_name: str, enabled: bool
-    ) -> Dict[str, Any]:
+        self, plugin_name: str, payload: PluginStatusSetPayload
+    ) -> PluginApiResponse:
         """
         Enables or disables a specific plugin.
 
@@ -56,7 +58,7 @@ class PluginMethodsMixin:
 
         Args:
             plugin_name (str): The name of the plugin (filename without .py).
-            enabled (bool): Set to True to enable, False to disable.
+            payload: A PluginStatusSetPayload object.
 
         Returns:
             Dict[str, Any]: API response, typically confirming the action.
@@ -79,18 +81,18 @@ class PluginMethodsMixin:
             _LOGGER.error("Plugin name cannot be empty for set_plugin_enabled.")
             raise ValueError("Plugin name cannot be empty.")
 
-        _LOGGER.info("Setting plugin '%s' to enabled state: %s.", plugin_name, enabled)
-        return await self._request(
+        _LOGGER.info("Setting plugin '%s' to enabled state: %s.", plugin_name, payload.enabled)
+        response = await self._request(
             method="POST",
             path=f"/plugins/{plugin_name}",
-            json_data={"enabled": enabled},
+            json_data=payload.model_dump(),
             authenticated=True,
         )
+        return PluginApiResponse.model_validate(response)
 
-    async def async_reload_plugins(self) -> Dict[str, Any]:
+    async def async_reload_plugins(self) -> PluginApiResponse:
         """
         Triggers a full reload of all plugins.
-        NOTE: The HTTP method for this endpoint was changed from POST to PUT in the new FastAPI backend.
 
         Corresponds to: PUT /api/plugins/reload
         Authentication: Required.
@@ -110,13 +112,14 @@ class PluginMethodsMixin:
             APIError: For other API response issues.
         """
         _LOGGER.info("Requesting reload of all plugins.")
-        return await self._request(
+        response = await self._request(
             method="PUT", path="/plugins/reload", authenticated=True
         )
+        return PluginApiResponse.model_validate(response)
 
     async def async_trigger_plugin_event(
-        self, event_name: str, payload: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+        self, payload: TriggerEventPayload
+    ) -> PluginApiResponse:
         """
         Triggers a custom plugin event.
 
@@ -124,8 +127,7 @@ class PluginMethodsMixin:
         Authentication: Required.
 
         Args:
-            event_name (str): The namespaced name of the custom event to trigger.
-            payload (Optional[Dict[str, Any]]): A JSON object containing data for event listeners.
+            payload: A TriggerEventPayload object.
 
         Returns:
             Dict[str, Any]: API response, typically confirming the event was triggered.
@@ -143,20 +145,13 @@ class PluginMethodsMixin:
             APIServerSideError: If an error occurs while triggering the event on the server.
             APIError: For other API response issues.
         """
-        if not event_name:
-            _LOGGER.error("Event name cannot be empty for trigger_plugin_event.")
-            raise ValueError("Event name cannot be empty.")
-
-        json_body: Dict[str, Any] = {"event_name": event_name}
-        if payload is not None:
-            json_body["payload"] = payload
-
         _LOGGER.info(
-            "Triggering custom plugin event '%s' with payload: %s", event_name, payload
+            "Triggering custom plugin event '%s' with payload: %s", payload.event_name, payload.payload
         )
-        return await self._request(
+        response = await self._request(
             method="POST",
             path="/plugins/trigger_event",
-            json_data=json_body,
+            json_data=payload.model_dump(),
             authenticated=True,
         )
+        return PluginApiResponse.model_validate(response)

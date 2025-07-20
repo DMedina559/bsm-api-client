@@ -2,10 +2,11 @@
 """Mixin class containing server action methods."""
 import logging
 from typing import Any, Dict, Optional, List, TYPE_CHECKING
-from urllib.parse import quote  # For URL encoding path parameters
+from urllib.parse import quote
+from ..models import CommandPayload, AllowlistAddPayload, AllowlistRemovePayload, PermissionsSetPayload, PropertiesPayload, ServiceUpdatePayload, ActionResponse
 
 if TYPE_CHECKING:
-    from ..client_base import ClientBase  # For type hinting _request
+    from ..client_base import ClientBase
 
 _LOGGER = logging.getLogger(__name__.split(".")[0] + ".client.server_actions")
 
@@ -49,7 +50,7 @@ class ServerActionMethodsMixin:
             is_retry: bool = False,
         ) -> Any: ...
 
-    async def async_start_server(self, server_name: str) -> Dict[str, Any]:
+    async def async_start_server(self, server_name: str) -> ActionResponse:
         """
         Starts the specified Bedrock server instance.
 
@@ -60,13 +61,14 @@ class ServerActionMethodsMixin:
             server_name: The unique name of the server instance to start.
         """
         _LOGGER.info("Requesting start for server '%s'", server_name)
-        return await self._request(
+        response = await self._request(
             "POST",
             f"/server/{server_name}/start",
             authenticated=True,
         )
+        return ActionResponse.model_validate(response)
 
-    async def async_stop_server(self, server_name: str) -> Dict[str, Any]:
+    async def async_stop_server(self, server_name: str) -> ActionResponse:
         """
         Stops the specified running Bedrock server instance.
 
@@ -77,13 +79,14 @@ class ServerActionMethodsMixin:
             server_name: The unique name of the server instance to stop.
         """
         _LOGGER.info("Requesting stop for server '%s'", server_name)
-        return await self._request(
+        response = await self._request(
             "POST",
             f"/server/{server_name}/stop",
             authenticated=True,
         )
+        return ActionResponse.model_validate(response)
 
-    async def async_restart_server(self, server_name: str) -> Dict[str, Any]:
+    async def async_restart_server(self, server_name: str) -> ActionResponse:
         """
         Restarts the specified Bedrock server instance.
 
@@ -94,15 +97,16 @@ class ServerActionMethodsMixin:
             server_name: The unique name of the server instance to restart.
         """
         _LOGGER.info("Requesting restart for server '%s'", server_name)
-        return await self._request(
+        response = await self._request(
             "POST",
             f"/server/{server_name}/restart",
             authenticated=True,
         )
+        return ActionResponse.model_validate(response)
 
     async def async_send_server_command(
-        self, server_name: str, command: str
-    ) -> Dict[str, Any]:
+        self, server_name: str, command: CommandPayload
+    ) -> ActionResponse:
         """
         Sends a command string to the specified server's console.
 
@@ -113,19 +117,17 @@ class ServerActionMethodsMixin:
             server_name: The unique name of the target server instance.
             command: The command string to send.
         """
-        if not command or command.isspace():
-            raise ValueError("Command cannot be empty or just whitespace.")
-        _LOGGER.info("Sending command to server '%s': '%s'", server_name, command)
-        payload = {"command": command}
+        _LOGGER.info("Sending command to server '%s': '%s'", server_name, command.command)
 
-        return await self._request(
+        response = await self._request(
             "POST",
             f"/server/{server_name}/send_command",
-            json_data=payload,
+            json_data=command.model_dump(),
             authenticated=True,
         )
+        return ActionResponse.model_validate(response)
 
-    async def async_update_server(self, server_name: str) -> Dict[str, Any]:
+    async def async_update_server(self, server_name: str) -> ActionResponse:
         """
         Checks for and applies updates to the specified server instance.
 
@@ -136,15 +138,16 @@ class ServerActionMethodsMixin:
             server_name: The unique name of the server instance to update.
         """
         _LOGGER.info("Requesting update for server '%s'", server_name)
-        return await self._request(
+        response = await self._request(
             "POST",
             f"/server/{server_name}/update",
             authenticated=True,
         )
+        return ActionResponse.model_validate(response)
 
     async def async_add_server_allowlist(
-        self, server_name: str, players: List[str], ignores_player_limit: bool = False
-    ) -> Dict[str, Any]:
+        self, server_name: str, payload: AllowlistAddPayload
+    ) -> ActionResponse:
         """
         Adds players to the server's allowlist.json file.
 
@@ -153,34 +156,26 @@ class ServerActionMethodsMixin:
 
         Args:
             server_name: The name of the server.
-            players: A list of player names (Gamertags) to add.
-            ignores_player_limit: Sets the 'ignoresPlayerLimit' flag for added players.
+            payload: An AllowlistAddPayload object.
         """
-        if not isinstance(players, list):
-            raise TypeError("Players must be a list of strings.")
-        if (
-            not all(isinstance(p, str) and p.strip() for p in players) and players
-        ):  # Allow empty list, but not list with empty/invalid names
-            raise ValueError("All player names in the list must be non-empty strings.")
-
         _LOGGER.info(
             "Adding players %s to allowlist for server '%s' (ignores limit: %s)",
-            players,
+            payload.players,
             server_name,
-            ignores_player_limit,
+            payload.ignoresPlayerLimit,
         )
-        payload = {"players": players, "ignoresPlayerLimit": ignores_player_limit}
 
-        return await self._request(
+        response = await self._request(
             "POST",
             f"/server/{server_name}/allowlist/add",
-            json_data=payload,
+            json_data=payload.model_dump(),
             authenticated=True,
         )
+        return ActionResponse.model_validate(response)
 
     async def async_remove_server_allowlist_players(
-        self, server_name: str, player_names: List[str]
-    ) -> Dict[str, Any]:
+        self, server_name: str, payload: AllowlistRemovePayload
+    ) -> ActionResponse:
         """
         Removes one or more players from the server's allowlist.json.
         The operation is atomic on the server side.
@@ -190,174 +185,104 @@ class ServerActionMethodsMixin:
 
         Args:
             server_name: The name of the server.
-            player_names: A list of player names to remove (case-insensitive on API side).
+            payload: An AllowlistRemovePayload object.
 
         Returns:
             A dictionary with the results of the operation, detailing which
             players were removed and which were not found.
-
-        Raises:
-            ValueError: If the player_names list is empty or contains invalid entries.
         """
-        if not player_names:
-            raise ValueError("Player names list cannot be empty.")
-        if any(not name or name.isspace() for name in player_names):
-            raise ValueError(
-                "Player names in the list cannot be empty or just whitespace."
-            )
-
-        payload = {"players": player_names}
-
         _LOGGER.info(
             "Removing %d players from allowlist for server '%s': %s",
-            len(player_names),
+            len(payload.players),
             server_name,
-            player_names,
+            payload.players,
         )
 
-        return await self._request(
+        response = await self._request(
             "DELETE",
             f"/server/{server_name}/allowlist/remove",
-            json_data=payload,  # Sending data in the request body
+            json_data=payload.model_dump(),
             authenticated=True,
         )
+        return ActionResponse.model_validate(response)
 
     async def async_set_server_permissions(
-        self, server_name: str, permissions_input: Dict[str, str]
-    ) -> Dict[str, Any]:
+        self, server_name: str, payload: PermissionsSetPayload
+    ) -> ActionResponse:
         """
         Updates permission levels for players in the server's permissions.json.
-        NOTE: The new API (FastAPI) expects a `PermissionsSetPayload` which is a list of objects,
-        each containing `xuid`, `name`, and `permission_level`. This method transforms
-        the input dictionary to this format. The `name` field, not present in the original
-        client's input, is set to "Unknown" as a placeholder.
-
         Corresponds to `PUT /api/server/{server_name}/permissions/set`.
         Requires authentication.
 
         Args:
             server_name: The name of the server.
-            permissions_input: A dictionary mapping player XUIDs (strings) to
-                               permission levels ("visitor", "member", "operator").
+            payload: A PermissionsSetPayload object.
         """
-        if not isinstance(permissions_input, dict):
-            raise TypeError("permissions_input must be a dictionary.")
-
-        permissions_payload_list: List[Dict[str, str]] = []
-        for xuid, level in permissions_input.items():
-            level_lower = level.lower()
-            if level_lower not in ALLOWED_PERMISSION_LEVELS:
-                _LOGGER.error(
-                    "Invalid permission level '%s' for XUID '%s'. Allowed: %s",
-                    level,
-                    xuid,
-                    ALLOWED_PERMISSION_LEVELS,
-                )
-                raise ValueError(
-                    f"Invalid permission level '{level}' for XUID '{xuid}'. "
-                    f"Allowed levels are: {', '.join(ALLOWED_PERMISSION_LEVELS)}"
-                )
-            permissions_payload_list.append(
-                {
-                    "xuid": xuid,
-                    "name": "Unknown",  # Name is required by new Pydantic model, using placeholder
-                    "permission_level": level_lower,
-                }
-            )
-
         _LOGGER.info(
             "Setting permissions for server '%s': %s",
             server_name,
-            permissions_payload_list,
+            payload.permissions,
         )
-        # New payload structure: {"permissions": [list of objects]}
-        payload = {"permissions": permissions_payload_list}
 
-        return await self._request(
-            "PUT",  # This was already PUT, which is correct for the new API
+        response = await self._request(
+            "PUT",
             f"/server/{server_name}/permissions/set",
-            json_data=payload,
+            json_data=payload.model_dump(),
             authenticated=True,
         )
+        return ActionResponse.model_validate(response)
 
     async def async_update_server_properties(
-        self, server_name: str, properties_dict: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        self, server_name: str, payload: PropertiesPayload
+    ) -> ActionResponse:
         """
         Updates specified key-value pairs in the server's server.properties file.
-        Only allowed properties (as defined by the server-side API logic) will be modified.
-        NOTE: The new API (FastAPI) expects the payload to be a `PropertiesPayload`,
-        meaning the dictionary of properties should be wrapped under a "properties" key.
-        This method handles that wrapping.
-
         Corresponds to `POST /api/server/{server_name}/properties/set`.
         Requires authentication.
 
         Args:
             server_name: The name of the server.
-            properties_dict: A dictionary of properties to update.
+            payload: A PropertiesPayload object.
         """
-        if not isinstance(properties_dict, dict):
-            raise TypeError("properties_dict must be a dictionary.")
-
-        for key_provided in properties_dict.keys():
-            if key_provided not in ALLOWED_SERVER_PROPERTIES_TO_UPDATE:
-                _LOGGER.warning(
-                    "Property '%s' is not in the list of API-allowed modifiable properties and might be ignored by the API.",
-                    key_provided,
-                )
-
         _LOGGER.info(
-            "Updating properties for server '%s': %s", server_name, properties_dict
+            "Updating properties for server '%s': %s", server_name, payload.properties
         )
-        # New API expects properties nested under a "properties" key.
-        payload = {"properties": properties_dict}
 
-        return await self._request(
+        response = await self._request(
             "POST",
             f"/server/{server_name}/properties/set",
-            json_data=payload,  # Payload is now wrapped
+            json_data=payload.model_dump(),
             authenticated=True,
         )
+        return ActionResponse.model_validate(response)
 
     async def async_configure_server_os_service(
-        self, server_name: str, service_config: Dict[str, bool]
-    ) -> Dict[str, Any]:
+        self, server_name: str, payload: ServiceUpdatePayload
+    ) -> ActionResponse:
         """
         Configures OS-specific service settings (e.g., systemd, autoupdate flag).
-        The exact keys required in `service_config` depend on the server's OS.
-        Linux: {"autoupdate": bool, "autostart": bool}
-        Windows: {"autoupdate": bool}
-
         Corresponds to `POST /api/server/{server_name}/service/update`.
         Requires authentication.
 
         Args:
             server_name: The name of the server.
-            service_config: A dictionary with OS-specific boolean flags.
+            payload: A ServiceUpdatePayload object.
         """
-        if not isinstance(service_config, dict):
-            raise TypeError("service_config must be a dictionary.")
-        for key, value in service_config.items():
-            if not isinstance(value, bool):
-                raise ValueError(
-                    f"Value for service config key '{key}' must be a boolean."
-                )
-
         _LOGGER.info(
             "Requesting OS service config for server '%s' with payload: %s",
             server_name,
-            service_config,
+            payload.model_dump(),
         )
 
-        return await self._request(
+        response = await self._request(
             "POST",
             f"/server/{server_name}/service/update",
-            json_data=service_config,
+            json_data=payload.model_dump(),
             authenticated=True,
         )
+        return ActionResponse.model_validate(response)
 
-    async def async_delete_server(self, server_name: str) -> Dict[str, Any]:
+    async def async_delete_server(self, server_name: str) -> ActionResponse:
         """
         Permanently deletes all data associated with the specified server instance.
         **USE WITH EXTREME CAUTION: This action is irreversible.**
@@ -371,8 +296,9 @@ class ServerActionMethodsMixin:
         _LOGGER.warning(
             "Requesting DELETION of server '%s'. THIS IS IRREVERSIBLE.", server_name
         )
-        return await self._request(
+        response = await self._request(
             "DELETE",
             f"/server/{server_name}/delete",
             authenticated=True,
         )
+        return ActionResponse.model_validate(response)

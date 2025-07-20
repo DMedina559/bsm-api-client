@@ -2,6 +2,7 @@
 """Mixin class containing manager-level API methods."""
 import logging
 from typing import Any, Dict, Optional, List, TYPE_CHECKING
+from ..models import AddPlayersPayload, SettingItem, PruneDownloadsPayload, InstallServerPayload, GeneralApiResponse, SettingsResponse
 
 if TYPE_CHECKING:
     from ..client_base import ClientBase
@@ -25,7 +26,7 @@ class ManagerMethodsMixin:
             is_retry: bool = False,
         ) -> Any: ...
 
-    async def async_get_info(self) -> Dict[str, Any]:
+    async def async_get_info(self) -> GeneralApiResponse:
         """
         Gets system and application information from the manager.
 
@@ -33,7 +34,8 @@ class ManagerMethodsMixin:
         Requires no authentication.
         """
         _LOGGER.debug("Fetching manager system and application information from /info")
-        return await self._request(method="GET", path="/info", authenticated=False)
+        response = await self._request(method="GET", path="/info", authenticated=False)
+        return GeneralApiResponse.model_validate(response)
 
     async def async_scan_players(self) -> Dict[str, Any]:
         """
@@ -59,7 +61,7 @@ class ManagerMethodsMixin:
             method="GET", path="/players/get", authenticated=True
         )
 
-    async def async_add_players(self, players_data: List[str]) -> Dict[str, Any]:
+    async def async_add_players(self, payload: AddPlayersPayload) -> Dict[str, Any]:
         """
         Adds or updates players in the global list.
         Each string in `players_data` should be in "PlayerName:PlayerXUID" format.
@@ -68,17 +70,35 @@ class ManagerMethodsMixin:
         Requires authentication.
 
         Args:
-            players_data: A list of player strings to add or update.
-                          Example: ["Steve:2535460987654321", "Alex:2535461234567890"]
+            payload: An AddPlayersPayload object.
         """
-        _LOGGER.info("Adding/updating global players: %s", players_data)
-        payload = {"players": players_data}
+        _LOGGER.info("Adding/updating global players: %s", payload.players)
         return await self._request(
             method="POST",
             path="/players/add",
-            json_data=payload,
+            json_data=payload.model_dump(),
             authenticated=True,
         )
+
+    async def async_get_custom_zips(self) -> Dict[str, Any]:
+        """
+        Retrieves a list of available custom server ZIP files.
+
+        Corresponds to `GET /api/downloads/list`.
+        Requires authentication.
+        """
+        _LOGGER.info("Fetching list of custom zips.")
+        return await self._request(method="GET", path="/downloads/list", authenticated=True)
+
+    async def async_get_themes(self) -> Dict[str, Any]:
+        """
+        Retrieves a list of available themes.
+
+        Corresponds to `GET /api/themes`.
+        Requires authentication.
+        """
+        _LOGGER.info("Fetching list of available themes.")
+        return await self._request(method="GET", path="/themes", authenticated=True)
 
     async def async_get_all_settings(self) -> Dict[str, Any]:
         """
@@ -91,7 +111,7 @@ class ManagerMethodsMixin:
         _LOGGER.info("Fetching all global application settings.")
         return await self._request(method="GET", path="/settings", authenticated=True)
 
-    async def async_set_setting(self, key: str, value: Any) -> Dict[str, Any]:
+    async def async_set_setting(self, payload: SettingItem) -> Dict[str, Any]:
         """
         Sets a specific global application setting.
 
@@ -101,15 +121,11 @@ class ManagerMethodsMixin:
         Expected response model: SettingsResponse
 
         Args:
-            key: The dot-notation key of the setting (e.g., 'web.port').
-            value: The new value for the setting.
+            payload: A SettingItem object.
         """
-        if not key or not isinstance(key, str):
-            raise ValueError("Setting key must be a non-empty string.")
-        _LOGGER.info("Setting global application setting '%s' to: %s", key, value)
-        payload = {"key": key, "value": value}
+        _LOGGER.info("Setting global application setting '%s' to: %s", payload.key, payload.value)
         return await self._request(
-            method="POST", path="/settings", json_data=payload, authenticated=True
+            method="POST", path="/settings", json_data=payload.model_dump(), authenticated=True
         )
 
     async def async_reload_settings(self) -> Dict[str, Any]:
@@ -175,7 +191,7 @@ class ManagerMethodsMixin:
             ) from e
 
     async def async_prune_downloads(
-        self, directory: str, keep: Optional[int] = None
+        self, payload: PruneDownloadsPayload
     ) -> Dict[str, Any]:
         """
         Triggers pruning of downloaded server archives in a specified directory.
@@ -184,27 +200,23 @@ class ManagerMethodsMixin:
         Requires authentication.
 
         Args:
-            directory: The absolute path to the directory to prune.
-            keep: The number of newest files to retain. If None, uses server default.
+            payload: A PruneDownloadsPayload object.
         """
         _LOGGER.info(
             "Triggering download cache prune for directory '%s', keep: %s",
-            directory,
-            keep if keep is not None else "server default",
+            payload.directory,
+            payload.keep if payload.keep is not None else "server default",
         )
-        payload: Dict[str, Any] = {"directory": directory}
-        if keep is not None:
-            payload["keep"] = keep
 
         return await self._request(
             method="POST",
             path="/downloads/prune",
-            json_data=payload,
+            json_data=payload.model_dump(),
             authenticated=True,
         )
 
     async def async_install_new_server(
-        self, server_name: str, server_version: str, overwrite: bool = False
+        self, payload: InstallServerPayload
     ) -> Dict[str, Any]:
         """
         Requests installation of a new Bedrock server instance.
@@ -215,26 +227,18 @@ class ManagerMethodsMixin:
         Requires authentication.
 
         Args:
-            server_name: The desired unique name for the new server.
-            server_version: The version to install (e.g., "LATEST", "PREVIEW", "1.20.81.01").
-            overwrite: If True, will delete existing server data if a server with the
-                       same name already exists. Defaults to False.
+            payload: An InstallServerPayload object.
         """
         _LOGGER.info(
             "Requesting installation for server '%s', version: '%s', overwrite: %s",
-            server_name,
-            server_version,
-            overwrite,
+            payload.server_name,
+            payload.server_version,
+            payload.overwrite,
         )
-        payload = {
-            "server_name": server_name,
-            "server_version": server_version,
-            "overwrite": overwrite,
-        }
 
         return await self._request(
             method="POST",
             path="/server/install",
-            json_data=payload,
+            json_data=payload.model_dump(),
             authenticated=True,
         )
