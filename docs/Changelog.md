@@ -4,6 +4,9 @@
 
 # bsm-api-client Changelog
 
+# 1.2.0
+1. Added support for BSM 3.5.0
+
 # 1.1.0
 1. Added BSM 3.4.0 support
 2. Added methogs for plugin endpoints 
