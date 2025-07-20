@@ -58,9 +58,14 @@ class ServerInfoMethodsMixin:
         _LOGGER.debug("Fetching server names list")
         server_details = await self.async_get_servers_details()
         if server_details.servers:
-            return sorted([server["name"] for server in server_details.servers if "name" in server])
+            return sorted(
+                [
+                    server["name"]
+                    for server in server_details.servers
+                    if "name" in server
+                ]
+            )
         return []
-
 
     async def async_get_server_validate(self, server_name: str) -> bool:
         """
@@ -105,7 +110,9 @@ class ServerInfoMethodsMixin:
             )
             raise
 
-    async def async_get_server_process_info(self, server_name: str) -> GeneralApiResponse:
+    async def async_get_server_process_info(
+        self, server_name: str
+    ) -> GeneralApiResponse:
         """
         Gets runtime status information (PID, CPU, Memory, Uptime) for a server.
         The 'process_info' key in the response will be null if the server is not running.
@@ -219,7 +226,9 @@ class ServerInfoMethodsMixin:
                 f"An unexpected error occurred fetching world icon: {e}"
             ) from e
 
-    async def async_get_server_running_status(self, server_name: str) -> GeneralApiResponse:
+    async def async_get_server_running_status(
+        self, server_name: str
+    ) -> GeneralApiResponse:
         """
         Checks if the Bedrock server process is currently running.
         Path changed from `.../running_status` to `.../status` for the new API.
@@ -242,7 +251,9 @@ class ServerInfoMethodsMixin:
         )
         return GeneralApiResponse.model_validate(response)
 
-    async def async_get_server_config_status(self, server_name: str) -> GeneralApiResponse:
+    async def async_get_server_config_status(
+        self, server_name: str
+    ) -> GeneralApiResponse:
         """
         Gets the status string stored in the server's configuration file.
         Response contains `{"config_status": "status_string"}`.
@@ -281,7 +292,6 @@ class ServerInfoMethodsMixin:
             authenticated=True,
         )
         return GeneralApiResponse.model_validate(response)
-
 
     async def async_get_server_properties(self, server_name: str) -> GeneralApiResponse:
         """

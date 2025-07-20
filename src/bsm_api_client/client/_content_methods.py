@@ -2,7 +2,15 @@
 """Mixin class containing content management methods (backups, worlds, addons)."""
 import logging
 from typing import Any, Dict, Optional, List, TYPE_CHECKING
-from ..models import RestoreTypePayload, BackupActionPayload, RestoreActionPayload, FileNamePayload, BackupRestoreResponse, ContentListResponse, ActionResponse
+from ..models import (
+    RestoreTypePayload,
+    BackupActionPayload,
+    RestoreActionPayload,
+    FileNamePayload,
+    BackupRestoreResponse,
+    ContentListResponse,
+    ActionResponse,
+)
 
 if TYPE_CHECKING:
     from ..client_base import ClientBase
@@ -182,7 +190,9 @@ class ContentMethodsMixin:
         )
         return ActionResponse.model_validate(response)
 
-    async def async_prune_server_backups(self, server_name: str) -> BackupRestoreResponse:
+    async def async_prune_server_backups(
+        self, server_name: str
+    ) -> BackupRestoreResponse:
         """
         Prunes older backups for a specific server based on server-defined retention policies.
         The new FastAPI endpoint (`POST /api/server/{server_name}/backups/prune`)
@@ -234,7 +244,9 @@ class ContentMethodsMixin:
         )
         return BackupRestoreResponse.model_validate(response)
 
-    async def async_restore_server_latest_all(self, server_name: str) -> BackupRestoreResponse:
+    async def async_restore_server_latest_all(
+        self, server_name: str
+    ) -> BackupRestoreResponse:
         """
         Restores the server's world AND standard configuration files from their latest backups.
         NOTE: This method's behavior was updated for the new API. It now calls the

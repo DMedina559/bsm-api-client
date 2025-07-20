@@ -4,6 +4,7 @@ import pytest_asyncio
 from unittest.mock import AsyncMock, patch
 from bsm_api_client.api_client import BedrockServerManagerApi
 
+
 @pytest_asyncio.fixture
 async def client():
     """Async fixture for a BedrockServerManagerApi instance."""
@@ -11,12 +12,15 @@ async def client():
     yield client
     await client.close()
 
+
 @pytest.mark.asyncio
 async def test_add_server_cron_job(client):
     """Test async_add_server_cron_job method."""
     with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
         mock_request.return_value = {"status": "success", "message": "Cron job added."}
-        result = await client.async_add_server_cron_job("test-server", "* * * * * command")
+        result = await client.async_add_server_cron_job(
+            "test-server", "* * * * * command"
+        )
         mock_request.assert_called_once_with(
             "POST",
             "/server/test-server/cron_scheduler/add",
@@ -25,11 +29,15 @@ async def test_add_server_cron_job(client):
         )
         assert result["status"] == "success"
 
+
 @pytest.mark.asyncio
 async def test_modify_server_cron_job(client):
     """Test async_modify_server_cron_job method."""
     with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
-        mock_request.return_value = {"status": "success", "message": "Cron job modified."}
+        mock_request.return_value = {
+            "status": "success",
+            "message": "Cron job modified.",
+        }
         result = await client.async_modify_server_cron_job(
             "test-server", "* * * * * old_command", "* * * * * new_command"
         )
@@ -44,12 +52,18 @@ async def test_modify_server_cron_job(client):
         )
         assert result["status"] == "success"
 
+
 @pytest.mark.asyncio
 async def test_delete_server_cron_job(client):
     """Test async_delete_server_cron_job method."""
     with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
-        mock_request.return_value = {"status": "success", "message": "Cron job deleted."}
-        result = await client.async_delete_server_cron_job("test-server", "* * * * * command")
+        mock_request.return_value = {
+            "status": "success",
+            "message": "Cron job deleted.",
+        }
+        result = await client.async_delete_server_cron_job(
+            "test-server", "* * * * * command"
+        )
         mock_request.assert_called_once_with(
             "DELETE",
             "/server/test-server/cron_scheduler/delete",
@@ -57,6 +71,7 @@ async def test_delete_server_cron_job(client):
             authenticated=True,
         )
         assert result["status"] == "success"
+
 
 @pytest.mark.asyncio
 async def test_add_server_windows_task(client):
@@ -75,6 +90,7 @@ async def test_add_server_windows_task(client):
         )
         assert result["status"] == "success"
 
+
 @pytest.mark.asyncio
 async def test_modify_server_windows_task(client):
     """Test async_modify_server_windows_task method."""
@@ -92,12 +108,15 @@ async def test_modify_server_windows_task(client):
         )
         assert result["status"] == "success"
 
+
 @pytest.mark.asyncio
 async def test_delete_server_windows_task(client):
     """Test async_delete_server_windows_task method."""
     with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
         mock_request.return_value = {"status": "success", "message": "Task deleted."}
-        result = await client.async_delete_server_windows_task("test-server", "test-task")
+        result = await client.async_delete_server_windows_task(
+            "test-server", "test-task"
+        )
         mock_request.assert_called_once_with(
             "DELETE",
             "/server/test-server/task_scheduler/task/test-task",

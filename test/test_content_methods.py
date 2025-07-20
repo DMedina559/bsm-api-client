@@ -10,12 +10,14 @@ from bsm_api_client.models import (
     FileNamePayload,
 )
 
+
 @pytest_asyncio.fixture
 async def client():
     """Async fixture for a BedrockServerManagerApi instance."""
     client = BedrockServerManagerApi("localhost", "admin", "password")
     yield client
     await client.close()
+
 
 @pytest.mark.asyncio
 async def test_list_server_backups(client):
@@ -27,6 +29,7 @@ async def test_list_server_backups(client):
             "GET", "/server/test-server/backup/list/world", authenticated=True
         )
         assert len(result["backups"]) == 1
+
 
 @pytest.mark.asyncio
 async def test_restore_select_backup_type(client):
@@ -43,14 +46,18 @@ async def test_restore_select_backup_type(client):
         )
         assert result["redirect_url"] == "/some/url"
 
+
 @pytest.mark.asyncio
 async def test_get_content_worlds(client):
     """Test async_get_content_worlds method."""
     with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
         mock_request.return_value = {"status": "success", "files": ["world1.mcworld"]}
         result = await client.async_get_content_worlds()
-        mock_request.assert_called_once_with("GET", "/content/worlds", authenticated=True)
+        mock_request.assert_called_once_with(
+            "GET", "/content/worlds", authenticated=True
+        )
         assert len(result["files"]) == 1
+
 
 @pytest.mark.asyncio
 async def test_get_content_addons(client):
@@ -58,15 +65,21 @@ async def test_get_content_addons(client):
     with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
         mock_request.return_value = {"status": "success", "files": ["addon1.mcaddon"]}
         result = await client.async_get_content_addons()
-        mock_request.assert_called_once_with("GET", "/content/addons", authenticated=True)
+        mock_request.assert_called_once_with(
+            "GET", "/content/addons", authenticated=True
+        )
         assert len(result["files"]) == 1
+
 
 @pytest.mark.asyncio
 async def test_trigger_server_backup(client):
     """Test async_trigger_server_backup method."""
     with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
         payload = BackupActionPayload(backup_type="all")
-        mock_request.return_value = {"status": "success", "message": "Backup triggered."}
+        mock_request.return_value = {
+            "status": "success",
+            "message": "Backup triggered.",
+        }
         result = await client.async_trigger_server_backup("test-server", payload)
         mock_request.assert_called_once_with(
             "POST",
@@ -76,16 +89,24 @@ async def test_trigger_server_backup(client):
         )
         assert result["status"] == "success"
 
+
 @pytest.mark.asyncio
 async def test_export_server_world(client):
     """Test async_export_server_world method."""
     with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
-        mock_request.return_value = {"status": "success", "message": "Export triggered."}
+        mock_request.return_value = {
+            "status": "success",
+            "message": "Export triggered.",
+        }
         result = await client.async_export_server_world("test-server")
         mock_request.assert_called_once_with(
-            "POST", "/server/test-server/world/export", json_data=None, authenticated=True
+            "POST",
+            "/server/test-server/world/export",
+            json_data=None,
+            authenticated=True,
         )
         assert result["status"] == "success"
+
 
 @pytest.mark.asyncio
 async def test_reset_server_world(client):
@@ -94,27 +115,41 @@ async def test_reset_server_world(client):
         mock_request.return_value = {"status": "success", "message": "Reset triggered."}
         result = await client.async_reset_server_world("test-server")
         mock_request.assert_called_once_with(
-            "DELETE", "/server/test-server/world/reset", json_data=None, authenticated=True
+            "DELETE",
+            "/server/test-server/world/reset",
+            json_data=None,
+            authenticated=True,
         )
         assert result["status"] == "success"
+
 
 @pytest.mark.asyncio
 async def test_prune_server_backups(client):
     """Test async_prune_server_backups method."""
     with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
-        mock_request.return_value = {"status": "success", "message": "Pruning triggered."}
+        mock_request.return_value = {
+            "status": "success",
+            "message": "Pruning triggered.",
+        }
         result = await client.async_prune_server_backups("test-server")
         mock_request.assert_called_once_with(
-            "POST", "/server/test-server/backups/prune", json_data=None, authenticated=True
+            "POST",
+            "/server/test-server/backups/prune",
+            json_data=None,
+            authenticated=True,
         )
         assert result["status"] == "success"
+
 
 @pytest.mark.asyncio
 async def test_restore_server_backup(client):
     """Test async_restore_server_backup method."""
     with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
         payload = RestoreActionPayload(restore_type="world", backup_file="backup1.zip")
-        mock_request.return_value = {"status": "success", "message": "Restore triggered."}
+        mock_request.return_value = {
+            "status": "success",
+            "message": "Restore triggered.",
+        }
         result = await client.async_restore_server_backup("test-server", payload)
         mock_request.assert_called_once_with(
             "POST",
@@ -124,11 +159,15 @@ async def test_restore_server_backup(client):
         )
         assert result["status"] == "success"
 
+
 @pytest.mark.asyncio
 async def test_restore_server_latest_all(client):
     """Test async_restore_server_latest_all method."""
     with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
-        mock_request.return_value = {"status": "success", "message": "Restore triggered."}
+        mock_request.return_value = {
+            "status": "success",
+            "message": "Restore triggered.",
+        }
         result = await client.async_restore_server_latest_all("test-server")
         mock_request.assert_called_once_with(
             "POST",
@@ -138,12 +177,16 @@ async def test_restore_server_latest_all(client):
         )
         assert result["status"] == "success"
 
+
 @pytest.mark.asyncio
 async def test_install_server_world(client):
     """Test async_install_server_world method."""
     with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
         payload = FileNamePayload(filename="world1.mcworld")
-        mock_request.return_value = {"status": "success", "message": "Install triggered."}
+        mock_request.return_value = {
+            "status": "success",
+            "message": "Install triggered.",
+        }
         result = await client.async_install_server_world("test-server", payload)
         mock_request.assert_called_once_with(
             "POST",
@@ -153,12 +196,16 @@ async def test_install_server_world(client):
         )
         assert result["status"] == "success"
 
+
 @pytest.mark.asyncio
 async def test_install_server_addon(client):
     """Test async_install_server_addon method."""
     with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
         payload = FileNamePayload(filename="addon1.mcaddon")
-        mock_request.return_value = {"status": "success", "message": "Install triggered."}
+        mock_request.return_value = {
+            "status": "success",
+            "message": "Install triggered.",
+        }
         result = await client.async_install_server_addon("test-server", payload)
         mock_request.assert_called_once_with(
             "POST",

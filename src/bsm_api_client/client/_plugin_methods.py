@@ -44,7 +44,9 @@ class PluginMethodsMixin:
             APIError: For other API response issues.
         """
         _LOGGER.info("Requesting status of all plugins.")
-        response = await self._request(method="GET", path="/plugins", authenticated=True)
+        response = await self._request(
+            method="GET", path="/plugins", authenticated=True
+        )
         return PluginApiResponse.model_validate(response)
 
     async def async_set_plugin_status(
@@ -81,7 +83,9 @@ class PluginMethodsMixin:
             _LOGGER.error("Plugin name cannot be empty for set_plugin_enabled.")
             raise ValueError("Plugin name cannot be empty.")
 
-        _LOGGER.info("Setting plugin '%s' to enabled state: %s.", plugin_name, payload.enabled)
+        _LOGGER.info(
+            "Setting plugin '%s' to enabled state: %s.", plugin_name, payload.enabled
+        )
         response = await self._request(
             method="POST",
             path=f"/plugins/{plugin_name}",
@@ -146,7 +150,9 @@ class PluginMethodsMixin:
             APIError: For other API response issues.
         """
         _LOGGER.info(
-            "Triggering custom plugin event '%s' with payload: %s", payload.event_name, payload.payload
+            "Triggering custom plugin event '%s' with payload: %s",
+            payload.event_name,
+            payload.payload,
         )
         response = await self._request(
             method="POST",

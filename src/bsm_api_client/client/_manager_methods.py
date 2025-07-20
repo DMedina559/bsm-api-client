@@ -2,7 +2,14 @@
 """Mixin class containing manager-level API methods."""
 import logging
 from typing import Any, Dict, Optional, List, TYPE_CHECKING
-from ..models import AddPlayersPayload, SettingItem, PruneDownloadsPayload, InstallServerPayload, GeneralApiResponse, SettingsResponse
+from ..models import (
+    AddPlayersPayload,
+    SettingItem,
+    PruneDownloadsPayload,
+    InstallServerPayload,
+    GeneralApiResponse,
+    SettingsResponse,
+)
 
 if TYPE_CHECKING:
     from ..client_base import ClientBase
@@ -88,7 +95,9 @@ class ManagerMethodsMixin:
         Requires authentication.
         """
         _LOGGER.info("Fetching list of custom zips.")
-        return await self._request(method="GET", path="/downloads/list", authenticated=True)
+        return await self._request(
+            method="GET", path="/downloads/list", authenticated=True
+        )
 
     async def async_get_themes(self) -> Dict[str, Any]:
         """
@@ -123,9 +132,14 @@ class ManagerMethodsMixin:
         Args:
             payload: A SettingItem object.
         """
-        _LOGGER.info("Setting global application setting '%s' to: %s", payload.key, payload.value)
+        _LOGGER.info(
+            "Setting global application setting '%s' to: %s", payload.key, payload.value
+        )
         return await self._request(
-            method="POST", path="/settings", json_data=payload.model_dump(), authenticated=True
+            method="POST",
+            path="/settings",
+            json_data=payload.model_dump(),
+            authenticated=True,
         )
 
     async def async_reload_settings(self) -> Dict[str, Any]:

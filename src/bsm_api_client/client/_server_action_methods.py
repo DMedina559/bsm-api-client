@@ -3,7 +3,15 @@
 import logging
 from typing import Any, Dict, Optional, List, TYPE_CHECKING
 from urllib.parse import quote
-from ..models import CommandPayload, AllowlistAddPayload, AllowlistRemovePayload, PermissionsSetPayload, PropertiesPayload, ServiceUpdatePayload, ActionResponse
+from ..models import (
+    CommandPayload,
+    AllowlistAddPayload,
+    AllowlistRemovePayload,
+    PermissionsSetPayload,
+    PropertiesPayload,
+    ServiceUpdatePayload,
+    ActionResponse,
+)
 
 if TYPE_CHECKING:
     from ..client_base import ClientBase
@@ -117,7 +125,9 @@ class ServerActionMethodsMixin:
             server_name: The unique name of the target server instance.
             command: The command string to send.
         """
-        _LOGGER.info("Sending command to server '%s': '%s'", server_name, command.command)
+        _LOGGER.info(
+            "Sending command to server '%s': '%s'", server_name, command.command
+        )
 
         response = await self._request(
             "POST",
