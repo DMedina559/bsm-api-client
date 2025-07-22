@@ -45,10 +45,8 @@ async def add(ctx, server_name: str, players: tuple[str], ignore_limit: bool):
         payload = AllowlistAddPayload(players=player_data_list)
         response = await client.async_add_server_allowlist(server_name, payload)
         
-        if response.status == "success":
-            click.secho("Successfully added players to the allowlist.", fg="green")
-        else:
-            click.secho(f"Failed to add players to allowlist: {response.message}", fg="red")
+        added_count = response.data.get("added_count", 0)
+        click.secho(f"Successfully added {added_count} new player(s) to the allowlist.", fg="green")
 
     except Exception as e:
         click.secho(f"\nAn error occurred: {e}", fg="red")
@@ -80,7 +78,26 @@ async def remove(ctx, server_name: str, players: tuple[str]):
     response = await client.async_remove_server_allowlist_players(server_name, payload)
 
     if response.status == "success":
-        click.secho("Successfully removed players from the allowlist.", fg="green")
+        details = response.data.get("details", {})
+        removed_players = details.get("removed", [])
+        not_found_players = details.get("not_found", [])
+
+        message = response.message
+        click.secho(message, fg="cyan" if not removed_players else "green")
+
+        if removed_players:
+            click.secho(
+                f"\nSuccessfully removed {len(removed_players)} player(s):", fg="green"
+            )
+            for p_name in removed_players:
+                click.echo(f"  - {p_name}")
+        if not_found_players:
+            click.secho(
+                f"\n{len(not_found_players)} player(s) were not found in the allowlist:",
+                fg="yellow",
+            )
+            for p_name in not_found_players:
+                click.echo(f"  - {p_name}")
     else:
         click.secho(f"Failed to remove players from allowlist: {response.message}", fg="red")
 

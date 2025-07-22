@@ -56,6 +56,10 @@ async def set_props(ctx, server_name: str, properties: tuple[str]):
 
     try:
         if not properties:
+            click.secho(
+                f"No properties specified; starting interactive editor for '{server_name}'...",
+                fg="yellow",
+            )
             await interactive_properties_workflow(client, server_name)
             return
 

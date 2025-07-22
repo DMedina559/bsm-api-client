@@ -26,6 +26,10 @@ async def set_perm(ctx, server_name: str, player_name: str, level: str):
 
     try:
         if not player_name or not level:
+            click.secho(
+                f"Player or level not specified; starting interactive editor for '{server_name}'...",
+                fg="yellow",
+            )
             await interactive_permissions_workflow(client, server_name)
             return
 
