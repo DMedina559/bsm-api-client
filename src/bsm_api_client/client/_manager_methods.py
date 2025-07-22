@@ -7,6 +7,7 @@ from ..models import (
     SettingItem,
     PruneDownloadsPayload,
     InstallServerPayload,
+    InstallServerResponse,
     GeneralApiResponse,
     SettingsResponse,
 )
@@ -231,7 +232,7 @@ class ManagerMethodsMixin:
 
     async def async_install_new_server(
         self, payload: InstallServerPayload
-    ) -> Dict[str, Any]:
+    ) -> InstallServerResponse:
         """
         Requests installation of a new Bedrock server instance.
         The response may indicate success or that confirmation is needed if overwrite is false
@@ -242,6 +243,9 @@ class ManagerMethodsMixin:
 
         Args:
             payload: An InstallServerPayload object.
+
+        Returns:
+            An InstallServerResponse object.
         """
         _LOGGER.info(
             "Requesting installation for server '%s', version: '%s', overwrite: %s",
@@ -250,9 +254,31 @@ class ManagerMethodsMixin:
             payload.overwrite,
         )
 
-        return await self._request(
+        response = await self._request(
             method="POST",
             path="/server/install",
             json_data=payload.model_dump(),
             authenticated=True,
         )
+        return InstallServerResponse.model_validate(response)
+
+    async def async_get_install_status(self, task_id: str) -> Dict[str, Any]:
+        """
+        Retrieves the status of a background server installation task.
+
+        Corresponds to `GET /api/server/install/status/{task_id}`.
+        Requires authentication.
+
+        Args:
+            task_id: The ID of the installation task.
+
+        Returns:
+            A dictionary containing the installation status.
+        """
+        _LOGGER.info("Fetching installation status for task ID: %s", task_id)
+        return await self._request(
+            method="GET",
+            path=f"/server/install/status/{task_id}",
+            authenticated=True,
+        )
+        return InstallServerResponse.model_validate(response)
