@@ -113,10 +113,10 @@ async def main_menu(ctx: click.Context):
 
             elif choice == "Manage Plugins":
                 plugin_group = cli.get_command(ctx, "plugin")
-                ctx.invoke(plugin_group)
-                questionary.press_any_key_to_continue(
+                await ctx.invoke(plugin_group)
+                await questionary.press_any_key_to_continue(
                     "Press any key to return to the main menu..."
-                ).ask()
+                ).ask_async()
 
         except (click.Abort, KeyboardInterrupt):
             click.echo("\nAction cancelled. Returning to the main menu.")
