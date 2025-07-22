@@ -19,28 +19,11 @@ class AsyncGroup(click.Group):
                     result = super(AsyncGroup, self).invoke(ctx)
                     if asyncio.iscoroutine(result):
                         await result
-            
-            try:
-                loop = asyncio.get_running_loop()
-            except RuntimeError:
-                loop = None
-
-            if loop and loop.is_running():
-                return asyncio.ensure_future(runner())
-            else:
-                return asyncio.run(runner())
-
+            return asyncio.run(runner())
+        
         result = super().invoke(ctx)
         if asyncio.iscoroutine(result):
-            try:
-                loop = asyncio.get_running_loop()
-            except RuntimeError:
-                loop = None
-
-            if loop and loop.is_running():
-                return asyncio.ensure_future(result)
-            else:
-                return asyncio.run(result)
+            return asyncio.run(result)
         return result
 
 def pass_async_context(f):

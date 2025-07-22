@@ -1,3 +1,4 @@
+import os
 import click
 import questionary
 from .decorators import pass_async_context
@@ -176,8 +177,8 @@ async def install(ctx):
 
         server_zip_path = None
         if target_version.upper() == "CUSTOM":
-            response = await client.async_get_content_custom()
-            available_files = response.files
+            response = await client.async_get_custom_zips()
+            available_files = response['custom_zips']
 
             if not available_files:
                 click.secho(
