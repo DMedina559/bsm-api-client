@@ -27,15 +27,20 @@ classifiers = [
     "Framework :: AsyncIO",
 ]
 dependencies = [
-    "aiohttp>=3.8.0,<4.0.0",
-    "pydantic >= 2.11.0,<2.12"
+    "aiohttp >= 3.8.0,<4.0.0",
+    "pydantic >= 2.11.0,<2.12",
 ]
 
 [project.optional-dependencies]
+dev = [
+    "pytest >=8.4.0,<8.5",
+    "pytest-asyncio >= 1.1.0,<1.2.0",
+    "black >= 23.3.0,<24.0.0",
+    "flake8 >= 6.0.0,<7.0.0",
+]
 cli = [
-    "click",
-    "questionary",
-    "toml",
+    "click >=8.2.0,<8.3",
+    "questionary >=2.1.0,<2.2",
 ]
 keywords = ["minecraft", "bedrock", "server", "manager", "api", "client", "asyncio", "aiohttp", "bsm"]
 
