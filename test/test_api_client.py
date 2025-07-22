@@ -7,7 +7,7 @@ from bsm_api_client.models import (
     InstallServerPayload,
     PropertiesPayload,
     PermissionsSetPayload,
-    PlayerPermissionItem,
+    PlayerPermission,
 )
 
 import pytest_asyncio
@@ -74,8 +74,8 @@ async def test_set_server_permissions(client):
     """Test async_set_server_permissions method."""
     with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
         permissions = [
-            PlayerPermissionItem(xuid="123", name="player1", permission_level="member"),
-            PlayerPermissionItem(
+            PlayerPermission(xuid="123", name="player1", permission_level="member"),
+            PlayerPermission(
                 xuid="456", name="player2", permission_level="operator"
             ),
         ]
