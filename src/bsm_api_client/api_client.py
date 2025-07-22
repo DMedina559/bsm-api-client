@@ -30,4 +30,8 @@ class BedrockServerManagerApi(
 
     # __init__ is inherited from ClientBase.
     # All async API methods are inherited from mixins.
-    pass
+    
+    @property
+    def servers(self):
+        """Provides access to server-related methods."""
+        return self

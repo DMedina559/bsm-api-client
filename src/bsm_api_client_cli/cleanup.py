@@ -1,48 +1,15 @@
-# bedrock_server_manager/cli/cleanup.py
-"""
-Defines the `bsm cleanup` command for removing generated application files.
-
-This module provides a utility command for project and application maintenance.
-It allows for the targeted removal of:
--   Python bytecode cache directories (``__pycache__``).
--   Application log files (``.log`` files from the configured log directory).
-
-The log cleanup functionality is designed to retain the most recent log file
-while deleting older ones, helping to manage disk space without losing the
-very latest logging information. The project root for pycache cleanup is
-determined dynamically. The log directory can be specified via an option or
-taken from application settings.
-"""
-
+import click
 import logging
 import os
 import shutil
 from pathlib import Path
 from typing import Optional
 
-import click
-
-from ..instances import get_settings_instance
-
 logger = logging.getLogger(__name__)
 
-
-# --- Core Cleanup Functions ---
-
-
 def _cleanup_pycache() -> int:
-    """Finds and removes all `__pycache__` directories within the project.
-
-    It traverses up from the current file's location to find the project
-    root and then recursively removes all `__pycache__` directories.
-
-    Returns:
-        The number of directories deleted.
-    """
+    """Finds and removes all `__pycache__` directories within the project."""
     try:
-        # Assumes this file is at bedrock_server_manager/cli/cleanup.py.
-        # .parents[0] is 'cli', .parents[1] is 'bedrock_server_manager',
-        # .parents[2] is the project root directory.
         project_root = Path(__file__).resolve().parents[2]
         deleted_count = 0
 
@@ -60,15 +27,7 @@ def _cleanup_pycache() -> int:
 
 
 def _cleanup_log_files(log_dir_path: Path) -> int:
-    """
-    Deletes all `.log` files in the specified directory, skipping the newest one.
-
-    Args:
-        log_dir_path (Path): The `pathlib.Path` object for the log directory.
-
-    Returns:
-        int: The number of log files deleted.
-    """
+    """Deletes all `.log` files in the specified directory, skipping the newest one."""
     if not log_dir_path.is_dir():
         message = f"Log directory '{log_dir_path}' does not exist."
         click.secho(f"Warning: {message}", fg="yellow")
@@ -92,7 +51,6 @@ def _cleanup_log_files(log_dir_path: Path) -> int:
         newest_log = log_files[-1]
         logger.info(f"Keeping newest log file: {newest_log.name}")
 
-        # Iterate over all but the newest log file
         for log_file in log_files[:-1]:
             try:
                 logger.debug(f"Removing old log file: {log_file.name}")
@@ -116,9 +74,6 @@ def _cleanup_log_files(log_dir_path: Path) -> int:
         return 0
 
 
-# --- The Click Command ---
-
-
 @click.command("cleanup")
 @click.option(
     "-c",
@@ -127,7 +82,7 @@ def _cleanup_log_files(log_dir_path: Path) -> int:
     help="Clean up Python bytecode cache files (__pycache__).",
 )
 @click.option(
-    "-l", "--logs", is_flag=True, help="Clean up application log files (``*.log``)."
+    "-l", "--logs", is_flag=True, help="Clean up application log files (*.log)."
 )
 @click.option(
     "--log-dir",
@@ -135,26 +90,10 @@ def _cleanup_log_files(log_dir_path: Path) -> int:
     type=click.Path(file_okay=False, resolve_path=True, path_type=Path),
     help="Override the default log directory from settings.",
 )
-def cleanup(cache: bool, logs: bool, log_dir_override: Optional[Path]):
-    """
-    Cleans up generated application files, such as logs and Python bytecode cache.
-
-    This maintenance command helps keep the project directory and application
-    data areas tidy by removing temporary or accumulated files. At least one
-    of the cleanup flags (`--cache` or `--logs`) must be provided for the
-    command to perform an action.
-
-    Log Cleanup Behavior:
-        When `--logs` is specified, this command will delete ``.log`` files from
-        the configured log directory. **Crucially, it preserves the single
-        most recent log file**, ensuring that the latest operational logs are
-        not accidentally deleted.
-
-    Raises:
-        click.Abort: If log cleaning (`--logs`) is requested but no valid log
-                     directory can be determined (neither specified via
-                     `--log-dir` nor found in settings).
-    """
+@click.pass_context
+def cleanup(ctx, cache: bool, logs: bool, log_dir_override: Optional[Path]):
+    """Cleans up generated application files, such as logs and Python bytecode cache."""
+    config = ctx.obj["config"]
     logger.info("CLI: Running cleanup command...")
 
     if not cache and not logs:
@@ -183,10 +122,9 @@ def cleanup(cache: bool, logs: bool, log_dir_override: Optional[Path]):
     if logs:
         click.secho("\nCleaning log files...", bold=True)
 
-        # Determine the correct log directory, prioritizing the command-line override.
         final_log_dir = log_dir_override
         if not final_log_dir:
-            settings_log_dir = get_settings_instance().get("paths.logs")
+            settings_log_dir = config.get("paths.logs")
             if settings_log_dir:
                 final_log_dir = Path(settings_log_dir)
 
@@ -218,8 +156,3 @@ def cleanup(cache: bool, logs: bool, log_dir_override: Optional[Path]):
         logger.info("CLI: Cleanup operations finished successfully.")
     else:
         logger.info("CLI: Cleanup operations finished, nothing was cleaned.")
-
-
-if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
-    cleanup()

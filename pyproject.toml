@@ -30,11 +30,21 @@ dependencies = [
     "aiohttp>=3.8.0,<4.0.0",
     "pydantic >= 2.11.0,<2.12"
 ]
+
+[project.optional-dependencies]
+cli = [
+    "click",
+    "questionary",
+    "toml",
+]
 keywords = ["minecraft", "bedrock", "server", "manager", "api", "client", "asyncio", "aiohttp", "bsm"]
 
 [tool.setuptools.packages.find]
 where = ["src"] 
-include = ["bsm_api_client*"]
+include = ["bsm_api_client*", "bsm_api_client_cli*"]
+
+[project.scripts]
+bsm-api-client = "bsm_api_client_cli.__main__:cli"
 
 [project.urls]
 "Homepage" = "https://github.com/DMedina559/bsm-api-client"
