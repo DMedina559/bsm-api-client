@@ -233,6 +233,7 @@ async def install(ctx):
         install_result = await client.async_install_new_server(payload)
 
         if install_result.task_id:
+            time.sleep(5)  # Give the server time to start installation
             click.echo("Server installation started. Polling for completion...")
             while True:
                 status_response = await client.async_get_install_status(
