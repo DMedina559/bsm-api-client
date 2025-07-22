@@ -2,6 +2,7 @@ import click
 import questionary
 from questionary import Separator
 from .decorators import pass_async_context
+from .server import list_servers
 
 async def _world_management_menu(ctx: click.Context, server_name: str):
     """Displays a sub-menu for world management actions."""
@@ -76,6 +77,8 @@ async def main_menu(ctx: click.Context):
         try:
             click.clear()
             click.secho("BSM API Client - Main Menu", fg="magenta", bold=True)
+
+            await ctx.invoke(list_servers)
 
             # --- Dynamically build menu choices ---
             response = await client.async_get_servers_details()
@@ -156,9 +159,8 @@ async def manage_server_menu(ctx: click.Context, server_name: str):
         "Update Server": (get_cmd("server", "update"), {}),
         "Delete Server": (get_cmd("server", "delete"), {}),
     }
-    system_map = {
-        "Monitor Resource Usage": (get_cmd("system", "monitor"), {})
-    }
+    system_map = {}
+    system_map["Monitor Resource Usage"] = (get_cmd("system", "monitor"), {})
 
     # ---- Combine all maps for easy lookup ----
     full_menu_map = {
@@ -178,17 +180,26 @@ async def manage_server_menu(ctx: click.Context, server_name: str):
         *management_map.keys(),
         Separator("--- Configuration ---"),
         *config_map.keys(),
-        Separator("--- System & Monitoring ---"),
-        *system_map.keys(),
-        Separator("--- Maintenance ---"),
-        *maintenance_map.keys(),
-        Separator("--------------------"),
-        "Back to Main Menu",
     ]
+
+    if system_map:
+        menu_choices.extend(
+            [Separator("--- System & Monitoring ---"), *system_map.keys()]
+        )
+
+    menu_choices.extend(
+        [
+            Separator("--- Maintenance ---"),
+            *maintenance_map.keys(),
+            Separator("--------------------"),
+            "Back to Main Menu",
+        ]
+    )
 
     while True:
         click.clear()
         click.secho(f"--- Managing Server: {server_name} ---", fg="magenta", bold=True)
+        await ctx.invoke(list_servers, server_name=server_name)
 
         choice = await questionary.select(
             f"\nSelect an action for '{server_name}':",

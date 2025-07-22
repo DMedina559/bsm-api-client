@@ -3,29 +3,89 @@ import questionary
 from .decorators import pass_async_context
 from bsm_api_client.models import InstallServerPayload, CommandPayload
 
+def _print_server_table(servers):
+    """Prints a formatted table of server information to the console."""
+    header = f"{'SERVER NAME':<25} {'STATUS':<15} {'VERSION'}"
+    click.secho(header, bold=True)
+    click.echo("-" * 65)
+
+    if not servers:
+        click.echo("  No servers found.")
+    else:
+        for server_data in servers:
+            name = server_data.get("name", "N/A")
+            status = server_data.get("status", "UNKNOWN").upper()
+            version = server_data.get("version", "UNKNOWN")
+
+            color_map = {
+                "RUNNING": "green",
+                "STOPPED": "red",
+                "STARTING": "yellow",
+                "STOPPING": "yellow",
+                "INSTALLING": "bright_cyan",
+                "UPDATING": "bright_cyan",
+                "INSTALLED": "bright_magenta",
+                "UPDATED": "bright_magenta",
+                "UNKNOWN": "bright_black",
+            }
+            status_color = color_map.get(status, "red")
+
+            status_styled = click.style(f"{status:<10}", fg=status_color)
+            name_styled = click.style(name, fg="cyan")
+            version_styled = click.style(version, fg="bright_white")
+
+            click.echo(f"  {name_styled:<38} {status_styled:<20} {version_styled}")
+    click.echo("-" * 65)
+
 @click.group()
 def server():
     """Manages servers."""
     pass
 
 @server.command("list")
+@click.option(
+    "--loop", is_flag=True, help="Continuously refresh server statuses every 5 seconds."
+)
+@click.option("--server-name", help="Display status for only a specific server.")
 @pass_async_context
-async def list_servers(ctx):
-    """Lists all servers."""
+async def list_servers(ctx, loop, server_name):
+    """Lists all configured Bedrock servers and their current operational status."""
     client = ctx.obj.get("client")
     if not client:
         click.secho("You are not logged in.", fg="red")
         return
 
-    try:
+    async def _display_status():
         response = await client.async_get_servers_details()
-        if response.servers:
-            for server in response.servers:
-                click.echo(f"- {server['name']}: {server['status']}")
+        all_servers = response.servers
+
+        if server_name:
+            servers_to_show = [s for s in all_servers if s.get("name") == server_name]
         else:
-            click.echo("No servers found.")
+            servers_to_show = all_servers
+
+        _print_server_table(servers_to_show)
+
+    try:
+        if loop:
+            while True:
+                click.clear()
+                click.secho(
+                    "--- Bedrock Servers Status (Press CTRL+C to exit) ---",
+                    fg="magenta",
+                    bold=True,
+                )
+                await _display_status()
+                time.sleep(5)
+        else:
+            if not server_name:
+                click.secho("--- Bedrock Servers Status ---", fg="magenta", bold=True)
+            await _display_status()
+
+    except (KeyboardInterrupt, click.Abort):
+        click.secho("\nExiting status monitor.", fg="green")
     except Exception as e:
-        click.secho(f"Failed to list servers: {e}", fg="red")
+        click.secho(f"An error occurred: {e}", fg="red")
 
 @server.command("start")
 @click.option("-s", "--server", "server_name", required=True, help="Name of the server to start.")
