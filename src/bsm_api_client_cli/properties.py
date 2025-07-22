@@ -111,7 +111,9 @@ async def interactive_properties_workflow(client, server_name: str):
         click.secho(f"Error: {properties_response.message}", fg="red")
         raise click.Abort()
 
-    current_properties = properties_response.data["properties"]
+    current_properties = (
+        properties_response.properties if properties_response.properties else {}
+    )
     changes = {}
 
     async def _prompt(prop: str, message: str, prompter, **kwargs):

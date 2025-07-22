@@ -238,7 +238,7 @@ async def install(ctx):
                 status_response = await client.async_get_install_status(
                     install_result.task_id
                 )
-                if status_response["status"] == "complete":
+                if status_response["status"] == "success":
                     click.secho(
                         "Server installation completed successfully.", fg="green"
                     )
