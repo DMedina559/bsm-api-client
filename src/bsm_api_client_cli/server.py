@@ -1,8 +1,10 @@
 import os
+import time
 import click
 import questionary
 from .decorators import pass_async_context
 from bsm_api_client.models import InstallServerPayload, CommandPayload
+
 
 def _print_server_table(servers):
     """Prints a formatted table of server information to the console."""
@@ -38,10 +40,12 @@ def _print_server_table(servers):
             click.echo(f"  {name_styled:<38} {status_styled:<20} {version_styled}")
     click.echo("-" * 65)
 
+
 @click.group()
 def server():
     """Manages servers."""
     pass
+
 
 @server.command("list")
 @click.option(
@@ -88,8 +92,11 @@ async def list_servers(ctx, loop, server_name):
     except Exception as e:
         click.secho(f"An error occurred: {e}", fg="red")
 
+
 @server.command("start")
-@click.option("-s", "--server", "server_name", required=True, help="Name of the server to start.")
+@click.option(
+    "-s", "--server", "server_name", required=True, help="Name of the server to start."
+)
 @click.pass_context
 async def start_server(ctx, server_name: str):
     """Starts a specific Bedrock server instance."""
@@ -108,8 +115,11 @@ async def start_server(ctx, server_name: str):
     except Exception as e:
         click.secho(f"Failed to start server: {e}", fg="red")
 
+
 @server.command("stop")
-@click.option("-s", "--server", "server_name", required=True, help="Name of the server to stop.")
+@click.option(
+    "-s", "--server", "server_name", required=True, help="Name of the server to stop."
+)
 @click.pass_context
 async def stop_server(ctx, server_name: str):
     """Sends a graceful stop command to a running Bedrock server."""
@@ -128,8 +138,15 @@ async def stop_server(ctx, server_name: str):
     except Exception as e:
         click.secho(f"Failed to stop server: {e}", fg="red")
 
+
 @server.command("restart")
-@click.option("-s", "--server", "server_name", required=True, help="Name of the server to restart.")
+@click.option(
+    "-s",
+    "--server",
+    "server_name",
+    required=True,
+    help="Name of the server to restart.",
+)
 @click.pass_context
 async def restart_server(ctx, server_name: str):
     """Gracefully restarts a specific Bedrock server."""
@@ -148,10 +165,12 @@ async def restart_server(ctx, server_name: str):
     except Exception as e:
         click.secho(f"Failed to restart server: {e}", fg="red")
 
+
 from bsm_api_client.models import InstallServerPayload, CommandPayload
 from .properties import interactive_properties_workflow
 from .allowlist import interactive_allowlist_workflow
 from .permissions import interactive_permissions_workflow
+
 
 @server.command("install")
 @click.pass_context
@@ -164,7 +183,9 @@ async def install(ctx):
 
     try:
         click.secho("--- New Bedrock Server Installation ---", bold=True)
-        server_name = await questionary.text("Enter a name for the new server:").ask_async()
+        server_name = await questionary.text(
+            "Enter a name for the new server:"
+        ).ask_async()
         if not server_name:
             raise click.Abort()
 
@@ -178,7 +199,7 @@ async def install(ctx):
         server_zip_path = None
         if target_version.upper() == "CUSTOM":
             response = await client.async_get_custom_zips()
-            available_files = response['custom_zips']
+            available_files = response["custom_zips"]
 
             if not available_files:
                 click.secho(
@@ -197,37 +218,70 @@ async def install(ctx):
                 raise click.Abort()
             server_zip_path = file_map[selection]
 
-        overwrite = await questionary.confirm("Overwrite existing server if it exists?", default=False).ask_async()
+        overwrite = await questionary.confirm(
+            "Overwrite existing server if it exists?", default=False
+        ).ask_async()
 
         click.echo(f"\nInstalling server '{server_name}' version '{target_version}'...")
-        
-        payload = InstallServerPayload(server_name=server_name, server_version=target_version, overwrite=overwrite, server_zip_path=server_zip_path)
+
+        payload = InstallServerPayload(
+            server_name=server_name,
+            server_version=target_version,
+            overwrite=overwrite,
+            server_zip_path=server_zip_path,
+        )
         install_result = await client.async_install_new_server(payload)
 
-        if install_result.status == "success":
+        if install_result.task_id:
+            click.echo("Server installation started. Polling for completion...")
+            while True:
+                status_response = await client.async_get_install_status(
+                    install_result.task_id
+                )
+                if status_response["status"] == "complete":
+                    click.secho(
+                        "Server installation completed successfully.", fg="green"
+                    )
+                    break
+                elif status_response["status"] == "error":
+                    click.secho(
+                        f"Installation failed: {status_response['message']}", fg="red"
+                    )
+                    return
+                time.sleep(2)
+        elif install_result.status == "success":
             click.secho("Server files installed successfully.", fg="green")
         else:
             click.secho(f"Failed to install server: {install_result.message}", fg="red")
             return
-            
+
         await interactive_properties_workflow(client, server_name)
-        if await questionary.confirm("\nConfigure the allowlist now?", default=False).ask_async():
+        if await questionary.confirm(
+            "\nConfigure the allowlist now?", default=False
+        ).ask_async():
             await interactive_allowlist_workflow(client, server_name)
-        if await questionary.confirm("\nConfigure player permissions now?", default=False).ask_async():
+        if await questionary.confirm(
+            "\nConfigure player permissions now?", default=False
+        ).ask_async():
             await interactive_permissions_workflow(client, server_name)
-            
+
         click.secho(
             "\nInstallation and initial configuration complete!", fg="green", bold=True
         )
 
-        if await questionary.confirm(f"Start server '{server_name}' now?", default=True).ask_async():
+        if await questionary.confirm(
+            f"Start server '{server_name}' now?", default=True
+        ).ask_async():
             await ctx.invoke(start_server, server_name=server_name)
 
     except Exception as e:
         click.secho(f"An application error occurred: {e}", fg="red")
 
+
 @server.command("update")
-@click.option("-s", "--server", "server_name", required=True, help="Name of the server to update.")
+@click.option(
+    "-s", "--server", "server_name", required=True, help="Name of the server to update."
+)
 @click.pass_context
 async def update(ctx, server_name: str):
     """Checks for and applies updates to an existing Bedrock server."""
@@ -235,7 +289,7 @@ async def update(ctx, server_name: str):
     if not client:
         click.secho("You are not logged in.", fg="red")
         return
-        
+
     click.echo(f"Checking for updates for server '{server_name}'...")
     try:
         response = await client.async_update_server(server_name)
@@ -246,8 +300,11 @@ async def update(ctx, server_name: str):
     except Exception as e:
         click.secho(f"A server update error occurred: {e}", fg="red")
 
+
 @server.command("delete")
-@click.option("-s", "--server", "server_name", required=True, help="Name of the server to delete.")
+@click.option(
+    "-s", "--server", "server_name", required=True, help="Name of the server to delete."
+)
 @click.option("-y", "--yes", is_flag=True, help="Bypass the confirmation prompt.")
 @click.pass_context
 async def delete_server(ctx, server_name: str, yes: bool):
@@ -272,7 +329,10 @@ async def delete_server(ctx, server_name: str, yes: bool):
     try:
         response = await client.async_delete_server(server_name)
         if response.status == "success":
-            click.secho(f"Server '{server_name}' and all its data have been deleted.", fg="green")
+            click.secho(
+                f"Server '{server_name}' and all its data have been deleted.",
+                fg="green",
+            )
         else:
             click.secho(f"Failed to delete server: {response.message}", fg="red")
     except Exception as e:
@@ -280,7 +340,9 @@ async def delete_server(ctx, server_name: str, yes: bool):
 
 
 @server.command("send-command")
-@click.option("-s", "--server", "server_name", required=True, help="Name of the target server.")
+@click.option(
+    "-s", "--server", "server_name", required=True, help="Name of the target server."
+)
 @click.argument("command_parts", nargs=-1, required=True)
 @click.pass_context
 async def send_command(ctx, server_name: str, command_parts: str):
@@ -301,4 +363,3 @@ async def send_command(ctx, server_name: str, command_parts: str):
             click.secho(f"Failed to send command: {response.message}", fg="red")
     except Exception as e:
         click.secho(f"Failed to send command: {e}", fg="red")
-
