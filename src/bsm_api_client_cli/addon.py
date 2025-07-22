@@ -3,13 +3,17 @@ import os
 import questionary
 from bsm_api_client.models import FileNamePayload
 
+
 @click.group()
 def addon():
     """Manages server addons."""
     pass
 
+
 @addon.command("install")
-@click.option("-s", "--server", "server_name", required=True, help="Name of the target server.")
+@click.option(
+    "-s", "--server", "server_name", required=True, help="Name of the target server."
+)
 @click.option(
     "-f",
     "--file",

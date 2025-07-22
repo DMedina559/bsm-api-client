@@ -2,13 +2,21 @@ import click
 import questionary
 from bsm_api_client.models import PropertiesPayload
 
+
 @click.group()
 def properties():
     """Manages a server's server.properties file."""
     pass
 
+
 @properties.command("get")
-@click.option("-s", "--server", "server_name", required=True, help="The name of the target server.")
+@click.option(
+    "-s",
+    "--server",
+    "server_name",
+    required=True,
+    help="The name of the target server.",
+)
 @click.option("-p", "--prop", "property_name", help="Display a single property value.")
 @click.pass_context
 async def get_props(ctx, server_name: str, property_name: str):
@@ -38,7 +46,13 @@ async def get_props(ctx, server_name: str, property_name: str):
 
 
 @properties.command("set")
-@click.option("-s", "--server", "server_name", required=True, help="The name of the target server.")
+@click.option(
+    "-s",
+    "--server",
+    "server_name",
+    required=True,
+    help="The name of the target server.",
+)
 @click.option(
     "-p",
     "--prop",
@@ -71,8 +85,10 @@ async def set_props(ctx, server_name: str, properties: tuple[str]):
             key, value = p.split("=", 1)
             props_to_update[key.strip()] = value.strip()
 
-        click.echo(f"Updating {len(props_to_update)} propert(y/ies) for '{server_name}'...")
-        
+        click.echo(
+            f"Updating {len(props_to_update)} propert(y/ies) for '{server_name}'..."
+        )
+
         payload = PropertiesPayload(properties=props_to_update)
         response = await client.async_update_server_properties(server_name, payload)
 
@@ -104,13 +120,17 @@ async def interactive_properties_workflow(client, server_name: str):
 
         if prompter == questionary.confirm:
             default_bool = str(original_value).lower() == "true"
-            new_val = await prompter(message, default=default_bool, **kwargs).ask_async()
+            new_val = await prompter(
+                message, default=default_bool, **kwargs
+            ).ask_async()
             if new_val is None:
                 return
             if new_val != default_bool:
                 changes[prop] = str(new_val).lower()
         else:
-            new_val = await prompter(message, default=str(original_value), **kwargs).ask_async()
+            new_val = await prompter(
+                message, default=str(original_value), **kwargs
+            ).ask_async()
             if new_val is None:
                 return
             if new_val != original_value:
@@ -118,16 +138,37 @@ async def interactive_properties_workflow(client, server_name: str):
 
     await _prompt("server-name", "Server name (visible in LAN list):", questionary.text)
     await _prompt("level-name", "World folder name:", questionary.text)
-    await _prompt("gamemode", "Default gamemode:", questionary.select, choices=["survival", "creative", "adventure"])
-    await _prompt("difficulty", "Game difficulty:", questionary.select, choices=["peaceful", "easy", "normal", "hard"])
+    await _prompt(
+        "gamemode",
+        "Default gamemode:",
+        questionary.select,
+        choices=["survival", "creative", "adventure"],
+    )
+    await _prompt(
+        "difficulty",
+        "Game difficulty:",
+        questionary.select,
+        choices=["peaceful", "easy", "normal", "hard"],
+    )
     await _prompt("allow-cheats", "Allow cheats:", questionary.confirm)
     await _prompt("max-players", "Maximum players:", questionary.text)
-    await _prompt("online-mode", "Require Xbox Live authentication:", questionary.confirm)
+    await _prompt(
+        "online-mode", "Require Xbox Live authentication:", questionary.confirm
+    )
     await _prompt("allow-list", "Enable allowlist:", questionary.confirm)
-    await _prompt("default-player-permission-level", "Default permission for new players:", questionary.select, choices=["visitor", "member", "operator"])
+    await _prompt(
+        "default-player-permission-level",
+        "Default permission for new players:",
+        questionary.select,
+        choices=["visitor", "member", "operator"],
+    )
     await _prompt("view-distance", "View distance (chunks):", questionary.text)
-    await _prompt("tick-distance", "Tick simulation distance (chunks):", questionary.text)
-    await _prompt("level-seed", "Level seed (leave blank for random):", questionary.text)
+    await _prompt(
+        "tick-distance", "Tick simulation distance (chunks):", questionary.text
+    )
+    await _prompt(
+        "level-seed", "Level seed (leave blank for random):", questionary.text
+    )
     await _prompt("texturepack-required", "Require texture packs:", questionary.confirm)
 
     if not changes:
@@ -137,14 +178,16 @@ async def interactive_properties_workflow(client, server_name: str):
     click.secho("\nApplying the following changes:", bold=True)
     for key, value in changes.items():
         original = current_properties.get(key, "not set")
-        click.echo(f"  - {key}: {click.style(original, fg='red')} -> {click.style(value, fg='green')}")
+        click.echo(
+            f"  - {key}: {click.style(original, fg='red')} -> {click.style(value, fg='green')}"
+        )
 
     if not await questionary.confirm("Save these changes?", default=True).ask_async():
         raise click.Abort()
 
     payload = PropertiesPayload(properties=changes)
     update_response = await client.async_update_server_properties(server_name, payload)
-    
+
     if update_response.status == "success":
         click.secho("Server properties updated successfully.", fg="green")
     else:

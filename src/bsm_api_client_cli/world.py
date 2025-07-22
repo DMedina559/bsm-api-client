@@ -3,13 +3,17 @@ import os
 import questionary
 from bsm_api_client.models import FileNamePayload
 
+
 @click.group()
 def world():
     """Manages server worlds."""
     pass
 
+
 @world.command("install")
-@click.option("-s", "--server", "server_name", required=True, help="Name of the target server.")
+@click.option(
+    "-s", "--server", "server_name", required=True, help="Name of the target server."
+)
 @click.option(
     "-f",
     "--file",
@@ -67,7 +71,7 @@ async def install_world(ctx, server_name: str, world_file_path: str):
         click.echo(f"Installing world '{filename}'...")
         payload = FileNamePayload(filename=filename)
         response = await client.async_install_server_world(server_name, payload)
-        
+
         if response.status == "success":
             click.secho(f"World '{filename}' installed successfully.", fg="green")
         else:
@@ -78,7 +82,13 @@ async def install_world(ctx, server_name: str, world_file_path: str):
 
 
 @world.command("export")
-@click.option("-s", "--server", "server_name", required=True, help="Name of the server whose world to export.")
+@click.option(
+    "-s",
+    "--server",
+    "server_name",
+    required=True,
+    help="Name of the server whose world to export.",
+)
 @click.pass_context
 async def export_world(ctx, server_name: str):
     """Exports the server's current active world to a .mcworld file."""
@@ -86,7 +96,7 @@ async def export_world(ctx, server_name: str):
     if not client:
         click.secho("You are not logged in.", fg="red")
         return
-        
+
     click.echo(f"Attempting to export world for server '{server_name}'...")
     try:
         response = await client.async_export_server_world(server_name)
@@ -99,7 +109,13 @@ async def export_world(ctx, server_name: str):
 
 
 @world.command("reset")
-@click.option("-s", "--server", "server_name", required=True, help="Name of the server whose world to reset.")
+@click.option(
+    "-s",
+    "--server",
+    "server_name",
+    required=True,
+    help="Name of the server whose world to reset.",
+)
 @click.option("-y", "--yes", is_flag=True, help="Bypass the confirmation prompt.")
 @click.pass_context
 async def reset_world(ctx, server_name: str, yes: bool):

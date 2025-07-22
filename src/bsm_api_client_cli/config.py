@@ -7,9 +7,11 @@ CONFIG_FILE_NAME = ".bsm_cli_config.json"
 DEFAULT_HOST = "http://127.0.0.1"
 DEFAULT_PORT = 11325
 
+
 def get_config_path() -> Path:
     """Gets the path to the configuration file."""
     return Path.home() / CONFIG_FILE_NAME
+
 
 def load_config() -> Dict[str, Any]:
     """Loads the configuration from the config file."""
@@ -19,11 +21,13 @@ def load_config() -> Dict[str, Any]:
     with open(config_path, "r") as f:
         return json.load(f)
 
+
 def save_config(config: Dict[str, Any]):
     """Saves the configuration to the config file."""
     config_path = get_config_path()
     with open(config_path, "w") as f:
         json.dump(config, f, indent=4)
+
 
 class Config:
     """Manages CLI configuration."""

@@ -3,6 +3,7 @@ import json
 import questionary
 from bsm_api_client.models import PluginStatusSetPayload, TriggerEventPayload
 
+
 def _print_plugin_table(plugins):
     """
     Internal helper to print a formatted table of plugins, their statuses, and versions.
@@ -17,7 +18,9 @@ def _print_plugin_table(plugins):
     versions = [config.get("version", "N/A") for config in plugins.values()]
 
     max_name_len = max(len(name) for name in plugin_names) if plugin_names else 20
-    max_version_len = max((max(len(v) for v in versions) if versions else 0), len("Version"))
+    max_version_len = max(
+        (max(len(v) for v in versions) if versions else 0), len("Version")
+    )
     max_status_len = len("Disabled")
 
     header = f"{'Plugin Name':<{max_name_len}} | {'Status':<{max_status_len}} | {'Version':<{max_version_len}}"
@@ -35,12 +38,15 @@ def _print_plugin_table(plugins):
         click.secho(f"{status_str:<{max_status_len}}", fg=status_color, nl=False)
         click.echo(f" | {version:<{max_version_len}}")
 
+
 async def interactive_plugin_workflow(client):
     """Guides the user through an interactive session to enable or disable plugins."""
     try:
         response = await client.async_get_plugin_statuses()
         if response.status != "success":
-            click.secho(f"Failed to retrieve plugin statuses: {response.message}", fg="red")
+            click.secho(
+                f"Failed to retrieve plugin statuses: {response.message}", fg="red"
+            )
             return
 
         plugins = response.data
@@ -76,8 +82,12 @@ async def interactive_plugin_workflow(client):
             return
 
         final_enabled_plugins = set(selected_plugin_names_list)
-        plugins_to_enable = sorted(list(final_enabled_plugins - initial_enabled_plugins))
-        plugins_to_disable = sorted(list(initial_enabled_plugins - final_enabled_plugins))
+        plugins_to_enable = sorted(
+            list(final_enabled_plugins - initial_enabled_plugins)
+        )
+        plugins_to_disable = sorted(
+            list(initial_enabled_plugins - final_enabled_plugins)
+        )
 
         if not plugins_to_enable and not plugins_to_disable:
             click.secho("\nNo changes made to plugin statuses.", fg="cyan")
@@ -115,21 +125,29 @@ async def interactive_plugin_workflow(client):
                 if reload_response.status == "success":
                     click.secho(reload_response.message, fg="green")
                 else:
-                    click.secho(f"Failed to reload plugins: {reload_response.message}", fg="red")
+                    click.secho(
+                        f"Failed to reload plugins: {reload_response.message}", fg="red"
+                    )
             except Exception as e_reload:
                 click.secho(f"\nError reloading plugins: {e_reload}", fg="red")
         else:
-            click.secho("\nNo changes were successfully applied to plugin statuses.", fg="yellow")
+            click.secho(
+                "\nNo changes were successfully applied to plugin statuses.",
+                fg="yellow",
+            )
 
         click.echo("\nFetching updated plugin statuses...")
         final_response = await client.async_get_plugin_statuses()
         if final_response.status == "success":
             _print_plugin_table(final_response.data)
         else:
-            click.secho("Could not retrieve final plugin statuses after update.", fg="red")
+            click.secho(
+                "Could not retrieve final plugin statuses after update.", fg="red"
+            )
 
     except Exception as e:
         click.secho(f"An error occurred during plugin configuration: {e}", fg="red")
+
 
 @click.group(invoke_without_command=True)
 @click.pass_context
@@ -141,6 +159,7 @@ async def plugin(ctx):
             click.secho("You are not logged in.", fg="red")
             return
         await interactive_plugin_workflow(client)
+
 
 @plugin.command("list")
 @click.pass_context
@@ -158,12 +177,13 @@ async def list_plugins(ctx):
             if not plugins:
                 click.secho("No plugins found.", fg="yellow")
                 return
-            
+
             _print_plugin_table(plugins)
         else:
             click.secho(f"Failed to list plugins: {response.message}", fg="red")
     except Exception as e:
         click.secho(f"An error occurred: {e}", fg="red")
+
 
 @plugin.command("enable")
 @click.argument("plugin_name")
@@ -228,7 +248,9 @@ async def reload_plugins(ctx):
 
 @plugin.command("trigger-event")
 @click.argument("event_name")
-@click.option("--payload-json", help="Optional JSON string to use as the event payload.")
+@click.option(
+    "--payload-json", help="Optional JSON string to use as the event payload."
+)
 @click.pass_context
 async def trigger_event(ctx, event_name: str, payload_json: str):
     """Triggers a custom plugin event."""
@@ -241,7 +263,7 @@ async def trigger_event(ctx, event_name: str, payload_json: str):
         payload = None
         if payload_json:
             payload = json.loads(payload_json)
-        
+
         event_payload = TriggerEventPayload(event_name=event_name, payload=payload)
         response = await client.async_trigger_plugin_event(event_payload)
         if response.status == "success":

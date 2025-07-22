@@ -1,9 +1,11 @@
 import click
 
+
 @click.group()
 def player():
     """Manages the central player database."""
     pass
+
 
 @player.command("scan")
 @click.pass_context

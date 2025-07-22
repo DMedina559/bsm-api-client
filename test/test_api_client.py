@@ -66,7 +66,7 @@ async def test_prune_server_backups(client):
             json_data=None,
             authenticated=True,
         )
-        assert result["status"] == "success"
+        assert result.status == "success"
 
 
 @pytest.mark.asyncio
@@ -74,10 +74,8 @@ async def test_set_server_permissions(client):
     """Test async_set_server_permissions method."""
     with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
         permissions = [
-            PlayerPermission(xuid="123", name="player1", permission_level="member"),
-            PlayerPermission(
-                xuid="456", name="player2", permission_level="operator"
-            ),
+            PlayerPermission(xuid="123", permission="member"),
+            PlayerPermission(xuid="456", permission="operator"),
         ]
         payload = PermissionsSetPayload(permissions=permissions)
         mock_request.return_value = {
@@ -91,7 +89,7 @@ async def test_set_server_permissions(client):
             json_data=payload.model_dump(),
             authenticated=True,
         )
-        assert result["status"] == "success"
+        assert result.status == "success"
 
 
 @pytest.mark.asyncio
@@ -111,7 +109,7 @@ async def test_update_server_properties(client):
             json_data=payload.model_dump(),
             authenticated=True,
         )
-        assert result["status"] == "success"
+        assert result.status == "success"
 
 
 @pytest.mark.asyncio
@@ -126,4 +124,4 @@ async def test_reload_plugins(client):
         mock_request.assert_called_once_with(
             method="PUT", path="/plugins/reload", authenticated=True
         )
-        assert result["status"] == "success"
+        assert result.status == "success"

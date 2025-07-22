@@ -2,13 +2,17 @@ import click
 import questionary
 from bsm_api_client.models import AllowlistAddPayload, AllowlistRemovePayload
 
+
 @click.group()
 def allowlist():
     """Manages a server's player allowlist."""
     pass
 
+
 @allowlist.command("add")
-@click.option("-s", "--server", "server_name", required=True, help="The name of the server.")
+@click.option(
+    "-s", "--server", "server_name", required=True, help="The name of the server."
+)
 @click.option(
     "-p",
     "--player",
@@ -41,18 +45,24 @@ async def add(ctx, server_name: str, players: tuple[str], ignore_limit: bool):
         player_data_list = [
             {"name": p_name, "ignoresPlayerLimit": ignore_limit} for p_name in players
         ]
-        
+
         payload = AllowlistAddPayload(players=player_data_list)
         response = await client.async_add_server_allowlist(server_name, payload)
-        
+
         added_count = response.data.get("added_count", 0)
-        click.secho(f"Successfully added {added_count} new player(s) to the allowlist.", fg="green")
+        click.secho(
+            f"Successfully added {added_count} new player(s) to the allowlist.",
+            fg="green",
+        )
 
     except Exception as e:
         click.secho(f"\nAn error occurred: {e}", fg="red")
 
+
 @allowlist.command("remove")
-@click.option("-s", "--server", "server_name", required=True, help="The name of the server.")
+@click.option(
+    "-s", "--server", "server_name", required=True, help="The name of the server."
+)
 @click.option(
     "-p",
     "--player",
@@ -68,12 +78,12 @@ async def remove(ctx, server_name: str, players: tuple[str]):
     if not client:
         click.secho("You are not logged in.", fg="red")
         return
-        
+
     player_list = list(players)
     click.echo(
         f"Removing {len(player_list)} player(s) from '{server_name}' allowlist..."
     )
-    
+
     payload = AllowlistRemovePayload(players=player_list)
     response = await client.async_remove_server_allowlist_players(server_name, payload)
 
@@ -99,11 +109,15 @@ async def remove(ctx, server_name: str, players: tuple[str]):
             for p_name in not_found_players:
                 click.echo(f"  - {p_name}")
     else:
-        click.secho(f"Failed to remove players from allowlist: {response.message}", fg="red")
+        click.secho(
+            f"Failed to remove players from allowlist: {response.message}", fg="red"
+        )
 
 
 @allowlist.command("list")
-@click.option("-s", "--server", "server_name", required=True, help="The name of the server.")
+@click.option(
+    "-s", "--server", "server_name", required=True, help="The name of the server."
+)
 @click.pass_context
 async def list_players(ctx, server_name: str):
     """Lists all players currently on a server's allowlist."""
@@ -117,7 +131,9 @@ async def list_players(ctx, server_name: str):
     if response.status == "success":
         players = response.data.get("existing_players", [])
         if not players:
-            click.secho(f"The allowlist for server '{server_name}' is empty.", fg="yellow")
+            click.secho(
+                f"The allowlist for server '{server_name}' is empty.", fg="yellow"
+            )
             return
 
         click.secho(f"\nAllowlist for '{server_name}':", bold=True)
@@ -180,6 +196,8 @@ async def interactive_allowlist_workflow(client, server_name: str):
         if save_response.status == "success":
             click.secho("Allowlist updated successfully.", fg="green")
         else:
-            click.secho(f"Failed to update allowlist: {save_response.message}", fg="red")
+            click.secho(
+                f"Failed to update allowlist: {save_response.message}", fg="red"
+            )
     else:
         click.secho("No new players were added.", fg="cyan")

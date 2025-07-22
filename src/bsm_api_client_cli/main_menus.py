@@ -4,6 +4,7 @@ from questionary import Separator
 from .decorators import pass_async_context
 from .server import list_servers
 
+
 async def _world_management_menu(ctx: click.Context, server_name: str):
     """Displays a sub-menu for world management actions."""
     world_group = ctx.obj["cli"].get_command(ctx, "world")
@@ -66,7 +67,9 @@ async def main_menu(ctx: click.Context):
     """Displays the main application menu and drives interactive mode."""
     client = ctx.obj.get("client")
     if not client:
-        click.secho("You are not logged in. Please run `bsm-cli auth login` first.", fg="red")
+        click.secho(
+            "You are not logged in. Please run `bsm-cli auth login` first.", fg="red"
+        )
         return
 
     cli = ctx.obj["cli"]
@@ -80,7 +83,9 @@ async def main_menu(ctx: click.Context):
 
             # --- Dynamically build menu choices ---
             response = await client.async_get_servers_details()
-            server_names = [s['name'] for s in response.servers] if response.servers else []
+            server_names = (
+                [s["name"] for s in response.servers] if response.servers else []
+            )
 
             menu_choices = ["Install New Server"]
             if server_names:
@@ -108,7 +113,9 @@ async def main_menu(ctx: click.Context):
                 ).ask_async()
 
             elif choice == "Manage Existing Server":
-                server_name = await questionary.select("Select a server:", choices=server_names).ask_async()
+                server_name = await questionary.select(
+                    "Select a server:", choices=server_names
+                ).ask_async()
                 if server_name:
                     await manage_server_menu(ctx, server_name)
 
@@ -220,7 +227,9 @@ async def manage_server_menu(ctx: click.Context, server_name: str):
                 if not command_obj:
                     continue
                 if command_obj.name == "send-command":
-                    cmd_str = await questionary.text("Enter command to send:").ask_async()
+                    cmd_str = await questionary.text(
+                        "Enter command to send:"
+                    ).ask_async()
                     if cmd_str:
                         kwargs["command_parts"] = cmd_str.split()
                     else:

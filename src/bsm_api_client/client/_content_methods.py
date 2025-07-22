@@ -37,7 +37,8 @@ class ContentMethodsMixin:
             params: Optional[Dict[str, Any]] = None,
             authenticated: bool = True,
             is_retry: bool = False,
-        ) -> Any: ...
+        ) -> Any:
+            ...
 
     async def async_list_server_backups(
         self, server_name: str, backup_type: str

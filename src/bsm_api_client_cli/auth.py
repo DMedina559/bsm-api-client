@@ -2,16 +2,20 @@ import click
 from .config import Config
 from bsm_api_client import BedrockServerManagerApi, AuthError
 
+
 @click.group()
 def auth():
     """Manages authentication."""
     pass
 
+
 @auth.command()
 @click.option("--host", help="The host of the Bedrock Server Manager API.")
 @click.option("--port", help="The port of the Bedrock Server Manager API.", type=int)
 @click.option("--username", prompt=True, help="The username for authentication.")
-@click.option("--password", prompt=True, hide_input=True, help="The password for authentication.")
+@click.option(
+    "--password", prompt=True, hide_input=True, help="The password for authentication."
+)
 @click.pass_context
 async def login(ctx, host, port, username, password):
     """Logs in to the Bedrock Server Manager API."""

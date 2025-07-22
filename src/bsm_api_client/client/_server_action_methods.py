@@ -45,8 +45,11 @@ class ServerActionMethodsMixin:
     _request: callable
     if TYPE_CHECKING:
 
-        def is_linux_server(self: "ClientBase") -> bool: ...
-        def is_windows_server(self: "ClientBase") -> bool: ...
+        def is_linux_server(self: "ClientBase") -> bool:
+            ...
+
+        def is_windows_server(self: "ClientBase") -> bool:
+            ...
 
         async def _request(
             self: "ClientBase",
@@ -56,7 +59,8 @@ class ServerActionMethodsMixin:
             params: Optional[Dict[str, Any]] = None,
             authenticated: bool = True,
             is_retry: bool = False,
-        ) -> Any: ...
+        ) -> Any:
+            ...
 
     async def async_start_server(self, server_name: str) -> ActionResponse:
         """

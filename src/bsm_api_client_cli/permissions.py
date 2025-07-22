@@ -2,14 +2,27 @@ import click
 import questionary
 from bsm_api_client.models import PermissionsSetPayload
 
+
 @click.group()
 def permissions():
     """Manages player permission levels on a server."""
     pass
 
+
 @permissions.command("set")
-@click.option("-s", "--server", "server_name", required=True, help="The name of the target server.")
-@click.option("-p", "--player", "player_name", help="The gamertag of the player. Skips interactive mode.")
+@click.option(
+    "-s",
+    "--server",
+    "server_name",
+    required=True,
+    help="The name of the target server.",
+)
+@click.option(
+    "-p",
+    "--player",
+    "player_name",
+    help="The gamertag of the player. Skips interactive mode.",
+)
 @click.option(
     "-l",
     "--level",
@@ -52,11 +65,15 @@ async def set_perm(ctx, server_name: str, player_name: str, level: str):
             return
 
         xuid = player_data["xuid"]
-        click.echo(f"Setting permission for {player_name} (XUID: {xuid}) to '{level}'...")
-        
-        payload = PermissionsSetPayload(permissions=[{"xuid": xuid, "permission_level": level}])
+        click.echo(
+            f"Setting permission for {player_name} (XUID: {xuid}) to '{level}'..."
+        )
+
+        payload = PermissionsSetPayload(
+            permissions=[{"xuid": xuid, "permission_level": level}]
+        )
         response = await client.async_set_server_permissions(server_name, payload)
-        
+
         if response.status == "success":
             click.secho("Permission updated successfully.", fg="green")
         else:
@@ -67,7 +84,9 @@ async def set_perm(ctx, server_name: str, player_name: str, level: str):
 
 
 @permissions.command("list")
-@click.option("-s", "--server", "server_name", required=True, help="The name of the server.")
+@click.option(
+    "-s", "--server", "server_name", required=True, help="The name of the server."
+)
 @click.pass_context
 async def list_perms(ctx, server_name: str):
     """Lists all configured player permissions for a specific server."""
@@ -81,7 +100,10 @@ async def list_perms(ctx, server_name: str):
     if response.status == "success":
         permissions = response.data.get("permissions", [])
         if not permissions:
-            click.secho(f"The permissions file for server '{server_name}' is empty.", fg="yellow")
+            click.secho(
+                f"The permissions file for server '{server_name}' is empty.",
+                fg="yellow",
+            )
             return
 
         click.secho(f"\nPermissions for '{server_name}':", bold=True)
@@ -132,10 +154,15 @@ async def interactive_permissions_workflow(client, server_name: str):
     if permission is None:
         raise click.Abort()
 
-    payload = PermissionsSetPayload(permissions=[{"xuid": selected_player["xuid"], "permission_level": permission}])
+    payload = PermissionsSetPayload(
+        permissions=[{"xuid": selected_player["xuid"], "permission_level": permission}]
+    )
     perm_response = await client.async_set_server_permissions(server_name, payload)
-    
+
     if perm_response.status == "success":
-        click.secho(f"Permission for {selected_player['name']} set to '{permission}'.", fg="green")
+        click.secho(
+            f"Permission for {selected_player['name']} set to '{permission}'.",
+            fg="green",
+        )
     else:
         click.secho(f"Failed to set permission: {perm_response.message}", fg="red")

@@ -1,13 +1,21 @@
 import click
 import time
 
+
 @click.group()
 def system():
     """Manages OS-level integrations and server resource monitoring."""
     pass
 
+
 @system.command("monitor")
-@click.option("-s", "--server", "server_name", required=True, help="Name of the server to monitor.")
+@click.option(
+    "-s",
+    "--server",
+    "server_name",
+    required=True,
+    help="Name of the server to monitor.",
+)
 @click.pass_context
 async def monitor_usage(ctx, server_name: str):
     """Continuously monitors CPU and memory usage of a specific server process."""

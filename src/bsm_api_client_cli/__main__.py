@@ -18,13 +18,15 @@ from .world import world
 from .main_menus import main_menu
 from .decorators import AsyncGroup
 
+
 @click.group(cls=AsyncGroup, invoke_without_command=True)
 @click.pass_context
 async def cli(ctx):
     """A CLI for managing Bedrock servers."""
-    ctx.obj['cli'] = cli
+    ctx.obj["cli"] = cli
     if ctx.invoked_subcommand is None:
         await main_menu(ctx)
+
 
 @cli.context
 @asynccontextmanager
@@ -33,12 +35,14 @@ async def cli_context(ctx):
     ctx.obj["config"] = config
 
     if config.jwt_token:
-        client = BedrockServerManagerApi(host=config.host, port=config.port, username="", password="")
+        client = BedrockServerManagerApi(
+            host=config.host, port=config.port, username="", password=""
+        )
         client._jwt_token = config.jwt_token
         ctx.obj["client"] = client
     else:
         ctx.obj["client"] = None
-    
+
     try:
         yield
     finally:

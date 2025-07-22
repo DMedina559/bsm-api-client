@@ -32,7 +32,8 @@ class ManagerMethodsMixin:
             params: Optional[Dict[str, Any]] = None,
             authenticated: bool = True,
             is_retry: bool = False,
-        ) -> Any: ...
+        ) -> Any:
+            ...
 
     async def async_get_info(self) -> GeneralApiResponse:
         """

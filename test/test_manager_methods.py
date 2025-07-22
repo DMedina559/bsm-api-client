@@ -28,7 +28,7 @@ async def test_get_info(client):
         mock_request.assert_called_once_with(
             method="GET", path="/info", authenticated=False
         )
-        assert result["info"]["version"] == "1.0.0"
+        assert result.info["version"] == "1.0.0"
 
 
 @pytest.mark.asyncio
@@ -148,8 +148,9 @@ async def test_install_new_server(client):
             server_name="test-server", server_version="LATEST", overwrite=True
         )
         mock_request.return_value = {
-            "status": "success",
-            "message": "Server installed.",
+            "status": "pending",
+            "message": "Installation started.",
+            "task_id": "test-task-id",
         }
         result = await client.async_install_new_server(payload)
         mock_request.assert_called_once_with(
@@ -158,4 +159,23 @@ async def test_install_new_server(client):
             json_data=payload.model_dump(),
             authenticated=True,
         )
-        assert result["status"] == "success"
+        assert result.status == "pending"
+        assert result.task_id == "test-task-id"
+
+
+@pytest.mark.asyncio
+async def test_get_install_status(client):
+    """Test async_get_install_status method."""
+    with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
+        task_id = "test-task-id"
+        mock_request.return_value = {
+            "status": "complete",
+            "message": "Installation complete.",
+        }
+        result = await client.async_get_install_status(task_id)
+        mock_request.assert_called_once_with(
+            method="GET",
+            path=f"/server/install/status/{task_id}",
+            authenticated=True,
+        )
+        assert result["status"] == "complete"

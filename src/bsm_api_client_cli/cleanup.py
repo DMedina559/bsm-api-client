@@ -7,6 +7,7 @@ from typing import Optional
 
 logger = logging.getLogger(__name__)
 
+
 def _cleanup_pycache() -> int:
     """Finds and removes all `__pycache__` directories within the project."""
     try:

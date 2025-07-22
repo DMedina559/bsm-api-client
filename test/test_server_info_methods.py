@@ -27,8 +27,8 @@ async def test_get_servers_details(client):
         }
         result = await client.async_get_servers_details()
         mock_request.assert_called_once_with("GET", "/servers", authenticated=True)
-        assert len(result) == 2
-        assert result[0]["name"] == "server1"
+        assert len(result.servers) == 2
+        assert result.servers[0]["name"] == "server1"
 
 
 @pytest.mark.asyncio
@@ -37,7 +37,7 @@ async def test_get_server_names(client):
     with patch.object(
         client, "async_get_servers_details", new_callable=AsyncMock
     ) as mock_details:
-        mock_details.return_value = [
+        mock_details.return_value.servers = [
             {"name": "server2", "status": "STOPPED", "version": "1.0.1"},
             {"name": "server1", "status": "RUNNING", "version": "1.0.0"},
         ]
@@ -78,7 +78,7 @@ async def test_get_server_process_info(client):
         mock_request.assert_called_once_with(
             "GET", "/server/test-server/process_info", authenticated=True
         )
-        assert result["data"]["process_info"]["pid"] == 123
+        assert result.data["process_info"]["pid"] == 123
 
 
 @pytest.mark.asyncio
@@ -90,7 +90,7 @@ async def test_get_server_running_status(client):
         mock_request.assert_called_once_with(
             "GET", "/server/test-server/status", authenticated=True
         )
-        assert result["data"]["running"] is True
+        assert result.data["running"] is True
 
 
 @pytest.mark.asyncio
@@ -105,19 +105,19 @@ async def test_get_server_config_status(client):
         mock_request.assert_called_once_with(
             "GET", "/server/test-server/config_status", authenticated=True
         )
-        assert result["data"]["config_status"] == "RUNNING"
+        assert result.data["config_status"] == "RUNNING"
 
 
 @pytest.mark.asyncio
 async def test_get_server_version(client):
     """Test async_get_server_version method."""
     with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
-        mock_request.return_value = {"status": "success", "installed_version": "1.0.0"}
+        mock_request.return_value = {"status": "success", "data": {"version": "1.0.0"}}
         result = await client.async_get_server_version("test-server")
         mock_request.assert_called_once_with(
             "GET", "/server/test-server/version", authenticated=True
         )
-        assert result == "1.0.0"
+        assert result.data["version"] == "1.0.0"
 
 
 @pytest.mark.asyncio
@@ -132,7 +132,7 @@ async def test_get_server_properties(client):
         mock_request.assert_called_once_with(
             "GET", "/server/test-server/properties/get", authenticated=True
         )
-        assert result["properties"]["level-name"] == "world"
+        assert result.properties["level-name"] == "world"
 
 
 @pytest.mark.asyncio
@@ -144,16 +144,16 @@ async def test_get_server_permissions_data(client):
         mock_request.assert_called_once_with(
             "GET", "/server/test-server/permissions/get", authenticated=True
         )
-        assert result["data"]["permissions"] == []
+        assert result.data["permissions"] == []
 
 
 @pytest.mark.asyncio
 async def test_get_server_allowlist(client):
     """Test async_get_server_allowlist method."""
     with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
-        mock_request.return_value = {"status": "success", "existing_players": []}
+        mock_request.return_value = {"status": "success", "players": []}
         result = await client.async_get_server_allowlist("test-server")
         mock_request.assert_called_once_with(
             "GET", "/server/test-server/allowlist/get", authenticated=True
         )
-        assert result["existing_players"] == []
+        assert result.players == []

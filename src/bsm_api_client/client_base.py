@@ -392,9 +392,9 @@ class ClientBase:
                     }
 
                 try:
-                    json_response: Union[Dict[str, Any], List[Any]] = (
-                        await response.json(content_type=None)
-                    )
+                    json_response: Union[
+                        Dict[str, Any], List[Any]
+                    ] = await response.json(content_type=None)
                     if (
                         isinstance(json_response, dict)
                         and json_response.get("status") == "error"

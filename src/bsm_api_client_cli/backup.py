@@ -3,13 +3,17 @@ import os
 import questionary
 from bsm_api_client.models import BackupActionPayload, RestoreActionPayload
 
+
 @click.group()
 def backup():
     """Manages server backups."""
     pass
 
+
 @backup.command("create")
-@click.option("-s", "--server", "server_name", required=True, help="Name of the target server.")
+@click.option(
+    "-s", "--server", "server_name", required=True, help="Name of the target server."
+)
 @click.option(
     "-t",
     "--type",
@@ -36,11 +40,15 @@ async def create_backup(ctx, server_name: str, backup_type: str, file_to_backup:
             backup_type, file_to_backup, _ = await _interactive_backup_menu(server_name)
 
         if backup_type == "config" and not file_to_backup:
-            raise click.UsageError("Option '--file' is required when using '--type config'.")
+            raise click.UsageError(
+                "Option '--file' is required when using '--type config'."
+            )
 
         click.echo(f"Starting '{backup_type}' backup for server '{server_name}'...")
-        
-        payload = BackupActionPayload(backup_type=backup_type, file_to_backup=file_to_backup)
+
+        payload = BackupActionPayload(
+            backup_type=backup_type, file_to_backup=file_to_backup
+        )
         response = await client.async_trigger_server_backup(server_name, payload)
 
         if response.status == "success":
@@ -50,15 +58,20 @@ async def create_backup(ctx, server_name: str, backup_type: str, file_to_backup:
             if prune_response.status == "success":
                 click.secho("Pruning complete.", fg="green")
             else:
-                click.secho(f"Failed to prune backups: {prune_response.message}", fg="red")
+                click.secho(
+                    f"Failed to prune backups: {prune_response.message}", fg="red"
+                )
         else:
             click.secho(f"Failed to create backup: {response.message}", fg="red")
 
     except Exception as e:
         click.secho(f"An error occurred: {e}", fg="red")
 
+
 @backup.command("restore")
-@click.option("-s", "--server", "server_name", required=True, help="Name of the target server.")
+@click.option(
+    "-s", "--server", "server_name", required=True, help="Name of the target server."
+)
 @click.option(
     "-f",
     "--file",
@@ -76,7 +89,9 @@ async def restore_backup(ctx, server_name: str, backup_file_path: str):
 
     try:
         if not backup_file_path:
-            restore_type, backup_file_path, _ = await _interactive_restore_menu(client, server_name)
+            restore_type, backup_file_path, _ = await _interactive_restore_menu(
+                client, server_name
+            )
         else:
             filename = os.path.basename(backup_file_path).lower()
             if "world" in filename:
@@ -88,11 +103,17 @@ async def restore_backup(ctx, server_name: str, backup_file_path: str):
             elif "properties" in filename:
                 restore_type = "properties"
             else:
-                raise click.UsageError(f"Could not determine restore type from filename '{filename}'.")
+                raise click.UsageError(
+                    f"Could not determine restore type from filename '{filename}'."
+                )
 
-        click.echo(f"Starting '{restore_type}' restore for server '{server_name}' from '{os.path.basename(backup_file_path)}'...")
-        
-        payload = RestoreActionPayload(restore_type=restore_type, backup_file=os.path.basename(backup_file_path))
+        click.echo(
+            f"Starting '{restore_type}' restore for server '{server_name}' from '{os.path.basename(backup_file_path)}'..."
+        )
+
+        payload = RestoreActionPayload(
+            restore_type=restore_type, backup_file=os.path.basename(backup_file_path)
+        )
         response = await client.async_restore_server_backup(server_name, payload)
 
         if response.status == "success":
@@ -105,7 +126,13 @@ async def restore_backup(ctx, server_name: str, backup_file_path: str):
 
 
 @backup.command("prune")
-@click.option("-s", "--server", "server_name", required=True, help="Name of the server whose backups to prune.")
+@click.option(
+    "-s",
+    "--server",
+    "server_name",
+    required=True,
+    help="Name of the server whose backups to prune.",
+)
 @click.pass_context
 async def prune_backups(ctx, server_name: str):
     """Deletes old backups for a server."""

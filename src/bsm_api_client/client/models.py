@@ -48,6 +48,7 @@ class Player(BaseModel):
     name: str
     ignoresPlayerLimit: bool = False
 
+
 class AllowlistAddPayload(BaseModel):
     """Request model for adding players to the allowlist."""
 
