@@ -40,7 +40,7 @@ async def login(ctx, host, port, username, password):
 
 @auth.command()
 @click.pass_context
-def logout(ctx):
+async def logout(ctx):
     """Logs out from the Bedrock Server Manager API."""
     config = ctx.obj["config"]
     config.jwt_token = None

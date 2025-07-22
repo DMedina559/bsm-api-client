@@ -1,7 +1,6 @@
 import click
 import os
 import questionary
-from .decorators import pass_async_context
 from bsm_api_client.models import FileNamePayload
 
 @click.group()
@@ -18,7 +17,7 @@ def world():
     type=click.Path(exists=True, dir_okay=False, resolve_path=True),
     help="Path to the .mcworld file to install. Skips interactive menu.",
 )
-@pass_async_context
+@click.pass_context
 async def install_world(ctx, server_name: str, world_file_path: str):
     """Installs a world from a .mcworld file, replacing the server's current world."""
     client = ctx.obj.get("client")
@@ -80,7 +79,7 @@ async def install_world(ctx, server_name: str, world_file_path: str):
 
 @world.command("export")
 @click.option("-s", "--server", "server_name", required=True, help="Name of the server whose world to export.")
-@pass_async_context
+@click.pass_context
 async def export_world(ctx, server_name: str):
     """Exports the server's current active world to a .mcworld file."""
     client = ctx.obj.get("client")
@@ -102,7 +101,7 @@ async def export_world(ctx, server_name: str):
 @world.command("reset")
 @click.option("-s", "--server", "server_name", required=True, help="Name of the server whose world to reset.")
 @click.option("-y", "--yes", is_flag=True, help="Bypass the confirmation prompt.")
-@pass_async_context
+@click.pass_context
 async def reset_world(ctx, server_name: str, yes: bool):
     """Deletes the current active world data for a server."""
     client = ctx.obj.get("client")

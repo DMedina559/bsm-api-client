@@ -1,6 +1,5 @@
 import click
 import questionary
-from .decorators import pass_async_context
 from bsm_api_client.models import PropertiesPayload
 
 @click.group()
@@ -11,7 +10,7 @@ def properties():
 @properties.command("get")
 @click.option("-s", "--server", "server_name", required=True, help="The name of the target server.")
 @click.option("-p", "--prop", "property_name", help="Display a single property value.")
-@pass_async_context
+@click.pass_context
 async def get_props(ctx, server_name: str, property_name: str):
     """Displays server properties from a server's server.properties file."""
     client = ctx.obj.get("client")
@@ -47,7 +46,7 @@ async def get_props(ctx, server_name: str, property_name: str):
     multiple=True,
     help="A 'key=value' pair to set. Use multiple times for multiple properties.",
 )
-@pass_async_context
+@click.pass_context
 async def set_props(ctx, server_name: str, properties: tuple[str]):
     """Sets one or more properties in a server's server.properties file."""
     client = ctx.obj.get("client")

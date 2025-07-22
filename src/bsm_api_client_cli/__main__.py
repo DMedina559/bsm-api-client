@@ -24,7 +24,7 @@ async def cli(ctx):
     """A CLI for managing Bedrock servers."""
     ctx.obj['cli'] = cli
     if ctx.invoked_subcommand is None:
-        await ctx.invoke(main_menu)
+        await main_menu(ctx)
 
 @cli.context
 @asynccontextmanager

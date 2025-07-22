@@ -1,7 +1,6 @@
 import click
 import os
 import questionary
-from .decorators import pass_async_context
 from bsm_api_client.models import BackupActionPayload, RestoreActionPayload
 
 @click.group()
@@ -24,7 +23,7 @@ def backup():
     "file_to_backup",
     help="Specific file to back up (required if --type=config).",
 )
-@pass_async_context
+@click.pass_context
 async def create_backup(ctx, server_name: str, backup_type: str, file_to_backup: str):
     """Creates a backup of specified server data."""
     client = ctx.obj.get("client")
@@ -34,7 +33,7 @@ async def create_backup(ctx, server_name: str, backup_type: str, file_to_backup:
 
     try:
         if not backup_type:
-            backup_type, file_to_backup, _ = _interactive_backup_menu(server_name)
+            backup_type, file_to_backup, _ = await _interactive_backup_menu(server_name)
 
         if backup_type == "config" and not file_to_backup:
             raise click.UsageError("Option '--file' is required when using '--type config'.")
@@ -67,7 +66,7 @@ async def create_backup(ctx, server_name: str, backup_type: str, file_to_backup:
     type=click.Path(exists=True, dir_okay=False, resolve_path=True),
     help="Path to the backup file to restore; skips interactive menu.",
 )
-@pass_async_context
+@click.pass_context
 async def restore_backup(ctx, server_name: str, backup_file_path: str):
     """Restores server data from a specified backup file."""
     client = ctx.obj.get("client")
@@ -107,7 +106,7 @@ async def restore_backup(ctx, server_name: str, backup_file_path: str):
 
 @backup.command("prune")
 @click.option("-s", "--server", "server_name", required=True, help="Name of the server whose backups to prune.")
-@pass_async_context
+@click.pass_context
 async def prune_backups(ctx, server_name: str):
     """Deletes old backups for a server."""
     client = ctx.obj.get("client")
@@ -126,7 +125,7 @@ async def prune_backups(ctx, server_name: str):
         click.secho(f"An error occurred during pruning: {e}", fg="red")
 
 
-def _interactive_backup_menu(server_name: str):
+async def _interactive_backup_menu(server_name: str):
     click.secho(f"Entering interactive backup for server: {server_name}", fg="yellow")
 
     backup_type_map = {
@@ -135,10 +134,10 @@ def _interactive_backup_menu(server_name: str):
         "Backup a Specific Configuration File": ("config", None, False),
     }
 
-    choice = questionary.select(
+    choice = await questionary.select(
         "Select a backup option:",
         choices=list(backup_type_map.keys()) + ["Cancel"],
-    ).ask()
+    ).ask_async()
 
     if not choice or choice == "Cancel":
         raise click.Abort()
@@ -151,10 +150,10 @@ def _interactive_backup_menu(server_name: str):
             "permissions.json": "permissions.json",
             "server.properties": "server.properties",
         }
-        file_choice = questionary.select(
+        file_choice = await questionary.select(
             "Which configuration file do you want to back up?",
             choices=list(config_file_map.keys()) + ["Cancel"],
-        ).ask()
+        ).ask_async()
 
         if not file_choice or file_choice == "Cancel":
             raise click.Abort()

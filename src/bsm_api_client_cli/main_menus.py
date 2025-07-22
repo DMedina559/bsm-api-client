@@ -29,7 +29,7 @@ async def _world_management_menu(ctx: click.Context, server_name: str):
             return
         command = menu_map.get(choice)
         if command:
-            ctx.invoke(command, server_name=server_name)
+            await ctx.invoke(command, server_name=server_name)
             break
 
 
@@ -58,12 +58,10 @@ async def _backup_restore_menu(ctx: click.Context, server_name: str):
             return
         command = menu_map.get(choice)
         if command:
-            ctx.invoke(command, server_name=server_name)
+            await ctx.invoke(command, server_name=server_name)
             break
 
 
-@click.command()
-@pass_async_context
 async def main_menu(ctx: click.Context):
     """Displays the main application menu and drives interactive mode."""
     client = ctx.obj.get("client")
@@ -104,10 +102,10 @@ async def main_menu(ctx: click.Context):
             if choice == "Install New Server":
                 server_group = cli.get_command(ctx, "server")
                 install_cmd = server_group.get_command(ctx, "install")
-                ctx.invoke(install_cmd)
-                questionary.press_any_key_to_continue(
+                await ctx.invoke(install_cmd)
+                await questionary.press_any_key_to_continue(
                     "Press any key to return to the main menu..."
-                ).ask()
+                ).ask_async()
 
             elif choice == "Manage Existing Server":
                 server_name = await questionary.select("Select a server:", choices=server_names).ask_async()
@@ -228,7 +226,7 @@ async def manage_server_menu(ctx: click.Context, server_name: str):
                     else:
                         continue
                 kwargs["server_name"] = server_name
-                ctx.invoke(command_obj, **kwargs)
+                await ctx.invoke(command_obj, **kwargs)
                 if command_obj.name == "delete":
                     click.echo("\nServer has been deleted. Returning to main menu.")
                     click.pause()

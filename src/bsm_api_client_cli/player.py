@@ -1,5 +1,4 @@
 import click
-from .decorators import pass_async_context
 
 @click.group()
 def player():
@@ -7,7 +6,7 @@ def player():
     pass
 
 @player.command("scan")
-@pass_async_context
+@click.pass_context
 async def scan_for_players(ctx):
     """Scans all server logs to discover player gamertags and XUIDs."""
     client = ctx.obj.get("client")
@@ -35,7 +34,7 @@ async def scan_for_players(ctx):
     required=True,
     help="Player to add in 'Gamertag:XUID' format. Use multiple times for multiple players.",
 )
-@pass_async_context
+@click.pass_context
 async def add_players(ctx, players):
     """Manually adds or updates player entries in the central player database."""
     client = ctx.obj.get("client")

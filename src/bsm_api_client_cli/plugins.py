@@ -1,7 +1,6 @@
 import click
 import json
 import questionary
-from .decorators import pass_async_context, AsyncGroup
 from bsm_api_client.models import PluginStatusSetPayload, TriggerEventPayload
 
 def _print_plugin_table(plugins):
@@ -132,7 +131,7 @@ async def interactive_plugin_workflow(client):
     except Exception as e:
         click.secho(f"An error occurred during plugin configuration: {e}", fg="red")
 
-@click.group(cls=AsyncGroup, invoke_without_command=True)
+@click.group(invoke_without_command=True)
 @click.pass_context
 async def plugin(ctx):
     """Manages plugins."""
@@ -144,7 +143,7 @@ async def plugin(ctx):
         await interactive_plugin_workflow(client)
 
 @plugin.command("list")
-@pass_async_context
+@click.pass_context
 async def list_plugins(ctx):
     """Lists all discoverable plugins."""
     client = ctx.obj.get("client")
@@ -168,7 +167,7 @@ async def list_plugins(ctx):
 
 @plugin.command("enable")
 @click.argument("plugin_name")
-@pass_async_context
+@click.pass_context
 async def enable_plugin(ctx, plugin_name: str):
     """Enables a plugin."""
     client = ctx.obj.get("client")
@@ -189,7 +188,7 @@ async def enable_plugin(ctx, plugin_name: str):
 
 @plugin.command("disable")
 @click.argument("plugin_name")
-@pass_async_context
+@click.pass_context
 async def disable_plugin(ctx, plugin_name: str):
     """Disables a plugin."""
     client = ctx.obj.get("client")
@@ -209,7 +208,7 @@ async def disable_plugin(ctx, plugin_name: str):
 
 
 @plugin.command("reload")
-@pass_async_context
+@click.pass_context
 async def reload_plugins(ctx):
     """Reloads all plugins."""
     client = ctx.obj.get("client")
@@ -230,7 +229,7 @@ async def reload_plugins(ctx):
 @plugin.command("trigger-event")
 @click.argument("event_name")
 @click.option("--payload-json", help="Optional JSON string to use as the event payload.")
-@pass_async_context
+@click.pass_context
 async def trigger_event(ctx, event_name: str, payload_json: str):
     """Triggers a custom plugin event."""
     client = ctx.obj.get("client")

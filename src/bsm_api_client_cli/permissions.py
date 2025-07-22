@@ -1,6 +1,5 @@
 import click
 import questionary
-from .decorators import pass_async_context
 from bsm_api_client.models import PermissionsSetPayload
 
 @click.group()
@@ -17,7 +16,7 @@ def permissions():
     type=click.Choice(["visitor", "member", "operator"], case_sensitive=False),
     help="The permission level to grant. Skips interactive mode.",
 )
-@pass_async_context
+@click.pass_context
 async def set_perm(ctx, server_name: str, player_name: str, level: str):
     """Sets a permission level for a player on a specific server."""
     client = ctx.obj.get("client")
@@ -65,7 +64,7 @@ async def set_perm(ctx, server_name: str, player_name: str, level: str):
 
 @permissions.command("list")
 @click.option("-s", "--server", "server_name", required=True, help="The name of the server.")
-@pass_async_context
+@click.pass_context
 async def list_perms(ctx, server_name: str):
     """Lists all configured player permissions for a specific server."""
     client = ctx.obj.get("client")

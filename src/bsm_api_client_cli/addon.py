@@ -1,7 +1,6 @@
 import click
 import os
 import questionary
-from .decorators import pass_async_context
 from bsm_api_client.models import FileNamePayload
 
 @click.group()
@@ -18,7 +17,7 @@ def addon():
     type=click.Path(exists=True, dir_okay=False, resolve_path=True),
     help="Path to the addon file (.mcpack, .mcaddon); skips interactive menu.",
 )
-@pass_async_context
+@click.pass_context
 async def install_addon(ctx, server_name: str, addon_file_path: str):
     """Installs a behavior or resource pack addon to a specified server."""
     client = ctx.obj.get("client")

@@ -1,6 +1,5 @@
 import click
 import questionary
-from .decorators import pass_async_context
 from bsm_api_client.models import AllowlistAddPayload, AllowlistRemovePayload
 
 @click.group()
@@ -22,7 +21,7 @@ def allowlist():
     is_flag=True,
     help="Allow player(s) to join even if the server is full.",
 )
-@pass_async_context
+@click.pass_context
 async def add(ctx, server_name: str, players: tuple[str], ignore_limit: bool):
     """Adds one or more players to a server's allowlist."""
     client = ctx.obj.get("client")
@@ -64,7 +63,7 @@ async def add(ctx, server_name: str, players: tuple[str], ignore_limit: bool):
     required=True,
     help="Gamertag of the player to remove. Use multiple times for multiple players.",
 )
-@pass_async_context
+@click.pass_context
 async def remove(ctx, server_name: str, players: tuple[str]):
     """Removes one or more players from a server's allowlist."""
     client = ctx.obj.get("client")
@@ -88,7 +87,7 @@ async def remove(ctx, server_name: str, players: tuple[str]):
 
 @allowlist.command("list")
 @click.option("-s", "--server", "server_name", required=True, help="The name of the server.")
-@pass_async_context
+@click.pass_context
 async def list_players(ctx, server_name: str):
     """Lists all players currently on a server's allowlist."""
     client = ctx.obj.get("client")
