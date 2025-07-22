@@ -98,18 +98,18 @@ async def install(ctx):
 
     try:
         click.secho("--- New Bedrock Server Installation ---", bold=True)
-        server_name = questionary.text("Enter a name for the new server:").ask()
+        server_name = await questionary.text("Enter a name for the new server:").ask_async()
         if not server_name:
             raise click.Abort()
 
-        target_version = questionary.text(
+        target_version = await questionary.text(
             "Enter server version (e.g., LATEST, PREVIEW, CUSTOM, 1.20.81.01):",
             default="LATEST",
-        ).ask()
+        ).ask_async()
         if not target_version:
             raise click.Abort()
 
-        overwrite = questionary.confirm("Overwrite existing server if it exists?", default=False).ask()
+        overwrite = await questionary.confirm("Overwrite existing server if it exists?", default=False).ask_async()
 
         click.echo(f"\nInstalling server '{server_name}' version '{target_version}'...")
         

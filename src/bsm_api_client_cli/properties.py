@@ -95,37 +95,37 @@ async def interactive_properties_workflow(client, server_name: str):
     current_properties = properties_response.data["properties"]
     changes = {}
 
-    def _prompt(prop: str, message: str, prompter, **kwargs):
+    async def _prompt(prop: str, message: str, prompter, **kwargs):
         """A nested helper to abstract the prompting and change-tracking logic."""
         original_value = current_properties.get(prop)
 
         if prompter == questionary.confirm:
             default_bool = str(original_value).lower() == "true"
-            new_val = prompter(message, default=default_bool, **kwargs).ask()
+            new_val = await prompter(message, default=default_bool, **kwargs).ask_async()
             if new_val is None:
                 return
             if new_val != default_bool:
                 changes[prop] = str(new_val).lower()
         else:
-            new_val = prompter(message, default=str(original_value), **kwargs).ask()
+            new_val = await prompter(message, default=str(original_value), **kwargs).ask_async()
             if new_val is None:
                 return
             if new_val != original_value:
                 changes[prop] = new_val
 
-    _prompt("server-name", "Server name (visible in LAN list):", questionary.text)
-    _prompt("level-name", "World folder name:", questionary.text)
-    _prompt("gamemode", "Default gamemode:", questionary.select, choices=["survival", "creative", "adventure"])
-    _prompt("difficulty", "Game difficulty:", questionary.select, choices=["peaceful", "easy", "normal", "hard"])
-    _prompt("allow-cheats", "Allow cheats:", questionary.confirm)
-    _prompt("max-players", "Maximum players:", questionary.text)
-    _prompt("online-mode", "Require Xbox Live authentication:", questionary.confirm)
-    _prompt("allow-list", "Enable allowlist:", questionary.confirm)
-    _prompt("default-player-permission-level", "Default permission for new players:", questionary.select, choices=["visitor", "member", "operator"])
-    _prompt("view-distance", "View distance (chunks):", questionary.text)
-    _prompt("tick-distance", "Tick simulation distance (chunks):", questionary.text)
-    _prompt("level-seed", "Level seed (leave blank for random):", questionary.text)
-    _prompt("texturepack-required", "Require texture packs:", questionary.confirm)
+    await _prompt("server-name", "Server name (visible in LAN list):", questionary.text)
+    await _prompt("level-name", "World folder name:", questionary.text)
+    await _prompt("gamemode", "Default gamemode:", questionary.select, choices=["survival", "creative", "adventure"])
+    await _prompt("difficulty", "Game difficulty:", questionary.select, choices=["peaceful", "easy", "normal", "hard"])
+    await _prompt("allow-cheats", "Allow cheats:", questionary.confirm)
+    await _prompt("max-players", "Maximum players:", questionary.text)
+    await _prompt("online-mode", "Require Xbox Live authentication:", questionary.confirm)
+    await _prompt("allow-list", "Enable allowlist:", questionary.confirm)
+    await _prompt("default-player-permission-level", "Default permission for new players:", questionary.select, choices=["visitor", "member", "operator"])
+    await _prompt("view-distance", "View distance (chunks):", questionary.text)
+    await _prompt("tick-distance", "Tick simulation distance (chunks):", questionary.text)
+    await _prompt("level-seed", "Level seed (leave blank for random):", questionary.text)
+    await _prompt("texturepack-required", "Require texture packs:", questionary.confirm)
 
     if not changes:
         click.secho("\nNo properties were changed.", fg="cyan")
@@ -136,7 +136,7 @@ async def interactive_properties_workflow(client, server_name: str):
         original = current_properties.get(key, "not set")
         click.echo(f"  - {key}: {click.style(original, fg='red')} -> {click.style(value, fg='green')}")
 
-    if not questionary.confirm("Save these changes?", default=True).ask():
+    if not await questionary.confirm("Save these changes?", default=True).ask_async():
         raise click.Abort()
 
     payload = PropertiesPayload(properties=changes)

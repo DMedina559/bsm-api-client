@@ -15,10 +15,17 @@ class AsyncGroup(click.Group):
         ctx.obj = ctx.obj or {}
         if self.async_context_settings.get('context'):
             async def runner():
-                async with self.async_context_settings['context'](ctx) as cm:
-                    return await super(AsyncGroup, self).invoke(ctx)
+                async with self.async_context_settings['context'](ctx):
+                    result = super(AsyncGroup, self).invoke(ctx)
+                    if asyncio.iscoroutine(result):
+                        return await result
+                    return result
             return asyncio.run(runner())
-        return super().invoke(ctx)
+        
+        result = super().invoke(ctx)
+        if asyncio.iscoroutine(result):
+            return asyncio.run(result)
+        return result
 
 def pass_async_context(f):
     @functools.wraps(f)

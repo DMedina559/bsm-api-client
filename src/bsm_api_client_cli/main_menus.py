@@ -3,7 +3,7 @@ import questionary
 from questionary import Separator
 from .decorators import pass_async_context
 
-def _world_management_menu(ctx: click.Context, server_name: str):
+async def _world_management_menu(ctx: click.Context, server_name: str):
     """Displays a sub-menu for world management actions."""
     world_group = ctx.obj["cli"].get_command(ctx, "world")
     if not world_group:
@@ -18,11 +18,11 @@ def _world_management_menu(ctx: click.Context, server_name: str):
     }
 
     while True:
-        choice = questionary.select(
+        choice = await questionary.select(
             f"World Management for '{server_name}':",
             choices=list(menu_map.keys()),
             use_indicator=True,
-        ).ask()
+        ).ask_async()
 
         if choice is None or choice == "Back":
             return
@@ -32,7 +32,7 @@ def _world_management_menu(ctx: click.Context, server_name: str):
             break
 
 
-def _backup_restore_menu(ctx: click.Context, server_name: str):
+async def _backup_restore_menu(ctx: click.Context, server_name: str):
     """Displays a sub-menu for backup and restore actions."""
     backup_group = ctx.obj["cli"].get_command(ctx, "backup")
     if not backup_group:
@@ -47,11 +47,11 @@ def _backup_restore_menu(ctx: click.Context, server_name: str):
     }
 
     while True:
-        choice = questionary.select(
+        choice = await questionary.select(
             f"Backup/Restore for '{server_name}':",
             choices=list(menu_map.keys()),
             use_indicator=True,
-        ).ask()
+        ).ask_async()
 
         if choice is None or choice == "Back":
             return
@@ -89,11 +89,11 @@ async def main_menu(ctx: click.Context):
             menu_choices.append(Separator("--- Application ---"))
             menu_choices.append("Exit")
 
-            choice = questionary.select(
+            choice = await questionary.select(
                 "\nChoose an action:",
                 choices=menu_choices,
                 use_indicator=True,
-            ).ask()
+            ).ask_async()
 
             if choice is None or choice == "Exit":
                 return
@@ -107,9 +107,9 @@ async def main_menu(ctx: click.Context):
                 ).ask()
 
             elif choice == "Manage Existing Server":
-                server_name = questionary.select("Select a server:", choices=server_names).ask()
+                server_name = await questionary.select("Select a server:", choices=server_names).ask_async()
                 if server_name:
-                    manage_server_menu(ctx, server_name)
+                    await manage_server_menu(ctx, server_name)
 
             elif choice == "Manage Plugins":
                 plugin_group = cli.get_command(ctx, "plugin")
@@ -126,7 +126,7 @@ async def main_menu(ctx: click.Context):
             click.pause("Press any key to return to the main menu...")
 
 
-def manage_server_menu(ctx: click.Context, server_name: str):
+async def manage_server_menu(ctx: click.Context, server_name: str):
     """Displays the menu for managing a specific, existing server."""
     cli = ctx.obj["cli"]
 
@@ -190,11 +190,11 @@ def manage_server_menu(ctx: click.Context, server_name: str):
         click.clear()
         click.secho(f"--- Managing Server: {server_name} ---", fg="magenta", bold=True)
 
-        choice = questionary.select(
+        choice = await questionary.select(
             f"\nSelect an action for '{server_name}':",
             choices=menu_choices,
             use_indicator=True,
-        ).ask()
+        ).ask_async()
 
         if choice is None or choice == "Back to Main Menu":
             return
@@ -205,13 +205,13 @@ def manage_server_menu(ctx: click.Context, server_name: str):
 
         try:
             if callable(action) and not hasattr(action, "commands"):
-                action(ctx, server_name)
+                await action(ctx, server_name)
             elif isinstance(action, tuple):
                 command_obj, kwargs = action
                 if not command_obj:
                     continue
                 if command_obj.name == "send-command":
-                    cmd_str = questionary.text("Enter command to send:").ask()
+                    cmd_str = await questionary.text("Enter command to send:").ask_async()
                     if cmd_str:
                         kwargs["command_parts"] = cmd_str.split()
                     else:

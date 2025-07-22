@@ -137,7 +137,7 @@ async def interactive_allowlist_workflow(client, server_name: str):
     new_players_to_add = []
     click.echo("\nEnter new players to add. Press Enter on an empty line to finish.")
     while True:
-        player_name = questionary.text("Player gamertag:").ask()
+        player_name = await questionary.text("Player gamertag:").ask_async()
         if not player_name or not player_name.strip():
             break
 
@@ -150,9 +150,9 @@ async def interactive_allowlist_workflow(client, server_name: str):
             )
             continue
 
-        ignore_limit = questionary.confirm(
+        ignore_limit = await questionary.confirm(
             f"Should '{player_name}' ignore the player limit?", default=False
-        ).ask()
+        ).ask_async()
         new_players_to_add.append(
             {"name": player_name.strip(), "ignoresPlayerLimit": ignore_limit}
         )

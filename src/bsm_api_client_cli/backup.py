@@ -173,10 +173,10 @@ async def _interactive_restore_menu(client, server_name: str):
         "Restore Properties": "properties",
     }
 
-    choice = questionary.select(
+    choice = await questionary.select(
         "What do you want to restore?",
         choices=list(restore_type_map.keys()) + ["Cancel"],
-    ).ask()
+    ).ask_async()
 
     if not choice or choice == "Cancel":
         raise click.Abort()
@@ -194,10 +194,10 @@ async def _interactive_restore_menu(client, server_name: str):
     file_map = {os.path.basename(f): f for f in backup_files}
     file_choices = sorted(list(file_map.keys()), reverse=True)
 
-    file_to_restore_basename = questionary.select(
+    file_to_restore_basename = await questionary.select(
         f"Select a '{restore_type}' backup to restore:",
         choices=file_choices + ["Cancel"],
-    ).ask()
+    ).ask_async()
 
     if not file_to_restore_basename or file_to_restore_basename == "Cancel":
         raise click.Abort()

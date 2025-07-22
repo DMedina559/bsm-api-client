@@ -46,9 +46,9 @@ async def install_addon(ctx, server_name: str, addon_file_path: str):
 
             file_map = {os.path.basename(f): f for f in available_files}
             choices = sorted(list(file_map.keys())) + ["Cancel"]
-            selection = questionary.select(
+            selection = await questionary.select(
                 "Select an addon to install:", choices=choices
-            ).ask()
+            ).ask_async()
 
             if not selection or selection == "Cancel":
                 raise click.Abort()

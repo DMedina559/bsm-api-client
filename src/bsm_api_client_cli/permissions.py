@@ -112,19 +112,19 @@ async def interactive_permissions_workflow(client, server_name: str):
     player_map = {f"{p['name']} (XUID: {p['xuid']})": p for p in all_players}
     choices = sorted(list(player_map.keys())) + ["Cancel"]
 
-    player_choice_str = questionary.select(
+    player_choice_str = await questionary.select(
         "Select a player to configure permissions for:", choices=choices
-    ).ask()
+    ).ask_async()
 
     if not player_choice_str or player_choice_str == "Cancel":
         raise click.Abort()
 
     selected_player = player_map[player_choice_str]
-    permission = questionary.select(
+    permission = await questionary.select(
         f"Select permission level for {selected_player['name']}:",
         choices=["member", "operator", "visitor"],
         default="member",
-    ).ask()
+    ).ask_async()
 
     if permission is None:
         raise click.Abort()

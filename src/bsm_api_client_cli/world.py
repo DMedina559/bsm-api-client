@@ -46,9 +46,9 @@ async def install_world(ctx, server_name: str, world_file_path: str):
 
             file_map = {os.path.basename(f): f for f in available_files}
             choices = sorted(list(file_map.keys())) + ["Cancel"]
-            selection = questionary.select(
+            selection = await questionary.select(
                 "Select a world to install:", choices=choices
-            ).ask()
+            ).ask_async()
 
             if not selection or selection == "Cancel":
                 raise click.Abort()
@@ -60,9 +60,9 @@ async def install_world(ctx, server_name: str, world_file_path: str):
             fg="red",
             bold=True,
         )
-        if not questionary.confirm(
+        if not await questionary.confirm(
             "This action cannot be undone. Are you sure?", default=False
-        ).ask():
+        ).ask_async():
             raise click.Abort()
 
         click.echo(f"Installing world '{filename}'...")

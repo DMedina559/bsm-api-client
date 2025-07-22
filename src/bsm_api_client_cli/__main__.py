@@ -20,10 +20,11 @@ from .decorators import AsyncGroup
 
 @click.group(cls=AsyncGroup, invoke_without_command=True)
 @click.pass_context
-def cli(ctx):
+async def cli(ctx):
     """A CLI for managing Bedrock servers."""
+    ctx.obj['cli'] = cli
     if ctx.invoked_subcommand is None:
-        ctx.invoke(main_menu)
+        await ctx.invoke(main_menu)
 
 @cli.context
 @asynccontextmanager
