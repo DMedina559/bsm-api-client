@@ -27,8 +27,7 @@ class ServerInfoMethodsMixin:
             params: Optional[Dict[str, Any]] = None,
             authenticated: bool = True,
             is_retry: bool = False,
-        ) -> Any:
-            ...
+        ) -> Any: ...
 
     async def async_get_servers_details(self) -> GeneralApiResponse:
         """
