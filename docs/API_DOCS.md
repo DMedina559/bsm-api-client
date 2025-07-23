@@ -12,14 +12,12 @@ import asyncio
 
 async def main():
     client = BedrockServerManagerApi(
-        host="your_server_host",
+        base_url="http://your_server_host:11325",
         username="your_username",
         password="your_password",
-        port=11325, # Optional, defaults based on scheme or can be omitted
         # base_path="/api", # Optional, defaults to /api
         # request_timeout=10, # Optional, defaults to 10 seconds
-        # use_ssl=False, # Optional, defaults to False
-        # verify_ssl=True # Optional, defaults to True (if use_ssl is True)
+        # verify_ssl=True # Optional, defaults to True
     )
 
     try:
