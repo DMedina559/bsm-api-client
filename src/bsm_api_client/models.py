@@ -60,8 +60,9 @@ class AllowlistRemovePayload(BaseModel):
 class PlayerPermission(BaseModel):
     """Represents a single player's permission data sent from the client."""
 
+    name: str
     xuid: str
-    permission: str
+    permission_level: str
 
 
 class PermissionsSetPayload(BaseModel):

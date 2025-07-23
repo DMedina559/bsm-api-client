@@ -70,7 +70,7 @@ async def set_perm(ctx, server_name: str, player_name: str, level: str):
         )
 
         payload = PermissionsSetPayload(
-            permissions=[{"xuid": xuid, "permission_level": level}]
+            permissions=[{"name": player_name, "xuid": xuid, "permission_level": level}]
         )
         response = await client.async_set_server_permissions(server_name, payload)
 
@@ -108,7 +108,7 @@ async def list_perms(ctx, server_name: str):
 
         click.secho(f"\nPermissions for '{server_name}':", bold=True)
         for p in permissions:
-            level = p.get("permission", "unknown").lower()
+            level = p.get("permission_level", "unknown").lower()
             level_color = {"operator": "red", "member": "green", "visitor": "blue"}.get(
                 level, "white"
             )
@@ -155,7 +155,13 @@ async def interactive_permissions_workflow(client, server_name: str):
         raise click.Abort()
 
     payload = PermissionsSetPayload(
-        permissions=[{"xuid": selected_player["xuid"], "permission_level": permission}]
+        permissions=[
+            {
+                "name": selected_player["name"],
+                "xuid": selected_player["xuid"],
+                "permission_level": permission,
+            }
+        ]
     )
     perm_response = await client.async_set_server_permissions(server_name, payload)
 
