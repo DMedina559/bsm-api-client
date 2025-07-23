@@ -44,21 +44,17 @@ class PropertiesPayload(BaseModel):
     properties: Dict[str, Any]
 
 
-class Player(BaseModel):
-    name: str
-    ignoresPlayerLimit: bool = False
-
-
 class AllowlistAddPayload(BaseModel):
     """Request model for adding players to the allowlist."""
 
-    players: List[Player]
+    players: List[str]
+    ignoresPlayerLimit: bool = False
 
 
 class AllowlistRemovePayload(BaseModel):
     """Request model for removing players from the allowlist."""
 
-    players: List[Player]
+    players: List[str]
 
 
 class PlayerPermission(BaseModel):
