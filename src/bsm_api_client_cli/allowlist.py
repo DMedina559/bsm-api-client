@@ -183,27 +183,43 @@ async def interactive_allowlist_workflow(client, server_name: str):
         ignore_limit = await questionary.confirm(
             f"Should '{player_name}' ignore the player limit?", default=False
         ).ask_async()
-        new_players_to_add.append({"name": player_name.strip(), "ignoresPlayerLimit": ignore_limit})
+        new_players_to_add.append(
+            {"name": player_name.strip(), "ignoresPlayerLimit": ignore_limit}
+        )
 
     if new_players_to_add:
         # The interactive mode will add all players with their specified ignore limit.
         # We need to group them by the ignore limit flag and make separate API calls.
-        players_ignore_limit = [p["name"] for p in new_players_to_add if p["ignoresPlayerLimit"]]
-        players_no_ignore_limit = [p["name"] for p in new_players_to_add if not p["ignoresPlayerLimit"]]
+        players_ignore_limit = [
+            p["name"] for p in new_players_to_add if p["ignoresPlayerLimit"]
+        ]
+        players_no_ignore_limit = [
+            p["name"] for p in new_players_to_add if not p["ignoresPlayerLimit"]
+        ]
 
         if players_ignore_limit:
             click.echo("Adding players with ignore limit...")
-            payload = AllowlistAddPayload(players=players_ignore_limit, ignoresPlayerLimit=True)
+            payload = AllowlistAddPayload(
+                players=players_ignore_limit, ignoresPlayerLimit=True
+            )
             response = await client.async_add_server_allowlist(server_name, payload)
             if response.status != "success":
-                click.secho(f"Failed to add players with ignore limit: {response.message}", fg="red")
-        
+                click.secho(
+                    f"Failed to add players with ignore limit: {response.message}",
+                    fg="red",
+                )
+
         if players_no_ignore_limit:
             click.echo("Adding players without ignore limit...")
-            payload = AllowlistAddPayload(players=players_no_ignore_limit, ignoresPlayerLimit=False)
+            payload = AllowlistAddPayload(
+                players=players_no_ignore_limit, ignoresPlayerLimit=False
+            )
             response = await client.async_add_server_allowlist(server_name, payload)
             if response.status != "success":
-                click.secho(f"Failed to add players without ignore limit: {response.message}", fg="red")
+                click.secho(
+                    f"Failed to add players without ignore limit: {response.message}",
+                    fg="red",
+                )
 
         click.secho("Allowlist updated.", fg="green")
     else:
