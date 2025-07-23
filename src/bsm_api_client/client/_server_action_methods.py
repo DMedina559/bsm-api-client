@@ -77,6 +77,52 @@ class ServerActionMethodsMixin:
         )
         return ActionResponse.model_validate(response)
 
+    async def async_enable_server_service(self, server_name: str) -> ActionResponse:
+        """
+        Enables the system service for the specified server.
+        """
+        _LOGGER.info("Enabling service for server '%s'", server_name)
+        return await self.async_configure_server_os_service(
+            server_name, ServiceUpdatePayload(autostart=True)
+        )
+
+    async def async_disable_server_service(self, server_name: str) -> ActionResponse:
+        """
+        Disables the system service for the specified server.
+        """
+        _LOGGER.info("Disabling service for server '%s'", server_name)
+        return await self.async_configure_server_os_service(
+            server_name, ServiceUpdatePayload(autostart=False)
+        )
+
+    async def async_set_server_autoupdate(
+        self, server_name: str, autoupdate: bool
+    ) -> ActionResponse:
+        """
+        Sets the autoupdate flag for the specified server.
+        """
+        _LOGGER.info(
+            "Setting autoupdate for server '%s' to %s", server_name, autoupdate
+        )
+        return await self.async_configure_server_os_service(
+            server_name, ServiceUpdatePayload(autoupdate=autoupdate)
+        )
+
+    async def async_create_server_service(
+        self, server_name: str, autostart: bool
+    ) -> ActionResponse:
+        """
+        Creates the system service for the specified server.
+        """
+        _LOGGER.info(
+            "Creating service for server '%s' with autostart=%s",
+            server_name,
+            autostart,
+        )
+        return await self.async_configure_server_os_service(
+            server_name, ServiceUpdatePayload(autostart=autostart)
+        )
+
     async def async_stop_server(self, server_name: str) -> ActionResponse:
         """
         Stops the specified running Bedrock server instance.

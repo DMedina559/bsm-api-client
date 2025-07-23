@@ -124,51 +124,63 @@ async def list_perms(ctx, server_name: str):
 async def interactive_permissions_workflow(client, server_name: str):
     """Guides the user through an interactive workflow to set a player's permission level."""
     click.secho("\n--- Interactive Permission Configuration ---", bold=True)
-    player_response = await client.async_get_players()
-    all_players = player_response.get("players", [])
 
-    if not all_players:
-        click.secho(
-            "No players found in the global player database (players.json).",
-            fg="yellow",
+    while True:
+        player_response = await client.async_get_players()
+        all_players = player_response.get("players", [])
+
+        if not all_players:
+            click.secho(
+                "No players found in the global player database (players.json).",
+                fg="yellow",
+            )
+            return
+
+        player_map = {f"{p['name']} (XUID: {p['xuid']})": p for p in all_players}
+        choices = sorted(list(player_map.keys())) + ["Cancel"]
+
+        player_choice_str = await questionary.select(
+            "Select a player to configure permissions for:", choices=choices
+        ).ask_async()
+
+        if not player_choice_str or player_choice_str == "Cancel":
+            click.secho("Exiting interactive permissions editor.", fg="blue")
+            break
+
+        selected_player = player_map[player_choice_str]
+        permission = await questionary.select(
+            f"Select permission level for {selected_player['name']}:",
+            choices=["member", "operator", "visitor", "Cancel"],
+            default="member",
+        ).ask_async()
+
+        if not permission or permission == "Cancel":
+            click.secho("Operation cancelled.", fg="blue")
+            continue
+
+        payload = PermissionsSetPayload(
+            permissions=[
+                {
+                    "name": selected_player["name"],
+                    "xuid": selected_player["xuid"],
+                    "permission_level": permission,
+                }
+            ]
         )
-        return
+        perm_response = await client.async_set_server_permissions(server_name, payload)
 
-    player_map = {f"{p['name']} (XUID: {p['xuid']})": p for p in all_players}
-    choices = sorted(list(player_map.keys())) + ["Cancel"]
+        if perm_response.status == "success":
+            click.secho(
+                f"Permission for {selected_player['name']} set to '{permission}'.",
+                fg="green",
+            )
+        else:
+            click.secho(f"Failed to set permission: {perm_response.message}", fg="red")
 
-    player_choice_str = await questionary.select(
-        "Select a player to configure permissions for:", choices=choices
-    ).ask_async()
-
-    if not player_choice_str or player_choice_str == "Cancel":
-        raise click.Abort()
-
-    selected_player = player_map[player_choice_str]
-    permission = await questionary.select(
-        f"Select permission level for {selected_player['name']}:",
-        choices=["member", "operator", "visitor"],
-        default="member",
-    ).ask_async()
-
-    if permission is None:
-        raise click.Abort()
-
-    payload = PermissionsSetPayload(
-        permissions=[
-            {
-                "name": selected_player["name"],
-                "xuid": selected_player["xuid"],
-                "permission_level": permission,
-            }
-        ]
-    )
-    perm_response = await client.async_set_server_permissions(server_name, payload)
-
-    if perm_response.status == "success":
-        click.secho(
-            f"Permission for {selected_player['name']} set to '{permission}'.",
-            fg="green",
-        )
-    else:
-        click.secho(f"Failed to set permission: {perm_response.message}", fg="red")
+        if (
+            await questionary.confirm(
+                "Configure another player?", default=True
+            ).ask_async()
+            is False
+        ):
+            break

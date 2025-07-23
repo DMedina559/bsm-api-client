@@ -164,8 +164,10 @@ async def manage_server_menu(ctx: click.Context, server_name: str):
         "Update Server": (get_cmd("server", "update"), {}),
         "Delete Server": (get_cmd("server", "delete"), {}),
     }
-    system_map = {}
-    system_map["Monitor Resource Usage"] = (get_cmd("system", "monitor"), {})
+    system_map = {
+        "Configure Service": (get_cmd("system", "configure-service"), {}),
+        "Monitor Resource Usage": (get_cmd("system", "monitor"), {}),
+    }
 
     # ---- Combine all maps for easy lookup ----
     full_menu_map = {
