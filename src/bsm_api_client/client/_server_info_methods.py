@@ -1,5 +1,10 @@
 # src/bsm_api_client/client/_server_info_methods.py
-"""Mixin class containing server information retrieval methods."""
+"""Mixin class for server information retrieval methods.
+
+This module provides the `ServerInfoMethodsMixin` class, which includes
+methods for retrieving information about server instances from the Bedrock
+Server Manager API.
+"""
 import logging
 from typing import Any, Dict, Optional, List, TYPE_CHECKING
 from urllib.parse import quote
@@ -30,27 +35,19 @@ class ServerInfoMethodsMixin:
         ) -> Any: ...
 
     async def async_get_servers_details(self) -> GeneralApiResponse:
-        """
-        Fetches a list of all detected Bedrock server instances with their details
-        (name, status, version).
-
-        Corresponds to `GET /api/servers`.
-        Requires authentication.
+        """Fetches details for all detected Bedrock server instances.
 
         Returns:
-            A list of dictionaries, where each dictionary represents a server
-            and contains 'name', 'status', and 'version' keys.
-            Returns an empty list if no servers are found or if an error occurs
-            that is handled by returning an empty list (e.g., malformed response).
+            A `GeneralApiResponse` object containing a list of servers with their details.
         """
         _LOGGER.debug("Fetching server details list from /api/servers")
         response_data = await self._request("GET", "/servers", authenticated=True)
         return GeneralApiResponse.model_validate(response_data)
 
     async def async_get_server_names(self) -> List[str]:
-        """
-        Fetches a simplified list of just server names.
-        A convenience wrapper around `async_get_servers_details`.
+        """Fetches a list of server names.
+
+        This is a convenience wrapper around `async_get_servers_details`.
 
         Returns:
             A sorted list of server names.
@@ -68,22 +65,17 @@ class ServerInfoMethodsMixin:
         return []
 
     async def async_get_server_validate(self, server_name: str) -> bool:
-        """
-        Validates if the server directory and executable exist for the specified server.
-        Returns True if valid, raises ServerNotFoundError if not found, or APIError for other issues.
-
-        Corresponds to `GET /api/server/{server_name}/validate`.
-        Requires authentication.
+        """Validates the existence of a server's directory and executable.
 
         Args:
             server_name: The name of the server to validate.
 
         Returns:
-            True if the server is found and considered valid by the API.
+            `True` if the server is valid, `False` otherwise.
 
         Raises:
-            ServerNotFoundError: If the API returns a 404 for this server.
-            APIError: For other API communication or processing errors.
+            ServerNotFoundError: If the server is not found.
+            APIError: For other API-related errors.
         """
         _LOGGER.debug("Validating existence of server: '%s'", server_name)
         # Server names might have characters needing encoding, though install rules try to limit this.
@@ -113,15 +105,13 @@ class ServerInfoMethodsMixin:
     async def async_get_server_process_info(
         self, server_name: str
     ) -> GeneralApiResponse:
-        """
-        Gets runtime status information (PID, CPU, Memory, Uptime) for a server.
-        The 'process_info' key in the response will be null if the server is not running.
-
-        Corresponds to `GET /api/server/{server_name}/process_info`.
-        Requires authentication.
+        """Gets runtime process information for a server.
 
         Args:
             server_name: The name of the server.
+
+        Returns:
+            A `GeneralApiResponse` object containing process information.
         """
         _LOGGER.debug("Fetching status info for server '%s'", server_name)
         encoded_server_name = quote(server_name)
@@ -133,15 +123,18 @@ class ServerInfoMethodsMixin:
         return GeneralApiResponse.model_validate(response)
 
     async def async_get_world_icon_image(self, server_name: str) -> bytes:
-        """
-        Serves the world_icon.jpeg for a server, or a default icon if not found.
-        Returns the raw image bytes.
-
-        Corresponds to `GET /api/server/{server_name}/world/icon`.
-        Requires authentication.
+        """Retrieves the world icon image for a server.
 
         Args:
             server_name: The name of the server.
+
+        Returns:
+            The raw bytes of the world icon image.
+
+        Raises:
+            ValueError: If `server_name` is empty.
+            CannotConnectError: If a connection to the server cannot be established.
+            APIError: For other API-related errors.
         """
         if not server_name:
             raise ValueError("Server name cannot be empty.")
@@ -229,17 +222,13 @@ class ServerInfoMethodsMixin:
     async def async_get_server_running_status(
         self, server_name: str
     ) -> GeneralApiResponse:
-        """
-        Checks if the Bedrock server process is currently running.
-        Path changed from `.../running_status` to `.../status` for the new API.
-        The new API (FastAPI) returns a GeneralApiResponse, so the running status
-        is expected in `response.get("data", {}).get("running")`.
-
-        Corresponds to `GET /api/server/{server_name}/status`.
-        Requires authentication.
+        """Checks if the Bedrock server process is currently running.
 
         Args:
             server_name: The name of the server.
+
+        Returns:
+            A `GeneralApiResponse` object containing the running status.
         """
         _LOGGER.debug("Fetching running status for server '%s'", server_name)
         encoded_server_name = quote(server_name)
@@ -254,15 +243,13 @@ class ServerInfoMethodsMixin:
     async def async_get_server_config_status(
         self, server_name: str
     ) -> GeneralApiResponse:
-        """
-        Gets the status string stored in the server's configuration file.
-        Response contains `{"config_status": "status_string"}`.
-
-        Corresponds to `GET /api/server/{server_name}/config_status`.
-        Requires authentication.
+        """Gets the status string from the server's configuration file.
 
         Args:
             server_name: The name of the server.
+
+        Returns:
+            A `GeneralApiResponse` object containing the configuration status.
         """
         _LOGGER.debug("Fetching config status for server '%s'", server_name)
         encoded_server_name = quote(server_name)
@@ -274,15 +261,13 @@ class ServerInfoMethodsMixin:
         return GeneralApiResponse.model_validate(response)
 
     async def async_get_server_version(self, server_name: str) -> GeneralApiResponse:
-        """
-        Gets the installed Bedrock server version from the server's config file.
-        Returns the version string or None if not found/error.
-
-        Corresponds to `GET /api/server/{server_name}/version`.
-        Requires authentication.
+        """Gets the installed Bedrock server version.
 
         Args:
             server_name: The name of the server.
+
+        Returns:
+            A `GeneralApiResponse` object containing the server version.
         """
         _LOGGER.debug("Fetching version for server '%s'", server_name)
         encoded_server_name = quote(server_name)
@@ -294,15 +279,13 @@ class ServerInfoMethodsMixin:
         return GeneralApiResponse.model_validate(response)
 
     async def async_get_server_properties(self, server_name: str) -> GeneralApiResponse:
-        """
-        Retrieves the parsed content of the server's server.properties file.
-        The actual properties are under the "properties" key in the response.
-
-        Corresponds to `GET /api/server/{server_name}/properties/get`.
-        Requires authentication.
+        """Retrieves the server's properties.
 
         Args:
             server_name: The name of the server.
+
+        Returns:
+            A `GeneralApiResponse` object containing the server properties.
         """
         _LOGGER.debug("Fetching server.properties for server '%s'", server_name)
         encoded_server_name = quote(server_name)
@@ -316,15 +299,13 @@ class ServerInfoMethodsMixin:
     async def async_get_server_permissions_data(
         self, server_name: str
     ) -> GeneralApiResponse:
-        """
-        Retrieves player permissions from the server's permissions.json file.
-        The actual permissions list is under the "data.permissions" key in the response.
-
-        Corresponds to `GET /api/server/{server_name}/permissions/get`.
-        Requires authentication.
+        """Retrieves player permissions from the server.
 
         Args:
             server_name: The name of the server.
+
+        Returns:
+            A `GeneralApiResponse` object containing the permissions data.
         """
         _LOGGER.debug("Fetching permissions.json data for server '%s'", server_name)
         encoded_server_name = quote(server_name)
@@ -336,15 +317,13 @@ class ServerInfoMethodsMixin:
         return GeneralApiResponse.model_validate(response)
 
     async def async_get_server_allowlist(self, server_name: str) -> GeneralApiResponse:
-        """
-        Retrieves the list of players from the server's allowlist.json file.
-        The player list is under the "existing_players" key in the response.
-
-        Corresponds to `GET /api/server/{server_name}/allowlist/get`.
-        Requires authentication.
+        """Retrieves the server's allowlist.
 
         Args:
             server_name: The name of the server.
+
+        Returns:
+            A `GeneralApiResponse` object containing the allowlist.
         """
         _LOGGER.debug("Fetching allowlist.json for server '%s'", server_name)
         encoded_server_name = quote(server_name)

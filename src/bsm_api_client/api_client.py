@@ -1,6 +1,9 @@
 # src/bsm_api_client/client.py
 """Main API client class for Bedrock Server Manager.
-Combines the base client logic with specific endpoint method mixins.
+
+This module provides the main API client class, `BedrockServerManagerApi`,
+which integrates connection handling, authentication, and various API
+endpoint methods organized into mixins.
 """
 import logging
 from .client_base import ClientBase
@@ -21,11 +24,16 @@ class BedrockServerManagerApi(
     ContentMethodsMixin,
     PluginMethodsMixin,
 ):
-    """
-    API Client for the Bedrock Server Manager.
+    """API Client for the Bedrock Server Manager.
 
-    This class combines the base connection/authentication logic with
-    methods for interacting with various API endpoints, organized via mixins.
+    This class combines the base connection and authentication logic from
+    `ClientBase` with methods for interacting with various API endpoints,
+    which are organized into mixin classes.
+
+    Example:
+        >>> from bsm_api_client import BedrockServerManagerApi
+        >>> client = BedrockServerManagerApi("http://localhost:8080", "my_secret_token")
+        >>> await client.async_get_info()
     """
 
     # __init__ is inherited from ClientBase.
@@ -33,5 +41,12 @@ class BedrockServerManagerApi(
 
     @property
     def servers(self):
-        """Provides access to server-related methods."""
+        """Provides access to server-related methods.
+
+        This is a convenience property that returns the client instance itself,
+        allowing for a more intuitive call structure (e.g., `client.servers.async_get_list()`).
+
+        Returns:
+            The client instance.
+        """
         return self

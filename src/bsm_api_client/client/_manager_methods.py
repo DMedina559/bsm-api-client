@@ -1,5 +1,11 @@
 # src/bsm_api_client/client/_manager_methods.py
-"""Mixin class containing manager-level API methods."""
+"""Mixin class for manager-level API methods.
+
+This module provides the `ManagerMethodsMixin` class, which includes methods
+for interacting with manager-level endpoints of the Bedrock Server Manager API.
+These methods handle operations such as getting system information, managing
+players, and installing new servers.
+"""
 import logging
 from typing import Any, Dict, Optional, List, TYPE_CHECKING
 from ..models import (
@@ -35,22 +41,20 @@ class ManagerMethodsMixin:
         ) -> Any: ...
 
     async def async_get_info(self) -> GeneralApiResponse:
-        """
-        Gets system and application information from the manager.
+        """Gets system and application information from the manager.
 
-        Corresponds to `GET /api/info`.
-        Requires no authentication.
+        Returns:
+            A `GeneralApiResponse` object containing system and application information.
         """
         _LOGGER.debug("Fetching manager system and application information from /info")
         response = await self._request(method="GET", path="/info", authenticated=False)
         return GeneralApiResponse.model_validate(response)
 
     async def async_scan_players(self) -> Dict[str, Any]:
-        """
-        Triggers scanning of player logs across all servers.
+        """Triggers a scan of player logs across all servers.
 
-        Corresponds to `POST /api/players/scan`.
-        Requires authentication.
+        Returns:
+            A dictionary containing the result of the scan operation.
         """
         _LOGGER.info("Triggering player log scan")
         return await self._request(
@@ -58,11 +62,10 @@ class ManagerMethodsMixin:
         )
 
     async def async_get_players(self) -> Dict[str, Any]:
-        """
-        Gets the global list of known players (name and XUID).
+        """Gets the global list of known players.
 
-        Corresponds to `GET /api/players/get`.
-        Requires authentication.
+        Returns:
+            A dictionary containing the list of players.
         """
         _LOGGER.debug("Fetching global player list from /players/get")
         return await self._request(
@@ -70,15 +73,13 @@ class ManagerMethodsMixin:
         )
 
     async def async_add_players(self, payload: AddPlayersPayload) -> Dict[str, Any]:
-        """
-        Adds or updates players in the global list.
-        Each string in `players_data` should be in "PlayerName:PlayerXUID" format.
-
-        Corresponds to `POST /api/players/add`.
-        Requires authentication.
+        """Adds or updates players in the global list.
 
         Args:
-            payload: An AddPlayersPayload object.
+            payload: An `AddPlayersPayload` object containing the players to add.
+
+        Returns:
+            A dictionary containing the result of the add operation.
         """
         _LOGGER.info("Adding/updating global players: %s", payload.players)
         return await self._request(
@@ -89,11 +90,10 @@ class ManagerMethodsMixin:
         )
 
     async def async_get_custom_zips(self) -> Dict[str, Any]:
-        """
-        Retrieves a list of available custom server ZIP files.
+        """Retrieves a list of available custom server ZIP files.
 
-        Corresponds to `GET /api/downloads/list`.
-        Requires authentication.
+        Returns:
+            A dictionary containing the list of custom ZIP files.
         """
         _LOGGER.info("Fetching list of custom zips.")
         return await self._request(
@@ -101,37 +101,31 @@ class ManagerMethodsMixin:
         )
 
     async def async_get_themes(self) -> Dict[str, Any]:
-        """
-        Retrieves a list of available themes.
+        """Retrieves a list of available themes.
 
-        Corresponds to `GET /api/themes`.
-        Requires authentication.
+        Returns:
+            A dictionary containing the list of themes.
         """
         _LOGGER.info("Fetching list of available themes.")
         return await self._request(method="GET", path="/themes", authenticated=True)
 
     async def async_get_all_settings(self) -> Dict[str, Any]:
-        """
-        Retrieves all global application settings.
+        """Retrieve all global application settings.
 
-        Corresponds to `GET /api/settings`.
-        Requires authentication.
-        Expected response model: SettingsResponse
+        Returns:
+            A dictionary containing all settings.
         """
         _LOGGER.info("Fetching all global application settings.")
         return await self._request(method="GET", path="/settings", authenticated=True)
 
     async def async_set_setting(self, payload: SettingItem) -> Dict[str, Any]:
-        """
-        Sets a specific global application setting.
-
-        Corresponds to `POST /api/settings`.
-        Requires authentication.
-        Request body model: SettingItem
-        Expected response model: SettingsResponse
+        """Sets a specific global application setting.
 
         Args:
-            payload: A SettingItem object.
+            payload: A `SettingItem` object containing the setting to set.
+
+        Returns:
+            A dictionary containing the result of the set operation.
         """
         _LOGGER.info(
             "Setting global application setting '%s' to: %s", payload.key, payload.value
@@ -144,12 +138,10 @@ class ManagerMethodsMixin:
         )
 
     async def async_reload_settings(self) -> Dict[str, Any]:
-        """
-        Forces a reload of global application settings and logging configuration.
+        """Forces a reload of global application settings and logging configuration.
 
-        Corresponds to `POST /api/settings/reload`.
-        Requires authentication.
-        Expected response model: SettingsResponse
+        Returns:
+            A dictionary containing the result of the reload operation.
         """
         _LOGGER.info("Requesting reload of global settings and logging configuration.")
         return await self._request(
@@ -157,12 +149,14 @@ class ManagerMethodsMixin:
         )
 
     async def async_get_panorama_image(self) -> bytes:
-        """
-        Serves a custom panorama.jpeg background image if available, otherwise a default.
-        Returns the raw image bytes.
+        """Retrieves the panorama background image.
 
-        Corresponds to `GET /api/panorama`.
-        Does not require authentication as per OpenAPI spec (no security scheme listed).
+        Returns:
+            The raw bytes of the panorama image.
+
+        Raises:
+            CannotConnectError: If a connection to the server cannot be established.
+            APIError: For any other API-related errors.
         """
         _LOGGER.info("Fetching panorama image.")
         # This request might return non-JSON data.
@@ -208,14 +202,13 @@ class ManagerMethodsMixin:
     async def async_prune_downloads(
         self, payload: PruneDownloadsPayload
     ) -> Dict[str, Any]:
-        """
-        Triggers pruning of downloaded server archives in a specified directory.
-
-        Corresponds to `POST /api/downloads/prune`.
-        Requires authentication.
+        """Triggers pruning of downloaded server archives.
 
         Args:
-            payload: A PruneDownloadsPayload object.
+            payload: A `PruneDownloadsPayload` object containing the prune options.
+
+        Returns:
+            A dictionary containing the result of the prune operation.
         """
         _LOGGER.info(
             "Triggering download cache prune for directory '%s', keep: %s",
@@ -233,19 +226,13 @@ class ManagerMethodsMixin:
     async def async_install_new_server(
         self, payload: InstallServerPayload
     ) -> InstallServerResponse:
-        """
-        Requests installation of a new Bedrock server instance.
-        The response may indicate success or that confirmation is needed if overwrite is false
-        and the server already exists.
-
-        Corresponds to `POST /api/server/install`.
-        Requires authentication.
+        """Requests the installation of a new Bedrock server instance.
 
         Args:
-            payload: An InstallServerPayload object.
+            payload: An `InstallServerPayload` object containing the server details.
 
         Returns:
-            An InstallServerResponse object.
+            An `InstallServerResponse` object with the result of the installation request.
         """
         _LOGGER.info(
             "Requesting installation for server '%s', version: '%s', overwrite: %s",
@@ -263,17 +250,13 @@ class ManagerMethodsMixin:
         return InstallServerResponse.model_validate(response)
 
     async def async_get_task_status(self, task_id: str) -> Dict[str, Any]:
-        """
-        Retrieves the status of a background task.
-
-        Corresponds to `GET /api/tasks/status/{task_id}`.
-        Requires authentication.
+        """Retrieves the status of a background task.
 
         Args:
-            task_id: The ID of the installation task.
+            task_id: The ID of the task.
 
         Returns:
-            A dictionary containing the installation status.
+            A dictionary containing the status of the task.
         """
         _LOGGER.info("Fetching installation status for task ID: %s", task_id)
         return await self._request(

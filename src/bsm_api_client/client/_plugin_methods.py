@@ -1,5 +1,9 @@
 # src/bsm_api_client/client/_plugin_methods.py
-"""Mixin class for Bedrock Server Manager API Client, handling Plugin Management endpoints."""
+"""Mixin class for plugin management methods.
+
+This module provides the `PluginMethodsMixin` class, which includes methods
+for managing plugins through the Bedrock Server Manager API.
+"""
 
 import logging
 from typing import Any, Dict, Optional, List
@@ -12,36 +16,13 @@ class PluginMethodsMixin:
     """Mixin containing methods for interacting with Plugin Management API endpoints."""
 
     async def async_get_plugin_statuses(self) -> PluginApiResponse:
-        """
-        Retrieves the status, version, and description of all discovered plugins.
-
-        Corresponds to: GET /api/plugins
-        Authentication: Required.
+        """Retrieves the status of all discovered plugins.
 
         Returns:
-            Dict[str, Any]: API response, typically including a "plugins" dictionary.
-                Example:
-                {
-                    "status": "success",
-                    "plugins": {
-                        "MyPlugin": {
-                            "enabled": True,
-                            "version": "1.0.0",
-                            "description": "This is my awesome plugin."
-                        },
-                        "AnotherPlugin": {
-                            "enabled": False,
-                            "version": "0.5.2",
-                            "description": "Does something else cool."
-                        }
-                    }
-                }
+            A `PluginApiResponse` object containing the statuses of all plugins.
 
         Raises:
-            CannotConnectError: If connection to the API fails.
-            AuthError: If authentication fails.
-            APIServerSideError: If there's an issue reading plugin configurations on the server.
-            APIError: For other API response issues.
+            APIError: For API-related errors.
         """
         _LOGGER.info("Requesting status of all plugins.")
         response = await self._request(
@@ -52,32 +33,18 @@ class PluginMethodsMixin:
     async def async_set_plugin_status(
         self, plugin_name: str, payload: PluginStatusSetPayload
     ) -> PluginApiResponse:
-        """
-        Enables or disables a specific plugin.
-
-        Corresponds to: POST /api/plugins/{plugin_name}
-        Authentication: Required.
+        """Enables or disables a specific plugin.
 
         Args:
-            plugin_name (str): The name of the plugin (filename without .py).
-            payload: A PluginStatusSetPayload object.
+            plugin_name: The name of the plugin to modify.
+            payload: A `PluginStatusSetPayload` object with the new status.
 
         Returns:
-            Dict[str, Any]: API response, typically confirming the action.
-                Example:
-                {
-                    "status": "success",
-                    "message": "Plugin 'MyPlugin' has been enabled. Reload plugins for changes to take full effect."
-                }
+            A `PluginApiResponse` object confirming the status change.
 
         Raises:
-            ValueError: If plugin_name is empty.
-            CannotConnectError: If connection to the API fails.
-            AuthError: If authentication fails.
-            InvalidInputError: If JSON body is invalid or 'enabled' field is missing.
-            NotFoundError: If plugin_name does not exist.
-            APIServerSideError: If saving the configuration fails on the server.
-            APIError: For other API response issues.
+            ValueError: If `plugin_name` is empty.
+            APIError: For API-related errors.
         """
         if not plugin_name:
             _LOGGER.error("Plugin name cannot be empty for set_plugin_enabled.")
@@ -95,25 +62,13 @@ class PluginMethodsMixin:
         return PluginApiResponse.model_validate(response)
 
     async def async_reload_plugins(self) -> PluginApiResponse:
-        """
-        Triggers a full reload of all plugins.
-
-        Corresponds to: PUT /api/plugins/reload
-        Authentication: Required.
+        """Triggers a full reload of all plugins.
 
         Returns:
-            Dict[str, Any]: API response, typically confirming the reload.
-                Example:
-                {
-                    "status": "success",
-                    "message": "Plugins have been reloaded successfully."
-                }
+            A `PluginApiResponse` object confirming the reload.
 
         Raises:
-            CannotConnectError: If connection to the API fails.
-            AuthError: If authentication fails.
-            APIServerSideError: If the reload process encounters an error on the server.
-            APIError: For other API response issues.
+            APIError: For API-related errors.
         """
         _LOGGER.info("Requesting reload of all plugins.")
         response = await self._request(
@@ -124,30 +79,16 @@ class PluginMethodsMixin:
     async def async_trigger_plugin_event(
         self, payload: TriggerEventPayload
     ) -> PluginApiResponse:
-        """
-        Triggers a custom plugin event.
-
-        Corresponds to: POST /api/plugins/trigger_event
-        Authentication: Required.
+        """Triggers a custom plugin event.
 
         Args:
-            payload: A TriggerEventPayload object.
+            payload: A `TriggerEventPayload` object with the event details.
 
         Returns:
-            Dict[str, Any]: API response, typically confirming the event was triggered.
-                Example:
-                {
-                    "status": "success",
-                    "message": "Event 'my_custom_plugin:some_action' triggered."
-                }
+            A `PluginApiResponse` object confirming the event was triggered.
 
         Raises:
-            ValueError: If event_name is empty.
-            CannotConnectError: If connection to the API fails.
-            AuthError: If authentication fails.
-            InvalidInputError: If event_name is missing or payload is not an object.
-            APIServerSideError: If an error occurs while triggering the event on the server.
-            APIError: For other API response issues.
+            APIError: For API-related errors.
         """
         _LOGGER.info(
             "Triggering custom plugin event '%s' with payload: %s",
