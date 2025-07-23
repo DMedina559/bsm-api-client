@@ -14,7 +14,7 @@ from bsm_api_client.models import (
 @pytest_asyncio.fixture
 async def client():
     """Async fixture for a BedrockServerManagerApi instance."""
-    client = BedrockServerManagerApi("localhost", "admin", "password")
+    client = BedrockServerManagerApi("http://localhost", "admin", "password")
     yield client
     await client.close()
 
@@ -165,17 +165,17 @@ async def test_install_new_server(client):
 
 @pytest.mark.asyncio
 async def test_get_install_status(client):
-    """Test async_get_install_status method."""
+    """Test async_get_task_status method."""
     with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
         task_id = "test-task-id"
         mock_request.return_value = {
             "status": "complete",
             "message": "Installation complete.",
         }
-        result = await client.async_get_install_status(task_id)
+        result = await client.async_get_task_status(task_id)
         mock_request.assert_called_once_with(
             method="GET",
-            path=f"/server/install/status/{task_id}",
+            path=f"/tasks/status/{task_id}",
             authenticated=True,
         )
         assert result["status"] == "complete"

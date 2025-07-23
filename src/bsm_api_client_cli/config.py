@@ -4,8 +4,7 @@ from pathlib import Path
 from typing import Optional, Dict, Any
 
 CONFIG_FILE_NAME = ".bsm_cli_config.json"
-DEFAULT_HOST = "http://127.0.0.1"
-DEFAULT_PORT = 11325
+DEFAULT_BASE_URL = "http://127.0.0.1:11325"
 
 
 def get_config_path() -> Path:
@@ -41,6 +40,8 @@ class Config:
         env_var = f"BSM_{key.upper()}"
         value = os.environ.get(env_var)
         if value:
+            if isinstance(default, bool):
+                return value.lower() in ("true", "1", "yes")
             return value
 
         # Fallback to config file
@@ -52,14 +53,14 @@ class Config:
         save_config(self._config)
 
     @property
-    def host(self) -> str:
-        """The API host."""
-        return self.get("host", DEFAULT_HOST)
+    def base_url(self) -> str:
+        """The API base URL."""
+        return self.get("base_url", DEFAULT_BASE_URL)
 
     @property
-    def port(self) -> int:
-        """The API port."""
-        return self.get("port", DEFAULT_PORT)
+    def verify_ssl(self) -> bool:
+        """Whether to verify SSL."""
+        return self.get("verify_ssl", True)
 
     @property
     def username(self) -> Optional[str]:

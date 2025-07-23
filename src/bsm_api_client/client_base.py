@@ -55,73 +55,50 @@ class ClientBase:
 
     def __init__(
         self,
-        host: str,
+        base_url: str,
         username: str,
         password: str,
-        port: Optional[int] = None,
         session: Optional[aiohttp.ClientSession] = None,
         base_path: str = "/api",
         request_timeout: int = 10,
-        use_ssl: bool = False,
         verify_ssl: bool = True,
     ):
         """Initializes the base API client.
-
         Args:
-            host: The hostname or IP address of the Bedrock Server Manager.
+            base_url: The base URL of the Bedrock Server Manager (e.g., http://localhost:8080).
             username: The username for authentication.
             password: The password for authentication.
-            port: The port of the Bedrock Server Manager.
             session: An optional `aiohttp.ClientSession` to use for requests.
             base_path: The base path for the API.
             request_timeout: The timeout for requests in seconds.
-            use_ssl: Whether to use SSL for the connection.
             verify_ssl: Whether to verify the SSL certificate.
         """
-        protocol = "https" if use_ssl else "http"
+        if not base_url:
+            raise ValueError("base_url must be provided.")
 
-        # Robustly parse the input host string
-        # It might contain a scheme, port, or path, which we want to handle/ignore appropriately.
-        if "://" not in host:
-            # urlparse needs a scheme to correctly parse netloc, prepend // if missing
-            parsed_uri = urlparse(f"//{host}")
-        else:
-            parsed_uri = urlparse(host)
-
-        actual_hostname = parsed_uri.hostname
-        port_from_host_uri = parsed_uri.port
-
-        if not actual_hostname:
+        # Robustly parse the input base_url string
+        parsed_uri = urlparse(base_url)
+        if not parsed_uri.scheme or not parsed_uri.netloc:
             raise ValueError(
-                f"Invalid host string provided: '{host}'. Could not determine hostname."
+                f"Invalid base_url provided: '{base_url}'. Must include scheme (http/https) and hostname."
             )
 
-        self._host: str = actual_hostname
-
-        # Determine effective port: explicit port param > port in host string > None
-        if port is not None:
-            self._port: Optional[int] = port
-        elif port_from_host_uri is not None:
-            self._port = port_from_host_uri
-        else:
-            self._port = None
+        self._host = parsed_uri.hostname
+        self._port = parsed_uri.port
+        self._use_ssl = parsed_uri.scheme == "https"
 
         self._api_base_segment = (
             f"/{base_path.strip('/')}" if base_path.strip("/") else ""
         )
 
-        # Construct port string for URL: ":<port>" or ""
-        port_str = f":{self._port}" if self._port is not None else ""
         # _server_root_url is the base part of the server's address (e.g., http://localhost:8000)
-        # It's used for special paths like /auth that are not under the main _api_base_segment.
-        self._server_root_url = f"{protocol}://{self._host}{port_str}"
+        self._server_root_url = f"{parsed_uri.scheme}://{parsed_uri.netloc}"
         # _base_url includes the _api_base_segment (e.g., /api) and is used for most standard API calls.
         self._base_url = f"{self._server_root_url}{self._api_base_segment}"
 
         self._username = username
         self._password = password
         self._request_timeout = request_timeout
-        self._use_ssl = use_ssl
         self._verify_ssl = verify_ssl
 
         if session is None:
@@ -141,8 +118,7 @@ class ClientBase:
             if self._use_ssl and not self._verify_ssl:
                 _LOGGER.info(
                     "An external ClientSession is provided, and verify_ssl=False was requested by user. "
-                    "The provided session's SSL verification behavior (ideally configured via verify_ssl to async_get_clientsession) "
-                    "will take precedence."
+                    "The provided session's SSL verification behavior will take precedence."
                 )
 
         self._jwt_token: Optional[str] = None

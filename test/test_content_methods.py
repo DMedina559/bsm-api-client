@@ -14,7 +14,7 @@ from bsm_api_client.models import (
 @pytest_asyncio.fixture
 async def client():
     """Async fixture for a BedrockServerManagerApi instance."""
-    client = BedrockServerManagerApi("localhost", "admin", "password")
+    client = BedrockServerManagerApi("http://localhost", "admin", "password")
     yield client
     await client.close()
 

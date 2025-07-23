@@ -10,27 +10,35 @@ def auth():
 
 
 @auth.command()
-@click.option("--host", help="The host of the Bedrock Server Manager API.")
-@click.option("--port", help="The port of the Bedrock Server Manager API.", type=int)
+@click.option(
+    "--base-url", prompt=True, help="The base URL of the Bedrock Server Manager API."
+)
+@click.option(
+    "--verify-ssl/--no-verify-ssl",
+    is_flag=True,
+    default=True,
+    prompt=True,
+    help="Enable/disable SSL verification.",
+)
 @click.option("--username", prompt=True, help="The username for authentication.")
 @click.option(
     "--password", prompt=True, hide_input=True, help="The password for authentication."
 )
 @click.pass_context
-async def login(ctx, host, port, username, password):
+async def login(ctx, base_url, username, password, verify_ssl):
     """Logs in to the Bedrock Server Manager API."""
     config = ctx.obj["config"]
 
-    if host:
-        config.set("host", host)
-    if port:
-        config.set("port", port)
+    if base_url:
+        config.set("base_url", base_url)
+
+    config.set("verify_ssl", verify_ssl)
 
     client = BedrockServerManagerApi(
-        host=config.host,
-        port=config.port,
+        base_url=config.base_url,
         username=username,
         password=password,
+        verify_ssl=config.verify_ssl,
     )
     try:
         token = await client.authenticate()

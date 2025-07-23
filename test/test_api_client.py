@@ -16,7 +16,7 @@ import pytest_asyncio
 @pytest_asyncio.fixture
 async def client():
     """Async fixture for a BedrockServerManagerApi instance."""
-    client = BedrockServerManagerApi("localhost", "admin", "password")
+    client = BedrockServerManagerApi("http://localhost", "admin", "password")
     yield client
     await client.close()
 
@@ -74,8 +74,8 @@ async def test_set_server_permissions(client):
     """Test async_set_server_permissions method."""
     with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
         permissions = [
-            PlayerPermission(xuid="123", permission="member"),
-            PlayerPermission(xuid="456", permission="operator"),
+            PlayerPermission(name="Player1", xuid="123", permission_level="member"),
+            PlayerPermission(name="Player2", xuid="456", permission_level="operator"),
         ]
         payload = PermissionsSetPayload(permissions=permissions)
         mock_request.return_value = {

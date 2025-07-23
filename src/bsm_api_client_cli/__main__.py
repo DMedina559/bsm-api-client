@@ -36,7 +36,10 @@ async def cli_context(ctx):
 
     if config.jwt_token:
         client = BedrockServerManagerApi(
-            host=config.host, port=config.port, username="", password=""
+            base_url=config.base_url,
+            username="",
+            password="",
+            verify_ssl=config.verify_ssl,
         )
         client._jwt_token = config.jwt_token
         ctx.obj["client"] = client
