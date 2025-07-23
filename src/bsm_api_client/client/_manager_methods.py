@@ -262,11 +262,11 @@ class ManagerMethodsMixin:
         )
         return InstallServerResponse.model_validate(response)
 
-    async def async_get_install_status(self, task_id: str) -> Dict[str, Any]:
+    async def async_get_task_status(self, task_id: str) -> Dict[str, Any]:
         """
-        Retrieves the status of a background server installation task.
+        Retrieves the status of a background task.
 
-        Corresponds to `GET /api/server/install/status/{task_id}`.
+        Corresponds to `GET /api/tasks/status/{task_id}`.
         Requires authentication.
 
         Args:
@@ -278,7 +278,7 @@ class ManagerMethodsMixin:
         _LOGGER.info("Fetching installation status for task ID: %s", task_id)
         return await self._request(
             method="GET",
-            path=f"/server/install/status/{task_id}",
+            path=f"/tasks/status/{task_id}",
             authenticated=True,
         )
         return InstallServerResponse.model_validate(response)

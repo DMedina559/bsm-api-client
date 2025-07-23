@@ -236,7 +236,7 @@ async def install(ctx):
             time.sleep(5)  # Give the server time to start installation
             click.echo("Server installation started. Polling for completion...")
             while True:
-                status_response = await client.async_get_install_status(
+                status_response = await client.async_get_task_status(
                     install_result.task_id
                 )
                 if status_response["status"] == "success":
