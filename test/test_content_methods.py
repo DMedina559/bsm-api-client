@@ -28,7 +28,7 @@ async def test_list_server_backups(client):
         mock_request.assert_called_once_with(
             "GET", "/server/test-server/backup/list/world", authenticated=True
         )
-        assert len(result["backups"]) == 1
+        assert len(result.backups) == 1
 
 
 @pytest.mark.asyncio
@@ -44,7 +44,7 @@ async def test_restore_select_backup_type(client):
             json_data=payload.model_dump(),
             authenticated=True,
         )
-        assert result["redirect_url"] == "/some/url"
+        assert result.redirect_url == "/some/url"
 
 
 @pytest.mark.asyncio
@@ -56,7 +56,7 @@ async def test_get_content_worlds(client):
         mock_request.assert_called_once_with(
             "GET", "/content/worlds", authenticated=True
         )
-        assert len(result["files"]) == 1
+        assert len(result.files) == 1
 
 
 @pytest.mark.asyncio
@@ -68,7 +68,7 @@ async def test_get_content_addons(client):
         mock_request.assert_called_once_with(
             "GET", "/content/addons", authenticated=True
         )
-        assert len(result["files"]) == 1
+        assert len(result.files) == 1
 
 
 @pytest.mark.asyncio
@@ -87,7 +87,7 @@ async def test_trigger_server_backup(client):
             json_data=payload.model_dump(),
             authenticated=True,
         )
-        assert result["status"] == "success"
+        assert result.status == "success"
 
 
 @pytest.mark.asyncio
@@ -105,7 +105,7 @@ async def test_export_server_world(client):
             json_data=None,
             authenticated=True,
         )
-        assert result["status"] == "success"
+        assert result.status == "success"
 
 
 @pytest.mark.asyncio
@@ -120,7 +120,7 @@ async def test_reset_server_world(client):
             json_data=None,
             authenticated=True,
         )
-        assert result["status"] == "success"
+        assert result.status == "success"
 
 
 @pytest.mark.asyncio
@@ -138,7 +138,7 @@ async def test_prune_server_backups(client):
             json_data=None,
             authenticated=True,
         )
-        assert result["status"] == "success"
+        assert result.status == "success"
 
 
 @pytest.mark.asyncio
@@ -157,7 +157,7 @@ async def test_restore_server_backup(client):
             json_data=payload.model_dump(),
             authenticated=True,
         )
-        assert result["status"] == "success"
+        assert result.status == "success"
 
 
 @pytest.mark.asyncio
@@ -175,7 +175,7 @@ async def test_restore_server_latest_all(client):
             json_data={"restore_type": "all"},
             authenticated=True,
         )
-        assert result["status"] == "success"
+        assert result.status == "success"
 
 
 @pytest.mark.asyncio
@@ -194,7 +194,7 @@ async def test_install_server_world(client):
             json_data=payload.model_dump(),
             authenticated=True,
         )
-        assert result["status"] == "success"
+        assert result.status == "success"
 
 
 @pytest.mark.asyncio
@@ -213,4 +213,4 @@ async def test_install_server_addon(client):
             json_data=payload.model_dump(),
             authenticated=True,
         )
-        assert result["status"] == "success"
+        assert result.status == "success"

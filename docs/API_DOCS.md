@@ -411,53 +411,6 @@ Methods for managing server content like backups, worlds, and addons.
     *   `payload: RestoreTypePayload` - Pydantic model containing the restore type.
 *   **Returns**: `BackupRestoreResponse` - A Pydantic model containing the API response.
 
-## Scheduler Methods
-
-Methods for managing scheduled tasks (OS-specific).
-
-### `async client.async_add_server_cron_job(server_name: str, new_cron_job: str) -> Dict[str, Any]` (Linux)
-
-*   **Description**: Adds a new cron job.
-*   **API Endpoint**: `POST /api/server/{server_name}/cron_scheduler/add`
-*   **Request Payload**: `{"new_cron_job": "..."}` (model: `CronJobPayload`)
-*   **Returns**: `Dict[str, Any]` - API response (model: `TaskApiResponse`).
-
-### `async client.async_modify_server_cron_job(server_name: str, old_cron_job: str, new_cron_job: str) -> Dict[str, Any]` (Linux)
-
-*   **Description**: Modifies an existing cron job.
-*   **API Endpoint**: `POST /api/server/{server_name}/cron_scheduler/modify`
-*   **Request Payload**: `{"old_cron_job": "...", "new_cron_job": "..."}` (model: `CronJobPayload`)
-*   **Returns**: `Dict[str, Any]` - API response (model: `TaskApiResponse`).
-
-### `async client.async_delete_server_cron_job(server_name: str, cron_string: str) -> Dict[str, Any]` (Linux)
-
-*   **Description**: Deletes a cron job.
-*   **API Endpoint**: `DELETE /api/server/{server_name}/cron_scheduler/delete`
-*   **Arguments**:
-    *   `server_name: str`
-    *   `cron_string: str` (as query parameter)
-*   **Returns**: `Dict[str, Any]` - API response (model: `TaskApiResponse`).
-
-### `async client.async_add_server_windows_task(server_name: str, command: str, triggers: List[Dict[str, Any]]) -> Dict[str, Any]` (Windows)
-
-*   **Description**: Adds a new Windows Scheduled Task.
-*   **API Endpoint**: `POST /api/server/{server_name}/task_scheduler/add`
-*   **Request Payload**: `{"command": "...", "triggers": [...]}` (model: `WindowsTaskPayload`)
-*   **Returns**: `Dict[str, Any]` - API response (model: `TaskApiResponse`).
-
-### `async client.async_modify_server_windows_task(server_name: str, task_name: str, command: str, triggers: List[Dict[str, Any]]) -> Dict[str, Any]` (Windows)
-
-*   **Description**: Modifies an existing Windows Scheduled Task.
-*   **API Endpoint**: `PUT /api/server/{server_name}/task_scheduler/task/{task_name}`
-*   **Request Payload**: `{"command": "...", "triggers": [...]}` (model: `WindowsTaskPayload`)
-*   **Returns**: `Dict[str, Any]` - API response (model: `TaskApiResponse`).
-
-### `async client.async_delete_server_windows_task(server_name: str, task_name: str) -> Dict[str, Any]` (Windows)
-
-*   **Description**: Deletes a Windows Scheduled Task.
-*   **API Endpoint**: `DELETE /api/server/{server_name}/task_scheduler/task/{task_name}`
-*   **Returns**: `Dict[str, Any]` - API response (model: `TaskApiResponse`).
-
 ## Plugin Methods
 
 Methods for managing plugins.

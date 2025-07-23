@@ -1,5 +1,10 @@
 # src/bsm_api_client/client/_server_action_methods.py
-"""Mixin class containing server action methods."""
+"""Mixin class for server action methods.
+
+This module provides the `ServerActionMethodsMixin` class, which includes
+methods for performing actions on a specific server instance, such as
+starting, stopping, and sending commands.
+"""
 import logging
 from typing import Any, Dict, Optional, List, TYPE_CHECKING
 from urllib.parse import quote
@@ -46,6 +51,7 @@ class ServerActionMethodsMixin:
     if TYPE_CHECKING:
 
         def is_linux_server(self: "ClientBase") -> bool: ...
+
         def is_windows_server(self: "ClientBase") -> bool: ...
 
         async def _request(
@@ -59,14 +65,13 @@ class ServerActionMethodsMixin:
         ) -> Any: ...
 
     async def async_start_server(self, server_name: str) -> ActionResponse:
-        """
-        Starts the specified Bedrock server instance.
-
-        Corresponds to `POST /api/server/{server_name}/start`.
-        Requires authentication.
+        """Starts the specified Bedrock server instance.
 
         Args:
             server_name: The unique name of the server instance to start.
+
+        Returns:
+            An `ActionResponse` object confirming the action.
         """
         _LOGGER.info("Requesting start for server '%s'", server_name)
         response = await self._request(
@@ -76,15 +81,82 @@ class ServerActionMethodsMixin:
         )
         return ActionResponse.model_validate(response)
 
-    async def async_stop_server(self, server_name: str) -> ActionResponse:
-        """
-        Stops the specified running Bedrock server instance.
+    async def async_enable_server_service(self, server_name: str) -> ActionResponse:
+        """Enables the system service for the specified server.
 
-        Corresponds to `POST /api/server/{server_name}/stop`.
-        Requires authentication.
+        Args:
+            server_name: The name of the server.
+
+        Returns:
+            An `ActionResponse` object confirming the action.
+        """
+        _LOGGER.info("Enabling service for server '%s'", server_name)
+        return await self.async_configure_server_os_service(
+            server_name, ServiceUpdatePayload(autostart=True)
+        )
+
+    async def async_disable_server_service(self, server_name: str) -> ActionResponse:
+        """Disables the system service for the specified server.
+
+        Args:
+            server_name: The name of the server.
+
+        Returns:
+            An `ActionResponse` object confirming the action.
+        """
+        _LOGGER.info("Disabling service for server '%s'", server_name)
+        return await self.async_configure_server_os_service(
+            server_name, ServiceUpdatePayload(autostart=False)
+        )
+
+    async def async_set_server_autoupdate(
+        self, server_name: str, autoupdate: bool
+    ) -> ActionResponse:
+        """Sets the autoupdate flag for the specified server.
+
+        Args:
+            server_name: The name of the server.
+            autoupdate: The desired autoupdate state.
+
+        Returns:
+            An `ActionResponse` object confirming the action.
+        """
+        _LOGGER.info(
+            "Setting autoupdate for server '%s' to %s", server_name, autoupdate
+        )
+        return await self.async_configure_server_os_service(
+            server_name, ServiceUpdatePayload(autoupdate=autoupdate)
+        )
+
+    async def async_create_server_service(
+        self, server_name: str, autostart: bool
+    ) -> ActionResponse:
+        """Creates the system service for the specified server.
+
+        Args:
+            server_name: The name of the server.
+            autostart: Whether the service should start on boot.
+
+        Returns:
+            An `ActionResponse` object confirming the action.
+        """
+        _LOGGER.info(
+            "Creating service for server '%s' with autostart=%s",
+            server_name,
+            autostart,
+        )
+        return await self.async_configure_server_os_service(
+            server_name, ServiceUpdatePayload(autostart=autostart)
+        )
+
+    async def async_stop_server(self, server_name: str) -> ActionResponse:
+        """Stops the specified running Bedrock server instance.
 
         Args:
             server_name: The unique name of the server instance to stop.
+
+        Returns:
+            An `ActionResponse` object confirming the action.
         """
         _LOGGER.info("Requesting stop for server '%s'", server_name)
         response = await self._request(
@@ -95,14 +167,13 @@ class ServerActionMethodsMixin:
         return ActionResponse.model_validate(response)
 
     async def async_restart_server(self, server_name: str) -> ActionResponse:
-        """
-        Restarts the specified Bedrock server instance.
-
-        Corresponds to `POST /api/server/{server_name}/restart`.
-        Requires authentication.
+        """Restarts the specified Bedrock server instance.
 
         Args:
             server_name: The unique name of the server instance to restart.
+
+        Returns:
+            An `ActionResponse` object confirming the action.
         """
         _LOGGER.info("Requesting restart for server '%s'", server_name)
         response = await self._request(
@@ -115,15 +186,14 @@ class ServerActionMethodsMixin:
     async def async_send_server_command(
         self, server_name: str, command: CommandPayload
     ) -> ActionResponse:
-        """
-        Sends a command string to the specified server's console.
-
-        Corresponds to `POST /api/server/{server_name}/send_command`.
-        Requires authentication.
+        """Sends a command to the specified server's console.
 
         Args:
             server_name: The unique name of the target server instance.
-            command: The command string to send.
+            command: A `CommandPayload` object containing the command to send.
+
+        Returns:
+            An `ActionResponse` object confirming the action.
         """
         _LOGGER.info(
             "Sending command to server '%s': '%s'", server_name, command.command
@@ -138,14 +208,13 @@ class ServerActionMethodsMixin:
         return ActionResponse.model_validate(response)
 
     async def async_update_server(self, server_name: str) -> ActionResponse:
-        """
-        Checks for and applies updates to the specified server instance.
-
-        Corresponds to `POST /api/server/{server_name}/update`.
-        Requires authentication.
+        """Checks for and applies updates to the specified server instance.
 
         Args:
             server_name: The unique name of the server instance to update.
+
+        Returns:
+            An `ActionResponse` object confirming the action.
         """
         _LOGGER.info("Requesting update for server '%s'", server_name)
         response = await self._request(
@@ -158,15 +227,14 @@ class ServerActionMethodsMixin:
     async def async_add_server_allowlist(
         self, server_name: str, payload: AllowlistAddPayload
     ) -> ActionResponse:
-        """
-        Adds players to the server's allowlist.json file.
-
-        Corresponds to `POST /api/server/{server_name}/allowlist/add`.
-        Requires authentication.
+        """Adds players to the server's allowlist.
 
         Args:
             server_name: The name of the server.
-            payload: An AllowlistAddPayload object.
+            payload: An `AllowlistAddPayload` object with the players to add.
+
+        Returns:
+            An `ActionResponse` object confirming the action.
         """
         _LOGGER.info(
             "Adding players %s to allowlist for server '%s' (ignores limit: %s)",
@@ -186,20 +254,14 @@ class ServerActionMethodsMixin:
     async def async_remove_server_allowlist_players(
         self, server_name: str, payload: AllowlistRemovePayload
     ) -> ActionResponse:
-        """
-        Removes one or more players from the server's allowlist.json.
-        The operation is atomic on the server side.
-
-        Corresponds to `DELETE /api/server/{server_name}/allowlist/remove`.
-        Requires authentication.
+        """Removes players from the server's allowlist.
 
         Args:
             server_name: The name of the server.
-            payload: An AllowlistRemovePayload object.
+            payload: An `AllowlistRemovePayload` object with the players to remove.
 
         Returns:
-            A dictionary with the results of the operation, detailing which
-            players were removed and which were not found.
+            An `ActionResponse` object confirming the action.
         """
         _LOGGER.info(
             "Removing %d players from allowlist for server '%s': %s",
@@ -219,14 +281,14 @@ class ServerActionMethodsMixin:
     async def async_set_server_permissions(
         self, server_name: str, payload: PermissionsSetPayload
     ) -> ActionResponse:
-        """
-        Updates permission levels for players in the server's permissions.json.
-        Corresponds to `PUT /api/server/{server_name}/permissions/set`.
-        Requires authentication.
+        """Updates permission levels for players on the server.
 
         Args:
             server_name: The name of the server.
-            payload: A PermissionsSetPayload object.
+            payload: A `PermissionsSetPayload` object with the permissions to set.
+
+        Returns:
+            An `ActionResponse` object confirming the action.
         """
         _LOGGER.info(
             "Setting permissions for server '%s': %s",
@@ -245,14 +307,14 @@ class ServerActionMethodsMixin:
     async def async_update_server_properties(
         self, server_name: str, payload: PropertiesPayload
     ) -> ActionResponse:
-        """
-        Updates specified key-value pairs in the server's server.properties file.
-        Corresponds to `POST /api/server/{server_name}/properties/set`.
-        Requires authentication.
+        """Updates key-value pairs in the server's properties file.
 
         Args:
             server_name: The name of the server.
-            payload: A PropertiesPayload object.
+            payload: A `PropertiesPayload` object with the properties to update.
+
+        Returns:
+            An `ActionResponse` object confirming the action.
         """
         _LOGGER.info(
             "Updating properties for server '%s': %s", server_name, payload.properties
@@ -269,14 +331,14 @@ class ServerActionMethodsMixin:
     async def async_configure_server_os_service(
         self, server_name: str, payload: ServiceUpdatePayload
     ) -> ActionResponse:
-        """
-        Configures OS-specific service settings (e.g., systemd, autoupdate flag).
-        Corresponds to `POST /api/server/{server_name}/service/update`.
-        Requires authentication.
+        """Configures OS-specific service settings for the server.
 
         Args:
             server_name: The name of the server.
-            payload: A ServiceUpdatePayload object.
+            payload: A `ServiceUpdatePayload` object with the service settings.
+
+        Returns:
+            An `ActionResponse` object confirming the action.
         """
         _LOGGER.info(
             "Requesting OS service config for server '%s' with payload: %s",
@@ -293,15 +355,16 @@ class ServerActionMethodsMixin:
         return ActionResponse.model_validate(response)
 
     async def async_delete_server(self, server_name: str) -> ActionResponse:
-        """
-        Permanently deletes all data associated with the specified server instance.
-        **USE WITH EXTREME CAUTION: This action is irreversible.**
+        """Permanently deletes a server instance.
 
-        Corresponds to `DELETE /api/server/{server_name}/delete`.
-        Requires authentication.
+        Warning:
+            This action is irreversible and will delete all data associated with the server.
 
         Args:
             server_name: The unique name of the server instance to delete.
+
+        Returns:
+            An `ActionResponse` object confirming the action.
         """
         _LOGGER.warning(
             "Requesting DELETION of server '%s'. THIS IS IRREVERSIBLE.", server_name

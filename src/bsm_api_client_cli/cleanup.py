@@ -1,0 +1,159 @@
+import click
+import logging
+import os
+import shutil
+from pathlib import Path
+from typing import Optional
+
+logger = logging.getLogger(__name__)
+
+
+def _cleanup_pycache() -> int:
+    """Finds and removes all `__pycache__` directories within the project."""
+    try:
+        project_root = Path(__file__).resolve().parents[2]
+        deleted_count = 0
+
+        for cache_dir in project_root.rglob("__pycache__"):
+            if cache_dir.is_dir():
+                logger.debug(f"Removing pycache directory: {cache_dir}")
+                shutil.rmtree(cache_dir)
+                deleted_count += 1
+        return deleted_count
+
+    except Exception as e:
+        logger.error(f"Error during pycache cleanup: {e}", exc_info=True)
+        click.secho(f"An error occurred during cache cleanup: {e}", fg="red")
+        return 0
+
+
+def _cleanup_log_files(log_dir_path: Path) -> int:
+    """Deletes all `.log` files in the specified directory, skipping the newest one."""
+    if not log_dir_path.is_dir():
+        message = f"Log directory '{log_dir_path}' does not exist."
+        click.secho(f"Warning: {message}", fg="yellow")
+        logger.warning(f"Log cleanup skipped: {message}")
+        return 0
+
+    deleted_count = 0
+    try:
+        log_files = sorted(log_dir_path.glob("*.log.*"), key=os.path.getmtime)
+
+        if not log_files:
+            logger.info(f"No log files found in '{log_dir_path}'.")
+            return 0
+
+        if len(log_files) == 1:
+            logger.info(
+                f"Only one log file found ('{log_files[0].name}'); it will be kept."
+            )
+            return 0
+
+        newest_log = log_files[-1]
+        logger.info(f"Keeping newest log file: {newest_log.name}")
+
+        for log_file in log_files[:-1]:
+            try:
+                logger.debug(f"Removing old log file: {log_file.name}")
+                log_file.unlink()
+                deleted_count += 1
+            except Exception as e_unlink:
+                logger.error(
+                    f"Failed to remove log file '{log_file.name}': {e_unlink}",
+                    exc_info=True,
+                )
+                click.secho(
+                    f"Error removing log file '{log_file.name}': {e_unlink}", fg="red"
+                )
+
+        return deleted_count
+    except Exception as e:
+        logger.error(
+            f"Error during log cleanup in '{log_dir_path}': {e}", exc_info=True
+        )
+        click.secho(f"An error occurred during log cleanup: {e}", fg="red")
+        return 0
+
+
+@click.command("cleanup")
+@click.option(
+    "-c",
+    "--cache",
+    is_flag=True,
+    help="Clean up Python bytecode cache files (__pycache__).",
+)
+@click.option(
+    "-l", "--logs", is_flag=True, help="Clean up application log files (*.log)."
+)
+@click.option(
+    "--log-dir",
+    "log_dir_override",
+    type=click.Path(file_okay=False, resolve_path=True, path_type=Path),
+    help="Override the default log directory from settings.",
+)
+@click.pass_context
+def cleanup(ctx, cache: bool, logs: bool, log_dir_override: Optional[Path]):
+    """Cleans up generated application files, such as logs and Python bytecode cache."""
+    config = ctx.obj["config"]
+    logger.info("CLI: Running cleanup command...")
+
+    if not cache and not logs:
+        click.secho(
+            "No cleanup options specified. Use --cache, --logs, or both.", fg="yellow"
+        )
+        logger.warning("Cleanup command run without any action flags.")
+        return
+
+    was_anything_cleaned = False
+
+    if cache:
+        click.secho("\nCleaning Python cache files (__pycache__)...", bold=True)
+        deleted_count = _cleanup_pycache()
+        if deleted_count > 0:
+            click.secho(
+                f"Success: Cleaned up {deleted_count} __pycache__ director(ies).",
+                fg="green",
+            )
+            logger.info(f"Cleaned {deleted_count} __pycache__ directories.")
+            was_anything_cleaned = True
+        else:
+            click.secho("Info: No __pycache__ directories found to clean.", fg="cyan")
+            logger.info("No __pycache__ directories found.")
+
+    if logs:
+        click.secho("\nCleaning log files...", bold=True)
+
+        final_log_dir = log_dir_override
+        if not final_log_dir:
+            settings_log_dir = config.get("paths.logs")
+            if settings_log_dir:
+                final_log_dir = Path(settings_log_dir)
+
+        if not final_log_dir:
+            msg = (
+                "Log directory not specified via --log-dir or in application settings."
+            )
+            click.secho(f"Error: {msg}", fg="red")
+            logger.error(f"Cannot clean logs: {msg}")
+            raise click.Abort()
+
+        click.echo(f"Targeting log directory: {final_log_dir}")
+        deleted_count = _cleanup_log_files(final_log_dir)
+
+        if deleted_count > 0:
+            click.secho(
+                f"Success: Cleaned up {deleted_count} log file(s) from '{final_log_dir}'.",
+                fg="green",
+            )
+            logger.info(f"Cleaned {deleted_count} log files from '{final_log_dir}'.")
+            was_anything_cleaned = True
+        else:
+            click.secho(
+                f"Info: No log files found to clean in '{final_log_dir}'.", fg="cyan"
+            )
+            logger.info(f"No log files found in '{final_log_dir}'.")
+
+    if was_anything_cleaned:
+        logger.info("CLI: Cleanup operations finished successfully.")
+    else:
+        logger.info("CLI: Cleanup operations finished, nothing was cleaned.")

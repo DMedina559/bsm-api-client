@@ -1,5 +1,9 @@
 # src/bsm_api_client/client/_content_methods.py
-"""Mixin class containing content management methods (backups, worlds, addons)."""
+"""Mixin class for content management methods.
+
+This module provides the `ContentMethodsMixin` class, which includes methods
+for managing server content such as backups, worlds, and addons.
+"""
 import logging
 from typing import Any, Dict, Optional, List, TYPE_CHECKING
 from ..models import (
@@ -42,15 +46,17 @@ class ContentMethodsMixin:
     async def async_list_server_backups(
         self, server_name: str, backup_type: str
     ) -> BackupRestoreResponse:
-        """
-        Lists backup filenames for a specific server and backup type.
-
-        Corresponds to `GET /api/server/{server_name}/backup/list/{backup_type}`.
-        Requires authentication.
+        """Lists backup files for a specific server and backup type.
 
         Args:
             server_name: The name of the server.
-            backup_type: The type of backups to list (e.g., "world", "properties", "allowlist", "permissions", "all").
+            backup_type: The type of backups to list (e.g., "world", "properties").
+
+        Returns:
+            A `BackupRestoreResponse` object containing the list of backups.
+
+        Raises:
+            ValueError: If an invalid `backup_type` is provided.
         """
         bt_lower = backup_type.lower()
         if bt_lower not in ALLOWED_BACKUP_LIST_TYPES:
@@ -76,18 +82,14 @@ class ContentMethodsMixin:
     async def async_restore_select_backup_type(
         self, server_name: str, payload: RestoreTypePayload
     ) -> BackupRestoreResponse:
-        """
-        Handles the API request for selecting a restore type and provides a redirect URL
-        to the page where specific backup files of that type can be chosen.
-
-        Corresponds to `POST /api/server/{server_name}/restore/select_backup_type`.
-        Requires authentication.
-        Request body model: RestoreTypePayload
-        Expected response model: BackupRestoreResponse
+        """Selects a restore type and gets a redirect URL for choosing a backup file.
 
         Args:
             server_name: The name of the server.
-            payload: A RestoreTypePayload object.
+            payload: A `RestoreTypePayload` object specifying the restore type.
+
+        Returns:
+            A `BackupRestoreResponse` object, typically containing a redirect URL.
         """
         _LOGGER.info(
             "Selecting restore backup type '%s' for server '%s'",
@@ -103,22 +105,20 @@ class ContentMethodsMixin:
         return BackupRestoreResponse.model_validate(response)
 
     async def async_get_content_worlds(self) -> ContentListResponse:
-        """
-        Lists available world template files (.mcworld) from the manager's content directory.
+        """Lists available world template files (.mcworld).
 
-        Corresponds to `GET /api/content/worlds`.
-        Requires authentication.
+        Returns:
+            A `ContentListResponse` object containing the list of world files.
         """
         _LOGGER.debug("Fetching available world files from /content/worlds")
         response = await self._request("GET", "/content/worlds", authenticated=True)
         return ContentListResponse.model_validate(response)
 
     async def async_get_content_addons(self) -> ContentListResponse:
-        """
-        Lists available addon files (.mcpack, .mcaddon) from the manager's content directory.
+        """Lists available addon files (.mcpack, .mcaddon).
 
-        Corresponds to `GET /api/content/addons`.
-        Requires authentication.
+        Returns:
+            A `ContentListResponse` object containing the list of addon files.
         """
         _LOGGER.debug("Fetching available addon files from /content/addons")
         response = await self._request("GET", "/content/addons", authenticated=True)
@@ -127,15 +127,14 @@ class ContentMethodsMixin:
     async def async_trigger_server_backup(
         self, server_name: str, payload: BackupActionPayload
     ) -> BackupRestoreResponse:
-        """
-        Triggers a backup operation for a specific server.
-
-        Corresponds to `POST /api/server/{server_name}/backup/action`.
-        Requires authentication.
+        """Triggers a backup operation for a specific server.
 
         Args:
             server_name: The name of the server to back up.
-            payload: A BackupActionPayload object.
+            payload: A `BackupActionPayload` object specifying the backup details.
+
+        Returns:
+            A `BackupRestoreResponse` object confirming the backup action.
         """
         _LOGGER.info(
             "Triggering backup for server '%s', type: %s, file: %s",
@@ -153,14 +152,13 @@ class ContentMethodsMixin:
         return BackupRestoreResponse.model_validate(response)
 
     async def async_export_server_world(self, server_name: str) -> ActionResponse:
-        """
-        Exports the current world of a server to a .mcworld file in the content directory.
-
-        Corresponds to `POST /api/server/{server_name}/world/export`.
-        Requires authentication.
+        """Exports the current world of a server to a .mcworld file.
 
         Args:
             server_name: The name of the server whose world to export.
+
+        Returns:
+            An `ActionResponse` object confirming the export action.
         """
         _LOGGER.info("Triggering world export for server '%s'", server_name)
         response = await self._request(
@@ -172,14 +170,13 @@ class ContentMethodsMixin:
         return ActionResponse.model_validate(response)
 
     async def async_reset_server_world(self, server_name: str) -> ActionResponse:
-        """
-        Resets the current world of a server.
-
-        Corresponds to `DELETE /api/server/{server_name}/world/reset`.
-        Requires authentication.
+        """Resets the current world of a server.
 
         Args:
-            server_name: The name of the server whose world to export.
+            server_name: The name of the server whose world to reset.
+
+        Returns:
+            An `ActionResponse` object confirming the reset action.
         """
         _LOGGER.warning("Triggering world reset for server '%s'", server_name)
         response = await self._request(
@@ -193,16 +190,13 @@ class ContentMethodsMixin:
     async def async_prune_server_backups(
         self, server_name: str
     ) -> BackupRestoreResponse:
-        """
-        Prunes older backups for a specific server based on server-defined retention policies.
-        The new FastAPI endpoint (`POST /api/server/{server_name}/backups/prune`)
-        does not accept a request body; retention is solely managed by server-side settings.
-
-        Corresponds to `POST /api/server/{server_name}/backups/prune`.
-        Requires authentication.
+        """Prunes old backups for a server based on its retention policies.
 
         Args:
             server_name: The name of the server whose backups to prune.
+
+        Returns:
+            A `BackupRestoreResponse` object confirming the prune action.
         """
         _LOGGER.info(
             "Triggering backup pruning for server '%s' (using server-defined retention)",
@@ -219,15 +213,14 @@ class ContentMethodsMixin:
     async def async_restore_server_backup(
         self, server_name: str, payload: RestoreActionPayload
     ) -> BackupRestoreResponse:
-        """
-        Restores a server's world or a specific configuration file from a backup.
-
-        Corresponds to `POST /api/server/{server_name}/restore/action`.
-        Requires authentication.
+        """Restores a server's world or configuration from a backup.
 
         Args:
             server_name: The name of the server.
-            payload: A RestoreActionPayload object.
+            payload: A `RestoreActionPayload` object specifying the restore details.
+
+        Returns:
+            A `BackupRestoreResponse` object confirming the restore action.
         """
         _LOGGER.info(
             "Requesting restore for server '%s', type: %s, file: '%s'",
@@ -247,18 +240,16 @@ class ContentMethodsMixin:
     async def async_restore_server_latest_all(
         self, server_name: str
     ) -> BackupRestoreResponse:
-        """
-        Restores the server's world AND standard configuration files from their latest backups.
-        NOTE: This method's behavior was updated for the new API. It now calls the
-        generic restore action endpoint (`POST /api/server/{server_name}/restore/action`)
-        with a payload of `{"restore_type": "all"}`. The dedicated `/restore/all`
-        endpoint from the old API is no longer used.
+        """Restores a server from the latest 'all' backup.
 
-        Corresponds to `POST /api/server/{server_name}/restore/action` with `{"restore_type": "all"}`.
-        Requires authentication.
+        This restores the server's world and standard configuration files from
+        their most recent backups.
 
         Args:
             server_name: The name of the server to restore.
+
+        Returns:
+            A `BackupRestoreResponse` object confirming the restore action.
         """
         _LOGGER.info(
             "Requesting restore of latest 'all' backup for server '%s'", server_name
@@ -275,15 +266,14 @@ class ContentMethodsMixin:
     async def async_install_server_world(
         self, server_name: str, payload: FileNamePayload
     ) -> ActionResponse:
-        """
-        Installs a world from a .mcworld file (from content directory) to a server.
-
-        Corresponds to `POST /api/server/{server_name}/world/install`.
-        Requires authentication.
+        """Installs a world to a server from a .mcworld file.
 
         Args:
             server_name: The name of the server.
-            payload: A FileNamePayload object.
+            payload: A `FileNamePayload` object with the name of the .mcworld file.
+
+        Returns:
+            An `ActionResponse` object confirming the installation.
         """
         _LOGGER.info(
             "Requesting world install for server '%s' from file '%s'",
@@ -302,15 +292,14 @@ class ContentMethodsMixin:
     async def async_install_server_addon(
         self, server_name: str, payload: FileNamePayload
     ) -> ActionResponse:
-        """
-        Installs an addon (.mcaddon or .mcpack file from content directory) to a server.
-
-        Corresponds to `POST /api/server/{server_name}/addon/install`.
-        Requires authentication.
+        """Installs an addon to a server from a .mcaddon or .mcpack file.
 
         Args:
             server_name: The name of the server.
-            payload: A FileNamePayload object.
+            payload: A `FileNamePayload` object with the name of the addon file.
+
+        Returns:
+            An `ActionResponse` object confirming the installation.
         """
         _LOGGER.info(
             "Requesting addon install for server '%s' from file '%s'",
