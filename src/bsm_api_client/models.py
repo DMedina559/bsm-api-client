@@ -178,8 +178,6 @@ class SettingItem(BaseModel):
         value: The value of the setting.
     """
 
-
-
     key: str
     value: Any
 
