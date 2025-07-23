@@ -151,7 +151,7 @@ async def list_players(ctx, server_name: str):
 async def interactive_allowlist_workflow(client, server_name: str):
     """Guides the user through an interactive session to view and add players to the allowlist."""
     response = await client.async_get_server_allowlist(server_name)
-    existing_players = response.data.get("existing_players", [])
+    existing_players = response.players or []
 
     click.secho("\n--- Interactive Allowlist Configuration ---", bold=True)
     if existing_players:

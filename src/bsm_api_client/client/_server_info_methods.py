@@ -3,7 +3,7 @@
 import logging
 from typing import Any, Dict, Optional, List, TYPE_CHECKING
 from urllib.parse import quote
-from ..exceptions import APIError, ServerNotFoundError
+from ..exceptions import APIError, ServerNotFoundError, AuthError, CannotConnectError
 from ..models import GeneralApiResponse
 
 if TYPE_CHECKING:
