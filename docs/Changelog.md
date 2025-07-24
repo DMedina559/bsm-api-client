@@ -4,6 +4,9 @@
 
 # bsm-api-client Changelog
 
+# 1.2.1
+1. Removed cleanup
+
 # 1.2.0
 1. Added support for BSM 3.5.0
 2. Added CLI client
