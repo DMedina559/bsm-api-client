@@ -60,7 +60,7 @@ class ClientBase:
         password: str,
         session: Optional[aiohttp.ClientSession] = None,
         base_path: str = "/api",
-        request_timeout: int = 10,
+        request_timeout: int = 90,
         verify_ssl: bool = True,
     ):
         """Initializes the base API client.

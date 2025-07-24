@@ -32,7 +32,7 @@ class BedrockServerManagerApi(
 
     Example:
         >>> from bsm_api_client import BedrockServerManagerApi
-        >>> client = BedrockServerManagerApi("http://localhost:8080", "my_secret_token")
+        >>> client = BedrockServerManagerApi("http://localhost:8080", "admin", "password")
         >>> await client.async_get_info()
     """
 

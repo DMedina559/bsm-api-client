@@ -46,10 +46,10 @@ keywords = ["minecraft", "bedrock", "server", "manager", "api", "client", "async
 
 [tool.setuptools.packages.find]
 where = ["src"] 
-include = ["bsm_api_client*", "bsm_api_client_cli*"]
+include = ["bsm_api_client*"]
 
 [project.scripts]
-bsm-api-client = "bsm_api_client_cli.__main__:cli"
+bsm-api-client = "bsm_api_client.cli.__main__:cli"
 
 [project.urls]
 "Homepage" = "https://github.com/DMedina559/bsm-api-client"

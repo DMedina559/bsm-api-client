@@ -1,4 +1,12 @@
-import click
+try:
+    import click
+    import questionary
+except ImportError:
+    print(
+        "Please install the required dependencies with `pip install bsm-api-client[cli]`"
+    )
+    exit(1)
+
 import asyncio
 from contextlib import asynccontextmanager
 from .config import Config
