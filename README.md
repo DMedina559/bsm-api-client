@@ -40,8 +40,6 @@ or if you wish to use the Command Line Interface CLI:
 pip install bsm-api-client[cli]
 ```
 
-
-
 ## Quick Start
 
 Here's a basic example of how to initialize the client and fetch server information:
