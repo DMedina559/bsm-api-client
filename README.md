@@ -34,6 +34,14 @@ Install the library using pip:
 pip install bsm-api-client
 ```
 
+or if you wish to use the Command Line Interface CLI:
+
+```bash
+pip install bsm-api-client[cli]
+```
+
+
+
 ## Quick Start
 
 Here's a basic example of how to initialize the client and fetch server information:
