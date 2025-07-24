@@ -15,7 +15,6 @@ from .auth import auth
 from .server import server
 from .addon import addon
 from .backup import backup
-from .cleanup import cleanup
 from .player import player
 from .plugins import plugin
 from .allowlist import allowlist
@@ -60,7 +59,6 @@ cli.add_command(auth)
 cli.add_command(server)
 cli.add_command(addon)
 cli.add_command(backup)
-cli.add_command(cleanup)
 cli.add_command(player)
 cli.add_command(plugin)
 cli.add_command(allowlist)
