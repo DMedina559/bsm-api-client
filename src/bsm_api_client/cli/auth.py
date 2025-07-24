@@ -20,12 +20,11 @@ def auth():
     prompt=True,
     help="Enable/disable SSL verification.",
 )
-@click.option("--username", prompt=True, help="The username for authentication.")
-@click.option(
-    "--password", prompt=True, hide_input=True, help="The password for authentication."
-)
+@click.option("--username", help="The username for authentication.")
+@click.option("--password", help="The password for authentication.")
+@click.option("--token", help="The JWT token for authentication.")
 @click.pass_context
-async def login(ctx, base_url, username, password, verify_ssl):
+async def login(ctx, base_url, username, password, verify_ssl, token):
     """Logs in to the Bedrock Server Manager API."""
     config = ctx.obj["config"]
 
@@ -34,6 +33,15 @@ async def login(ctx, base_url, username, password, verify_ssl):
 
     config.set("verify_ssl", verify_ssl)
 
+    if token:
+        config.jwt_token = token
+        click.echo("Token set.")
+        return
+
+    if not username and not password and not token:
+        await interactive_login(ctx)
+        return
+
     client = BedrockServerManagerApi(
         base_url=config.base_url,
         username=username,
@@ -41,8 +49,30 @@ async def login(ctx, base_url, username, password, verify_ssl):
         verify_ssl=config.verify_ssl,
     )
     try:
-        token = await client.authenticate()
-        config.jwt_token = token.access_token
+        token_data = await client.authenticate()
+        config.jwt_token = token_data.access_token
+        click.echo("Login successful.")
+    except AuthError as e:
+        click.secho(f"Login failed: {e}", fg="red")
+    finally:
+        await client.close()
+
+
+async def interactive_login(ctx):
+    """Handles the interactive login prompt."""
+    config = ctx.obj["config"]
+    username = click.prompt("Username")
+    password = click.prompt("Password", hide_input=True)
+
+    client = BedrockServerManagerApi(
+        base_url=config.base_url,
+        username=username,
+        password=password,
+        verify_ssl=config.verify_ssl,
+    )
+    try:
+        token_data = await client.authenticate()
+        config.jwt_token = token_data.access_token
         click.echo("Login successful.")
     except AuthError as e:
         click.secho(f"Login failed: {e}", fg="red")

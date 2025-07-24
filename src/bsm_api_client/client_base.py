@@ -56,8 +56,9 @@ class ClientBase:
     def __init__(
         self,
         base_url: str,
-        username: str,
-        password: str,
+        username: Optional[str] = None,
+        password: Optional[str] = None,
+        jwt_token: Optional[str] = None,
         session: Optional[aiohttp.ClientSession] = None,
         base_path: str = "/api",
         request_timeout: int = 90,
@@ -68,6 +69,7 @@ class ClientBase:
             base_url: The base URL of the Bedrock Server Manager (e.g., http://localhost:8080).
             username: The username for authentication.
             password: The password for authentication.
+            jwt_token: An optional JWT token to use for authentication.
             session: An optional `aiohttp.ClientSession` to use for requests.
             base_path: The base path for the API.
             request_timeout: The timeout for requests in seconds.
@@ -75,6 +77,11 @@ class ClientBase:
         """
         if not base_url:
             raise ValueError("base_url must be provided.")
+
+        if not jwt_token and not (username and password):
+            raise ValueError(
+                "Either a JWT token or a username and password must be provided."
+            )
 
         # Robustly parse the input base_url string
         parsed_uri = urlparse(base_url)
@@ -121,7 +128,7 @@ class ClientBase:
                     "The provided session's SSL verification behavior will take precedence."
                 )
 
-        self._jwt_token: Optional[str] = None
+        self._jwt_token: Optional[str] = jwt_token
         self._default_headers: Mapping[str, str] = {
             "Accept": "application/json",
         }

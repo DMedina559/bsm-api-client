@@ -42,17 +42,12 @@ async def cli_context(ctx):
     config = Config()
     ctx.obj["config"] = config
 
-    if config.jwt_token:
-        client = BedrockServerManagerApi(
-            base_url=config.base_url,
-            username="",
-            password="",
-            verify_ssl=config.verify_ssl,
-        )
-        client._jwt_token = config.jwt_token
-        ctx.obj["client"] = client
-    else:
-        ctx.obj["client"] = None
+    client = BedrockServerManagerApi(
+        base_url=config.base_url,
+        jwt_token=config.jwt_token,
+        verify_ssl=config.verify_ssl,
+    )
+    ctx.obj["client"] = client
 
     try:
         yield
