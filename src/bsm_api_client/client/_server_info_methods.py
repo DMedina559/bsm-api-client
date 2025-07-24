@@ -1,12 +1,19 @@
 # src/bsm_api_client/client/_server_info_methods.py
-"""Mixin class containing server information retrieval methods."""
+"""Mixin class for server information retrieval methods.
+
+This module provides the `ServerInfoMethodsMixin` class, which includes
+methods for retrieving information about server instances from the Bedrock
+Server Manager API.
+"""
 import logging
 from typing import Any, Dict, Optional, List, TYPE_CHECKING
 from urllib.parse import quote
+from ..exceptions import APIError, ServerNotFoundError, AuthError, CannotConnectError
+from ..models import GeneralApiResponse
 
 if TYPE_CHECKING:
     from ..client_base import ClientBase
-    from ..exceptions import APIError, ServerNotFoundError
+
 
 _LOGGER = logging.getLogger(__name__.split(".")[0] + ".client.server_info")
 
@@ -27,126 +34,48 @@ class ServerInfoMethodsMixin:
             is_retry: bool = False,
         ) -> Any: ...
 
-    async def async_get_servers_details(self) -> List[Dict[str, Any]]:
-        """
-        Fetches a list of all detected Bedrock server instances with their details
-        (name, status, version).
-
-        Corresponds to `GET /api/servers`.
-        Requires authentication.
+    async def async_get_servers_details(self) -> GeneralApiResponse:
+        """Fetches details for all detected Bedrock server instances.
 
         Returns:
-            A list of dictionaries, where each dictionary represents a server
-            and contains 'name', 'status', and 'version' keys.
-            Returns an empty list if no servers are found or if an error occurs
-            that is handled by returning an empty list (e.g., malformed response).
+            A `GeneralApiResponse` object containing a list of servers with their details.
         """
         _LOGGER.debug("Fetching server details list from /api/servers")
-        try:
-            response_data = await self._request("GET", "/servers", authenticated=True)
-
-            # API response includes "status": "success" and "servers": [...]
-            # or "status": "success", "servers": [...], "message": "Completed with errors..."
-            if (
-                not isinstance(response_data, dict)
-                or response_data.get("status") != "success"
-            ):
-                _LOGGER.error(
-                    "Received non-success or unexpected response structure from /api/servers: %s",
-                    response_data,
-                )
-                # For now, let's be strict if "status" isn't "success".
-                raise APIError(
-                    f"Failed to get server list, API status: {response_data.get('status')}",
-                    response_data=response_data,
-                )
-
-            servers_data_list = response_data.get("servers")
-            if not isinstance(servers_data_list, list):
-                _LOGGER.error(
-                    "Invalid server list response: 'servers' key not a list or missing. Data: %s",
-                    response_data,
-                )
-                # Depending on strictness, could return [] or raise APIError.
-                # Raising error if the structure is fundamentally wrong.
-                raise APIError(
-                    "Invalid response format from /api/servers: 'servers' key not a list or missing.",
-                    response_data=response_data,
-                )
-
-            processed_servers: List[Dict[str, Any]] = []
-            for item in servers_data_list:
-                if (
-                    isinstance(item, dict)
-                    and isinstance(item.get("name"), str)
-                    and isinstance(item.get("status"), str)
-                    and isinstance(item.get("version"), str)
-                ):
-                    processed_servers.append(
-                        {
-                            "name": item["name"],
-                            "status": item["status"],
-                            "version": item["version"],
-                        }
-                    )
-                else:
-                    _LOGGER.warning(
-                        "Skipping malformed server item in /servers response: %s", item
-                    )
-
-            if (
-                response_data.get("message")
-                and "error" in response_data.get("message", "").lower()
-            ):
-                _LOGGER.warning(
-                    "API reported errors while fetching server list: %s",
-                    response_data.get("message"),
-                )
-
-            return processed_servers  # Already a list of dicts
-        except APIError as e:
-            _LOGGER.error("API error fetching server list: %s", e)
-            raise  # Re-raise the original APIError
-        except Exception as e:  # Catch unexpected errors during parsing
-            _LOGGER.exception("Unexpected error processing server list response: %s", e)
-            raise APIError(f"Unexpected error processing server list: {e}")
+        response_data = await self._request("GET", "/servers", authenticated=True)
+        return GeneralApiResponse.model_validate(response_data)
 
     async def async_get_server_names(self) -> List[str]:
-        """
-        Fetches a simplified list of just server names.
-        A convenience wrapper around `async_get_servers_details`.
+        """Fetches a list of server names.
+
+        This is a convenience wrapper around `async_get_servers_details`.
 
         Returns:
             A sorted list of server names.
         """
         _LOGGER.debug("Fetching server names list")
-        server_details_list = await self.async_get_servers_details()
-        server_names = [
-            server.get("name", "")
-            for server in server_details_list
-            if server.get("name")
-        ]
-        return sorted(
-            filter(None, server_names)
-        )  # Filter out any empty names just in case
+        server_details = await self.async_get_servers_details()
+        if server_details.servers:
+            return sorted(
+                [
+                    server["name"]
+                    for server in server_details.servers
+                    if "name" in server
+                ]
+            )
+        return []
 
     async def async_get_server_validate(self, server_name: str) -> bool:
-        """
-        Validates if the server directory and executable exist for the specified server.
-        Returns True if valid, raises ServerNotFoundError if not found, or APIError for other issues.
-
-        Corresponds to `GET /api/server/{server_name}/validate`.
-        Requires authentication.
+        """Validates the existence of a server's directory and executable.
 
         Args:
             server_name: The name of the server to validate.
 
         Returns:
-            True if the server is found and considered valid by the API.
+            `True` if the server is valid, `False` otherwise.
 
         Raises:
-            ServerNotFoundError: If the API returns a 404 for this server.
-            APIError: For other API communication or processing errors.
+            ServerNotFoundError: If the server is not found.
+            APIError: For other API-related errors.
         """
         _LOGGER.debug("Validating existence of server: '%s'", server_name)
         # Server names might have characters needing encoding, though install rules try to limit this.
@@ -173,151 +102,234 @@ class ServerInfoMethodsMixin:
             )
             raise
 
-    async def async_get_server_process_info(self, server_name: str) -> Dict[str, Any]:
-        """
-        Gets runtime status information (PID, CPU, Memory, Uptime) for a server.
-        The 'process_info' key in the response will be null if the server is not running.
-
-        Corresponds to `GET /api/server/{server_name}/process_info`.
-        Requires authentication.
+    async def async_get_server_process_info(
+        self, server_name: str
+    ) -> GeneralApiResponse:
+        """Gets runtime process information for a server.
 
         Args:
             server_name: The name of the server.
+
+        Returns:
+            A `GeneralApiResponse` object containing process information.
         """
         _LOGGER.debug("Fetching status info for server '%s'", server_name)
         encoded_server_name = quote(server_name)
-        return await self._request(
+        response = await self._request(
             "GET",
             f"/server/{encoded_server_name}/process_info",
             authenticated=True,
         )
+        return GeneralApiResponse.model_validate(response)
 
-    async def async_get_server_running_status(self, server_name: str) -> Dict[str, Any]:
-        """
-        Checks if the Bedrock server process is currently running.
-        Response contains `{"is_running": true/false}`.
-
-        Corresponds to `GET /api/server/{server_name}/running_status`.
-        Requires authentication.
+    async def async_get_world_icon_image(self, server_name: str) -> bytes:
+        """Retrieves the world icon image for a server.
 
         Args:
             server_name: The name of the server.
+
+        Returns:
+            The raw bytes of the world icon image.
+
+        Raises:
+            ValueError: If `server_name` is empty.
+            CannotConnectError: If a connection to the server cannot be established.
+            APIError: For other API-related errors.
+        """
+        if not server_name:
+            raise ValueError("Server name cannot be empty.")
+        _LOGGER.info("Fetching world icon for server '%s'.", server_name)
+
+        encoded_server_name = quote(server_name)
+        # Path is /api/server/{server_name}/world/icon.
+        # self._base_url already contains /api, so path for _request should be server/...
+        # However, for direct session call for binary data:
+        url = f"{self._base_url}/server/{encoded_server_name}/world/icon"
+
+        headers = {"Accept": "image/jpeg, */*"}
+        if self._jwt_token:
+            headers["Authorization"] = f"Bearer {self._jwt_token}"
+
+        _LOGGER.debug("Request: GET %s for world icon", url)
+        try:
+            async with self._session.get(
+                url,
+                headers=headers,
+                timeout=aiohttp.ClientTimeout(total=self._request_timeout),
+            ) as response:
+                _LOGGER.debug("Response Status for GET %s: %s", url, response.status)
+                if not response.ok:
+                    # Attempt re-authentication for 401, then retry or raise.
+                    # This logic is complex to duplicate from _request.
+                    # For simplicity in this direct call, we'll handle common errors directly.
+                    if (
+                        response.status == 401 and self._jwt_token
+                    ):  # Check if token was used
+                        _LOGGER.warning(
+                            "Received 401 for world icon, attempting token refresh and retry once."
+                        )
+                        async with self._auth_lock:  # Ensure only one refresh attempt
+                            self._jwt_token = None  # Clear potentially invalid token
+                            await self.authenticate()  # Attempt to get a new token
+
+                        if self._jwt_token:  # If new token obtained, retry the request
+                            headers["Authorization"] = f"Bearer {self._jwt_token}"
+                            async with self._session.get(
+                                url,
+                                headers=headers,
+                                timeout=aiohttp.ClientTimeout(
+                                    total=self._request_timeout
+                                ),
+                            ) as retry_response:
+                                if not retry_response.ok:
+                                    await self._handle_api_error(
+                                        retry_response,
+                                        f"/server/{encoded_server_name}/world/icon",
+                                    )
+                                    raise APIError(
+                                        f"World icon request failed with status {retry_response.status} after retry."
+                                    )
+                                return await retry_response.read()
+                        else:  # Failed to get new token
+                            raise AuthError(
+                                "Failed to re-authenticate for world icon request."
+                            )
+
+                    await self._handle_api_error(
+                        response, f"/server/{encoded_server_name}/world/icon"
+                    )
+                    raise APIError(
+                        f"World icon request failed with status {response.status}"
+                    )  # Should be caught by _handle_api_error
+                return await response.read()  # Returns bytes
+        except aiohttp.ClientError as e:
+            _LOGGER.error(
+                "AIOHTTP client error fetching world icon for '%s': %s", server_name, e
+            )
+            raise CannotConnectError(
+                f"AIOHTTP Client Error fetching world icon: {e}", original_exception=e
+            ) from e
+        except APIError:  # Re-raise APIError from _handle_api_error or auth failure
+            raise
+        except Exception as e:
+            _LOGGER.exception(
+                "Unexpected error fetching world icon for '%s': %s", server_name, e
+            )
+            raise APIError(
+                f"An unexpected error occurred fetching world icon: {e}"
+            ) from e
+
+    async def async_get_server_running_status(
+        self, server_name: str
+    ) -> GeneralApiResponse:
+        """Checks if the Bedrock server process is currently running.
+
+        Args:
+            server_name: The name of the server.
+
+        Returns:
+            A `GeneralApiResponse` object containing the running status.
         """
         _LOGGER.debug("Fetching running status for server '%s'", server_name)
         encoded_server_name = quote(server_name)
-        return await self._request(
+        # Path changed from /running_status to /status for the new API.
+        response = await self._request(
             "GET",
-            f"/server/{encoded_server_name}/running_status",
+            f"/server/{encoded_server_name}/status",
             authenticated=True,
         )
+        return GeneralApiResponse.model_validate(response)
 
-    async def async_get_server_config_status(self, server_name: str) -> Dict[str, Any]:
-        """
-        Gets the status string stored in the server's configuration file.
-        Response contains `{"config_status": "status_string"}`.
-
-        Corresponds to `GET /api/server/{server_name}/config_status`.
-        Requires authentication.
+    async def async_get_server_config_status(
+        self, server_name: str
+    ) -> GeneralApiResponse:
+        """Gets the status string from the server's configuration file.
 
         Args:
             server_name: The name of the server.
+
+        Returns:
+            A `GeneralApiResponse` object containing the configuration status.
         """
         _LOGGER.debug("Fetching config status for server '%s'", server_name)
         encoded_server_name = quote(server_name)
-        return await self._request(
+        response = await self._request(
             "GET",
             f"/server/{encoded_server_name}/config_status",
             authenticated=True,
         )
+        return GeneralApiResponse.model_validate(response)
 
-    async def async_get_server_version(self, server_name: str) -> Optional[str]:
-        """
-        Gets the installed Bedrock server version from the server's config file.
-        Returns the version string or None if not found/error.
-
-        Corresponds to `GET /api/server/{server_name}/version`.
-        Requires authentication.
+    async def async_get_server_version(self, server_name: str) -> GeneralApiResponse:
+        """Gets the installed Bedrock server version.
 
         Args:
             server_name: The name of the server.
+
+        Returns:
+            A `GeneralApiResponse` object containing the server version.
         """
         _LOGGER.debug("Fetching version for server '%s'", server_name)
         encoded_server_name = quote(server_name)
-        try:
-            data = await self._request(
-                "GET",
-                f"/server/{encoded_server_name}/version",
-                authenticated=True,
-            )
-            # API returns {"status": "success", "installed_version": "1.x.y.z"}
-            if isinstance(data, dict) and data.get("status") == "success":
-                version = data.get("installed_version")
-                return str(version) if version is not None else None
-            _LOGGER.warning(
-                "Unexpected response structure for server version: %s", data
-            )
-            return None
-        except APIError as e:  # Includes ServerNotFoundError if server path is invalid
-            _LOGGER.warning(
-                "Could not fetch version for server '%s': %s", server_name, e
-            )
-            return None
+        response = await self._request(
+            "GET",
+            f"/server/{encoded_server_name}/version",
+            authenticated=True,
+        )
+        return GeneralApiResponse.model_validate(response)
 
-    async def async_get_server_properties(self, server_name: str) -> Dict[str, Any]:
-        """
-        Retrieves the parsed content of the server's server.properties file.
-        The actual properties are under the "properties" key in the response.
-
-        Corresponds to `GET /api/server/{server_name}/properties/get`.
-        Requires authentication.
+    async def async_get_server_properties(self, server_name: str) -> GeneralApiResponse:
+        """Retrieves the server's properties.
 
         Args:
             server_name: The name of the server.
+
+        Returns:
+            A `GeneralApiResponse` object containing the server properties.
         """
         _LOGGER.debug("Fetching server.properties for server '%s'", server_name)
         encoded_server_name = quote(server_name)
-        return await self._request(
+        response = await self._request(
             "GET",
             f"/server/{encoded_server_name}/properties/get",
             authenticated=True,
         )
+        return GeneralApiResponse.model_validate(response)
 
     async def async_get_server_permissions_data(
         self, server_name: str
-    ) -> Dict[str, Any]:
-        """
-        Retrieves player permissions from the server's permissions.json file.
-        The actual permissions list is under the "data.permissions" key in the response.
-
-        Corresponds to `GET /api/server/{server_name}/permissions/get`.
-        Requires authentication.
+    ) -> GeneralApiResponse:
+        """Retrieves player permissions from the server.
 
         Args:
             server_name: The name of the server.
+
+        Returns:
+            A `GeneralApiResponse` object containing the permissions data.
         """
         _LOGGER.debug("Fetching permissions.json data for server '%s'", server_name)
         encoded_server_name = quote(server_name)
-        return await self._request(
+        response = await self._request(
             "GET",
             f"/server/{encoded_server_name}/permissions/get",
             authenticated=True,
         )
+        return GeneralApiResponse.model_validate(response)
 
-    async def async_get_server_allowlist(self, server_name: str) -> Dict[str, Any]:
-        """
-        Retrieves the list of players from the server's allowlist.json file.
-        The player list is under the "existing_players" key in the response.
-
-        Corresponds to `GET /api/server/{server_name}/allowlist/get`.
-        Requires authentication.
+    async def async_get_server_allowlist(self, server_name: str) -> GeneralApiResponse:
+        """Retrieves the server's allowlist.
 
         Args:
             server_name: The name of the server.
+
+        Returns:
+            A `GeneralApiResponse` object containing the allowlist.
         """
         _LOGGER.debug("Fetching allowlist.json for server '%s'", server_name)
         encoded_server_name = quote(server_name)
-        return await self._request(
+        response = await self._request(
             "GET",
             f"/server/{encoded_server_name}/allowlist/get",
             authenticated=True,
         )
+        return GeneralApiResponse.model_validate(response)

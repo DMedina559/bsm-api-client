@@ -34,6 +34,12 @@ Install the library using pip:
 pip install bsm-api-client
 ```
 
+or if you wish to use the Command Line Interface CLI:
+
+```bash
+pip install bsm-api-client[cli]
+```
+
 ## Quick Start
 
 Here's a basic example of how to initialize the client and fetch server information:
@@ -46,11 +52,9 @@ from bsm_api_client import BedrockServerManagerApi, APIError, CannotConnectError
 
 async def main():
     client = BedrockServerManagerApi(
-        host="host",                   # e.g., "127.0.0.1" or "bsm.example.internal"
+        base_url="http://host:port",    # e.g., "http://127.0.0.1:11325" or "https://bsm.example.internal"
         username="username",           # Username for BSM login
         password="password",           # Password for BSM login
-        port=11325,                    # Optional: Not required for example if using domain such as bsm.example.internal
-        use_ssl=False                  # Set to True if your manager uses HTTPS
         verify_ssl=True                # Set to False if using HTTPS with a self-signed cert
     )
 

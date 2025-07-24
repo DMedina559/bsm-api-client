@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "bsm-api-client"
-version = "1.1.0"
+version = "1.2.0"
 authors = [
     { name="DMedina559", email="dmedina559-github@outlook.com" },
 ]
@@ -27,13 +27,29 @@ classifiers = [
     "Framework :: AsyncIO",
 ]
 dependencies = [
-    "aiohttp>=3.8.0,<4.0.0",
+    "aiohttp >= 3.8.0,<4.0.0",
+    "pydantic >= 2.11.0,<2.12",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest >=8.4.0,<8.5",
+    "pytest-asyncio >= 1.1.0,<1.2.0",
+    "black >=25.1.0,<25.2",
+    "flake8 >=7.3.0,<7.4",
+]
+cli = [
+    "click >=8.2.0,<8.3",
+    "questionary >=2.1.0,<2.2",
 ]
 keywords = ["minecraft", "bedrock", "server", "manager", "api", "client", "asyncio", "aiohttp", "bsm"]
 
 [tool.setuptools.packages.find]
 where = ["src"] 
 include = ["bsm_api_client*"]
+
+[project.scripts]
+bsm-api-client = "bsm_api_client.cli.__main__:cli"
 
 [project.urls]
 "Homepage" = "https://github.com/DMedina559/bsm-api-client"

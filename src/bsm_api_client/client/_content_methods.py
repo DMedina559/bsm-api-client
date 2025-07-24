@@ -1,7 +1,20 @@
 # src/bsm_api_client/client/_content_methods.py
-"""Mixin class containing content management methods (backups, worlds, addons)."""
+"""Mixin class for content management methods.
+
+This module provides the `ContentMethodsMixin` class, which includes methods
+for managing server content such as backups, worlds, and addons.
+"""
 import logging
 from typing import Any, Dict, Optional, List, TYPE_CHECKING
+from ..models import (
+    RestoreTypePayload,
+    BackupActionPayload,
+    RestoreActionPayload,
+    FileNamePayload,
+    BackupRestoreResponse,
+    ContentListResponse,
+    ActionResponse,
+)
 
 if TYPE_CHECKING:
     from ..client_base import ClientBase
@@ -32,16 +45,18 @@ class ContentMethodsMixin:
 
     async def async_list_server_backups(
         self, server_name: str, backup_type: str
-    ) -> Dict[str, Any]:
-        """
-        Lists backup filenames for a specific server and backup type.
-
-        Corresponds to `GET /api/server/{server_name}/backup/list/{backup_type}`.
-        Requires authentication.
+    ) -> BackupRestoreResponse:
+        """Lists backup files for a specific server and backup type.
 
         Args:
             server_name: The name of the server.
-            backup_type: The type of backups to list (e.g., "world", "properties", "allowlist", "permissions", "all").
+            backup_type: The type of backups to list (e.g., "world", "properties").
+
+        Returns:
+            A `BackupRestoreResponse` object containing the list of backups.
+
+        Raises:
+            ValueError: If an invalid `backup_type` is provided.
         """
         bt_lower = backup_type.lower()
         if bt_lower not in ALLOWED_BACKUP_LIST_TYPES:
@@ -57,265 +72,245 @@ class ContentMethodsMixin:
             "Fetching '%s' backups list for server '%s'", bt_lower, server_name
         )
 
-        return await self._request(
+        response = await self._request(
             "GET",
             f"/server/{server_name}/backup/list/{bt_lower}",
             authenticated=True,
         )
+        return BackupRestoreResponse.model_validate(response)
 
-    async def async_get_content_worlds(self) -> Dict[str, Any]:
+    async def async_restore_select_backup_type(
+        self, server_name: str, payload: RestoreTypePayload
+    ) -> BackupRestoreResponse:
+        """Selects a restore type and gets a redirect URL for choosing a backup file.
+
+        Args:
+            server_name: The name of the server.
+            payload: A `RestoreTypePayload` object specifying the restore type.
+
+        Returns:
+            A `BackupRestoreResponse` object, typically containing a redirect URL.
         """
-        Lists available world template files (.mcworld) from the manager's content directory.
+        _LOGGER.info(
+            "Selecting restore backup type '%s' for server '%s'",
+            payload.restore_type,
+            server_name,
+        )
+        response = await self._request(
+            method="POST",
+            path=f"/server/{server_name}/restore/select_backup_type",
+            json_data=payload.model_dump(),
+            authenticated=True,
+        )
+        return BackupRestoreResponse.model_validate(response)
 
-        Corresponds to `GET /api/content/worlds`.
-        Requires authentication.
+    async def async_get_content_worlds(self) -> ContentListResponse:
+        """Lists available world template files (.mcworld).
+
+        Returns:
+            A `ContentListResponse` object containing the list of world files.
         """
         _LOGGER.debug("Fetching available world files from /content/worlds")
-        return await self._request("GET", "/content/worlds", authenticated=True)
+        response = await self._request("GET", "/content/worlds", authenticated=True)
+        return ContentListResponse.model_validate(response)
 
-    async def async_get_content_addons(self) -> Dict[str, Any]:
-        """
-        Lists available addon files (.mcpack, .mcaddon) from the manager's content directory.
+    async def async_get_content_addons(self) -> ContentListResponse:
+        """Lists available addon files (.mcpack, .mcaddon).
 
-        Corresponds to `GET /api/content/addons`.
-        Requires authentication.
+        Returns:
+            A `ContentListResponse` object containing the list of addon files.
         """
         _LOGGER.debug("Fetching available addon files from /content/addons")
-        return await self._request("GET", "/content/addons", authenticated=True)
+        response = await self._request("GET", "/content/addons", authenticated=True)
+        return ContentListResponse.model_validate(response)
 
     async def async_trigger_server_backup(
-        self,
-        server_name: str,
-        backup_type: str = "all",
-        file_to_backup: Optional[str] = None,
-    ) -> Dict[str, Any]:
-        """
-        Triggers a backup operation for a specific server.
-
-        Corresponds to `POST /api/server/{server_name}/backup/action`.
-        Requires authentication.
+        self, server_name: str, payload: BackupActionPayload
+    ) -> BackupRestoreResponse:
+        """Triggers a backup operation for a specific server.
 
         Args:
             server_name: The name of the server to back up.
-            backup_type: Type of backup ("world", "config", "all"). Defaults to "all".
-            file_to_backup: Required if backup_type is "config". Specifies the config file.
-        """
-        bt_lower = backup_type.lower()
-        if bt_lower not in ALLOWED_BACKUP_ACTION_TYPES:
-            _LOGGER.error(
-                "Invalid backup_type '%s' for triggering backup. Allowed: %s",
-                backup_type,
-                ALLOWED_BACKUP_ACTION_TYPES,
-            )
-            raise ValueError(
-                f"Invalid backup_type '{backup_type}' provided. Allowed types are: {', '.join(ALLOWED_BACKUP_ACTION_TYPES)}"
-            )
+            payload: A `BackupActionPayload` object specifying the backup details.
 
+        Returns:
+            A `BackupRestoreResponse` object confirming the backup action.
+        """
         _LOGGER.info(
             "Triggering backup for server '%s', type: %s, file: %s",
             server_name,
-            bt_lower,
-            file_to_backup or "N/A",
+            payload.backup_type,
+            payload.file_to_backup or "N/A",
         )
-        payload: Dict[str, str] = {"backup_type": bt_lower}
-        if bt_lower == "config":
-            if not file_to_backup:
-                raise ValueError(
-                    "file_to_backup is required when backup_type is 'config'"
-                )
-            payload["file_to_backup"] = file_to_backup
-        elif file_to_backup:
-            _LOGGER.warning(
-                "file_to_backup ('%s') provided but will be ignored for backup_type '%s'",
-                file_to_backup,
-                bt_lower,
-            )
 
-        return await self._request(
+        response = await self._request(
             "POST",
             f"/server/{server_name}/backup/action",
-            json_data=payload,
+            json_data=payload.model_dump(),
             authenticated=True,
         )
+        return BackupRestoreResponse.model_validate(response)
 
-    async def async_export_server_world(self, server_name: str) -> Dict[str, Any]:
-        """
-        Exports the current world of a server to a .mcworld file in the content directory.
-
-        Corresponds to `POST /api/server/{server_name}/world/export`.
-        Requires authentication.
+    async def async_export_server_world(self, server_name: str) -> ActionResponse:
+        """Exports the current world of a server to a .mcworld file.
 
         Args:
             server_name: The name of the server whose world to export.
+
+        Returns:
+            An `ActionResponse` object confirming the export action.
         """
         _LOGGER.info("Triggering world export for server '%s'", server_name)
-        return await self._request(
+        response = await self._request(
             "POST",
             f"/server/{server_name}/world/export",
             json_data=None,
             authenticated=True,
         )
+        return ActionResponse.model_validate(response)
 
-    async def async_reset_server_world(self, server_name: str) -> Dict[str, Any]:
-        """
-        Resets the current world of a server.
-
-        Corresponds to `DELETE /api/server/{server_name}/world/reset`.
-        Requires authentication.
+    async def async_reset_server_world(self, server_name: str) -> ActionResponse:
+        """Resets the current world of a server.
 
         Args:
-            server_name: The name of the server whose world to export.
+            server_name: The name of the server whose world to reset.
+
+        Returns:
+            An `ActionResponse` object confirming the reset action.
         """
         _LOGGER.warning("Triggering world reset for server '%s'", server_name)
-        return await self._request(
+        response = await self._request(
             "DELETE",
             f"/server/{server_name}/world/reset",
             json_data=None,
             authenticated=True,
         )
+        return ActionResponse.model_validate(response)
 
     async def async_prune_server_backups(
-        self, server_name: str, keep: Optional[int] = None
-    ) -> Dict[str, Any]:
-        """
-        Prunes older backups for a specific server.
-
-        Corresponds to `POST /api/server/{server_name}/backups/prune`.
-        Requires authentication.
+        self, server_name: str
+    ) -> BackupRestoreResponse:
+        """Prunes old backups for a server based on its retention policies.
 
         Args:
             server_name: The name of the server whose backups to prune.
-            keep: The number of recent backups of each type to retain.
-                  If None, uses the manager's default setting.
+
+        Returns:
+            A `BackupRestoreResponse` object confirming the prune action.
         """
         _LOGGER.info(
-            "Triggering backup pruning for server '%s', keep: %s",
+            "Triggering backup pruning for server '%s' (using server-defined retention)",
             server_name,
-            keep if keep is not None else "manager default",
         )
-        payload: Optional[Dict[str, Any]] = None
-        if keep is not None:
-            if not isinstance(keep, int) or keep < 0:
-                raise ValueError("keep must be a non-negative integer if provided.")
-            payload = {"keep": keep}
-
-        return await self._request(
+        response = await self._request(
             "POST",
             f"/server/{server_name}/backups/prune",
-            json_data=payload,
+            json_data=None,
             authenticated=True,
         )
+        return BackupRestoreResponse.model_validate(response)
 
     async def async_restore_server_backup(
-        self, server_name: str, restore_type: str, backup_file: str
-    ) -> Dict[str, Any]:
-        """
-        Restores a server's world or a specific configuration file from a backup.
-
-        Corresponds to `POST /api/server/{server_name}/restore/action`.
-        Requires authentication.
+        self, server_name: str, payload: RestoreActionPayload
+    ) -> BackupRestoreResponse:
+        """Restores a server's world or configuration from a backup.
 
         Args:
             server_name: The name of the server.
-            restore_type: Type of restore ("world", "allowlist", "properties", "permissions").
-            backup_file: The filename of the backup to restore (relative to server's backup dir).
-        """
-        rt_lower = restore_type.lower()
-        if rt_lower not in ALLOWED_RESTORE_TYPES:
-            _LOGGER.error(
-                "Invalid restore_type '%s'. Allowed: %s",
-                restore_type,
-                ALLOWED_RESTORE_TYPES,
-            )
-            raise ValueError(
-                f"Invalid restore_type '{restore_type}' provided. Allowed types are: {', '.join(ALLOWED_RESTORE_TYPES)}"
-            )
+            payload: A `RestoreActionPayload` object specifying the restore details.
 
+        Returns:
+            A `BackupRestoreResponse` object confirming the restore action.
+        """
         _LOGGER.info(
             "Requesting restore for server '%s', type: %s, file: '%s'",
             server_name,
-            rt_lower,
-            backup_file,
+            payload.restore_type,
+            payload.backup_file,
         )
-        payload = {"restore_type": rt_lower, "backup_file": backup_file}
 
-        return await self._request(
+        response = await self._request(
             "POST",
             f"/server/{server_name}/restore/action",
-            json_data=payload,
+            json_data=payload.model_dump(),
             authenticated=True,
         )
+        return BackupRestoreResponse.model_validate(response)
 
-    async def async_restore_server_latest_all(self, server_name: str) -> Dict[str, Any]:
-        """
-        Restores the server's world AND standard configuration files from their latest backups.
+    async def async_restore_server_latest_all(
+        self, server_name: str
+    ) -> BackupRestoreResponse:
+        """Restores a server from the latest 'all' backup.
 
-        Corresponds to `POST /api/server/{server_name}/restore/all`.
-        Requires authentication.
+        This restores the server's world and standard configuration files from
+        their most recent backups.
 
         Args:
             server_name: The name of the server to restore.
+
+        Returns:
+            A `BackupRestoreResponse` object confirming the restore action.
         """
         _LOGGER.info(
             "Requesting restore of latest 'all' backup for server '%s'", server_name
         )
-        return await self._request(
+        payload = {"restore_type": "all"}
+        response = await self._request(
             "POST",
-            f"/server/{server_name}/restore/all",
-            json_data=None,
+            f"/server/{server_name}/restore/action",  # Path targets the generic restore action endpoint
+            json_data=payload,
             authenticated=True,
         )
+        return BackupRestoreResponse.model_validate(response)
 
     async def async_install_server_world(
-        self, server_name: str, filename: str
-    ) -> Dict[str, Any]:
-        """
-        Installs a world from a .mcworld file (from content directory) to a server.
-
-        Corresponds to `POST /api/server/{server_name}/world/install`.
-        Requires authentication.
+        self, server_name: str, payload: FileNamePayload
+    ) -> ActionResponse:
+        """Installs a world to a server from a .mcworld file.
 
         Args:
             server_name: The name of the server.
-            filename: The name of the .mcworld file (relative to content/worlds dir).
+            payload: A `FileNamePayload` object with the name of the .mcworld file.
+
+        Returns:
+            An `ActionResponse` object confirming the installation.
         """
         _LOGGER.info(
             "Requesting world install for server '%s' from file '%s'",
             server_name,
-            filename,
+            payload.filename,
         )
-        payload = {"filename": filename}
 
-        return await self._request(
+        response = await self._request(
             "POST",
             f"/server/{server_name}/world/install",
-            json_data=payload,
+            json_data=payload.model_dump(),
             authenticated=True,
         )
+        return ActionResponse.model_validate(response)
 
     async def async_install_server_addon(
-        self, server_name: str, filename: str
-    ) -> Dict[str, Any]:
-        """
-        Installs an addon (.mcaddon or .mcpack file from content directory) to a server.
-
-        Corresponds to `POST /api/server/{server_name}/addon/install`.
-        Requires authentication.
+        self, server_name: str, payload: FileNamePayload
+    ) -> ActionResponse:
+        """Installs an addon to a server from a .mcaddon or .mcpack file.
 
         Args:
             server_name: The name of the server.
-            filename: The name of the addon file (relative to content/addons dir).
+            payload: A `FileNamePayload` object with the name of the addon file.
+
+        Returns:
+            An `ActionResponse` object confirming the installation.
         """
         _LOGGER.info(
             "Requesting addon install for server '%s' from file '%s'",
             server_name,
-            filename,
+            payload.filename,
         )
-        payload = {"filename": filename}
 
-        return await self._request(
+        response = await self._request(
             "POST",
             f"/server/{server_name}/addon/install",
-            json_data=payload,
+            json_data=payload.model_dump(),
             authenticated=True,
         )
+        return ActionResponse.model_validate(response)

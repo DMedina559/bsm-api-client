@@ -4,6 +4,14 @@
 
 # bsm-api-client Changelog
 
+# 1.2.0
+1. Added support for BSM 3.5.0
+2. Added CLI client
+	- Use `pip install bsm-api-client[cli]`
+	- Run commands with `bsm-api-client`
+3. Refactored client to use pydantic models
+4. Removed various methods that no longer exist in the current version of BSM (3.5.7)
+
 # 1.1.0
 1. Added BSM 3.4.0 support
 2. Added methogs for plugin endpoints 
