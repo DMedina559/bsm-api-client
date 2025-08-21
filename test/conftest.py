@@ -1,10 +1,13 @@
 import pytest
+import pytest_asyncio
 import subprocess
 import time
 import aiohttp
 import asyncio
 import os
 import sys
+from bsm_api_client.api_client import BedrockServerManagerApi
+from bsm_api_client.models import InstallServerPayload
 
 @pytest.fixture(scope="session")
 def server():
@@ -75,3 +78,45 @@ def server():
             print("Server exited with an error.")
             print("STDOUT:", stdout.decode())
             print("STDERR:", stderr.decode())
+
+@pytest_asyncio.fixture(scope="session")
+async def bedrock_server(server):
+    """
+    A pytest fixture that creates a single bedrock server instance for all tests to use.
+    The server is deleted at the end of the test session.
+    """
+    server_name = "test-server"
+    client = BedrockServerManagerApi(server, "admin", "password")
+    try:
+        payload = InstallServerPayload(server_name=server_name, version="LATEST", overwrite=True)
+        install_result = await client.async_install_new_server(payload)
+        
+        if install_result.task_id:
+            for _ in range(90):  # 90s timeout for installation task
+                await asyncio.sleep(2) # Poll every 2 seconds
+                status_response = await client.async_get_task_status(install_result.task_id)
+                if status_response["status"] == "success":
+                    break
+                elif status_response["status"] == "error":
+                    pytest.fail(f"Installation task failed: {status_response['message']}")
+            else:
+                pytest.fail("Installation task timed out after 180 seconds.")
+        elif install_result.status != "success":
+             pytest.fail(f"Failed to install server: {install_result.message}")
+
+        yield server_name
+
+    finally:
+        try:
+            delete_result = await client.async_delete_server(server_name)
+            assert delete_result.status in ["pending", "success"]
+
+            for _ in range(10):
+                await asyncio.sleep(1)
+                servers = await client.async_get_server_names()
+                if server_name not in servers:
+                    break
+            else:
+                pytest.fail(f"Server {server_name} was not deleted within 10 seconds.")
+        finally:
+            await client.close()
