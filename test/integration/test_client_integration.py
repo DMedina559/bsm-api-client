@@ -9,6 +9,7 @@ from bsm_api_client.models import (
     PlayerPermission,
 )
 
+
 @pytest.mark.asyncio
 async def test_login(server):
     """
@@ -22,6 +23,7 @@ async def test_login(server):
     finally:
         await client.close()
 
+
 @pytest.mark.asyncio
 async def test_login_invalid_credentials(server):
     """
@@ -34,6 +36,7 @@ async def test_login_invalid_credentials(server):
         assert excinfo.value.status_code == 401
     finally:
         await client.close()
+
 
 @pytest.mark.asyncio
 async def test_server_operations(server, bedrock_server):
@@ -57,11 +60,18 @@ async def test_server_operations(server, bedrock_server):
 
         new_properties = {"level-name": "new-world-name"}
         update_payload = PropertiesPayload(properties=new_properties)
-        update_result = await client.async_update_server_properties(server_name, update_payload)
+        update_result = await client.async_update_server_properties(
+            server_name, update_payload
+        )
         assert update_result.status == "success"
 
-        properties_response_after_update = await client.async_get_server_properties(server_name)
-        assert properties_response_after_update.properties["level-name"] == "new-world-name"
+        properties_response_after_update = await client.async_get_server_properties(
+            server_name
+        )
+        assert (
+            properties_response_after_update.properties["level-name"]
+            == "new-world-name"
+        )
 
         # -- Test Allowlist Management --
         allowlist_response = await client.async_get_server_allowlist(server_name)
@@ -73,30 +83,42 @@ async def test_server_operations(server, bedrock_server):
         add_result = await client.async_add_server_allowlist(server_name, add_payload)
         assert add_result.status == "success"
 
-        allowlist_response_after_add = await client.async_get_server_allowlist(server_name)
+        allowlist_response_after_add = await client.async_get_server_allowlist(
+            server_name
+        )
         assert allowlist_response_after_add.players is not None
         assert "TestPlayer" in [p["name"] for p in allowlist_response_after_add.players]
 
         remove_payload = AllowlistRemovePayload(players=["TestPlayer"])
-        remove_result = await client.async_remove_server_allowlist_players(server_name, remove_payload)
+        remove_result = await client.async_remove_server_allowlist_players(
+            server_name, remove_payload
+        )
         assert remove_result.status == "success"
 
-        allowlist_response_after_remove = await client.async_get_server_allowlist(server_name)
+        allowlist_response_after_remove = await client.async_get_server_allowlist(
+            server_name
+        )
         if allowlist_response_after_remove.players:
             assert allowlist_response_after_remove.players == []
 
         # -- Test Permissions Management --
-        permissions_response = await client.async_get_server_permissions_data(server_name)
+        permissions_response = await client.async_get_server_permissions_data(
+            server_name
+        )
         assert permissions_response.status == "success"
         if permissions_response.data:
             assert permissions_response.data.get("permissions", []) == []
 
-        permission = PlayerPermission(name="TestPlayer", xuid="123456789", permission_level="operator")
+        permission = PlayerPermission(
+            name="TestPlayer", xuid="123456789", permission_level="operator"
+        )
         set_payload = PermissionsSetPayload(permissions=[permission])
         set_result = await client.async_set_server_permissions(server_name, set_payload)
         assert set_result.status == "success"
 
-        permissions_response_after_set = await client.async_get_server_permissions_data(server_name)
+        permissions_response_after_set = await client.async_get_server_permissions_data(
+            server_name
+        )
         assert permissions_response_after_set.data is not None
         assert len(permissions_response_after_set.data["permissions"]) == 1
         player_permission = permissions_response_after_set.data["permissions"][0]
