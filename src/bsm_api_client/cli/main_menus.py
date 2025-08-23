@@ -82,7 +82,7 @@ async def main_menu(ctx: click.Context):
             await ctx.invoke(list_servers)
 
             # --- Dynamically build menu choices ---
-            response = await client.async_get_servers_details()
+            response = await client.async_get_servers()
             server_names = (
                 [s["name"] for s in response.servers] if response.servers else []
             )
