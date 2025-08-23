@@ -1,6 +1,7 @@
 import click
 import os
 import questionary
+from .decorators import pass_async_context, monitor_task
 from bsm_api_client.models import BackupActionPayload, RestoreActionPayload
 
 
@@ -27,7 +28,7 @@ def backup():
     "file_to_backup",
     help="Specific file to back up (required if --type=config).",
 )
-@click.pass_context
+@pass_async_context
 async def create_backup(ctx, server_name: str, backup_type: str, file_to_backup: str):
     """Creates a backup of specified server data."""
     client = ctx.obj.get("client")
@@ -51,16 +52,30 @@ async def create_backup(ctx, server_name: str, backup_type: str, file_to_backup:
         )
         response = await client.async_trigger_server_backup(server_name, payload)
 
-        if response.status == "success":
-            click.secho("Backup completed successfully.", fg="green")
+        if response.task_id:
+            await monitor_task(
+                client,
+                response.task_id,
+                "Backup completed successfully",
+                "Failed to create backup",
+            )
             click.echo("Pruning old backups...")
             prune_response = await client.async_prune_server_backups(server_name)
-            if prune_response.status == "success":
+            if prune_response.task_id:
+                await monitor_task(
+                    client,
+                    prune_response.task_id,
+                    "Pruning complete",
+                    "Failed to prune backups",
+                )
+            elif prune_response.status == "success":
                 click.secho("Pruning complete.", fg="green")
             else:
                 click.secho(
                     f"Failed to prune backups: {prune_response.message}", fg="red"
                 )
+        elif response.status == "success":
+            click.secho("Backup completed successfully.", fg="green")
         else:
             click.secho(f"Failed to create backup: {response.message}", fg="red")
 
@@ -79,7 +94,7 @@ async def create_backup(ctx, server_name: str, backup_type: str, file_to_backup:
     type=click.Path(exists=True, dir_okay=False, resolve_path=True),
     help="Path to the backup file to restore; skips interactive menu.",
 )
-@click.pass_context
+@pass_async_context
 async def restore_backup(ctx, server_name: str, backup_file_path: str):
     """Restores server data from a specified backup file."""
     client = ctx.obj.get("client")
@@ -116,7 +131,14 @@ async def restore_backup(ctx, server_name: str, backup_file_path: str):
         )
         response = await client.async_restore_server_backup(server_name, payload)
 
-        if response.status == "success":
+        if response.task_id:
+            await monitor_task(
+                client,
+                response.task_id,
+                "Restore completed successfully",
+                "Failed to restore backup",
+            )
+        elif response.status == "success":
             click.secho("Restore completed successfully.", fg="green")
         else:
             click.secho(f"Failed to restore backup: {response.message}", fg="red")
@@ -133,7 +155,7 @@ async def restore_backup(ctx, server_name: str, backup_file_path: str):
     required=True,
     help="Name of the server whose backups to prune.",
 )
-@click.pass_context
+@pass_async_context
 async def prune_backups(ctx, server_name: str):
     """Deletes old backups for a server."""
     client = ctx.obj.get("client")
@@ -144,7 +166,14 @@ async def prune_backups(ctx, server_name: str):
     try:
         click.echo(f"Pruning old backups for server '{server_name}'...")
         response = await client.async_prune_server_backups(server_name)
-        if response.status == "success":
+        if response.task_id:
+            await monitor_task(
+                client,
+                response.task_id,
+                "Pruning complete",
+                "Failed to prune backups",
+            )
+        elif response.status == "success":
             click.secho("Pruning complete.", fg="green")
         else:
             click.secho(f"Failed to prune backups: {response.message}", fg="red")

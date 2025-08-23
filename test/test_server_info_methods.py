@@ -15,8 +15,8 @@ async def client():
 
 
 @pytest.mark.asyncio
-async def test_get_servers_details(client):
-    """Test async_get_servers_details method."""
+async def test_get_servers(client):
+    """Test async_get_servers method."""
     with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
         mock_request.return_value = {
             "status": "success",
@@ -25,7 +25,7 @@ async def test_get_servers_details(client):
                 {"name": "server2", "status": "STOPPED", "version": "1.0.1"},
             ],
         }
-        result = await client.async_get_servers_details()
+        result = await client.async_get_servers()
         mock_request.assert_called_once_with("GET", "/servers", authenticated=True)
         assert len(result.servers) == 2
         assert result.servers[0]["name"] == "server1"
@@ -35,7 +35,7 @@ async def test_get_servers_details(client):
 async def test_get_server_names(client):
     """Test async_get_server_names method."""
     with patch.object(
-        client, "async_get_servers_details", new_callable=AsyncMock
+        client, "async_get_servers", new_callable=AsyncMock
     ) as mock_details:
         mock_details.return_value.servers = [
             {"name": "server2", "status": "STOPPED", "version": "1.0.1"},

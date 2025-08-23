@@ -169,6 +169,46 @@ class ContentMethodsMixin:
         )
         return ActionResponse.model_validate(response)
 
+    async def async_upload_content(self, file_path: str) -> Dict[str, Any]:
+        """Uploads a content file (e.g., .mcworld, .mcaddon) to the server.
+
+        Args:
+            file_path: The local path to the file to upload.
+
+        Returns:
+            A dictionary containing the API response.
+        """
+        import aiohttp
+        import os
+
+        _LOGGER.info("Uploading content file: %s", file_path)
+        data = aiohttp.FormData()
+        data.add_field(
+            "file",
+            open(file_path, "rb"),
+            filename=os.path.basename(file_path),
+            content_type="application/octet-stream",
+        )
+
+        # Note: aiohttp requires direct session usage for multipart/form-data
+        # We bypass the generic _request helper here.
+        url = f"{self._server_root_url}/api/content/upload"
+        headers = {}
+        if self._jwt_token:
+            headers["Authorization"] = f"Bearer {self._jwt_token}"
+
+        async with self._session.post(url, data=data, headers=headers) as response:
+            if response.status == 401 and not self._is_retrying:
+                _LOGGER.info("Token expired, attempting to refresh and retry.")
+                self._is_retrying = True
+                await self._authenticate()
+                # Clear the flag before retrying
+                self._is_retrying = False
+                return await self.async_upload_content(file_path)
+
+            await self._handle_api_error(response, "/api/content/upload")
+            return await response.json()
+
     async def async_reset_server_world(self, server_name: str) -> ActionResponse:
         """Resets the current world of a server.
 

@@ -34,26 +34,26 @@ class ServerInfoMethodsMixin:
             is_retry: bool = False,
         ) -> Any: ...
 
-    async def async_get_servers_details(self) -> GeneralApiResponse:
-        """Fetches details for all detected Bedrock server instances.
+    async def async_get_servers(self) -> GeneralApiResponse:
+        """Retrieves a list of all detected server instances with their status and version.
 
         Returns:
-            A `GeneralApiResponse` object containing a list of servers with their details.
+            A `GeneralApiResponse` object containing a list of servers.
         """
-        _LOGGER.debug("Fetching server details list from /api/servers")
+        _LOGGER.debug("Fetching server list from /api/servers")
         response_data = await self._request("GET", "/servers", authenticated=True)
         return GeneralApiResponse.model_validate(response_data)
 
     async def async_get_server_names(self) -> List[str]:
         """Fetches a list of server names.
 
-        This is a convenience wrapper around `async_get_servers_details`.
+        This is a convenience wrapper around `async_get_servers`.
 
         Returns:
             A sorted list of server names.
         """
         _LOGGER.debug("Fetching server names list")
-        server_details = await self.async_get_servers_details()
+        server_details = await self.async_get_servers()
         if server_details.servers:
             return sorted(
                 [
