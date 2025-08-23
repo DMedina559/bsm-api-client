@@ -8,6 +8,8 @@ Server Manager API.
 import logging
 from typing import Any, Dict, Optional, List, TYPE_CHECKING
 from urllib.parse import quote
+
+import aiohttp
 from ..exceptions import APIError, ServerNotFoundError, AuthError, CannotConnectError
 from ..models import GeneralApiResponse
 
