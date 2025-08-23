@@ -73,7 +73,9 @@ class TestManagerAndServerInfo:
         finally:
             await client.close()
 
-    async def test_server_info_endpoints(self, server, bedrock_server, wait_for_server_status):
+    async def test_server_info_endpoints(
+        self, server, bedrock_server, wait_for_server_status
+    ):
         """Tests various server-specific informational endpoints."""
         client = BedrockServerManagerApi(server, "admin", "password")
         server_name = bedrock_server

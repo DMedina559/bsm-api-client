@@ -40,7 +40,9 @@ def pass_async_context(f):
     return wrapper
 
 
-async def monitor_task(client, task_id: str, success_message: str, failure_message: str):
+async def monitor_task(
+    client, task_id: str, success_message: str, failure_message: str
+):
     """Polls the status of a background task until it completes."""
     click.echo("Task started in the background. Polling for completion...")
     while True:
