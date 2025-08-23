@@ -1,5 +1,6 @@
 import asyncio
 import functools
+import time
 import click
 
 
@@ -37,3 +38,34 @@ def pass_async_context(f):
         return f(ctx, *args, **kwargs)
 
     return wrapper
+
+
+async def monitor_task(client, task_id: str, success_message: str, failure_message: str):
+    """Polls the status of a background task until it completes."""
+    click.echo("Task started in the background. Polling for completion...")
+    while True:
+        try:
+            status_response = await client.async_get_task_status(task_id)
+            status = status_response.get("status")
+            message = status_response.get("message", "No message provided.")
+
+            if status == "success":
+                click.secho(f"{success_message}: {message}", fg="green")
+                break
+            elif status == "error":
+                click.secho(
+                    f"{failure_message}: {message}",
+                    fg="red",
+                )
+                break
+            elif status == "pending":
+                # Still waiting, continue loop
+                pass
+            else:
+                # Handle unexpected status
+                click.secho(f"Unknown task status received: {status}", fg="yellow")
+
+            time.sleep(2)
+        except Exception as e:
+            click.secho(f"An error occurred while monitoring task: {e}", fg="red")
+            break

@@ -1,6 +1,7 @@
 import click
 import os
 import questionary
+from .decorators import pass_async_context, monitor_task
 from bsm_api_client.models import FileNamePayload
 
 
@@ -21,7 +22,7 @@ def addon():
     type=click.Path(exists=True, dir_okay=False, resolve_path=True),
     help="Path to the addon file (.mcpack, .mcaddon); skips interactive menu.",
 )
-@click.pass_context
+@pass_async_context
 async def install_addon(ctx, server_name: str, addon_file_path: str):
     """Installs a behavior or resource pack addon to a specified server."""
     client = ctx.obj.get("client")
@@ -62,7 +63,14 @@ async def install_addon(ctx, server_name: str, addon_file_path: str):
 
         payload = FileNamePayload(filename=addon_filename)
         response = await client.async_install_server_addon(server_name, payload)
-        if response.status == "success":
+        if response.task_id:
+            await monitor_task(
+                client,
+                response.task_id,
+                f"Addon '{addon_filename}' installed successfully",
+                "Failed to install addon",
+            )
+        elif response.status == "success":
             click.secho(f"Addon '{addon_filename}' installed successfully.", fg="green")
         else:
             click.secho(f"Failed to install addon: {response.message}", fg="red")

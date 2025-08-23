@@ -30,11 +30,79 @@ class ActionResponse(BaseModel):
         status: The status of the action, e.g., "success".
         message: A descriptive message about the outcome of the action.
         details: Optional additional details about the action's result.
+        task_id: The ID of the background task if one was created.
     """
 
     status: str = "success"
     message: str
     details: Optional[Any] = None
+    task_id: Optional[str] = None
+
+
+class BaseApiResponse(BaseModel):
+    """Base model for simple API responses.
+
+    Attributes:
+        status: The status of the response, e.g., "success".
+        message: An optional descriptive message.
+    """
+
+    status: str
+    message: Optional[str] = None
+
+
+class User(BaseModel):
+    """Represents a user account.
+
+    Attributes:
+        id: The user's ID.
+        username: The user's username.
+        identity_type: The type of identity (e.g., "local").
+        role: The user's role (e.g., "admin").
+        is_active: Whether the user account is active.
+        theme: The user's preferred theme.
+    """
+
+    id: int
+    username: str
+    identity_type: str
+    role: str
+    is_active: bool
+    theme: str = "default"
+
+
+class ThemeUpdate(BaseModel):
+    """Request model for updating a user's theme.
+
+    Attributes:
+        theme: The name of the theme to set.
+    """
+
+    theme: str
+
+
+class ProfileUpdate(BaseModel):
+    """Request model for updating a user's profile.
+
+    Attributes:
+        full_name: The user's full name.
+        email: The user's email address.
+    """
+
+    full_name: str
+    email: str
+
+
+class ChangePasswordRequest(BaseModel):
+    """Request model for changing a user's password.
+
+    Attributes:
+        current_password: The user's current password.
+        new_password: The new password to set.
+    """
+
+    current_password: str
+    new_password: str
 
 
 class InstallServerPayload(BaseModel):

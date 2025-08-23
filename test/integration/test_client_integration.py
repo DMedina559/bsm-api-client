@@ -17,7 +17,7 @@ async def test_login(server):
     """
     client = BedrockServerManagerApi(server, "admin", "password")
     try:
-        servers_response = await client.async_get_servers_details()
+        servers_response = await client.async_get_servers()
         assert servers_response is not None
         assert isinstance(servers_response.servers, list)
     finally:
@@ -32,7 +32,7 @@ async def test_login_invalid_credentials(server):
     client = BedrockServerManagerApi(server, "admin", "wrong_password")
     try:
         with pytest.raises(APIError) as excinfo:
-            await client.async_get_servers_details()
+            await client.async_get_servers()
         assert excinfo.value.status_code == 401
     finally:
         await client.close()

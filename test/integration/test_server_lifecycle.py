@@ -67,7 +67,7 @@ class TestServerLifecycle:
         client = client_fixture
         server_name = bedrock_server
 
-        details_res = await client.async_get_servers_details()
+        details_res = await client.async_get_servers()
         server_details = next(s for s in details_res.servers if s["name"] == server_name)
         
         original_autostart = server_details.get("autostart_service", False)
@@ -80,7 +80,7 @@ class TestServerLifecycle:
         
         await client.async_set_server_autoupdate(server_name, not original_autoupdate)
 
-        details_after_res = await client.async_get_servers_details()
+        details_after_res = await client.async_get_servers()
         server_details_after = next(s for s in details_after_res.servers if s["name"] == server_name)
 
         assert server_details_after.get("autostart_service") is not original_autostart

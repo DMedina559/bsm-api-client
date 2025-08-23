@@ -1,7 +1,7 @@
 # tests/test_content_methods.py
 import pytest
 import pytest_asyncio
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, patch, MagicMock
 from bsm_api_client.api_client import BedrockServerManagerApi
 from bsm_api_client.models import (
     RestoreTypePayload,
@@ -88,6 +88,25 @@ async def test_trigger_server_backup(client):
             authenticated=True,
         )
         assert result.status == "success"
+
+
+@pytest.mark.skip(reason="Content uploader is a disabled-by-default plugin")
+@pytest.mark.skip(reason="Content uploader is a disabled-by-default plugin")
+@pytest.mark.asyncio
+async def test_upload_content(client):
+    """Test async_upload_content method."""
+    with patch("aiohttp.FormData", new_callable=MagicMock) as mock_form_data:
+        with patch.object(client, "_session") as mock_session:
+            mock_session.post.return_value.__aenter__.return_value.status = 200
+            mock_session.post.return_value.__aenter__.return_value.json = AsyncMock(
+                return_value={"status": "success"}
+            )
+
+            with patch("builtins.open", new_callable=MagicMock) as mock_open:
+                with patch("os.path.basename", return_value="test.zip"):
+                    result = await client.async_upload_content("/fake/path/test.zip")
+                    assert result["status"] == "success"
+                    mock_session.post.assert_called_once()
 
 
 @pytest.mark.asyncio
