@@ -90,6 +90,137 @@ async def test_trigger_server_backup(client):
         assert result.status == "success"
 
 
+@pytest.mark.asyncio
+async def test_list_server_backups_error(client):
+    """Test async_list_server_backups method with an API error."""
+    with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
+        mock_request.side_effect = Exception("API Error")
+        with pytest.raises(Exception) as excinfo:
+            await client.async_list_server_backups("test-server", "world")
+        assert "API Error" in str(excinfo.value)
+
+
+@pytest.mark.asyncio
+async def test_restore_select_backup_type_error(client):
+    """Test async_restore_select_backup_type method with an API error."""
+    with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
+        mock_request.side_effect = Exception("API Error")
+        with pytest.raises(Exception) as excinfo:
+            await client.async_restore_select_backup_type(
+                "test-server", RestoreTypePayload(restore_type="world")
+            )
+        assert "API Error" in str(excinfo.value)
+
+
+@pytest.mark.asyncio
+async def test_get_content_worlds_error(client):
+    """Test async_get_content_worlds method with an API error."""
+    with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
+        mock_request.side_effect = Exception("API Error")
+        with pytest.raises(Exception) as excinfo:
+            await client.async_get_content_worlds()
+        assert "API Error" in str(excinfo.value)
+
+
+@pytest.mark.asyncio
+async def test_get_content_addons_error(client):
+    """Test async_get_content_addons method with an API error."""
+    with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
+        mock_request.side_effect = Exception("API Error")
+        with pytest.raises(Exception) as excinfo:
+            await client.async_get_content_addons()
+        assert "API Error" in str(excinfo.value)
+
+
+@pytest.mark.asyncio
+async def test_trigger_server_backup_error(client):
+    """Test async_trigger_server_backup method with an API error."""
+    with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
+        mock_request.side_effect = Exception("API Error")
+        with pytest.raises(Exception) as excinfo:
+            await client.async_trigger_server_backup(
+                "test-server", BackupActionPayload(backup_type="all")
+            )
+        assert "API Error" in str(excinfo.value)
+
+
+@pytest.mark.asyncio
+async def test_export_server_world_error(client):
+    """Test async_export_server_world method with an API error."""
+    with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
+        mock_request.side_effect = Exception("API Error")
+        with pytest.raises(Exception) as excinfo:
+            await client.async_export_server_world("test-server")
+        assert "API Error" in str(excinfo.value)
+
+
+@pytest.mark.asyncio
+async def test_reset_server_world_error(client):
+    """Test async_reset_server_world method with an API error."""
+    with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
+        mock_request.side_effect = Exception("API Error")
+        with pytest.raises(Exception) as excinfo:
+            await client.async_reset_server_world("test-server")
+        assert "API Error" in str(excinfo.value)
+
+
+@pytest.mark.asyncio
+async def test_prune_server_backups_error(client):
+    """Test async_prune_server_backups method with an API error."""
+    with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
+        mock_request.side_effect = Exception("API Error")
+        with pytest.raises(Exception) as excinfo:
+            await client.async_prune_server_backups("test-server")
+        assert "API Error" in str(excinfo.value)
+
+
+@pytest.mark.asyncio
+async def test_restore_server_backup_error(client):
+    """Test async_restore_server_backup method with an API error."""
+    with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
+        mock_request.side_effect = Exception("API Error")
+        with pytest.raises(Exception) as excinfo:
+            await client.async_restore_server_backup(
+                "test-server",
+                RestoreActionPayload(restore_type="world", backup_file="backup1.zip"),
+            )
+        assert "API Error" in str(excinfo.value)
+
+
+@pytest.mark.asyncio
+async def test_restore_server_latest_all_error(client):
+    """Test async_restore_server_latest_all method with an API error."""
+    with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
+        mock_request.side_effect = Exception("API Error")
+        with pytest.raises(Exception) as excinfo:
+            await client.async_restore_server_latest_all("test-server")
+        assert "API Error" in str(excinfo.value)
+
+
+@pytest.mark.asyncio
+async def test_install_server_world_error(client):
+    """Test async_install_server_world method with an API error."""
+    with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
+        mock_request.side_effect = Exception("API Error")
+        with pytest.raises(Exception) as excinfo:
+            await client.async_install_server_world(
+                "test-server", FileNamePayload(filename="world1.mcworld")
+            )
+        assert "API Error" in str(excinfo.value)
+
+
+@pytest.mark.asyncio
+async def test_install_server_addon_error(client):
+    """Test async_install_server_addon method with an API error."""
+    with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
+        mock_request.side_effect = Exception("API Error")
+        with pytest.raises(Exception) as excinfo:
+            await client.async_install_server_addon(
+                "test-server", FileNamePayload(filename="addon1.mcaddon")
+            )
+        assert "API Error" in str(excinfo.value)
+
+
 @pytest.mark.skip(reason="Content uploader is a disabled-by-default plugin")
 @pytest.mark.skip(reason="Content uploader is a disabled-by-default plugin")
 @pytest.mark.asyncio

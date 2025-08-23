@@ -9,6 +9,7 @@ import sys
 from bsm_api_client.api_client import BedrockServerManagerApi
 from bsm_api_client.models import InstallServerPayload
 
+
 @pytest.fixture(scope="session")
 def server():
     """
@@ -20,7 +21,7 @@ def server():
     # When binding to 0.0.0.0, we connect to 127.0.0.1
     connect_host = "127.0.0.1"
     base_url = f"http://{connect_host}:{port}"
-    
+
     # Remove the database file if it exists, to ensure a clean setup
     db_path = os.path.expanduser("~/bedrock-server-manager/bedrock_server_manager.db")
     if os.path.exists(db_path):
@@ -35,13 +36,14 @@ def server():
             "web",
             "start",
             "--host",
-            host
+            host,
         ],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
     )
 
     try:
+
         async def wait_and_setup():
             # Wait for the server to start
             for _ in range(60):  # 60 * 0.5s = 30s timeout
@@ -67,17 +69,18 @@ def server():
                             pytest.fail(f"Failed to setup server: {text}")
                     elif response.status != 200:
                         pytest.fail(f"Failed to setup server: {await response.text()}")
-        
+
         asyncio.run(wait_and_setup())
         yield base_url
     finally:
         process.terminate()
         process.wait()
         stdout, stderr = process.communicate()
-        if process.returncode != 0 and process.returncode != -15: # -15 is SIGTERM
+        if process.returncode != 0 and process.returncode != -15:  # -15 is SIGTERM
             print("Server exited with an error.")
             print("STDOUT:", stdout.decode())
             print("STDERR:", stderr.decode())
+
 
 @pytest_asyncio.fixture(scope="session")
 async def bedrock_server(server):
@@ -88,21 +91,27 @@ async def bedrock_server(server):
     server_name = "test-server"
     client = BedrockServerManagerApi(server, "admin", "password")
     try:
-        payload = InstallServerPayload(server_name=server_name, version="LATEST", overwrite=True)
+        payload = InstallServerPayload(
+            server_name=server_name, version="LATEST", overwrite=True
+        )
         install_result = await client.async_install_new_server(payload)
-        
+
         if install_result.task_id:
             for _ in range(90):  # 90s timeout for installation task
-                await asyncio.sleep(2) # Poll every 2 seconds
-                status_response = await client.async_get_task_status(install_result.task_id)
+                await asyncio.sleep(2)  # Poll every 2 seconds
+                status_response = await client.async_get_task_status(
+                    install_result.task_id
+                )
                 if status_response["status"] == "success":
                     break
                 elif status_response["status"] == "error":
-                    pytest.fail(f"Installation task failed: {status_response['message']}")
+                    pytest.fail(
+                        f"Installation task failed: {status_response['message']}"
+                    )
             else:
                 pytest.fail("Installation task timed out after 180 seconds.")
         elif install_result.status != "success":
-             pytest.fail(f"Failed to install server: {install_result.message}")
+            pytest.fail(f"Failed to install server: {install_result.message}")
 
         yield server_name
 

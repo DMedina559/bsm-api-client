@@ -35,7 +35,9 @@ async def test_get_account_details(client):
         result = await client.async_get_account_details()
         assert isinstance(result, User)
         assert result.username == "admin"
-        mock_request.assert_called_once_with(method="GET", path="/account", authenticated=True)
+        mock_request.assert_called_once_with(
+            method="GET", path="/account", authenticated=True
+        )
 
 
 @pytest.mark.asyncio
@@ -48,7 +50,10 @@ async def test_update_theme(client):
         assert isinstance(result, BaseApiResponse)
         assert result.status == "success"
         mock_request.assert_called_once_with(
-            method="POST", path="/account/theme", json_data={"theme": "dark"}, authenticated=True
+            method="POST",
+            path="/account/theme",
+            json_data={"theme": "dark"},
+            authenticated=True,
         )
 
 
@@ -89,3 +94,49 @@ async def test_change_password(client):
             },
             authenticated=True,
         )
+
+
+@pytest.mark.asyncio
+async def test_get_account_details_error(client):
+    """Test async_get_account_details method with an API error."""
+    with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
+        mock_request.side_effect = Exception("API Error")
+        with pytest.raises(Exception) as excinfo:
+            await client.async_get_account_details()
+        assert "API Error" in str(excinfo.value)
+
+
+@pytest.mark.asyncio
+async def test_update_theme_error(client):
+    """Test async_update_theme method with an API error."""
+    with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
+        mock_request.side_effect = Exception("API Error")
+        with pytest.raises(Exception) as excinfo:
+            await client.async_update_theme(ThemeUpdate(theme="dark"))
+        assert "API Error" in str(excinfo.value)
+
+
+@pytest.mark.asyncio
+async def test_update_profile_error(client):
+    """Test async_update_profile method with an API error."""
+    with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
+        mock_request.side_effect = Exception("API Error")
+        with pytest.raises(Exception) as excinfo:
+            await client.async_update_profile(
+                ProfileUpdate(full_name="Admin User", email="admin@example.com")
+            )
+        assert "API Error" in str(excinfo.value)
+
+
+@pytest.mark.asyncio
+async def test_change_password_error(client):
+    """Test async_change_password method with an API error."""
+    with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
+        mock_request.side_effect = Exception("API Error")
+        with pytest.raises(Exception) as excinfo:
+            await client.async_change_password(
+                ChangePasswordRequest(
+                    current_password="password", new_password="new_password"
+                )
+            )
+        assert "API Error" in str(excinfo.value)
