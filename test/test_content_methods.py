@@ -90,6 +90,25 @@ async def test_trigger_server_backup(client):
         assert result.status == "success"
 
 
+@pytest.mark.skip(reason="Content uploader is a disabled-by-default plugin")
+@pytest.mark.skip(reason="Content uploader is a disabled-by-default plugin")
+@pytest.mark.asyncio
+async def test_upload_content(client):
+    """Test async_upload_content method."""
+    with patch("aiohttp.FormData", new_callable=MagicMock) as mock_form_data:
+        with patch.object(client, "_session") as mock_session:
+            mock_session.post.return_value.__aenter__.return_value.status = 200
+            mock_session.post.return_value.__aenter__.return_value.json = AsyncMock(
+                return_value={"status": "success"}
+            )
+
+            with patch("builtins.open", new_callable=MagicMock) as mock_open:
+                with patch("os.path.basename", return_value="test.zip"):
+                    result = await client.async_upload_content("/fake/path/test.zip")
+                    assert result["status"] == "success"
+                    mock_session.post.assert_called_once()
+
+
 @pytest.mark.asyncio
 async def test_list_server_backups_error(client):
     """Test async_list_server_backups method with an API error."""

@@ -3,7 +3,6 @@ import pytest_asyncio
 import asyncio
 from bsm_api_client.api_client import BedrockServerManagerApi
 
-
 @pytest_asyncio.fixture
 async def client_fixture(server, bedrock_server, wait_for_server_status):
     """
@@ -18,7 +17,7 @@ async def client_fixture(server, bedrock_server, wait_for_server_status):
         if status_res.data.get("running"):
             await client.async_stop_server(server_name)
             await wait_for_server_status(client, server_name, is_running=False)
-
+        
         yield client
 
     finally:
@@ -26,9 +25,7 @@ async def client_fixture(server, bedrock_server, wait_for_server_status):
         status_res = await client.async_get_server_running_status(server_name)
         if status_res.data.get("running"):
             await client.async_stop_server(server_name)
-            await wait_for_server_status(
-                client, server_name, is_running=False, timeout=30
-            )
+            await wait_for_server_status(client, server_name, is_running=False, timeout=30)
         await client.close()
 
 
@@ -38,13 +35,11 @@ class TestServerLifecycle:
     Integration tests for server lifecycle methods.
     """
 
-    async def test_start_and_stop(
-        self, bedrock_server, wait_for_server_status, client_fixture
-    ):
+    async def test_start_and_stop(self, bedrock_server, wait_for_server_status, client_fixture):
         """Tests starting and stopping the server."""
         client = client_fixture
         server_name = bedrock_server
-
+        
         start_res = await client.async_start_server(server_name)
         assert start_res.status == "success"
         await wait_for_server_status(client, server_name, is_running=True, timeout=90)
@@ -53,20 +48,18 @@ class TestServerLifecycle:
         assert stop_res.status in ["success", "pending"]
         await wait_for_server_status(client, server_name, is_running=False, timeout=90)
 
-    async def test_restart(
-        self, bedrock_server, wait_for_server_status, client_fixture
-    ):
+    async def test_restart(self, bedrock_server, wait_for_server_status, client_fixture):
         """Tests restarting the server."""
         client = client_fixture
         server_name = bedrock_server
-
+        
         await client.async_start_server(server_name)
         await wait_for_server_status(client, server_name, is_running=True, timeout=90)
 
         restart_res = await client.async_restart_server(server_name)
         assert restart_res.status in ["success", "pending"]
-
-        await asyncio.sleep(5)
+        
+        await asyncio.sleep(5) 
         await wait_for_server_status(client, server_name, is_running=True, timeout=90)
 
     async def test_service_methods(self, bedrock_server, client_fixture):
@@ -75,10 +68,8 @@ class TestServerLifecycle:
         server_name = bedrock_server
 
         details_res = await client.async_get_servers()
-        server_details = next(
-            s for s in details_res.servers if s["name"] == server_name
-        )
-
+        server_details = next(s for s in details_res.servers if s["name"] == server_name)
+        
         original_autostart = server_details.get("autostart_service", False)
         original_autoupdate = server_details.get("autoupdate", False)
 
@@ -86,13 +77,11 @@ class TestServerLifecycle:
             await client.async_disable_server_service(server_name)
         else:
             await client.async_enable_server_service(server_name)
-
+        
         await client.async_set_server_autoupdate(server_name, not original_autoupdate)
 
         details_after_res = await client.async_get_servers()
-        server_details_after = next(
-            s for s in details_after_res.servers if s["name"] == server_name
-        )
+        server_details_after = next(s for s in details_after_res.servers if s["name"] == server_name)
 
         assert server_details_after.get("autostart_service") is not original_autostart
         assert server_details_after.get("autoupdate") is not original_autoupdate

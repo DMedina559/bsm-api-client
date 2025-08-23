@@ -40,9 +40,7 @@ class AccountMethodsMixin:
             A `User` object containing the account details.
         """
         _LOGGER.debug("Fetching account details from /account")
-        response = await self._request(
-            method="GET", path="/account", authenticated=True
-        )
+        response = await self._request(method="GET", path="/account", authenticated=True)
         return User.model_validate(response)
 
     async def async_update_theme(self, payload: ThemeUpdate) -> BaseApiResponse:
