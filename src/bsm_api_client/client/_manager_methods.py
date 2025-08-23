@@ -7,7 +7,9 @@ These methods handle operations such as getting system information, managing
 players, and installing new servers.
 """
 import logging
-from typing import Any, Dict, Optional, List, TYPE_CHECKING
+import aiohttp
+from typing import Any, Dict, Optional, TYPE_CHECKING
+from ..exceptions import APIError, CannotConnectError
 from ..models import (
     AddPlayersPayload,
     SettingItem,
