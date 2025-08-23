@@ -61,7 +61,7 @@ async def list_servers(ctx, loop, server_name):
         return
 
     async def _display_status():
-        response = await client.async_get_servers_details()
+        response = await client.async_get_servers()
         all_servers = response.servers
 
         if server_name:
