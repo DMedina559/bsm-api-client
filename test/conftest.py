@@ -60,7 +60,7 @@ def server():
             # Perform initial setup
             async with aiohttp.ClientSession() as session:
                 payload = {"username": "admin", "password": "password"}
-                async with session.post(f"{base_url}/setup", json=payload) as response:
+                async with session.post(f"{base_url}/setup/create-first-user", json=payload) as response:
                     if response.status == 400:
                         text = await response.text()
                         if "Setup already completed" in text:
