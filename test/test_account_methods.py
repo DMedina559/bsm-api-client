@@ -35,7 +35,9 @@ async def test_get_account_details(client):
         result = await client.async_get_account_details()
         assert isinstance(result, User)
         assert result.username == "admin"
-        mock_request.assert_called_once_with(method="GET", path="/account", authenticated=True)
+        mock_request.assert_called_once_with(
+            method="GET", path="/account", authenticated=True
+        )
 
 
 @pytest.mark.asyncio
@@ -48,7 +50,10 @@ async def test_update_theme(client):
         assert isinstance(result, BaseApiResponse)
         assert result.status == "success"
         mock_request.assert_called_once_with(
-            method="POST", path="/account/theme", json_data={"theme": "dark"}, authenticated=True
+            method="POST",
+            path="/account/theme",
+            json_data={"theme": "dark"},
+            authenticated=True,
         )
 
 
