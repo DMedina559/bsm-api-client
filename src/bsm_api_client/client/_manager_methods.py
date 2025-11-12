@@ -266,4 +266,3 @@ class ManagerMethodsMixin:
             path=f"/tasks/status/{task_id}",
             authenticated=True,
         )
-        return InstallServerResponse.model_validate(response)
