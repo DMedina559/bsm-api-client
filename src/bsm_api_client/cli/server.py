@@ -2,7 +2,7 @@ import os
 import time
 import click
 import questionary
-from .decorators import pass_async_context
+from .decorators import pass_async_context, monitor_task
 from bsm_api_client.models import InstallServerPayload, CommandPayload
 
 
@@ -61,7 +61,7 @@ async def list_servers(ctx, loop, server_name):
         return
 
     async def _display_status():
-        response = await client.async_get_servers_details()
+        response = await client.async_get_servers()
         all_servers = response.servers
 
         if server_name:
@@ -120,7 +120,7 @@ async def start_server(ctx, server_name: str):
 @click.option(
     "-s", "--server", "server_name", required=True, help="Name of the server to stop."
 )
-@click.pass_context
+@pass_async_context
 async def stop_server(ctx, server_name: str):
     """Sends a graceful stop command to a running Bedrock server."""
     client = ctx.obj.get("client")
@@ -131,7 +131,14 @@ async def stop_server(ctx, server_name: str):
     click.echo(f"Attempting to stop server '{server_name}'...")
     try:
         response = await client.async_stop_server(server_name)
-        if response.status == "success":
+        if response.task_id:
+            await monitor_task(
+                client,
+                response.task_id,
+                "Server stopped successfully",
+                "Failed to stop server",
+            )
+        elif response.status == "success":
             click.secho(f"Stop signal sent to server '{server_name}'.", fg="green")
         else:
             click.secho(f"Failed to stop server: {response.message}", fg="red")
@@ -147,7 +154,7 @@ async def stop_server(ctx, server_name: str):
     required=True,
     help="Name of the server to restart.",
 )
-@click.pass_context
+@pass_async_context
 async def restart_server(ctx, server_name: str):
     """Gracefully restarts a specific Bedrock server."""
     client = ctx.obj.get("client")
@@ -158,7 +165,14 @@ async def restart_server(ctx, server_name: str):
     click.echo(f"Attempting to restart server '{server_name}'...")
     try:
         response = await client.async_restart_server(server_name)
-        if response.status == "success":
+        if response.task_id:
+            await monitor_task(
+                client,
+                response.task_id,
+                "Server restarted successfully",
+                "Failed to restart server",
+            )
+        elif response.status == "success":
             click.secho(f"Restart signal sent to server '{server_name}'.", fg="green")
         else:
             click.secho(f"Failed to restart server: {response.message}", fg="red")
@@ -233,23 +247,12 @@ async def install(ctx):
         install_result = await client.async_install_new_server(payload)
 
         if install_result.task_id:
-            time.sleep(5)  # Give the server time to start installation
-            click.echo("Server installation started. Polling for completion...")
-            while True:
-                status_response = await client.async_get_task_status(
-                    install_result.task_id
-                )
-                if status_response["status"] == "success":
-                    click.secho(
-                        "Server installation completed successfully.", fg="green"
-                    )
-                    break
-                elif status_response["status"] == "error":
-                    click.secho(
-                        f"Installation failed: {status_response['message']}", fg="red"
-                    )
-                    return
-                time.sleep(2)
+            await monitor_task(
+                client,
+                install_result.task_id,
+                "Server installation completed successfully",
+                "Installation failed",
+            )
         elif install_result.status == "success":
             click.secho("Server files installed successfully.", fg="green")
         else:
@@ -283,7 +286,7 @@ async def install(ctx):
 @click.option(
     "-s", "--server", "server_name", required=True, help="Name of the server to update."
 )
-@click.pass_context
+@pass_async_context
 async def update(ctx, server_name: str):
     """Checks for and applies updates to an existing Bedrock server."""
     client = ctx.obj.get("client")
@@ -294,7 +297,14 @@ async def update(ctx, server_name: str):
     click.echo(f"Checking for updates for server '{server_name}'...")
     try:
         response = await client.async_update_server(server_name)
-        if response.status == "success":
+        if response.task_id:
+            await monitor_task(
+                client,
+                response.task_id,
+                "Server update completed successfully",
+                "Failed to update server",
+            )
+        elif response.status == "success":
             click.secho("Update check complete.", fg="green")
         else:
             click.secho(f"Failed to update server: {response.message}", fg="red")
@@ -307,7 +317,7 @@ async def update(ctx, server_name: str):
     "-s", "--server", "server_name", required=True, help="Name of the server to delete."
 )
 @click.option("-y", "--yes", is_flag=True, help="Bypass the confirmation prompt.")
-@click.pass_context
+@pass_async_context
 async def delete_server(ctx, server_name: str, yes: bool):
     """Deletes all data for a server, including world, configs, and backups."""
     client = ctx.obj.get("client")
@@ -329,7 +339,14 @@ async def delete_server(ctx, server_name: str, yes: bool):
     click.echo(f"Proceeding with deletion of server '{server_name}'...")
     try:
         response = await client.async_delete_server(server_name)
-        if response.status == "success":
+        if response.task_id:
+            await monitor_task(
+                client,
+                response.task_id,
+                "Server deleted successfully",
+                "Failed to delete server",
+            )
+        elif response.status == "success":
             click.secho(
                 f"Server '{server_name}' and all its data have been deleted.",
                 fg="green",

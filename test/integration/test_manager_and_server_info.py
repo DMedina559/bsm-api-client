@@ -73,11 +73,19 @@ class TestManagerAndServerInfo:
         finally:
             await client.close()
 
-    async def test_server_info_endpoints(self, server, bedrock_server):
+    async def test_server_info_endpoints(
+        self, server, bedrock_server, wait_for_server_status
+    ):
         """Tests various server-specific informational endpoints."""
         client = BedrockServerManagerApi(server, "admin", "password")
         server_name = bedrock_server
         try:
+            # Ensure server is stopped before this test
+            status_res = await client.async_get_server_running_status(server_name)
+            if status_res.data.get("running"):
+                await client.async_stop_server(server_name)
+                await wait_for_server_status(client, server_name, is_running=False)
+
             validate_result = await client.async_get_server_validate(server_name)
             assert validate_result is True
 
@@ -87,7 +95,6 @@ class TestManagerAndServerInfo:
 
             config_status_res = await client.async_get_server_config_status(server_name)
             assert config_status_res.status == "success"
-            # The status can be INSTALLED or STOPPED depending on test order
             assert config_status_res.data.get("config_status") in [
                 "INSTALLED",
                 "STOPPED",

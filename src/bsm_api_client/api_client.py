@@ -12,6 +12,7 @@ from .client._server_info_methods import ServerInfoMethodsMixin
 from .client._server_action_methods import ServerActionMethodsMixin
 from .client._content_methods import ContentMethodsMixin
 from .client._plugin_methods import PluginMethodsMixin
+from .client._account_methods import AccountMethodsMixin
 
 _LOGGER = logging.getLogger(__name__.split(".")[0] + ".client")
 
@@ -23,6 +24,7 @@ class BedrockServerManagerApi(
     ServerActionMethodsMixin,
     ContentMethodsMixin,
     PluginMethodsMixin,
+    AccountMethodsMixin,
 ):
     """API Client for the Bedrock Server Manager.
 

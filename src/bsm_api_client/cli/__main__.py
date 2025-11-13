@@ -22,6 +22,8 @@ from .permissions import permissions
 from .properties import properties
 from .system import system
 from .world import world
+from .account import account
+from .content import content
 from .main_menus import main_menu
 from .decorators import AsyncGroup
 
@@ -66,6 +68,8 @@ cli.add_command(permissions)
 cli.add_command(properties)
 cli.add_command(system)
 cli.add_command(world)
+cli.add_command(account)
+cli.add_command(content)
 
 if __name__ == "__main__":
     cli()

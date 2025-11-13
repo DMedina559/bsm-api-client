@@ -1,6 +1,7 @@
 import click
 import os
 import questionary
+from .decorators import pass_async_context, monitor_task
 from bsm_api_client.models import FileNamePayload
 
 
@@ -21,7 +22,7 @@ def world():
     type=click.Path(exists=True, dir_okay=False, resolve_path=True),
     help="Path to the .mcworld file to install. Skips interactive menu.",
 )
-@click.pass_context
+@pass_async_context
 async def install_world(ctx, server_name: str, world_file_path: str):
     """Installs a world from a .mcworld file, replacing the server's current world."""
     client = ctx.obj.get("client")
@@ -72,7 +73,14 @@ async def install_world(ctx, server_name: str, world_file_path: str):
         payload = FileNamePayload(filename=filename)
         response = await client.async_install_server_world(server_name, payload)
 
-        if response.status == "success":
+        if response.task_id:
+            await monitor_task(
+                client,
+                response.task_id,
+                f"World '{filename}' installed successfully",
+                "Failed to install world",
+            )
+        elif response.status == "success":
             click.secho(f"World '{filename}' installed successfully.", fg="green")
         else:
             click.secho(f"Failed to install world: {response.message}", fg="red")
@@ -89,7 +97,7 @@ async def install_world(ctx, server_name: str, world_file_path: str):
     required=True,
     help="Name of the server whose world to export.",
 )
-@click.pass_context
+@pass_async_context
 async def export_world(ctx, server_name: str):
     """Exports the server's current active world to a .mcworld file."""
     client = ctx.obj.get("client")
@@ -100,7 +108,14 @@ async def export_world(ctx, server_name: str):
     click.echo(f"Attempting to export world for server '{server_name}'...")
     try:
         response = await client.async_export_server_world(server_name)
-        if response.status == "success":
+        if response.task_id:
+            await monitor_task(
+                client,
+                response.task_id,
+                "World exported successfully",
+                "Failed to export world",
+            )
+        elif response.status == "success":
             click.secho("World exported successfully.", fg="green")
         else:
             click.secho(f"Failed to export world: {response.message}", fg="red")
@@ -117,7 +132,7 @@ async def export_world(ctx, server_name: str):
     help="Name of the server whose world to reset.",
 )
 @click.option("-y", "--yes", is_flag=True, help="Bypass the confirmation prompt.")
-@click.pass_context
+@pass_async_context
 async def reset_world(ctx, server_name: str, yes: bool):
     """Deletes the current active world data for a server."""
     client = ctx.obj.get("client")
@@ -139,7 +154,14 @@ async def reset_world(ctx, server_name: str, yes: bool):
     click.echo(f"Resetting world for server '{server_name}'...")
     try:
         response = await client.async_reset_server_world(server_name)
-        if response.status == "success":
+        if response.task_id:
+            await monitor_task(
+                client,
+                response.task_id,
+                "World has been reset successfully",
+                "Failed to reset world",
+            )
+        elif response.status == "success":
             click.secho("World has been reset successfully.", fg="green")
         else:
             click.secho(f"Failed to reset world: {response.message}", fg="red")

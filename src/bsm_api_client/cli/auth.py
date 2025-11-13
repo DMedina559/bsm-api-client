@@ -3,6 +3,13 @@ from .config import Config
 from bsm_api_client import BedrockServerManagerApi, AuthError
 
 
+def _validate_and_get_url(url: str) -> str:
+    """Validates and returns a url with a scheme."""
+    if not url.startswith("http://") and not url.startswith("https://"):
+        return f"http://{url}"
+    return url
+
+
 @click.group()
 def auth():
     """Manages authentication."""
@@ -29,7 +36,8 @@ async def login(ctx, base_url, username, password, verify_ssl, token):
     config = ctx.obj["config"]
 
     if base_url:
-        config.set("base_url", base_url)
+        validated_url = _validate_and_get_url(base_url)
+        config.set("base_url", validated_url)
 
     config.set("verify_ssl", verify_ssl)
 
@@ -41,6 +49,9 @@ async def login(ctx, base_url, username, password, verify_ssl, token):
     if not username and not password and not token:
         await interactive_login(ctx)
         return
+
+    if username and not password:
+        password = click.prompt("Password", hide_input=True)
 
     client = BedrockServerManagerApi(
         base_url=config.base_url,
@@ -64,8 +75,12 @@ async def interactive_login(ctx):
     username = click.prompt("Username")
     password = click.prompt("Password", hide_input=True)
 
+    validated_url = _validate_and_get_url(config.base_url)
+    if validated_url != config.base_url:
+        config.set("base_url", validated_url)
+
     client = BedrockServerManagerApi(
-        base_url=config.base_url,
+        base_url=validated_url,
         username=username,
         password=password,
         verify_ssl=config.verify_ssl,
