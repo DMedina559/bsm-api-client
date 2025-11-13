@@ -40,15 +40,3 @@ class BedrockServerManagerApi(
 
     # __init__ is inherited from ClientBase.
     # All async API methods are inherited from mixins.
-
-    @property
-    def servers(self):
-        """Provides access to server-related methods.
-
-        This is a convenience property that returns the client instance itself,
-        allowing for a more intuitive call structure (e.g., `client.servers.async_get_list()`).
-
-        Returns:
-            The client instance.
-        """
-        return self
