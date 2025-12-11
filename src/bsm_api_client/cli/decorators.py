@@ -44,7 +44,39 @@ async def monitor_task(
     client, task_id: str, success_message: str, failure_message: str
 ):
     """Polls the status of a background task until it completes."""
-    click.echo("Task started in the background. Polling for completion...")
+    click.echo("Task started in the background. Monitoring for completion...")
+
+    # Try WebSocket first
+    try:
+        ws_client = await client.websocket_connect()
+        async with ws_client:
+            # No subscription needed for task updates as per documentation
+            async for msg in ws_client.listen():
+                # Expected format: {"type": "task_update", "topic": "task:{task_id}", "data": {...}}
+                if (
+                    msg.get("topic") == f"task:{task_id}"
+                    and msg.get("type") == "task_update"
+                ):
+                    data = msg.get("data", {})
+                    status = data.get("status")
+                    message = data.get("message", "No message provided.")
+
+                    if status == "success":
+                        click.secho(f"{success_message}: {message}", fg="green")
+                        return
+                    elif status == "error":
+                        click.secho(f"{failure_message}: {message}", fg="red")
+                        return
+                    elif status == "in_progress":
+                        # Maybe print progress if available, or just wait
+                        pass
+    except Exception as e:
+        click.secho(
+            f"WebSocket monitoring failed ({e}), falling back to polling...",
+            fg="yellow",
+        )
+
+    # Fallback to polling
     while True:
         try:
             status_response = await client.async_get_task_status(task_id)
@@ -60,14 +92,14 @@ async def monitor_task(
                     fg="red",
                 )
                 break
-            elif status == "pending":
+            elif status == "pending" or status == "in_progress":
                 # Still waiting, continue loop
                 pass
             else:
                 # Handle unexpected status
                 click.secho(f"Unknown task status received: {status}", fg="yellow")
 
-            time.sleep(2)
+            await asyncio.sleep(2)
         except Exception as e:
             click.secho(f"An error occurred while monitoring task: {e}", fg="red")
             break

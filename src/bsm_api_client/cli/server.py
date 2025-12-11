@@ -1,4 +1,5 @@
 import os
+import asyncio
 import time
 import click
 import questionary
@@ -73,15 +74,49 @@ async def list_servers(ctx, loop, server_name):
 
     try:
         if loop:
-            while True:
-                click.clear()
+            # Initial display
+            click.clear()
+            click.secho(
+                "--- Bedrock Servers Status (Press CTRL+C to exit) ---",
+                fg="magenta",
+                bold=True,
+            )
+            await _display_status()
+
+            # Try to use WebSocket for updates
+            try:
+                ws_client = await client.websocket_connect()
+
+                async with ws_client:
+                    await ws_client.subscribe("event:after_server_statuses_updated")
+                    # Listen for updates
+                    async for _ in ws_client.listen():
+                        click.clear()
+                        click.secho(
+                            "--- Bedrock Servers Status (Press CTRL+C to exit) ---",
+                            fg="magenta",
+                            bold=True,
+                        )
+                        await _display_status()
+
+            except (KeyboardInterrupt, click.Abort):
+                raise
+            except Exception as e:
+                # Fallback to polling if WebSocket fails
                 click.secho(
-                    "--- Bedrock Servers Status (Press CTRL+C to exit) ---",
-                    fg="magenta",
-                    bold=True,
+                    f"WebSocket connection failed ({e}), falling back to polling...",
+                    fg="yellow",
                 )
-                await _display_status()
-                time.sleep(5)
+                await asyncio.sleep(2)
+                while True:
+                    click.clear()
+                    click.secho(
+                        "--- Bedrock Servers Status (Press CTRL+C to exit) ---",
+                        fg="magenta",
+                        bold=True,
+                    )
+                    await _display_status()
+                    await asyncio.sleep(5)
         else:
             if not server_name:
                 click.secho("--- Bedrock Servers Status ---", fg="magenta", bold=True)
