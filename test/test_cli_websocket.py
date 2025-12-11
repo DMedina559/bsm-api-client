@@ -47,9 +47,19 @@ async def test_list_servers_websocket_flow(mock_client, mock_ws_client):
     # Create a real Click Context
     ctx = click.Context(list_servers, obj={"client": mock_client})
 
-    with patch("click.clear"), patch("click.secho"), patch("click.echo"):
+    # Mock sleep to break the loop after WS finishes
+    async def side_effect_sleep(seconds):
+        raise KeyboardInterrupt("Break loop")
+
+    with patch("click.clear"), patch("click.secho"), patch("click.echo"), patch(
+        "asyncio.sleep", side_effect=side_effect_sleep
+    ) as mock_sleep:
+
         with ctx.scope():
-            await list_servers.callback(loop=True, server_name=None)
+            try:
+                await list_servers.callback(loop=True, server_name=None)
+            except KeyboardInterrupt:
+                pass
 
     mock_client.websocket_connect.assert_called_once()
 
@@ -57,6 +67,8 @@ async def test_list_servers_websocket_flow(mock_client, mock_ws_client):
         "event:after_server_statuses_updated"
     )
     assert mock_client.async_get_servers.call_count >= 2
+    # Verify sleep was called (fallback triggered after WS finished)
+    mock_sleep.assert_called()
 
 
 @pytest.mark.asyncio

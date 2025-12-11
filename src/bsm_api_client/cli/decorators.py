@@ -134,4 +134,4 @@ async def monitor_task(
             await asyncio.sleep(2)
         except Exception as e:
             click.secho(f"An error occurred while monitoring task: {e}", fg="red")
-            break
+            await asyncio.sleep(2)  # Retry polling on error

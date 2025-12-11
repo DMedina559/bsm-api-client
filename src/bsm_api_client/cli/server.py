@@ -142,16 +142,21 @@ async def list_servers(ctx, loop, server_name):
                     f"WebSocket connection failed ({e}), falling back to polling...",
                     fg="yellow",
                 )
-                await asyncio.sleep(2)
-                while True:
-                    click.clear()
-                    click.secho(
-                        "--- Bedrock Servers Status (Press CTRL+C to exit) ---",
-                        fg="magenta",
-                        bold=True,
-                    )
+
+            # If we are here, WebSocket failed or closed. Fallback to polling.
+            await asyncio.sleep(2)
+            while True:
+                click.clear()
+                click.secho(
+                    "--- Bedrock Servers Status (Press CTRL+C to exit) ---",
+                    fg="magenta",
+                    bold=True,
+                )
+                try:
                     await _display_status()
-                    await asyncio.sleep(5)
+                except Exception as e:
+                    click.secho(f"Error refreshing status: {e}", fg="red")
+                await asyncio.sleep(5)
         else:
             if not server_name:
                 click.secho("--- Bedrock Servers Status ---", fg="magenta", bold=True)
