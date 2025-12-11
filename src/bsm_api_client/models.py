@@ -215,6 +215,7 @@ class BackupRestoreResponse(BaseModel):
         details: Optional additional details.
         redirect_url: An optional URL for redirection after the operation.
         backups: A list of available backups.
+        task_id: The ID of the background task if one was created.
     """
 
     status: str
@@ -222,6 +223,7 @@ class BackupRestoreResponse(BaseModel):
     details: Optional[Any] = None
     redirect_url: Optional[str] = None
     backups: Optional[List[Any]] = None
+    task_id: Optional[str] = None
 
 
 class ContentListResponse(BaseModel):
