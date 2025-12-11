@@ -89,7 +89,13 @@ async def list_servers(ctx, loop, server_name):
                 ws_client = await client.websocket_connect()
 
                 async with ws_client:
+                    # Subscribe to multiple topics for comprehensive status updates
                     await ws_client.subscribe("event:after_server_statuses_updated")
+                    await ws_client.subscribe("event:after_server_start")
+                    await ws_client.subscribe("event:after_server_stop")
+                    await ws_client.subscribe("event:after_server_updated")
+                    await ws_client.subscribe("event:after_delete_server_data")
+
                     # Listen for updates
                     async for _ in ws_client.listen():
                         click.clear()
