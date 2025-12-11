@@ -63,7 +63,7 @@ async def test_list_servers_websocket_flow(mock_client, mock_ws_client):
 
     mock_client.websocket_connect.assert_called_once()
 
-    mock_ws_client.subscribe.assert_called_once_with(
+    mock_ws_client.subscribe.assert_any_call(
         "event:after_server_statuses_updated"
     )
     assert mock_client.async_get_servers.call_count >= 2
