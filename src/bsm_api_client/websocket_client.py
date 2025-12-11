@@ -44,15 +44,18 @@ class WebSocketClient:
         Returns:
             self
         """
-        headers = {}
+        # The server expects the token as a query parameter '?token=...'
+        # It does not check the Authorization header for WebSockets.
+        url = self._url
         if self._token:
-            headers["Authorization"] = f"Bearer {self._token}"
+            separator = "&" if "?" in url else "?"
+            url = f"{url}{separator}token={self._token}"
 
         try:
-            self._ws = await self._session.ws_connect(self._url, headers=headers)
+            self._ws = await self._session.ws_connect(url)
             _LOGGER.info(f"Connected to WebSocket at {self._url}")
         except aiohttp.ClientResponseError as e:
-            if e.status == 401:
+            if e.status == 401 or e.status == 403:
                 raise AuthError(
                     f"Authentication failed: {e.message}", status_code=e.status
                 )

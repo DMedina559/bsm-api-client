@@ -33,9 +33,8 @@ async def test_websocket_connect(mock_session, mock_ws_response):
 
     await client.connect()
 
-    mock_session.ws_connect.assert_called_once_with(
-        url, headers={"Authorization": "Bearer fake_token"}
-    )
+    expected_url = f"{url}?token={token}"
+    mock_session.ws_connect.assert_called_once_with(expected_url)
     assert client._ws == mock_ws_response
 
 

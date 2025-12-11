@@ -2,6 +2,7 @@ import asyncio
 import functools
 import time
 import click
+from bsm_api_client.exceptions import AuthError
 
 
 class AsyncGroup(click.Group):
@@ -70,6 +71,37 @@ async def monitor_task(
                     elif status == "in_progress":
                         # Maybe print progress if available, or just wait
                         pass
+    except AuthError:
+        click.secho(
+            "WebSocket authentication failed. Attempting to refresh token...",
+            fg="yellow",
+        )
+        try:
+            await client.authenticate()
+            # Retry WebSocket once
+            ws_client = await client.websocket_connect()
+            async with ws_client:
+                async for msg in ws_client.listen():
+                    if (
+                        msg.get("topic") == f"task:{task_id}"
+                        and msg.get("type") == "task_update"
+                    ):
+                        data = msg.get("data", {})
+                        status = data.get("status")
+                        message = data.get("message", "No message provided.")
+
+                        if status == "success":
+                            click.secho(f"{success_message}: {message}", fg="green")
+                            return
+                        elif status == "error":
+                            click.secho(f"{failure_message}: {message}", fg="red")
+                            return
+                        elif status == "in_progress":
+                            pass
+        except Exception as e:
+            click.secho(
+                f"WebSocket retry failed ({e}), falling back to polling...", fg="yellow"
+            )
     except Exception as e:
         click.secho(
             f"WebSocket monitoring failed ({e}), falling back to polling...",
