@@ -40,7 +40,7 @@ dev = [
     "bedrock-server-manager >=3.6.0b1,<3.7.0",
 ]
 cli = [
-    "click >=8.2.0,<8.3",
+    "click >=8.2.0,<8.4",
     "questionary >=2.1.0,<2.2",
 ]
 keywords = ["minecraft", "bedrock", "server", "manager", "api", "client", "asyncio", "aiohttp", "bsm"]
