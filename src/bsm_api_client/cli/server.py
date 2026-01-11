@@ -1,8 +1,10 @@
 import os
+import asyncio
 import time
 import click
 import questionary
 from .decorators import pass_async_context, monitor_task
+from bsm_api_client.exceptions import AuthError
 from bsm_api_client.models import InstallServerPayload, CommandPayload
 
 
@@ -73,6 +75,82 @@ async def list_servers(ctx, loop, server_name):
 
     try:
         if loop:
+            # Initial display
+            click.clear()
+            click.secho(
+                "--- Bedrock Servers Status (Press CTRL+C to exit) ---",
+                fg="magenta",
+                bold=True,
+            )
+            await _display_status()
+
+            # Try to use WebSocket for updates
+            try:
+                ws_client = await client.websocket_connect()
+
+                async with ws_client:
+                    # Subscribe to multiple topics for comprehensive status updates
+                    await ws_client.subscribe("event:after_server_statuses_updated")
+                    await ws_client.subscribe("event:after_server_start")
+                    await ws_client.subscribe("event:after_server_stop")
+                    await ws_client.subscribe("event:after_server_updated")
+                    await ws_client.subscribe("event:after_delete_server_data")
+
+                    # Listen for updates
+                    async for _ in ws_client.listen():
+                        click.clear()
+                        click.secho(
+                            "--- Bedrock Servers Status (Press CTRL+C to exit) ---",
+                            fg="magenta",
+                            bold=True,
+                        )
+                        await _display_status()
+
+            except (KeyboardInterrupt, click.Abort):
+                raise
+            except AuthError:
+                click.secho(
+                    "WebSocket authentication failed. Attempting to refresh token...",
+                    fg="yellow",
+                )
+                try:
+                    await client.authenticate()
+                    # Retry WebSocket once
+                    ws_client = await client.websocket_connect()
+                    async with ws_client:
+                        await ws_client.subscribe("event:after_server_statuses_updated")
+                        async for _ in ws_client.listen():
+                            click.clear()
+                            click.secho(
+                                "--- Bedrock Servers Status (Press CTRL+C to exit) ---",
+                                fg="magenta",
+                                bold=True,
+                            )
+                            await _display_status()
+                except Exception as e:
+                    click.secho(
+                        f"WebSocket retry failed ({e}), falling back to polling...",
+                        fg="yellow",
+                    )
+                    await asyncio.sleep(2)
+                    while True:
+                        click.clear()
+                        click.secho(
+                            "--- Bedrock Servers Status (Press CTRL+C to exit) ---",
+                            fg="magenta",
+                            bold=True,
+                        )
+                        await _display_status()
+                        await asyncio.sleep(5)
+            except Exception as e:
+                # Fallback to polling if WebSocket fails
+                click.secho(
+                    f"WebSocket connection failed ({e}), falling back to polling...",
+                    fg="yellow",
+                )
+
+            # If we are here, WebSocket failed or closed. Fallback to polling.
+            await asyncio.sleep(2)
             while True:
                 click.clear()
                 click.secho(
@@ -80,8 +158,11 @@ async def list_servers(ctx, loop, server_name):
                     fg="magenta",
                     bold=True,
                 )
-                await _display_status()
-                time.sleep(5)
+                try:
+                    await _display_status()
+                except Exception as e:
+                    click.secho(f"Error refreshing status: {e}", fg="red")
+                await asyncio.sleep(5)
         else:
             if not server_name:
                 click.secho("--- Bedrock Servers Status ---", fg="magenta", bold=True)

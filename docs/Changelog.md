@@ -4,6 +4,10 @@
 
 # bsm-api-client Changelog
 
+# 1.4.0
+1. Added support for BSM 3.7.0
+2. Bumped minimum Python version to 3.11
+
 # 1.3.0
 1. Added support for BSM 3.6.0
 

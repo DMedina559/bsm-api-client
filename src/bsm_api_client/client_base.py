@@ -33,6 +33,7 @@ from .exceptions import (
     APIServerSideError,
 )
 from .models import Token
+from .websocket_client import WebSocketClient
 
 _LOGGER = logging.getLogger(__name__.split(".")[0] + ".client.base")
 
@@ -712,3 +713,23 @@ class ClientBase:
         except Exception as e:
             _LOGGER.exception("Unexpected error during logout: %s", e)
             raise APIError(f"An unexpected error occurred during logout: {e}") from e
+
+    async def websocket_connect(self) -> WebSocketClient:
+        """
+        Connects to the WebSocket endpoint.
+
+        Returns:
+            A WebSocketClient instance.
+        """
+        # Ensure we have a token or try to authenticate
+        async with self._auth_lock:
+            if not self._jwt_token:
+                await self.authenticate()
+
+        ws_scheme = "wss" if self._use_ssl else "ws"
+        # Typically the websocket endpoint is at /ws relative to the server root
+        ws_url = (
+            f"{ws_scheme}://{self._host}{f':{self._port}' if self._port else ''}/ws"
+        )
+
+        return WebSocketClient(self._session, ws_url, self._jwt_token)

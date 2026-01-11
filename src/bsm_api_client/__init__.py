@@ -15,6 +15,7 @@ from .exceptions import (
     APIServerSideError,
 )
 from .api_client import BedrockServerManagerApi
+from .websocket_client import WebSocketClient
 
 __all__ = [
     "BedrockServerManagerApi",
@@ -26,6 +27,7 @@ __all__ = [
     "InvalidInputError",
     "OperationFailedError",
     "APIServerSideError",
+    "WebSocketClient",
     "__version__",
 ]
 
