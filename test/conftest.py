@@ -45,12 +45,15 @@ def server():
     try:
 
         async def wait_and_setup():
+            needs_setup = False
             # Wait for the server to start
             for _ in range(60):  # 60 * 0.5s = 30s timeout
                 try:
                     async with aiohttp.ClientSession() as session:
-                        async with session.get(f"{base_url}/setup") as response:
+                        async with session.get(f"{base_url}/setup/status") as response:
                             if response.status == 200:
+                                data = await response.json()
+                                needs_setup = data.get("needs_setup", False)
                                 break
                 except aiohttp.ClientConnectorError:
                     await asyncio.sleep(0.5)
@@ -58,19 +61,20 @@ def server():
                 pytest.fail("Server did not start within 30 seconds.")
 
             # Perform initial setup
-            async with aiohttp.ClientSession() as session:
-                payload = {"username": "admin", "password": "password"}
-                async with session.post(
-                    f"{base_url}/setup/create-first-user", json=payload
-                ) as response:
-                    if response.status == 400:
-                        text = await response.text()
-                        if "Setup already completed" in text:
-                            pass
-                        else:
-                            pytest.fail(f"Failed to setup server: {text}")
-                    elif response.status != 200:
-                        pytest.fail(f"Failed to setup server: {await response.text()}")
+            if needs_setup:
+                async with aiohttp.ClientSession() as session:
+                    payload = {"username": "admin", "password": "password"}
+                    async with session.post(
+                        f"{base_url}/setup/create-first-user", json=payload
+                    ) as response:
+                        if response.status == 400:
+                            text = await response.text()
+                            if "Setup already completed" in text:
+                                pass
+                            else:
+                                pytest.fail(f"Failed to setup server: {text}")
+                        elif response.status != 200:
+                            pytest.fail(f"Failed to setup server: {await response.text()}")
 
         asyncio.run(wait_and_setup())
         yield base_url

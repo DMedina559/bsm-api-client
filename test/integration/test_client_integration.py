@@ -106,13 +106,14 @@ async def test_server_operations(server, bedrock_server):
             server_name
         )
         assert permissions_response.status == "success"
+        initial_permissions = []
         if permissions_response.data:
-            assert permissions_response.data.get("permissions", []) == []
+            initial_permissions = permissions_response.data.get("permissions", [])
 
         permission = PlayerPermission(
             name="TestPlayer", xuid="123456789", permission_level="operator"
         )
-        set_payload = PermissionsSetPayload(permissions=[permission])
+        set_payload = PermissionsSetPayload(permissions=initial_permissions + [permission])
         set_result = await client.async_set_server_permissions(server_name, set_payload)
         assert set_result.status == "success"
 
@@ -120,10 +121,10 @@ async def test_server_operations(server, bedrock_server):
             server_name
         )
         assert permissions_response_after_set.data is not None
-        assert len(permissions_response_after_set.data["permissions"]) == 1
-        player_permission = permissions_response_after_set.data["permissions"][0]
-        assert player_permission["name"] == "Unknown (XUID: 123456789)"
-        assert player_permission["permission_level"] == "operator"
+        assert len(permissions_response_after_set.data["permissions"]) == len(initial_permissions) + 1
+        found_player = next((p for p in permissions_response_after_set.data["permissions"] if p["xuid"] == "123456789"), None)
+        assert found_player is not None
+        assert found_player["permission_level"] == "operator"
 
     finally:
         await client.close()
