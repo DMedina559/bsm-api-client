@@ -28,6 +28,7 @@ def server():
         os.remove(db_path)
 
     # Start the server
+    server_log = open("bedrock_server_manager_test.log", "w")
     process = subprocess.Popen(
         [
             sys.executable,
@@ -38,19 +39,22 @@ def server():
             "--host",
             host,
         ],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
+        stdout=server_log,
+        stderr=server_log,
     )
 
     try:
 
         async def wait_and_setup():
+            needs_setup = False
             # Wait for the server to start
             for _ in range(60):  # 60 * 0.5s = 30s timeout
                 try:
                     async with aiohttp.ClientSession() as session:
-                        async with session.get(f"{base_url}/setup") as response:
+                        async with session.get(f"{base_url}/setup/status") as response:
                             if response.status == 200:
+                                data = await response.json()
+                                needs_setup = data.get("needs_setup", False)
                                 break
                 except aiohttp.ClientConnectorError:
                     await asyncio.sleep(0.5)
@@ -58,30 +62,29 @@ def server():
                 pytest.fail("Server did not start within 30 seconds.")
 
             # Perform initial setup
-            async with aiohttp.ClientSession() as session:
-                payload = {"username": "admin", "password": "password"}
-                async with session.post(
-                    f"{base_url}/setup/create-first-user", json=payload
-                ) as response:
-                    if response.status == 400:
-                        text = await response.text()
-                        if "Setup already completed" in text:
-                            pass
-                        else:
-                            pytest.fail(f"Failed to setup server: {text}")
-                    elif response.status != 200:
-                        pytest.fail(f"Failed to setup server: {await response.text()}")
+            if needs_setup:
+                async with aiohttp.ClientSession() as session:
+                    payload = {"username": "admin", "password": "password"}
+                    async with session.post(
+                        f"{base_url}/setup/create-first-user", json=payload
+                    ) as response:
+                        if response.status == 400:
+                            text = await response.text()
+                            if "Setup already completed" in text:
+                                pass
+                            else:
+                                pytest.fail(f"Failed to setup server: {text}")
+                        elif response.status != 200:
+                            pytest.fail(f"Failed to setup server: {await response.text()}")
 
         asyncio.run(wait_and_setup())
         yield base_url
     finally:
         process.terminate()
         process.wait()
-        stdout, stderr = process.communicate()
+        server_log.close()
         if process.returncode != 0 and process.returncode != -15:  # -15 is SIGTERM
-            print("Server exited with an error.")
-            print("STDOUT:", stdout.decode())
-            print("STDERR:", stderr.decode())
+            print(f"Server exited with an error (code {process.returncode}). Check bedrock_server_manager_test.log for details.")
 
 
 @pytest_asyncio.fixture(scope="session")

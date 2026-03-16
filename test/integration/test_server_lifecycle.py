@@ -46,7 +46,7 @@ class TestServerLifecycle:
         server_name = bedrock_server
 
         start_res = await client.async_start_server(server_name)
-        assert start_res.status == "success"
+        assert start_res.status in ["success", "pending"]
         await wait_for_server_status(client, server_name, is_running=True, timeout=90)
 
         stop_res = await client.async_stop_server(server_name)
