@@ -28,6 +28,7 @@ def server():
         os.remove(db_path)
 
     # Start the server
+    server_log = open("bedrock_server_manager_test.log", "w")
     process = subprocess.Popen(
         [
             sys.executable,
@@ -38,8 +39,8 @@ def server():
             "--host",
             host,
         ],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
+        stdout=server_log,
+        stderr=server_log,
     )
 
     try:
@@ -81,11 +82,9 @@ def server():
     finally:
         process.terminate()
         process.wait()
-        stdout, stderr = process.communicate()
+        server_log.close()
         if process.returncode != 0 and process.returncode != -15:  # -15 is SIGTERM
-            print("Server exited with an error.")
-            print("STDOUT:", stdout.decode())
-            print("STDERR:", stderr.decode())
+            print(f"Server exited with an error (code {process.returncode}). Check bedrock_server_manager_test.log for details.")
 
 
 @pytest_asyncio.fixture(scope="session")
