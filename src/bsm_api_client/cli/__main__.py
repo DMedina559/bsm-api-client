@@ -36,9 +36,7 @@ def cli(ctx):
     """A CLI for managing Bedrock servers."""
     ctx.obj["cli"] = cli
     if ctx.invoked_subcommand is None:
-        import asyncio
-
-        asyncio.run(main_menu(ctx))
+        return main_menu(ctx)
 
 
 @cli.context
