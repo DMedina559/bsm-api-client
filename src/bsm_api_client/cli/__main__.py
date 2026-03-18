@@ -1,13 +1,14 @@
 try:
     import click
     import questionary
+
 except ImportError:
     print(
         "Please install the required dependencies with `pip install bsm-api-client[cli]`"
     )
     exit(1)
 
-import asyncio
+
 from contextlib import asynccontextmanager
 from .config import Config
 from bsm_api_client import BedrockServerManagerApi
@@ -24,17 +25,20 @@ from .system import system
 from .world import world
 from .account import account
 from .content import content
+from .users import users
 from .main_menus import main_menu
 from .decorators import AsyncGroup
 
 
 @click.group(cls=AsyncGroup, invoke_without_command=True)
 @click.pass_context
-async def cli(ctx):
+def cli(ctx):
     """A CLI for managing Bedrock servers."""
     ctx.obj["cli"] = cli
     if ctx.invoked_subcommand is None:
-        await main_menu(ctx)
+        import asyncio
+
+        asyncio.run(main_menu(ctx))
 
 
 @cli.context
@@ -43,11 +47,18 @@ async def cli_context(ctx):
     config = Config()
     ctx.obj["config"] = config
 
-    client = BedrockServerManagerApi(
-        base_url=config.base_url,
-        jwt_token=config.jwt_token,
-        verify_ssl=config.verify_ssl,
-    )
+    try:
+        client = BedrockServerManagerApi(
+            base_url=config.base_url,
+            jwt_token=config.jwt_token,
+            verify_ssl=config.verify_ssl,
+        )
+    except ValueError as e:
+        # Ignore AuthError when logging out or auth group is called
+        if ctx.invoked_subcommand == auth or ctx.invoked_subcommand is None:
+            client = None
+        else:
+            raise e
     ctx.obj["client"] = client
 
     try:
@@ -70,6 +81,7 @@ cli.add_command(system)
 cli.add_command(world)
 cli.add_command(account)
 cli.add_command(content)
+cli.add_command(users)
 
 if __name__ == "__main__":
     cli()
