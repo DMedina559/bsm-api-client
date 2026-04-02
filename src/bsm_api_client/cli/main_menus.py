@@ -92,6 +92,7 @@ async def main_menu(ctx: click.Context):
                 menu_choices.append("Manage Existing Server")
 
             menu_choices.append("Manage Plugins")
+            menu_choices.append("Manage Users")
             menu_choices.append(Separator("--- Application ---"))
             menu_choices.append("Exit")
 
@@ -122,6 +123,13 @@ async def main_menu(ctx: click.Context):
             elif choice == "Manage Plugins":
                 plugin_group = cli.get_command(ctx, "plugin")
                 await ctx.invoke(plugin_group)
+                await questionary.press_any_key_to_continue(
+                    "Press any key to return to the main menu..."
+                ).ask_async()
+
+            elif choice == "Manage Users":
+                users_group = cli.get_command(ctx, "users")
+                await ctx.invoke(users_group)
                 await questionary.press_any_key_to_continue(
                     "Press any key to return to the main menu..."
                 ).ask_async()
