@@ -161,10 +161,11 @@ async def monitor_usage(ctx, server_name: str):
 
             if response.status == "error":
                 click.secho(f"Error: {response.message}", fg="red")
-            elif response.data.get("process_info") is None:
+            elif response.data is None:
                 click.secho("Server process not found (is it running?).", fg="yellow")
             else:
-                info = response.data["process_info"]
+                response_data = response.data
+                info = response_data.get("process_info", {}) if isinstance(info, dict) else {}
                 pid_str = info.get("pid", "N/A")
                 cpu_str = f"{info.get('cpu_percent', 0.0):.1f}%"
                 mem_str = f"{info.get('memory_mb', 0.0):.1f} MB"

@@ -24,10 +24,10 @@ async def details(ctx):
 @pass_async_context
 async def update_theme(ctx, theme):
     """Update your theme."""
-    from bsm_api_client.models import ThemeUpdate
+    from bsm_api_client.models import ThemeUpdatePayload
 
     client = ctx.obj["client"]
-    payload = ThemeUpdate(theme=theme)
+    payload = ThemeUpdatePayload(theme=theme)
     response = await client.async_update_theme(payload)
     click.echo(response.model_dump_json(indent=2))
 
@@ -38,10 +38,10 @@ async def update_theme(ctx, theme):
 @pass_async_context
 async def update_profile(ctx, full_name, email):
     """Update your profile."""
-    from bsm_api_client.models import ProfileUpdate
+    from bsm_api_client.models import ProfileUpdatePayload
 
     client = ctx.obj["client"]
-    payload = ProfileUpdate(full_name=full_name, email=email)
+    payload = ProfileUpdatePayload(full_name=full_name, email=email)
     response = await client.async_update_profile(payload)
     click.echo(response.model_dump_json(indent=2))
 
@@ -64,10 +64,10 @@ async def update_profile(ctx, full_name, email):
 @pass_async_context
 async def change_password(ctx, current_password, new_password):
     """Change your password."""
-    from bsm_api_client.models import ChangePasswordRequest
+    from bsm_api_client.models import ChangePasswordPayload
 
     client = ctx.obj["client"]
-    payload = ChangePasswordRequest(
+    payload = ChangePasswordPayload(
         current_password=current_password, new_password=new_password
     )
     response = await client.async_change_password(payload)

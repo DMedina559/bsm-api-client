@@ -18,9 +18,9 @@ def _print_server_table(servers):
         click.echo("  No servers found.")
     else:
         for server_data in servers:
-            name = server_data.get("name", "N/A")
-            status = server_data.get("status", "UNKNOWN").upper()
-            version = server_data.get("version", "UNKNOWN")
+            name = getattr(server_data, "name", "N/A")
+            status = getattr(server_data, "status", "UNKNOWN").upper()
+            version = getattr(server_data, "version", "UNKNOWN")
 
             color_map = {
                 "RUNNING": "green",
@@ -64,10 +64,10 @@ async def list_servers(ctx, loop, server_name):
 
     async def _display_status():
         response = await client.async_get_servers()
-        all_servers = response.servers
+        all_servers = response.servers or []
 
         if server_name:
-            servers_to_show = [s for s in all_servers if s.get("name") == server_name]
+            servers_to_show = [s for s in all_servers if getattr(s, "name", "") == server_name]
         else:
             servers_to_show = all_servers
 
@@ -294,7 +294,7 @@ async def install(ctx):
         server_zip_path = None
         if target_version.upper() == "CUSTOM":
             response = await client.async_get_custom_zips()
-            available_files = response["custom_zips"]
+            available_files = response.custom_zips
 
             if not available_files:
                 click.secho(

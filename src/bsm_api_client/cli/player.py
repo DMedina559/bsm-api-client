@@ -18,7 +18,7 @@ async def scan_for_players(ctx):
 
     try:
         click.echo("Scanning all server logs for player data...")
-        response = await client.async_scan_player_db()
+        response = await client.async_scan_players()
         if response.status == "success":
             click.secho("Player database updated successfully.", fg="green")
         else:
@@ -45,9 +45,11 @@ async def add_players(ctx, players):
         return
 
     try:
+        from bsm_api_client.models import AddPlayersPayload
         player_list = list(players)
         click.echo(f"Adding/updating {len(player_list)} player(s) in the database...")
-        response = await client.async_add_players_to_db(player_list)
+        payload = AddPlayersPayload(players=player_list)
+        response = await client.async_add_players(payload)
         if response.status == "success":
             click.secho("Players added/updated successfully.", fg="green")
         else:

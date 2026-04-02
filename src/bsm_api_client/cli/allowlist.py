@@ -127,7 +127,7 @@ async def list_players(ctx, server_name: str):
     response = await client.async_get_server_allowlist(server_name)
 
     if response.status == "success":
-        players = response.data.get("existing_players", [])
+        players = response.players
         if not players:
             click.secho(
                 f"The allowlist for server '{server_name}' is empty.", fg="yellow"

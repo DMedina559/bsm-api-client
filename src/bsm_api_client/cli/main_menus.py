@@ -84,7 +84,7 @@ async def main_menu(ctx: click.Context):
             # --- Dynamically build menu choices ---
             response = await client.async_get_servers()
             server_names = (
-                [s["name"] for s in response.servers] if response.servers else []
+                [s.name for s in response.servers] if response.servers else []
             )
 
             menu_choices = ["Install New Server"]
