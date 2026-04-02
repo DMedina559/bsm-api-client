@@ -32,7 +32,7 @@ from .exceptions import (
     OperationFailedError,
     APIServerSideError,
 )
-from .models import Token
+from .models import TokenResponse
 from .websocket_client import WebSocketClient
 
 _LOGGER = logging.getLogger(__name__.split(".")[0] + ".client.base")
@@ -543,7 +543,7 @@ class ClientBase:
                 f"An unexpected error occurred during request to {url}: {e}"
             ) from e
 
-    async def authenticate(self) -> Token:
+    async def authenticate(self) -> TokenResponse:
         """Authenticates with the API and retrieves a JWT token.
 
         This method sends a POST request to the `/auth/token` endpoint with the
@@ -551,7 +551,7 @@ class ClientBase:
         JWT token is stored internally for subsequent authenticated requests.
 
         Returns:
-            A `Token` object containing the access token and token type.
+            A `TokenResponse` object containing the access token and token type.
 
         Raises:
             AuthError: If authentication fails due to invalid credentials,
@@ -603,7 +603,7 @@ class ClientBase:
                         f"Authentication response was not valid JSON: {json_error}"
                     )
 
-            token = Token.model_validate(response_data)
+            token = TokenResponse.model_validate(response_data)
             self._jwt_token = token.access_token
             _LOGGER.info("Authentication successful, token received.")
             return token

@@ -11,7 +11,16 @@ from urllib.parse import quote
 
 import aiohttp
 from ..exceptions import APIError, ServerNotFoundError, AuthError, CannotConnectError
-from ..models import GeneralApiResponse
+from ..models import (
+    ServersListResponse,
+    ServerProcessInfoResponse,
+    ServerRunningStatusResponse,
+    ServerConfigStatusResponse,
+    ServerVersionResponse,
+    PropertiesGetResponse,
+    PermissionsGetResponse,
+    AllowlistGetResponse,
+)
 
 if TYPE_CHECKING:
     from ..client_base import ClientBase
@@ -36,15 +45,15 @@ class ServerInfoMethodsMixin:
             is_retry: bool = False,
         ) -> Any: ...
 
-    async def async_get_servers(self) -> GeneralApiResponse:
+    async def async_get_servers(self) -> ServersListResponse:
         """Retrieves a list of all detected server instances with their status and version.
 
         Returns:
-            A `GeneralApiResponse` object containing a list of servers.
+            A `ServersListResponse` object containing a list of servers.
         """
         _LOGGER.debug("Fetching server list from /api/servers")
         response_data = await self._request("GET", "/servers", authenticated=True)
-        return GeneralApiResponse.model_validate(response_data)
+        return ServersListResponse.model_validate(response_data)
 
     async def async_get_server_names(self) -> List[str]:
         """Fetches a list of server names.
@@ -59,9 +68,8 @@ class ServerInfoMethodsMixin:
         if server_details.servers:
             return sorted(
                 [
-                    server["name"]
+                    server.name
                     for server in server_details.servers
-                    if "name" in server
                 ]
             )
         return []
@@ -106,14 +114,14 @@ class ServerInfoMethodsMixin:
 
     async def async_get_server_process_info(
         self, server_name: str
-    ) -> GeneralApiResponse:
+    ) -> ServerProcessInfoResponse:
         """Gets runtime process information for a server.
 
         Args:
             server_name: The name of the server.
 
         Returns:
-            A `GeneralApiResponse` object containing process information.
+            A `ServerProcessInfoResponse` object containing process information.
         """
         _LOGGER.debug("Fetching status info for server '%s'", server_name)
         encoded_server_name = quote(server_name)
@@ -122,7 +130,7 @@ class ServerInfoMethodsMixin:
             f"/server/{encoded_server_name}/process_info",
             authenticated=True,
         )
-        return GeneralApiResponse.model_validate(response)
+        return ServerProcessInfoResponse.model_validate(response)
 
     async def async_get_world_icon_image(self, server_name: str) -> bytes:
         """Retrieves the world icon image for a server.
@@ -223,14 +231,14 @@ class ServerInfoMethodsMixin:
 
     async def async_get_server_running_status(
         self, server_name: str
-    ) -> GeneralApiResponse:
+    ) -> ServerRunningStatusResponse:
         """Checks if the Bedrock server process is currently running.
 
         Args:
             server_name: The name of the server.
 
         Returns:
-            A `GeneralApiResponse` object containing the running status.
+            A `ServerRunningStatusResponse` object containing the running status.
         """
         _LOGGER.debug("Fetching running status for server '%s'", server_name)
         encoded_server_name = quote(server_name)
@@ -240,18 +248,18 @@ class ServerInfoMethodsMixin:
             f"/server/{encoded_server_name}/status",
             authenticated=True,
         )
-        return GeneralApiResponse.model_validate(response)
+        return ServerRunningStatusResponse.model_validate(response)
 
     async def async_get_server_config_status(
         self, server_name: str
-    ) -> GeneralApiResponse:
+    ) -> ServerConfigStatusResponse:
         """Gets the status string from the server's configuration file.
 
         Args:
             server_name: The name of the server.
 
         Returns:
-            A `GeneralApiResponse` object containing the configuration status.
+            A `ServerConfigStatusResponse` object containing the configuration status.
         """
         _LOGGER.debug("Fetching config status for server '%s'", server_name)
         encoded_server_name = quote(server_name)
@@ -260,16 +268,16 @@ class ServerInfoMethodsMixin:
             f"/server/{encoded_server_name}/config_status",
             authenticated=True,
         )
-        return GeneralApiResponse.model_validate(response)
+        return ServerConfigStatusResponse.model_validate(response)
 
-    async def async_get_server_version(self, server_name: str) -> GeneralApiResponse:
+    async def async_get_server_version(self, server_name: str) -> ServerVersionResponse:
         """Gets the installed Bedrock server version.
 
         Args:
             server_name: The name of the server.
 
         Returns:
-            A `GeneralApiResponse` object containing the server version.
+            A `ServerVersionResponse` object containing the server version.
         """
         _LOGGER.debug("Fetching version for server '%s'", server_name)
         encoded_server_name = quote(server_name)
@@ -278,16 +286,16 @@ class ServerInfoMethodsMixin:
             f"/server/{encoded_server_name}/version",
             authenticated=True,
         )
-        return GeneralApiResponse.model_validate(response)
+        return ServerVersionResponse.model_validate(response)
 
-    async def async_get_server_properties(self, server_name: str) -> GeneralApiResponse:
+    async def async_get_server_properties(self, server_name: str) -> PropertiesGetResponse:
         """Retrieves the server's properties.
 
         Args:
             server_name: The name of the server.
 
         Returns:
-            A `GeneralApiResponse` object containing the server properties.
+            A `PropertiesGetResponse` object containing the server properties.
         """
         _LOGGER.debug("Fetching server.properties for server '%s'", server_name)
         encoded_server_name = quote(server_name)
@@ -296,18 +304,18 @@ class ServerInfoMethodsMixin:
             f"/server/{encoded_server_name}/properties/get",
             authenticated=True,
         )
-        return GeneralApiResponse.model_validate(response)
+        return PropertiesGetResponse.model_validate(response)
 
     async def async_get_server_permissions_data(
         self, server_name: str
-    ) -> GeneralApiResponse:
+    ) -> PermissionsGetResponse:
         """Retrieves player permissions from the server.
 
         Args:
             server_name: The name of the server.
 
         Returns:
-            A `GeneralApiResponse` object containing the permissions data.
+            A `PermissionsGetResponse` object containing the permissions data.
         """
         _LOGGER.debug("Fetching permissions.json data for server '%s'", server_name)
         encoded_server_name = quote(server_name)
@@ -316,16 +324,16 @@ class ServerInfoMethodsMixin:
             f"/server/{encoded_server_name}/permissions/get",
             authenticated=True,
         )
-        return GeneralApiResponse.model_validate(response)
+        return PermissionsGetResponse.model_validate(response)
 
-    async def async_get_server_allowlist(self, server_name: str) -> GeneralApiResponse:
+    async def async_get_server_allowlist(self, server_name: str) -> AllowlistGetResponse:
         """Retrieves the server's allowlist.
 
         Args:
             server_name: The name of the server.
 
         Returns:
-            A `GeneralApiResponse` object containing the allowlist.
+            A `AllowlistGetResponse` object containing the allowlist.
         """
         _LOGGER.debug("Fetching allowlist.json for server '%s'", server_name)
         encoded_server_name = quote(server_name)
@@ -334,4 +342,4 @@ class ServerInfoMethodsMixin:
             f"/server/{encoded_server_name}/allowlist/get",
             authenticated=True,
         )
-        return GeneralApiResponse.model_validate(response)
+        return AllowlistGetResponse.model_validate(response)

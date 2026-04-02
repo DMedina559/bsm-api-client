@@ -16,6 +16,8 @@ from ..models import (
     PropertiesPayload,
     ServiceUpdatePayload,
     ActionResponse,
+    BaseApiResponse,
+    PermissionsUpdateResponse,
 )
 
 if TYPE_CHECKING:
@@ -226,7 +228,7 @@ class ServerActionMethodsMixin:
 
     async def async_add_server_allowlist(
         self, server_name: str, payload: AllowlistAddPayload
-    ) -> ActionResponse:
+    ) -> BaseApiResponse:
         """Adds players to the server's allowlist.
 
         Args:
@@ -234,7 +236,7 @@ class ServerActionMethodsMixin:
             payload: An `AllowlistAddPayload` object with the players to add.
 
         Returns:
-            An `ActionResponse` object confirming the action.
+            A `BaseApiResponse` object confirming the action.
         """
         _LOGGER.info(
             "Adding players %s to allowlist for server '%s' (ignores limit: %s)",
@@ -249,11 +251,11 @@ class ServerActionMethodsMixin:
             json_data=payload.model_dump(),
             authenticated=True,
         )
-        return ActionResponse.model_validate(response)
+        return BaseApiResponse.model_validate(response)
 
     async def async_remove_server_allowlist_players(
         self, server_name: str, payload: AllowlistRemovePayload
-    ) -> ActionResponse:
+    ) -> BaseApiResponse:
         """Removes players from the server's allowlist.
 
         Args:
@@ -261,7 +263,7 @@ class ServerActionMethodsMixin:
             payload: An `AllowlistRemovePayload` object with the players to remove.
 
         Returns:
-            An `ActionResponse` object confirming the action.
+            A `BaseApiResponse` object confirming the action.
         """
         _LOGGER.info(
             "Removing %d players from allowlist for server '%s': %s",
@@ -276,11 +278,11 @@ class ServerActionMethodsMixin:
             json_data=payload.model_dump(),
             authenticated=True,
         )
-        return ActionResponse.model_validate(response)
+        return BaseApiResponse.model_validate(response)
 
     async def async_set_server_permissions(
         self, server_name: str, payload: PermissionsSetPayload
-    ) -> ActionResponse:
+    ) -> PermissionsUpdateResponse:
         """Updates permission levels for players on the server.
 
         Args:
@@ -288,7 +290,7 @@ class ServerActionMethodsMixin:
             payload: A `PermissionsSetPayload` object with the permissions to set.
 
         Returns:
-            An `ActionResponse` object confirming the action.
+            A `PermissionsUpdateResponse` object confirming the action.
         """
         _LOGGER.info(
             "Setting permissions for server '%s': %s",
@@ -302,11 +304,11 @@ class ServerActionMethodsMixin:
             json_data=payload.model_dump(),
             authenticated=True,
         )
-        return ActionResponse.model_validate(response)
+        return PermissionsUpdateResponse.model_validate(response)
 
     async def async_update_server_properties(
         self, server_name: str, payload: PropertiesPayload
-    ) -> ActionResponse:
+    ) -> BaseApiResponse:
         """Updates key-value pairs in the server's properties file.
 
         Args:
@@ -314,7 +316,7 @@ class ServerActionMethodsMixin:
             payload: A `PropertiesPayload` object with the properties to update.
 
         Returns:
-            An `ActionResponse` object confirming the action.
+            A `BaseApiResponse` object confirming the action.
         """
         _LOGGER.info(
             "Updating properties for server '%s': %s", server_name, payload.properties
@@ -326,11 +328,11 @@ class ServerActionMethodsMixin:
             json_data=payload.model_dump(),
             authenticated=True,
         )
-        return ActionResponse.model_validate(response)
+        return BaseApiResponse.model_validate(response)
 
     async def async_configure_server_os_service(
         self, server_name: str, payload: ServiceUpdatePayload
-    ) -> ActionResponse:
+    ) -> BaseApiResponse:
         """Configures OS-specific service settings for the server.
 
         Args:
@@ -338,7 +340,7 @@ class ServerActionMethodsMixin:
             payload: A `ServiceUpdatePayload` object with the service settings.
 
         Returns:
-            An `ActionResponse` object confirming the action.
+            A `BaseApiResponse` object confirming the action.
         """
         _LOGGER.info(
             "Requesting OS service config for server '%s' with payload: %s",
@@ -352,7 +354,7 @@ class ServerActionMethodsMixin:
             json_data=payload.model_dump(),
             authenticated=True,
         )
-        return ActionResponse.model_validate(response)
+        return BaseApiResponse.model_validate(response)
 
     async def async_delete_server(self, server_name: str) -> ActionResponse:
         """Permanently deletes a server instance.

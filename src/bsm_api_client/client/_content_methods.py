@@ -11,9 +11,8 @@ from ..models import (
     BackupActionPayload,
     RestoreActionPayload,
     FileNamePayload,
-    BackupRestoreResponse,
-    ContentListResponse,
     ActionResponse,
+    ContentListResponse,
 )
 
 if TYPE_CHECKING:
@@ -45,7 +44,7 @@ class ContentMethodsMixin:
 
     async def async_list_server_backups(
         self, server_name: str, backup_type: str
-    ) -> BackupRestoreResponse:
+    ) -> ActionResponse:
         """Lists backup files for a specific server and backup type.
 
         Args:
@@ -53,7 +52,7 @@ class ContentMethodsMixin:
             backup_type: The type of backups to list (e.g., "world", "properties").
 
         Returns:
-            A `BackupRestoreResponse` object containing the list of backups.
+            An `ActionResponse` object containing the list of backups.
 
         Raises:
             ValueError: If an invalid `backup_type` is provided.
@@ -77,11 +76,11 @@ class ContentMethodsMixin:
             f"/server/{server_name}/backup/list/{bt_lower}",
             authenticated=True,
         )
-        return BackupRestoreResponse.model_validate(response)
+        return ActionResponse.model_validate(response)
 
     async def async_restore_select_backup_type(
         self, server_name: str, payload: RestoreTypePayload
-    ) -> BackupRestoreResponse:
+    ) -> ActionResponse:
         """Selects a restore type and gets a redirect URL for choosing a backup file.
 
         Args:
@@ -89,7 +88,7 @@ class ContentMethodsMixin:
             payload: A `RestoreTypePayload` object specifying the restore type.
 
         Returns:
-            A `BackupRestoreResponse` object, typically containing a redirect URL.
+            An `ActionResponse` object, typically containing a redirect URL.
         """
         _LOGGER.info(
             "Selecting restore backup type '%s' for server '%s'",
@@ -102,7 +101,7 @@ class ContentMethodsMixin:
             json_data=payload.model_dump(),
             authenticated=True,
         )
-        return BackupRestoreResponse.model_validate(response)
+        return ActionResponse.model_validate(response)
 
     async def async_get_content_worlds(self) -> ContentListResponse:
         """Lists available world template files (.mcworld).
@@ -126,7 +125,7 @@ class ContentMethodsMixin:
 
     async def async_trigger_server_backup(
         self, server_name: str, payload: BackupActionPayload
-    ) -> BackupRestoreResponse:
+    ) -> ActionResponse:
         """Triggers a backup operation for a specific server.
 
         Args:
@@ -134,7 +133,7 @@ class ContentMethodsMixin:
             payload: A `BackupActionPayload` object specifying the backup details.
 
         Returns:
-            A `BackupRestoreResponse` object confirming the backup action.
+            An `ActionResponse` object confirming the backup action.
         """
         _LOGGER.info(
             "Triggering backup for server '%s', type: %s, file: %s",
@@ -149,7 +148,7 @@ class ContentMethodsMixin:
             json_data=payload.model_dump(),
             authenticated=True,
         )
-        return BackupRestoreResponse.model_validate(response)
+        return ActionResponse.model_validate(response)
 
     async def async_export_server_world(self, server_name: str) -> ActionResponse:
         """Exports the current world of a server to a .mcworld file.
@@ -229,14 +228,14 @@ class ContentMethodsMixin:
 
     async def async_prune_server_backups(
         self, server_name: str
-    ) -> BackupRestoreResponse:
+    ) -> ActionResponse:
         """Prunes old backups for a server based on its retention policies.
 
         Args:
             server_name: The name of the server whose backups to prune.
 
         Returns:
-            A `BackupRestoreResponse` object confirming the prune action.
+            An `ActionResponse` object confirming the prune action.
         """
         _LOGGER.info(
             "Triggering backup pruning for server '%s' (using server-defined retention)",
@@ -248,11 +247,11 @@ class ContentMethodsMixin:
             json_data=None,
             authenticated=True,
         )
-        return BackupRestoreResponse.model_validate(response)
+        return ActionResponse.model_validate(response)
 
     async def async_restore_server_backup(
         self, server_name: str, payload: RestoreActionPayload
-    ) -> BackupRestoreResponse:
+    ) -> ActionResponse:
         """Restores a server's world or configuration from a backup.
 
         Args:
@@ -260,7 +259,7 @@ class ContentMethodsMixin:
             payload: A `RestoreActionPayload` object specifying the restore details.
 
         Returns:
-            A `BackupRestoreResponse` object confirming the restore action.
+            An `ActionResponse` object confirming the restore action.
         """
         _LOGGER.info(
             "Requesting restore for server '%s', type: %s, file: '%s'",
@@ -275,11 +274,11 @@ class ContentMethodsMixin:
             json_data=payload.model_dump(),
             authenticated=True,
         )
-        return BackupRestoreResponse.model_validate(response)
+        return ActionResponse.model_validate(response)
 
     async def async_restore_server_latest_all(
         self, server_name: str
-    ) -> BackupRestoreResponse:
+    ) -> ActionResponse:
         """Restores a server from the latest 'all' backup.
 
         This restores the server's world and standard configuration files from
@@ -289,7 +288,7 @@ class ContentMethodsMixin:
             server_name: The name of the server to restore.
 
         Returns:
-            A `BackupRestoreResponse` object confirming the restore action.
+            An `ActionResponse` object confirming the restore action.
         """
         _LOGGER.info(
             "Requesting restore of latest 'all' backup for server '%s'", server_name
@@ -301,7 +300,7 @@ class ContentMethodsMixin:
             json_data=payload,
             authenticated=True,
         )
-        return BackupRestoreResponse.model_validate(response)
+        return ActionResponse.model_validate(response)
 
     async def async_install_server_world(
         self, server_name: str, payload: FileNamePayload
