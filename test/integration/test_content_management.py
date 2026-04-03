@@ -44,7 +44,7 @@ async def content_client(server, bedrock_server, wait_for_server_status):
     server_name = bedrock_server
     try:
         status_res = await client.async_get_server_running_status(server_name)
-        if status_res.data.get("running"):
+        if status_res.running:
             await client.async_stop_server(server_name)
             await wait_for_server_status(
                 client, server_name, is_running=False, timeout=90
@@ -52,7 +52,7 @@ async def content_client(server, bedrock_server, wait_for_server_status):
         yield client
     finally:
         status_res = await client.async_get_server_running_status(server_name)
-        if status_res.data.get("running"):
+        if status_res.running:
             await client.async_stop_server(server_name)
             await wait_for_server_status(
                 client, server_name, is_running=False, timeout=90

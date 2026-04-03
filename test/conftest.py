@@ -124,7 +124,7 @@ async def bedrock_server(server):
         try:
             # Ensure the server is stopped before trying to delete it
             status_res = await client.async_get_server_running_status(server_name)
-            if status_res.data.get("running"):
+            if status_res.running:
                 await client.async_stop_server(server_name)
                 # Give it a moment to stop
                 for _ in range(30):
@@ -132,7 +132,7 @@ async def bedrock_server(server):
                     status_res = await client.async_get_server_running_status(
                         server_name
                     )
-                    if not status_res.data.get("running"):
+                    if not status_res.running:
                         break
                 else:
                     pytest.fail(
@@ -161,7 +161,7 @@ async def wait_for_server_status():
         """Helper to wait for the server to reach a desired running state."""
         for _ in range(timeout):
             status_res = await client.async_get_server_running_status(server_name)
-            if status_res.data.get("running") == is_running:
+            if status_res.running == is_running:
                 return
             await asyncio.sleep(1)
         status_str = "running" if is_running else "stopped"

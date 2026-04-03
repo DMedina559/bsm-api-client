@@ -361,12 +361,14 @@ class AddPlayersResponse(BaseModel):
     Attributes:
         status: The status of the response.
         message: An optional descriptive message.
-        data: Optional data payload.
+        details: Optional data payload.
+        count: Optional count of added players.
     """
 
     status: str
     message: Optional[str] = None
-    data: Optional[Dict[str, Any]] = None
+    details: Optional[Dict[str, Any]] = None
+    count: Optional[int] = None
 
 
 class TriggerEventPayload(BaseModel):
@@ -379,6 +381,22 @@ class TriggerEventPayload(BaseModel):
 
     event_name: str = Field(..., min_length=1)
     payload: Optional[Dict[str, Any]] = None
+
+
+class TriggerEventResponse(BaseModel):
+    """Response model for triggering a custom plugin event."""
+
+    status: str
+    message: Optional[str] = None
+    details: Optional[Dict[str, Any]] = None
+
+
+class PluginStatusesResponse(BaseModel):
+    """Response model for plugin statuses."""
+
+    status: str
+    message: Optional[str] = None
+    plugins: Optional[Dict[str, Dict[str, Any]]] = None
 
 
 class PluginStatusSetPayload(BaseModel):
@@ -511,22 +529,13 @@ class ServersListResponse(BaseModel):
     servers: Optional[List[ServerSchemaResponse]] = None
 
 
-class PluginApiResponse(BaseModel):
-    """Generic API response model for plugin operations.
-    """
-
-    status: str
-    message: Optional[str] = None
-    data: Optional[Any] = None
-
-
 class ServerRunningStatusResponse(BaseModel):
     """Response model for server running status.
     """
 
     status: str
     message: Optional[str] = None
-    data: Optional[Dict[str, bool]] = None
+    running: Optional[bool] = None
 
 
 class ServerConfigStatusResponse(BaseModel):
@@ -535,7 +544,7 @@ class ServerConfigStatusResponse(BaseModel):
 
     status: str
     message: Optional[str] = None
-    data: Optional[Dict[str, str]] = None
+    config_status: Optional[str] = None
 
 
 class ServerVersionResponse(BaseModel):
@@ -544,7 +553,7 @@ class ServerVersionResponse(BaseModel):
 
     status: str
     message: Optional[str] = None
-    data: Optional[Dict[str, str]] = None
+    version: Optional[str] = None
 
 
 class ServerProcessInfoResponse(BaseModel):
@@ -553,7 +562,7 @@ class ServerProcessInfoResponse(BaseModel):
 
     status: str
     message: Optional[str] = None
-    data: Optional[Dict[str, Any]] = None
+    process_info: Optional[Dict[str, Any]] = None
 
 
 class ServerSettingItemPayload(BaseModel):

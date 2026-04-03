@@ -49,7 +49,7 @@ async def interactive_plugin_workflow(client):
             )
             return
 
-        plugins = response.data
+        plugins = response.plugins
         if not plugins:
             click.secho("No plugins found or configured to edit.", fg="yellow")
             return
@@ -139,7 +139,7 @@ async def interactive_plugin_workflow(client):
         click.echo("\nFetching updated plugin statuses...")
         final_response = await client.async_get_plugin_statuses()
         if final_response.status == "success":
-            _print_plugin_table(final_response.data)
+            _print_plugin_table(final_response.plugins)
         else:
             click.secho(
                 "Could not retrieve final plugin statuses after update.", fg="red"
@@ -173,7 +173,7 @@ async def list_plugins(ctx):
     try:
         response = await client.async_get_plugin_statuses()
         if response.status == "success":
-            plugins = response.data
+            plugins = response.plugins
             if not plugins:
                 click.secho("No plugins found.", fg="yellow")
                 return
