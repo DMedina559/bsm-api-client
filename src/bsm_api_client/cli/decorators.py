@@ -1,7 +1,8 @@
 import asyncio
 import functools
-import time
+
 import click
+
 from bsm_api_client.exceptions import AuthError
 
 
@@ -41,7 +42,7 @@ def pass_async_context(f):
     return wrapper
 
 
-async def monitor_task(
+async def monitor_task(  # noqa: C901
     client, task_id: str, success_message: str, failure_message: str
 ):
     """Polls the status of a background task until it completes."""

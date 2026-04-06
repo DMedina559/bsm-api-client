@@ -5,8 +5,10 @@ This module defines the Pydantic models used for data validation and serializati
 in the Bedrock Server Manager API client. These models correspond to the request
 and response bodies of the various API endpoints.
 """
-from pydantic import BaseModel, Field, RootModel
-from typing import Optional, List, Dict, Any, Union
+
+from typing import Any, Dict, List, Optional
+
+from pydantic import BaseModel, Field
 
 
 class TokenResponse(BaseModel):
@@ -409,16 +411,6 @@ class PluginStatusSetPayload(BaseModel):
     enabled: bool
 
 
-class RestoreTypePayload(BaseModel):
-    """Request model for specifying the type of restore operation.
-
-    Attributes:
-        restore_type: The type of restore to perform (e.g., 'world', 'properties').
-    """
-
-    restore_type: str
-
-
 class RestoreActionPayload(BaseModel):
     """Request model for triggering a restore action.
 
@@ -464,8 +456,7 @@ class SetupStatusResponse(BaseModel):
 
 
 class AuditLogResponse(BaseModel):
-    """Response model for audit logs.
-    """
+    """Response model for audit logs."""
 
     id: int
     user_id: int
@@ -475,8 +466,7 @@ class AuditLogResponse(BaseModel):
 
 
 class CustomZipsResponse(BaseModel):
-    """Response model for custom zips list.
-    """
+    """Response model for custom zips list."""
 
     status: str
     message: Optional[str] = None
@@ -484,8 +474,7 @@ class CustomZipsResponse(BaseModel):
 
 
 class AppInfoResponse(BaseModel):
-    """Response model for app/system info.
-    """
+    """Response model for app/system info."""
 
     status: str
     message: Optional[str] = None
@@ -493,8 +482,7 @@ class AppInfoResponse(BaseModel):
 
 
 class ThemeListResponse(BaseModel):
-    """Response model for theme lists.
-    """
+    """Response model for theme lists."""
 
     status: str
     message: Optional[str] = None
@@ -502,8 +490,7 @@ class ThemeListResponse(BaseModel):
 
 
 class PlayerListResponse(BaseModel):
-    """Response model for player lists.
-    """
+    """Response model for player lists."""
 
     status: str
     message: Optional[str] = None
@@ -511,8 +498,7 @@ class PlayerListResponse(BaseModel):
 
 
 class ServerSchemaResponse(BaseModel):
-    """Schema representing server information in lists.
-    """
+    """Schema representing server information in lists."""
 
     name: str
     status: str
@@ -521,8 +507,7 @@ class ServerSchemaResponse(BaseModel):
 
 
 class ServersListResponse(BaseModel):
-    """Response model for lists of server data.
-    """
+    """Response model for lists of server data."""
 
     status: str
     message: Optional[str] = None
@@ -530,8 +515,7 @@ class ServersListResponse(BaseModel):
 
 
 class ServerRunningStatusResponse(BaseModel):
-    """Response model for server running status.
-    """
+    """Response model for server running status."""
 
     status: str
     message: Optional[str] = None
@@ -539,8 +523,7 @@ class ServerRunningStatusResponse(BaseModel):
 
 
 class ServerConfigStatusResponse(BaseModel):
-    """Response model for server config status.
-    """
+    """Response model for server config status."""
 
     status: str
     message: Optional[str] = None
@@ -548,8 +531,7 @@ class ServerConfigStatusResponse(BaseModel):
 
 
 class ServerVersionResponse(BaseModel):
-    """Response model for server installed version.
-    """
+    """Response model for server installed version."""
 
     status: str
     message: Optional[str] = None
@@ -557,8 +539,7 @@ class ServerVersionResponse(BaseModel):
 
 
 class ServerProcessInfoResponse(BaseModel):
-    """Response model for server process info.
-    """
+    """Response model for server process info."""
 
     status: str
     message: Optional[str] = None
@@ -566,16 +547,14 @@ class ServerProcessInfoResponse(BaseModel):
 
 
 class ServerSettingItemPayload(BaseModel):
-    """Request model for a single server setting key-value pair.
-    """
+    """Request model for a single server setting key-value pair."""
 
     key: str
     value: Any
 
 
 class ServerSettingsResponse(BaseModel):
-    """Response model for server settings operations.
-    """
+    """Response model for server settings operations."""
 
     status: str
     message: Optional[str] = None
@@ -584,8 +563,7 @@ class ServerSettingsResponse(BaseModel):
 
 
 class UpdateUserRolePayload(BaseModel):
-    """Request payload for updating a user's role.
-    """
+    """Request payload for updating a user's role."""
 
     role: str
 
@@ -639,4 +617,3 @@ class AddonReorderPayload(BaseModel):
 
     pack_type: str
     uuids: List[str]
-

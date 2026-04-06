@@ -1,18 +1,16 @@
 # src/bsm_api_client/client/_account_methods.py
 """Mixin class for account-related API methods."""
+
 import logging
-from typing import Any, Dict, Optional, TYPE_CHECKING
+from typing import Any, Callable
 
 from ..models import (
-    UserResponse,
-    ThemeUpdatePayload,
-    ProfileUpdatePayload,
-    ChangePasswordPayload,
     BaseApiResponse,
+    ChangePasswordPayload,
+    ProfileUpdatePayload,
+    ThemeUpdatePayload,
+    UserResponse,
 )
-
-if TYPE_CHECKING:
-    from ..client_base import ClientBase
 
 _LOGGER = logging.getLogger(__name__.split(".")[0] + ".client.account")
 
@@ -20,18 +18,7 @@ _LOGGER = logging.getLogger(__name__.split(".")[0] + ".client.account")
 class AccountMethodsMixin:
     """Mixin for account-related endpoints."""
 
-    _request: callable
-    if TYPE_CHECKING:
-
-        async def _request(
-            self: "ClientBase",
-            method: str,
-            path: str,
-            json_data: Optional[Dict[str, Any]] = None,
-            params: Optional[Dict[str, Any]] = None,
-            authenticated: bool = True,
-            is_retry: bool = False,
-        ) -> Any: ...
+    _request: Callable[..., Any]
 
     async def async_get_account_details(self) -> UserResponse:
         """Gets the current user's account details.
@@ -63,7 +50,9 @@ class AccountMethodsMixin:
         )
         return BaseApiResponse.model_validate(response)
 
-    async def async_update_profile(self, payload: ProfileUpdatePayload) -> BaseApiResponse:
+    async def async_update_profile(
+        self, payload: ProfileUpdatePayload
+    ) -> BaseApiResponse:
         """Updates the current user's profile.
 
         Args:

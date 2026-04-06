@@ -1,7 +1,7 @@
 # src/bsm_api_client/exceptions.py
 """Custom Exceptions for the bsm_api_client library."""
 
-from typing import Optional, Dict, Any
+from typing import Any, Dict, Optional
 
 
 class APIError(Exception):

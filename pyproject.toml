@@ -73,5 +73,5 @@ warn_unused_configs = true
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]
-testpaths = ["test"]
+testpaths = ["tests"]
 asyncio_mode = "auto"

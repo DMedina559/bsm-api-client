@@ -6,13 +6,14 @@ for managing plugins through the Bedrock Server Manager API.
 """
 
 import logging
-from typing import Any, Dict, Optional, List
+from typing import Any, Callable
+
 from ..models import (
+    ActionResponse,
+    PluginStatusesResponse,
     PluginStatusSetPayload,
     TriggerEventPayload,
-    PluginStatusesResponse,
     TriggerEventResponse,
-    ActionResponse
 )
 
 _LOGGER = logging.getLogger(__name__.split(".")[0] + ".client.plugins")
@@ -20,6 +21,8 @@ _LOGGER = logging.getLogger(__name__.split(".")[0] + ".client.plugins")
 
 class PluginMethodsMixin:
     """Mixin containing methods for interacting with Plugin Management API endpoints."""
+
+    _request: Callable[..., Any]
 
     async def async_get_plugin_statuses(self) -> PluginStatusesResponse:
         """Retrieves the status of all discovered plugins.

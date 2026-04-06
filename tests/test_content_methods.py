@@ -1,16 +1,17 @@
 # tests/test_content_methods.py
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
 import pytest_asyncio
-from unittest.mock import AsyncMock, patch, MagicMock
+
 from bsm_api_client.api_client import BedrockServerManagerApi
 from bsm_api_client.models import (
-    RestoreTypePayload,
-    BackupActionPayload,
-    RestoreActionPayload,
-    FileNamePayload,
     AddonActionPayload,
-    AddonSubpackPayload,
     AddonReorderPayload,
+    AddonSubpackPayload,
+    BackupActionPayload,
+    FileNamePayload,
+    RestoreActionPayload,
 )
 
 
@@ -26,28 +27,16 @@ async def client():
 async def test_list_server_backups(client):
     """Test async_list_server_backups method."""
     with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
-        mock_request.return_value = {"status": "success", "message": "ok", "backups": ["backup1.zip"]}
+        mock_request.return_value = {
+            "status": "success",
+            "message": "ok",
+            "backups": ["backup1.zip"],
+        }
         result = await client.async_list_server_backups("test-server", "world")
         mock_request.assert_called_once_with(
             "GET", "/server/test-server/backup/list/world", authenticated=True
         )
         assert len(result.backups) == 1
-
-
-@pytest.mark.asyncio
-async def test_restore_select_backup_type(client):
-    """Test async_restore_select_backup_type method."""
-    with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
-        payload = RestoreTypePayload(restore_type="world")
-        mock_request.return_value = {"status": "success", "message": "ok", "redirect_url": "/some/url"}
-        result = await client.async_restore_select_backup_type("test-server", payload)
-        mock_request.assert_called_once_with(
-            method="POST",
-            path="/server/test-server/restore/select_backup_type",
-            json_data=payload.model_dump(),
-            authenticated=True,
-        )
-        assert result.redirect_url == "/some/url"
 
 
 @pytest.mark.asyncio
@@ -100,18 +89,6 @@ async def test_list_server_backups_error(client):
         mock_request.side_effect = Exception("API Error")
         with pytest.raises(Exception) as excinfo:
             await client.async_list_server_backups("test-server", "world")
-        assert "API Error" in str(excinfo.value)
-
-
-@pytest.mark.asyncio
-async def test_restore_select_backup_type_error(client):
-    """Test async_restore_select_backup_type method with an API error."""
-    with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
-        mock_request.side_effect = Exception("API Error")
-        with pytest.raises(Exception) as excinfo:
-            await client.async_restore_select_backup_type(
-                "test-server", RestoreTypePayload(restore_type="world")
-            )
         assert "API Error" in str(excinfo.value)
 
 
@@ -234,6 +211,7 @@ async def test_get_server_addons(client):
         )
         assert result.status == "success"
 
+
 @pytest.mark.asyncio
 async def test_enable_server_addon(client):
     with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
@@ -241,9 +219,13 @@ async def test_enable_server_addon(client):
         mock_request.return_value = {"status": "success", "message": "Enabled"}
         result = await client.async_enable_server_addon("test-server", payload)
         mock_request.assert_called_once_with(
-            "POST", "/server/test-server/addon/enable", json_data=payload.model_dump(), authenticated=True
+            "POST",
+            "/server/test-server/addon/enable",
+            json_data=payload.model_dump(),
+            authenticated=True,
         )
         assert result.status == "success"
+
 
 @pytest.mark.asyncio
 async def test_disable_server_addon(client):
@@ -252,20 +234,30 @@ async def test_disable_server_addon(client):
         mock_request.return_value = {"status": "success", "message": "Disabled"}
         result = await client.async_disable_server_addon("test-server", payload)
         mock_request.assert_called_once_with(
-            "POST", "/server/test-server/addon/disable", json_data=payload.model_dump(), authenticated=True
+            "POST",
+            "/server/test-server/addon/disable",
+            json_data=payload.model_dump(),
+            authenticated=True,
         )
         assert result.status == "success"
+
 
 @pytest.mark.asyncio
 async def test_update_server_addon_subpack(client):
     with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
-        payload = AddonSubpackPayload(pack_uuid="123", pack_type="behavior", subpack_name="test")
+        payload = AddonSubpackPayload(
+            pack_uuid="123", pack_type="behavior", subpack_name="test"
+        )
         mock_request.return_value = {"status": "success", "message": "Subpack updated"}
         result = await client.async_update_server_addon_subpack("test-server", payload)
         mock_request.assert_called_once_with(
-            "POST", "/server/test-server/addon/subpack", json_data=payload.model_dump(), authenticated=True
+            "POST",
+            "/server/test-server/addon/subpack",
+            json_data=payload.model_dump(),
+            authenticated=True,
         )
         assert result.status == "success"
+
 
 @pytest.mark.asyncio
 async def test_uninstall_server_addon(client):
@@ -274,9 +266,13 @@ async def test_uninstall_server_addon(client):
         mock_request.return_value = {"status": "success", "message": "Uninstalled"}
         result = await client.async_uninstall_server_addon("test-server", payload)
         mock_request.assert_called_once_with(
-            "POST", "/server/test-server/addon/uninstall", json_data=payload.model_dump(), authenticated=True
+            "POST",
+            "/server/test-server/addon/uninstall",
+            json_data=payload.model_dump(),
+            authenticated=True,
         )
         assert result.status == "success"
+
 
 @pytest.mark.asyncio
 async def test_reorder_server_addon(client):
@@ -285,7 +281,10 @@ async def test_reorder_server_addon(client):
         mock_request.return_value = {"status": "success", "message": "Reordered"}
         result = await client.async_reorder_server_addon("test-server", payload)
         mock_request.assert_called_once_with(
-            "POST", "/server/test-server/addon/reorder", json_data=payload.model_dump(), authenticated=True
+            "POST",
+            "/server/test-server/addon/reorder",
+            json_data=payload.model_dump(),
+            authenticated=True,
         )
         assert result.status == "success"
 
@@ -294,164 +293,14 @@ async def test_reorder_server_addon(client):
 @pytest.mark.asyncio
 async def test_upload_content(client):
     """Test async_upload_content method."""
-    with patch("aiohttp.FormData", new_callable=MagicMock) as mock_form_data:
+    with patch("aiohttp.FormData", new_callable=MagicMock):
         with patch.object(client, "_session") as mock_session:
             mock_session.post.return_value.__aenter__.return_value.status = 200
             mock_session.post.return_value.__aenter__.return_value.json = AsyncMock(
                 return_value={"status": "success"}
             )
 
-            with patch("builtins.open", new_callable=MagicMock) as mock_open:
-                with patch("os.path.basename", return_value="test.zip"):
-                    result = await client.async_upload_content("/fake/path/test.zip")
-                    assert result["status"] == "success"
-                    mock_session.post.assert_called_once()
-
-
-@pytest.mark.asyncio
-async def test_list_server_backups_error(client):
-    """Test async_list_server_backups method with an API error."""
-    with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
-        mock_request.side_effect = Exception("API Error")
-        with pytest.raises(Exception) as excinfo:
-            await client.async_list_server_backups("test-server", "world")
-        assert "API Error" in str(excinfo.value)
-
-
-@pytest.mark.asyncio
-async def test_restore_select_backup_type_error(client):
-    """Test async_restore_select_backup_type method with an API error."""
-    with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
-        mock_request.side_effect = Exception("API Error")
-        with pytest.raises(Exception) as excinfo:
-            await client.async_restore_select_backup_type(
-                "test-server", RestoreTypePayload(restore_type="world")
-            )
-        assert "API Error" in str(excinfo.value)
-
-
-@pytest.mark.asyncio
-async def test_get_content_worlds_error(client):
-    """Test async_get_content_worlds method with an API error."""
-    with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
-        mock_request.side_effect = Exception("API Error")
-        with pytest.raises(Exception) as excinfo:
-            await client.async_get_content_worlds()
-        assert "API Error" in str(excinfo.value)
-
-
-@pytest.mark.asyncio
-async def test_get_content_addons_error(client):
-    """Test async_get_content_addons method with an API error."""
-    with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
-        mock_request.side_effect = Exception("API Error")
-        with pytest.raises(Exception) as excinfo:
-            await client.async_get_content_addons()
-        assert "API Error" in str(excinfo.value)
-
-
-@pytest.mark.asyncio
-async def test_trigger_server_backup_error(client):
-    """Test async_trigger_server_backup method with an API error."""
-    with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
-        mock_request.side_effect = Exception("API Error")
-        with pytest.raises(Exception) as excinfo:
-            await client.async_trigger_server_backup(
-                "test-server", BackupActionPayload(backup_type="all")
-            )
-        assert "API Error" in str(excinfo.value)
-
-
-@pytest.mark.asyncio
-async def test_export_server_world_error(client):
-    """Test async_export_server_world method with an API error."""
-    with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
-        mock_request.side_effect = Exception("API Error")
-        with pytest.raises(Exception) as excinfo:
-            await client.async_export_server_world("test-server")
-        assert "API Error" in str(excinfo.value)
-
-
-@pytest.mark.asyncio
-async def test_reset_server_world_error(client):
-    """Test async_reset_server_world method with an API error."""
-    with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
-        mock_request.side_effect = Exception("API Error")
-        with pytest.raises(Exception) as excinfo:
-            await client.async_reset_server_world("test-server")
-        assert "API Error" in str(excinfo.value)
-
-
-@pytest.mark.asyncio
-async def test_prune_server_backups_error(client):
-    """Test async_prune_server_backups method with an API error."""
-    with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
-        mock_request.side_effect = Exception("API Error")
-        with pytest.raises(Exception) as excinfo:
-            await client.async_prune_server_backups("test-server")
-        assert "API Error" in str(excinfo.value)
-
-
-@pytest.mark.asyncio
-async def test_restore_server_backup_error(client):
-    """Test async_restore_server_backup method with an API error."""
-    with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
-        mock_request.side_effect = Exception("API Error")
-        with pytest.raises(Exception) as excinfo:
-            await client.async_restore_server_backup(
-                "test-server",
-                RestoreActionPayload(restore_type="world", backup_file="backup1.zip"),
-            )
-        assert "API Error" in str(excinfo.value)
-
-
-@pytest.mark.asyncio
-async def test_restore_server_latest_all_error(client):
-    """Test async_restore_server_latest_all method with an API error."""
-    with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
-        mock_request.side_effect = Exception("API Error")
-        with pytest.raises(Exception) as excinfo:
-            await client.async_restore_server_latest_all("test-server")
-        assert "API Error" in str(excinfo.value)
-
-
-@pytest.mark.asyncio
-async def test_install_server_world_error(client):
-    """Test async_install_server_world method with an API error."""
-    with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
-        mock_request.side_effect = Exception("API Error")
-        with pytest.raises(Exception) as excinfo:
-            await client.async_install_server_world(
-                "test-server", FileNamePayload(filename="world1.mcworld")
-            )
-        assert "API Error" in str(excinfo.value)
-
-
-@pytest.mark.asyncio
-async def test_install_server_addon_error(client):
-    """Test async_install_server_addon method with an API error."""
-    with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
-        mock_request.side_effect = Exception("API Error")
-        with pytest.raises(Exception) as excinfo:
-            await client.async_install_server_addon(
-                "test-server", FileNamePayload(filename="addon1.mcaddon")
-            )
-        assert "API Error" in str(excinfo.value)
-
-
-@pytest.mark.skip(reason="Content uploader is a disabled-by-default plugin")
-@pytest.mark.skip(reason="Content uploader is a disabled-by-default plugin")
-@pytest.mark.asyncio
-async def test_upload_content(client):
-    """Test async_upload_content method."""
-    with patch("aiohttp.FormData", new_callable=MagicMock) as mock_form_data:
-        with patch.object(client, "_session") as mock_session:
-            mock_session.post.return_value.__aenter__.return_value.status = 200
-            mock_session.post.return_value.__aenter__.return_value.json = AsyncMock(
-                return_value={"status": "success"}
-            )
-
-            with patch("builtins.open", new_callable=MagicMock) as mock_open:
+            with patch("builtins.open", new_callable=MagicMock):
                 with patch("os.path.basename", return_value="test.zip"):
                     result = await client.async_upload_content("/fake/path/test.zip")
                     assert result["status"] == "success"

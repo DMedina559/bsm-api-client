@@ -1,4 +1,5 @@
 import pytest
+
 from bsm_api_client.api_client import BedrockServerManagerApi
 from bsm_api_client.models import PluginStatusSetPayload, TriggerEventPayload
 
@@ -49,7 +50,9 @@ class TestPluginSystem:
 
             # 3. Verify the status changed
             status_res_after = await client.async_get_plugin_statuses()
-            assert status_res_after.plugins[DEFAULT_PLUGIN_NAME]["enabled"] is new_status
+            assert (
+                status_res_after.plugins[DEFAULT_PLUGIN_NAME]["enabled"] is new_status
+            )
 
             # 4. Revert to original state for test idempotency
             revert_payload = PluginStatusSetPayload(enabled=original_status)

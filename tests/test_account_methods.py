@@ -1,14 +1,16 @@
 # tests/test_account_methods.py
+from unittest.mock import AsyncMock, patch
+
 import pytest
 import pytest_asyncio
-from unittest.mock import AsyncMock, patch
+
 from bsm_api_client.api_client import BedrockServerManagerApi
 from bsm_api_client.models import (
-    UserResponse,
-    ThemeUpdatePayload,
-    ProfileUpdatePayload,
-    ChangePasswordPayload,
     BaseApiResponse,
+    ChangePasswordPayload,
+    ProfileUpdatePayload,
+    ThemeUpdatePayload,
+    UserResponse,
 )
 
 
@@ -62,7 +64,9 @@ async def test_update_profile(client):
     """Test async_update_profile method."""
     with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
         mock_request.return_value = {"status": "success"}
-        payload = ProfileUpdatePayload(full_name="Admin User", email="admin@example.com")
+        payload = ProfileUpdatePayload(
+            full_name="Admin User", email="admin@example.com"
+        )
         result = await client.async_update_profile(payload)
         assert isinstance(result, BaseApiResponse)
         assert result.status == "success"

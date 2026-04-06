@@ -46,6 +46,7 @@ async def add_players(ctx, players):
 
     try:
         from bsm_api_client.models import AddPlayersPayload
+
         player_list = list(players)
         click.echo(f"Adding/updating {len(player_list)} player(s) in the database...")
         payload = AddPlayersPayload(players=player_list)

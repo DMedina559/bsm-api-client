@@ -5,23 +5,21 @@ This module provides the `ServerActionMethodsMixin` class, which includes
 methods for performing actions on a specific server instance, such as
 starting, stopping, and sending commands.
 """
+
 import logging
-from typing import Any, Dict, Optional, List, TYPE_CHECKING
-from urllib.parse import quote
+from typing import Any, Callable
+
 from ..models import (
-    CommandPayload,
+    ActionResponse,
     AllowlistAddPayload,
     AllowlistRemovePayload,
+    BaseApiResponse,
+    CommandPayload,
     PermissionsSetPayload,
+    PermissionsUpdateResponse,
     PropertiesPayload,
     ServiceUpdatePayload,
-    ActionResponse,
-    BaseApiResponse,
-    PermissionsUpdateResponse,
 )
-
-if TYPE_CHECKING:
-    from ..client_base import ClientBase
 
 _LOGGER = logging.getLogger(__name__.split(".")[0] + ".client.server_actions")
 
@@ -49,22 +47,9 @@ ALLOWED_SERVER_PROPERTIES_TO_UPDATE = [
 class ServerActionMethodsMixin:
     """Mixin for server action endpoints."""
 
-    _request: callable
-    if TYPE_CHECKING:
-
-        def is_linux_server(self: "ClientBase") -> bool: ...
-
-        def is_windows_server(self: "ClientBase") -> bool: ...
-
-        async def _request(
-            self: "ClientBase",
-            method: str,
-            path: str,
-            json_data: Optional[Dict[str, Any]] = None,
-            params: Optional[Dict[str, Any]] = None,
-            authenticated: bool = True,
-            is_retry: bool = False,
-        ) -> Any: ...
+    _request: Callable[..., Any]
+    is_linux_server: Callable[..., bool]
+    is_windows_server: Callable[..., bool]
 
     async def async_start_server(self, server_name: str) -> ActionResponse:
         """Starts the specified Bedrock server instance.
@@ -83,28 +68,28 @@ class ServerActionMethodsMixin:
         )
         return ActionResponse.model_validate(response)
 
-    async def async_enable_server_service(self, server_name: str) -> ActionResponse:
+    async def async_enable_server_service(self, server_name: str) -> BaseApiResponse:
         """Enables the system service for the specified server.
 
         Args:
             server_name: The name of the server.
 
         Returns:
-            An `ActionResponse` object confirming the action.
+            A `BaseApiResponse` object confirming the action.
         """
         _LOGGER.info("Enabling service for server '%s'", server_name)
         return await self.async_configure_server_os_service(
             server_name, ServiceUpdatePayload(autostart=True)
         )
 
-    async def async_disable_server_service(self, server_name: str) -> ActionResponse:
+    async def async_disable_server_service(self, server_name: str) -> BaseApiResponse:
         """Disables the system service for the specified server.
 
         Args:
             server_name: The name of the server.
 
         Returns:
-            An `ActionResponse` object confirming the action.
+            A `BaseApiResponse` object confirming the action.
         """
         _LOGGER.info("Disabling service for server '%s'", server_name)
         return await self.async_configure_server_os_service(
@@ -113,7 +98,7 @@ class ServerActionMethodsMixin:
 
     async def async_set_server_autoupdate(
         self, server_name: str, autoupdate: bool
-    ) -> ActionResponse:
+    ) -> BaseApiResponse:
         """Sets the autoupdate flag for the specified server.
 
         Args:
@@ -121,7 +106,7 @@ class ServerActionMethodsMixin:
             autoupdate: The desired autoupdate state.
 
         Returns:
-            An `ActionResponse` object confirming the action.
+            A `BaseApiResponse` object confirming the action.
         """
         _LOGGER.info(
             "Setting autoupdate for server '%s' to %s", server_name, autoupdate
@@ -132,7 +117,7 @@ class ServerActionMethodsMixin:
 
     async def async_create_server_service(
         self, server_name: str, autostart: bool
-    ) -> ActionResponse:
+    ) -> BaseApiResponse:
         """Creates the system service for the specified server.
 
         Args:
@@ -140,7 +125,7 @@ class ServerActionMethodsMixin:
             autostart: Whether the service should start on boot.
 
         Returns:
-            An `ActionResponse` object confirming the action.
+            A `BaseApiResponse` object confirming the action.
         """
         _LOGGER.info(
             "Creating service for server '%s' with autostart=%s",

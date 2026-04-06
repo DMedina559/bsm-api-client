@@ -1,13 +1,15 @@
 # tests/test_manager_methods.py
+from unittest.mock import AsyncMock, patch
+
 import pytest
 import pytest_asyncio
-from unittest.mock import AsyncMock, patch
+
 from bsm_api_client.api_client import BedrockServerManagerApi
 from bsm_api_client.models import (
     AddPlayersPayload,
-    SettingItemResponse,
-    PruneDownloadsPayload,
     InstallServerPayload,
+    PruneDownloadsPayload,
+    SettingItemResponse,
 )
 
 
@@ -56,7 +58,10 @@ async def test_get_players(client):
             method="GET", path="/players/get", authenticated=True
         )
         assert len(result.players) == 1
-        assert getattr(result.players[0], "name", result.players[0].get("name", None)) == "player1"
+        assert (
+            getattr(result.players[0], "name", result.players[0].get("name", None))
+            == "player1"
+        )
 
 
 @pytest.mark.asyncio

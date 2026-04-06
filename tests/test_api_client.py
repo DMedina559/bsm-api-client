@@ -1,16 +1,15 @@
 # tests/test_api_client.py
-import pytest
 from unittest.mock import AsyncMock, patch
+
+import pytest
+import pytest_asyncio
+
 from bsm_api_client.api_client import BedrockServerManagerApi
-from bsm_api_client.exceptions import APIError, CannotConnectError
 from bsm_api_client.models import (
-    InstallServerPayload,
-    PropertiesPayload,
     PermissionsSetPayload,
     PlayerPermissionPayload,
+    PropertiesPayload,
 )
-
-import pytest_asyncio
 
 
 @pytest_asyncio.fixture
@@ -47,7 +46,9 @@ async def test_get_themes(client):
         mock_request.assert_called_once_with(
             method="GET", path="/themes", authenticated=True
         )
-        assert getattr(result, "dark", None) == "dark.css" or result == {"dark": "dark.css"}
+        assert getattr(result, "dark", None) == "dark.css" or result == {
+            "dark": "dark.css"
+        }
 
 
 @pytest.mark.asyncio
@@ -73,8 +74,12 @@ async def test_set_server_permissions(client):
     """Test async_set_server_permissions method."""
     with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
         permissions = [
-            PlayerPermissionPayload(name="Player1", xuid="123", permission_level="member"),
-            PlayerPermissionPayload(name="Player2", xuid="456", permission_level="operator"),
+            PlayerPermissionPayload(
+                name="Player1", xuid="123", permission_level="member"
+            ),
+            PlayerPermissionPayload(
+                name="Player2", xuid="456", permission_level="operator"
+            ),
         ]
         payload = PermissionsSetPayload(permissions=permissions)
         mock_request.return_value = {

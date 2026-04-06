@@ -1,17 +1,18 @@
-import pytest
-import pytest_asyncio
-import subprocess
-import time
-import aiohttp
 import asyncio
 import os
+import subprocess
 import sys
+
+import aiohttp
+import pytest
+import pytest_asyncio
+
 from bsm_api_client.api_client import BedrockServerManagerApi
 from bsm_api_client.models import InstallServerPayload
 
 
 @pytest.fixture(scope="session")
-def server():
+def server():  # noqa: C901
     """
     A pytest fixture that starts the bedrock-server-manager web server
     and sets it up for testing.
@@ -51,7 +52,9 @@ def server():
             for _ in range(60):  # 60 * 0.5s = 30s timeout
                 try:
                     async with aiohttp.ClientSession() as session:
-                        async with session.get(f"{base_url}/api/setup/status") as response:
+                        async with session.get(
+                            f"{base_url}/api/setup/status"
+                        ) as response:
                             if response.status == 200:
                                 data = await response.json()
                                 needs_setup = data.get("needs_setup", False)
@@ -75,7 +78,9 @@ def server():
                             else:
                                 pytest.fail(f"Failed to setup server: {text}")
                         elif response.status != 200:
-                            pytest.fail(f"Failed to setup server: {await response.text()}")
+                            pytest.fail(
+                                f"Failed to setup server: {await response.text()}"
+                            )
 
         asyncio.run(wait_and_setup())
         yield base_url
@@ -84,7 +89,9 @@ def server():
         process.wait()
         server_log.close()
         if process.returncode != 0 and process.returncode != -15:  # -15 is SIGTERM
-            print(f"Server exited with an error (code {process.returncode}). Check bedrock_server_manager_test.log for details.")
+            print(
+                f"Server exited with an error (code {process.returncode}). Check bedrock_server_manager_test.log for details."
+            )
 
 
 @pytest_asyncio.fixture(scope="session")

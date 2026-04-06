@@ -1,7 +1,13 @@
-import pytest
 import time
+
+import pytest
+
 from bsm_api_client.api_client import BedrockServerManagerApi
-from bsm_api_client.models import AddPlayersPayload, SettingItemResponse, PruneDownloadsPayload
+from bsm_api_client.models import (
+    AddPlayersPayload,
+    PruneDownloadsPayload,
+    SettingItemResponse,
+)
 
 
 @pytest.mark.asyncio
@@ -123,7 +129,10 @@ class TestManagerAndServerInfo:
                 server_name
             )
             assert running_status_res.status == "success"
-            assert running_status_res.running is False or running_status_res.running is None
+            assert (
+                running_status_res.running is False
+                or running_status_res.running is None
+            )
 
         finally:
             await client.close()

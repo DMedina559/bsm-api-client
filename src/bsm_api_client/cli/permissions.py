@@ -1,6 +1,7 @@
 import click
 import questionary
-from bsm_api_client.models import PermissionsSetPayload
+
+from bsm_api_client.models import PermissionsSetPayload, PlayerPermissionPayload
 
 
 @click.group()
@@ -70,7 +71,11 @@ async def set_perm(ctx, server_name: str, player_name: str, level: str):
         )
 
         payload = PermissionsSetPayload(
-            permissions=[{"name": player_name, "xuid": xuid, "permission_level": level}]
+            permissions=[
+                PlayerPermissionPayload(
+                    name=player_name, xuid=xuid, permission_level=level
+                )
+            ]
         )
         response = await client.async_set_server_permissions(server_name, payload)
 
@@ -160,11 +165,11 @@ async def interactive_permissions_workflow(client, server_name: str):
 
         payload = PermissionsSetPayload(
             permissions=[
-                {
-                    "name": selected_player["name"],
-                    "xuid": selected_player["xuid"],
-                    "permission_level": permission,
-                }
+                PlayerPermissionPayload(
+                    name=selected_player["name"],
+                    xuid=selected_player["xuid"],
+                    permission_level=permission,
+                )
             ]
         )
         perm_response = await client.async_set_server_permissions(server_name, payload)
