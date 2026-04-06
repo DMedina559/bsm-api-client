@@ -178,7 +178,7 @@ async def list_servers(ctx, loop, server_name):
 @click.option(
     "-s", "--server", "server_name", required=True, help="Name of the server to start."
 )
-@click.pass_context
+@pass_async_context
 async def start_server(ctx, server_name: str):
     """Starts a specific Bedrock server instance."""
     client = ctx.obj.get("client")
@@ -189,7 +189,14 @@ async def start_server(ctx, server_name: str):
     click.echo(f"Attempting to start server '{server_name}'...")
     try:
         response = await client.async_start_server(server_name)
-        if response.status == "success":
+        if response.task_id:
+            await monitor_task(
+                client,
+                response.task_id,
+                "Server started successfully",
+                "Failed to start server",
+            )
+        elif response.status == "success":
             click.secho(f"Server '{server_name}' started successfully.", fg="green")
         else:
             click.secho(f"Failed to start server: {response.message}", fg="red")
