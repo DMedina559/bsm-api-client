@@ -13,6 +13,10 @@ from ..models import (
     FileNamePayload,
     ActionResponse,
     ContentListResponse,
+    AddonListResponse,
+    AddonActionPayload,
+    AddonSubpackPayload,
+    AddonReorderPayload,
 )
 
 if TYPE_CHECKING:
@@ -76,6 +80,42 @@ class ContentMethodsMixin:
             f"/server/{server_name}/backup/list/{bt_lower}",
             authenticated=True,
         )
+        return ActionResponse.model_validate(response)
+
+    async def async_get_server_addons(self, server_name: str) -> AddonListResponse:
+        """Retrieves a list of addons installed on a server's active world."""
+        _LOGGER.debug("Fetching addons for server '%s'", server_name)
+        response = await self._request("GET", f"/server/{server_name}/addons", authenticated=True)
+        return AddonListResponse.model_validate(response)
+
+    async def async_enable_server_addon(self, server_name: str, payload: AddonActionPayload) -> ActionResponse:
+        """Enables an addon on a server."""
+        _LOGGER.info("Enabling addon '%s' for server '%s'", payload.pack_uuid, server_name)
+        response = await self._request("POST", f"/server/{server_name}/addon/enable", json_data=payload.model_dump(), authenticated=True)
+        return ActionResponse.model_validate(response)
+
+    async def async_disable_server_addon(self, server_name: str, payload: AddonActionPayload) -> ActionResponse:
+        """Disables an addon on a server."""
+        _LOGGER.info("Disabling addon '%s' for server '%s'", payload.pack_uuid, server_name)
+        response = await self._request("POST", f"/server/{server_name}/addon/disable", json_data=payload.model_dump(), authenticated=True)
+        return ActionResponse.model_validate(response)
+
+    async def async_update_server_addon_subpack(self, server_name: str, payload: AddonSubpackPayload) -> ActionResponse:
+        """Updates an addon's active subpack."""
+        _LOGGER.info("Updating subpack for addon '%s' on server '%s'", payload.pack_uuid, server_name)
+        response = await self._request("POST", f"/server/{server_name}/addon/subpack", json_data=payload.model_dump(), authenticated=True)
+        return ActionResponse.model_validate(response)
+
+    async def async_uninstall_server_addon(self, server_name: str, payload: AddonActionPayload) -> ActionResponse:
+        """Uninstalls an addon on a server."""
+        _LOGGER.info("Uninstalling addon '%s' for server '%s'", payload.pack_uuid, server_name)
+        response = await self._request("POST", f"/server/{server_name}/addon/uninstall", json_data=payload.model_dump(), authenticated=True)
+        return ActionResponse.model_validate(response)
+
+    async def async_reorder_server_addon(self, server_name: str, payload: AddonReorderPayload) -> ActionResponse:
+        """Reorders active addons on a server."""
+        _LOGGER.info("Reordering %s packs for server '%s'", payload.pack_type, server_name)
+        response = await self._request("POST", f"/server/{server_name}/addon/reorder", json_data=payload.model_dump(), authenticated=True)
         return ActionResponse.model_validate(response)
 
     async def async_restore_select_backup_type(

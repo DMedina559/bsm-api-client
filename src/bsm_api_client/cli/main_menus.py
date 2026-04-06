@@ -162,6 +162,7 @@ async def manage_server_menu(ctx: click.Context, server_name: str):
         "Backup or Restore": _backup_restore_menu,
         "Manage World": _world_management_menu,
         "Install Addon": (get_cmd("addon", "install"), {}),
+        "Manage Addons": (get_cmd("addon", "manage"), {}),
     }
     config_map = {
         "Configure Properties": (get_cmd("properties", "set"), {}),
