@@ -51,7 +51,7 @@ def server():
             for _ in range(60):  # 60 * 0.5s = 30s timeout
                 try:
                     async with aiohttp.ClientSession() as session:
-                        async with session.get(f"{base_url}/setup/status") as response:
+                        async with session.get(f"{base_url}/api/setup/status") as response:
                             if response.status == 200:
                                 data = await response.json()
                                 needs_setup = data.get("needs_setup", False)
@@ -66,7 +66,7 @@ def server():
                 async with aiohttp.ClientSession() as session:
                     payload = {"username": "admin", "password": "password"}
                     async with session.post(
-                        f"{base_url}/setup/create-first-user", json=payload
+                        f"{base_url}/api/setup/create-first-user", json=payload
                     ) as response:
                         if response.status == 400:
                             text = await response.text()

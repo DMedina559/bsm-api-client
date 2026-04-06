@@ -63,87 +63,94 @@ async def interactive_plugin_workflow(client):
             if config_dict.get("enabled", False)
         }
 
-        choices = []
-        for name, config_dict in sorted(plugins.items()):
-            is_enabled = config_dict.get("enabled", False)
-            version = config_dict.get("version", "N/A")
-            choice_title = f"{name} (v{version})"
-            choices.append(
-                questionary.Choice(title=choice_title, value=name, checked=is_enabled)
-            )
+        while True:
+            click.clear()
+            click.secho("--- Manage Plugins ---", fg="magenta", bold=True)
+            
+            response = await client.async_get_plugin_statuses()
+            if response.status != "success":
+                click.secho(f"Failed to retrieve plugin statuses: {response.message}", fg="red")
+                return
+            
+            plugins = response.plugins
+            if not plugins:
+                click.secho("No plugins found or configured to edit.", fg="yellow")
+                return
 
-        selected_plugin_names_list = await questionary.checkbox(
-            "Toggle plugins (space to select/deselect, enter to confirm):",
-            choices=choices,
-        ).ask_async()
-
-        if selected_plugin_names_list is None:
-            click.secho("\nOperation cancelled by user.", fg="yellow")
-            return
-
-        final_enabled_plugins = set(selected_plugin_names_list)
-        plugins_to_enable = sorted(
-            list(final_enabled_plugins - initial_enabled_plugins)
-        )
-        plugins_to_disable = sorted(
-            list(initial_enabled_plugins - final_enabled_plugins)
-        )
-
-        if not plugins_to_enable and not plugins_to_disable:
-            click.secho("\nNo changes made to plugin statuses.", fg="cyan")
-            return
-
-        click.echo("\nApplying changes...")
-        changes_made_successfully = False
-        for name in plugins_to_enable:
-            click.echo(f"Enabling plugin '{name}'... ", nl=False)
-            payload = PluginStatusSetPayload(enabled=True)
-            api_response = await client.async_set_plugin_status(name, payload)
-            if api_response.status == "success":
-                click.secho("OK", fg="green")
-                changes_made_successfully = True
-            else:
-                error_msg = api_response.message
-                click.secho(f"Failed: {error_msg}", fg="red")
-
-        for name in plugins_to_disable:
-            click.echo(f"Disabling plugin '{name}'... ", nl=False)
-            payload = PluginStatusSetPayload(enabled=False)
-            api_response = await client.async_set_plugin_status(name, payload)
-            if api_response.status == "success":
-                click.secho("OK", fg="green")
-                changes_made_successfully = True
-            else:
-                error_msg = api_response.message
-                click.secho(f"Failed: {error_msg}", fg="red")
-
-        if changes_made_successfully:
-            click.secho("\nPlugin configuration updated.", fg="green")
-            try:
+            menu_choices = []
+            for name, config_dict in sorted(plugins.items()):
+                is_enabled = config_dict.get("enabled", False)
+                version = config_dict.get("version", "N/A")
+                status = "🟢" if is_enabled else "⚪"
+                menu_choices.append(f"{status} {name} (v{version})")
+                
+            menu_choices.extend([
+                questionary.Separator("--- Actions ---"),
+                "Reload All Plugins",
+                "Back"
+            ])
+            
+            choice = await questionary.select(
+                "Select a plugin to manage or an action:",
+                choices=menu_choices
+            ).ask_async()
+            
+            if not choice or choice == "Back":
+                return
+                
+            if choice == "Reload All Plugins":
                 click.secho("Reloading plugins...", fg="cyan")
-                reload_response = await client.async_reload_plugins()
-                if reload_response.status == "success":
-                    click.secho(reload_response.message, fg="green")
+                try:
+                    reload_response = await client.async_reload_plugins()
+                    if reload_response.status == "success":
+                        click.secho(reload_response.message, fg="green")
+                    else:
+                        click.secho(f"Failed to reload plugins: {reload_response.message}", fg="red")
+                except Exception as e_reload:
+                    click.secho(f"Error reloading plugins: {e_reload}", fg="red")
+                click.pause()
+                continue
+                
+            # Handle specific plugin
+            plugin_name = choice.split(" ", 1)[1].split(" (v")[0]
+            config_dict = plugins.get(plugin_name)
+            
+            if not config_dict:
+                continue
+                
+            is_enabled = config_dict.get("enabled", False)
+            pack_menu = []
+            if is_enabled:
+                pack_menu.append("Disable")
+            else:
+                pack_menu.append("Enable")
+                
+            pack_menu.append("Back")
+            
+            action_choice = await questionary.select(
+                f"Actions for {plugin_name}:",
+                choices=pack_menu
+            ).ask_async()
+            
+            if not action_choice or action_choice == "Back":
+                continue
+                
+            if action_choice == "Enable":
+                payload = PluginStatusSetPayload(enabled=True)
+                res = await client.async_set_plugin_status(plugin_name, payload)
+                if res.status == "success":
+                    click.secho(f"Plugin '{plugin_name}' enabled successfully.", fg="green")
                 else:
-                    click.secho(
-                        f"Failed to reload plugins: {reload_response.message}", fg="red"
-                    )
-            except Exception as e_reload:
-                click.secho(f"\nError reloading plugins: {e_reload}", fg="red")
-        else:
-            click.secho(
-                "\nNo changes were successfully applied to plugin statuses.",
-                fg="yellow",
-            )
-
-        click.echo("\nFetching updated plugin statuses...")
-        final_response = await client.async_get_plugin_statuses()
-        if final_response.status == "success":
-            _print_plugin_table(final_response.plugins)
-        else:
-            click.secho(
-                "Could not retrieve final plugin statuses after update.", fg="red"
-            )
+                    click.secho(f"Failed to enable plugin '{plugin_name}': {res.message}", fg="red")
+            elif action_choice == "Disable":
+                payload = PluginStatusSetPayload(enabled=False)
+                res = await client.async_set_plugin_status(plugin_name, payload)
+                if res.status == "success":
+                    click.secho(f"Plugin '{plugin_name}' disabled successfully.", fg="green")
+                else:
+                    click.secho(f"Failed to disable plugin '{plugin_name}': {res.message}", fg="red")
+            
+            click.pause()
 
     except Exception as e:
         click.secho(f"An error occurred during plugin configuration: {e}", fg="red")

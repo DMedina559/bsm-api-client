@@ -560,20 +560,13 @@ class ClientBase:
         _LOGGER.info("Attempting API authentication for user %s", self._username)
         self._jwt_token = None
         try:
-            # FastAPI's OAuth2PasswordRequestForm expects x-www-form-urlencoded data.
-            form_data = aiohttp.FormData()
-            form_data.add_field("username", self._username)
-            form_data.add_field("password", self._password)
-
-            # Make the request without using self._request to avoid auth loop and content-type issues
-            # Use _server_root_url for auth path as it's not under the general _api_base_segment (e.g. /api)
             url = f"{self._server_root_url}/auth/token"
             headers = {"Accept": "application/json"}  # Still expect JSON response
 
-            _LOGGER.debug("Request: POST %s (Form Data Auth to root path)", url)
+            _LOGGER.debug("Request: POST %s (JSON Auth)", url)
             async with self._session.post(
                 url,
-                data=form_data,
+                json={"username": self._username, "password": self._password},
                 headers=headers,
                 timeout=aiohttp.ClientTimeout(total=self._request_timeout),
             ) as response:
