@@ -101,7 +101,7 @@ async def set_props(ctx, server_name: str, properties: tuple[str]):
         click.secho(f"An error occurred: {e}", fg="red")
 
 
-async def interactive_properties_workflow(client, server_name: str):
+async def interactive_properties_workflow(client, server_name: str):  # noqa: C901
     """Guides a user through an interactive session to edit `server.properties`."""
     click.secho("\n--- Interactive Server Properties Configuration ---", bold=True)
     click.echo("Loading current server properties...")

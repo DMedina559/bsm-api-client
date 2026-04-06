@@ -39,7 +39,7 @@ def _print_plugin_table(plugins):
         click.echo(f" | {version:<{max_version_len}}")
 
 
-async def interactive_plugin_workflow(client):
+async def interactive_plugin_workflow(client):  # noqa: C901
     """Guides the user through an interactive session to enable or disable plugins."""
     try:
         response = await client.async_get_plugin_statuses()
@@ -57,21 +57,17 @@ async def interactive_plugin_workflow(client):
         _print_plugin_table(plugins)
         click.echo()
 
-        initial_enabled_plugins = {
-            name
-            for name, config_dict in plugins.items()
-            if config_dict.get("enabled", False)
-        }
-
         while True:
             click.clear()
             click.secho("--- Manage Plugins ---", fg="magenta", bold=True)
-            
+
             response = await client.async_get_plugin_statuses()
             if response.status != "success":
-                click.secho(f"Failed to retrieve plugin statuses: {response.message}", fg="red")
+                click.secho(
+                    f"Failed to retrieve plugin statuses: {response.message}", fg="red"
+                )
                 return
-            
+
             plugins = response.plugins
             if not plugins:
                 click.secho("No plugins found or configured to edit.", fg="yellow")
@@ -83,23 +79,26 @@ async def interactive_plugin_workflow(client):
                 version = config_dict.get("version", "N/A")
                 status = "🟢" if is_enabled else "⚪"
                 menu_choices.append(
-                    questionary.Choice(title=f"{status} {name} (v{version})", value=name)
+                    questionary.Choice(
+                        title=f"{status} {name} (v{version})", value=name
+                    )
                 )
-                
-            menu_choices.extend([
-                questionary.Separator("--- Actions ---"),
-                questionary.Choice(title="Reload All Plugins", value="RELOAD"),
-                questionary.Choice(title="Back", value="BACK")
-            ])
-            
+
+            menu_choices.extend(
+                [
+                    questionary.Separator("--- Actions ---"),
+                    questionary.Choice(title="Reload All Plugins", value="RELOAD"),
+                    questionary.Choice(title="Back", value="BACK"),
+                ]
+            )
+
             choice = await questionary.select(
-                "Select a plugin to manage or an action:",
-                choices=menu_choices
+                "Select a plugin to manage or an action:", choices=menu_choices
             ).ask_async()
-            
+
             if not choice or choice == "BACK":
                 return
-                
+
             if choice == "RELOAD":
                 click.secho("Reloading plugins...", fg="cyan")
                 try:
@@ -107,51 +106,63 @@ async def interactive_plugin_workflow(client):
                     if reload_response.status == "success":
                         click.secho(reload_response.message, fg="green")
                     else:
-                        click.secho(f"Failed to reload plugins: {reload_response.message}", fg="red")
+                        click.secho(
+                            f"Failed to reload plugins: {reload_response.message}",
+                            fg="red",
+                        )
                 except Exception as e_reload:
                     click.secho(f"Error reloading plugins: {e_reload}", fg="red")
                 click.pause()
                 continue
-                
+
             # Handle specific plugin
             plugin_name = choice
             config_dict = plugins.get(plugin_name)
-            
+
             if not config_dict:
                 continue
-                
+
             is_enabled = config_dict.get("enabled", False)
             pack_menu = []
             if is_enabled:
                 pack_menu.append("Disable")
             else:
                 pack_menu.append("Enable")
-                
+
             pack_menu.append("Back")
-            
+
             action_choice = await questionary.select(
-                f"Actions for {plugin_name}:",
-                choices=pack_menu
+                f"Actions for {plugin_name}:", choices=pack_menu
             ).ask_async()
-            
+
             if not action_choice or action_choice == "Back":
                 continue
-                
+
             if action_choice == "Enable":
                 payload = PluginStatusSetPayload(enabled=True)
                 res = await client.async_set_plugin_status(plugin_name, payload)
                 if res.status == "success":
-                    click.secho(f"Plugin '{plugin_name}' enabled successfully.", fg="green")
+                    click.secho(
+                        f"Plugin '{plugin_name}' enabled successfully.", fg="green"
+                    )
                 else:
-                    click.secho(f"Failed to enable plugin '{plugin_name}': {res.message}", fg="red")
+                    click.secho(
+                        f"Failed to enable plugin '{plugin_name}': {res.message}",
+                        fg="red",
+                    )
             elif action_choice == "Disable":
                 payload = PluginStatusSetPayload(enabled=False)
                 res = await client.async_set_plugin_status(plugin_name, payload)
                 if res.status == "success":
-                    click.secho(f"Plugin '{plugin_name}' disabled successfully.", fg="green")
+                    click.secho(
+                        f"Plugin '{plugin_name}' disabled successfully.", fg="green"
+                    )
                 else:
-                    click.secho(f"Failed to disable plugin '{plugin_name}': {res.message}", fg="red")
-            
+                    click.secho(
+                        f"Failed to disable plugin '{plugin_name}': {res.message}",
+                        fg="red",
+                    )
+
             click.pause()
 
     except Exception as e:

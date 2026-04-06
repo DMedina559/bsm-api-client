@@ -20,7 +20,6 @@ _LOGGER = logging.getLogger(__name__.split(".")[0] + ".client")
 
 
 class BedrockServerManagerApi(
-    ClientBase,
     ManagerMethodsMixin,
     ServerInfoMethodsMixin,
     ServerActionMethodsMixin,
@@ -28,6 +27,7 @@ class BedrockServerManagerApi(
     PluginMethodsMixin,
     AccountMethodsMixin,
     UsersMethodsMixin,
+    ClientBase,
 ):
     """API Client for the Bedrock Server Manager.
 

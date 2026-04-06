@@ -1,6 +1,5 @@
 try:
     import click
-    import questionary
 
 except ImportError:
     print(

@@ -5,8 +5,10 @@ This module provides the `ServerInfoMethodsMixin` class, which includes
 methods for retrieving information about server instances from the Bedrock
 Server Manager API.
 """
+
 import logging
-from typing import Any, Dict, Optional, List, TYPE_CHECKING
+from typing import Any, Dict, Optional, Callable, List, TYPE_CHECKING
+import asyncio
 from urllib.parse import quote
 
 import aiohttp
@@ -32,18 +34,14 @@ _LOGGER = logging.getLogger(__name__.split(".")[0] + ".client.server_info")
 class ServerInfoMethodsMixin:
     """Mixin for server information endpoints."""
 
-    _request: callable
-    if TYPE_CHECKING:
-
-        async def _request(
-            self: "ClientBase",
-            method: str,
-            path: str,
-            json_data: Optional[Dict[str, Any]] = None,
-            params: Optional[Dict[str, Any]] = None,
-            authenticated: bool = True,
-            is_retry: bool = False,
-        ) -> Any: ...
+    _request: Callable[..., Any]
+    _base_url: str
+    _jwt_token: Optional[str]
+    _session: aiohttp.ClientSession
+    _request_timeout: aiohttp.ClientTimeout
+    _auth_lock: asyncio.Lock
+    authenticate: Callable[..., Any]
+    _handle_api_error: Callable[..., Any]
 
     async def async_get_servers(self) -> ServersListResponse:
         """Retrieves a list of all detected server instances with their status and version.
@@ -66,12 +64,7 @@ class ServerInfoMethodsMixin:
         _LOGGER.debug("Fetching server names list")
         server_details = await self.async_get_servers()
         if server_details.servers:
-            return sorted(
-                [
-                    server.name
-                    for server in server_details.servers
-                ]
-            )
+            return sorted([server.name for server in server_details.servers])
         return []
 
     async def async_get_server_validate(self, server_name: str) -> bool:
@@ -132,7 +125,7 @@ class ServerInfoMethodsMixin:
         )
         return ServerProcessInfoResponse.model_validate(response)
 
-    async def async_get_world_icon_image(self, server_name: str) -> bytes:
+    async def async_get_world_icon_image(self, server_name: str) -> bytes:  # noqa: C901
         """Retrieves the world icon image for a server.
 
         Args:
@@ -165,7 +158,7 @@ class ServerInfoMethodsMixin:
             async with self._session.get(
                 url,
                 headers=headers,
-                timeout=aiohttp.ClientTimeout(total=self._request_timeout),
+                timeout=self._request_timeout,
             ) as response:
                 _LOGGER.debug("Response Status for GET %s: %s", url, response.status)
                 if not response.ok:
@@ -288,7 +281,9 @@ class ServerInfoMethodsMixin:
         )
         return ServerVersionResponse.model_validate(response)
 
-    async def async_get_server_properties(self, server_name: str) -> PropertiesGetResponse:
+    async def async_get_server_properties(
+        self, server_name: str
+    ) -> PropertiesGetResponse:
         """Retrieves the server's properties.
 
         Args:
@@ -326,7 +321,9 @@ class ServerInfoMethodsMixin:
         )
         return PermissionsGetResponse.model_validate(response)
 
-    async def async_get_server_allowlist(self, server_name: str) -> AllowlistGetResponse:
+    async def async_get_server_allowlist(
+        self, server_name: str
+    ) -> AllowlistGetResponse:
         """Retrieves the server's allowlist.
 
         Args:

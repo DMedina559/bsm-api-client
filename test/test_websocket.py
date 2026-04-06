@@ -1,8 +1,7 @@
 import pytest
-import asyncio
 from unittest.mock import MagicMock, AsyncMock
 from bsm_api_client.websocket_client import WebSocketClient
-from bsm_api_client.exceptions import APIError, AuthError
+from bsm_api_client.exceptions import AuthError
 import aiohttp
 
 

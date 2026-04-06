@@ -6,7 +6,6 @@ from bsm_api_client.models import (
     AllowlistAddPayload,
     AllowlistRemovePayload,
     PermissionsSetPayload,
-    PlayerPermissionPayload,
 )
 
 
@@ -111,13 +110,13 @@ async def test_server_operations(server, bedrock_server):
             initial_permissions = permissions_response.permissions
 
         # we need to cast dictionaries to models to sum them properly
-        from bsm_api_client.models import PlayerPermissionPayload
-        
+        from bsm_api_client.models import PlayerPermissionPayload  # noqa: F811
+
         permission = PlayerPermissionPayload(
             name="TestPlayer", xuid="123456789", permission_level="operator"
         )
         initial_models = [PlayerPermissionPayload(**p) for p in initial_permissions]
-        
+
         set_payload = PermissionsSetPayload(permissions=initial_models + [permission])
         set_result = await client.async_set_server_permissions(server_name, set_payload)
         assert set_result.status == "success"
@@ -126,8 +125,18 @@ async def test_server_operations(server, bedrock_server):
             server_name
         )
         assert permissions_response_after_set.permissions is not None
-        assert len(permissions_response_after_set.permissions) == len(initial_permissions) + 1
-        found_player = next((p for p in permissions_response_after_set.permissions if p["xuid"] == "123456789"), None)
+        assert (
+            len(permissions_response_after_set.permissions)
+            == len(initial_permissions) + 1
+        )
+        found_player = next(
+            (
+                p
+                for p in permissions_response_after_set.permissions
+                if p["xuid"] == "123456789"
+            ),
+            None,
+        )
         assert found_player is not None
         assert found_player["permission_level"] == "operator"
 

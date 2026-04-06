@@ -6,9 +6,10 @@ for interacting with manager-level endpoints of the Bedrock Server Manager API.
 These methods handle operations such as getting system information, managing
 players, and installing new servers.
 """
+
 import logging
 import aiohttp
-from typing import Any, Dict, Optional, TYPE_CHECKING
+from typing import Any, Dict, Optional, Callable, TYPE_CHECKING
 from ..exceptions import APIError, CannotConnectError
 from ..models import (
     AddPlayersPayload,
@@ -33,18 +34,14 @@ _LOGGER = logging.getLogger(__name__.split(".")[0] + ".client.manager")
 class ManagerMethodsMixin:
     """Mixin for manager-level endpoints."""
 
-    _request: callable
-    if TYPE_CHECKING:
+    _request: Callable[..., Any]
+    _server_root_url: str
+    _api_base_segment: str
+    _base_url: str
+    _session: aiohttp.ClientSession
+    _request_timeout: aiohttp.ClientTimeout
+    _handle_api_error: Callable[..., Any]
 
-        async def _request(
-            self: "ClientBase",
-            method: str,
-            path: str,
-            json_data: Optional[Dict[str, Any]] = None,
-            params: Optional[Dict[str, Any]] = None,
-            authenticated: bool = True,
-            is_retry: bool = False,
-        ) -> Any: ...
 
     async def async_get_info(self) -> AppInfoResponse:
         """Gets system and application information from the manager.
@@ -117,7 +114,8 @@ class ManagerMethodsMixin:
             A dictionary containing the list of themes.
         """
         _LOGGER.info("Fetching list of available themes.")
-        return await self._request(method="GET", path="/themes", authenticated=True)
+        result = await self._request(method="GET", path="/themes", authenticated=True)
+        return dict(result)
 
     async def async_get_all_settings(self) -> SettingsResponse:
         """Retrieve all global application settings.
@@ -126,7 +124,9 @@ class ManagerMethodsMixin:
             A `SettingsResponse` object containing all settings.
         """
         _LOGGER.info("Fetching all global application settings.")
-        response = await self._request(method="GET", path="/settings", authenticated=True)
+        response = await self._request(
+            method="GET", path="/settings", authenticated=True
+        )
         return SettingsResponse.model_validate(response)
 
     async def async_set_setting(self, payload: SettingItemResponse) -> SettingsResponse:
@@ -189,7 +189,7 @@ class ManagerMethodsMixin:
             async with self._session.get(
                 url,
                 headers={"Accept": "image/jpeg, */*"},  # Accept jpeg primarily
-                timeout=aiohttp.ClientTimeout(total=self._request_timeout),
+                timeout=self._request_timeout,
             ) as response:
                 _LOGGER.debug("Response Status for GET %s: %s", url, response.status)
                 if not response.ok:
@@ -273,8 +273,9 @@ class ManagerMethodsMixin:
             A dictionary containing the status of the task.
         """
         _LOGGER.info("Fetching installation status for task ID: %s", task_id)
-        return await self._request(
+        result = await self._request(
             method="GET",
             path=f"/tasks/status/{task_id}",
             authenticated=True,
         )
+        return dict(result)

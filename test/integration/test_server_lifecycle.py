@@ -75,11 +75,6 @@ class TestServerLifecycle:
         client = client_fixture
         server_name = bedrock_server
 
-        details_res = await client.async_get_servers()
-        server_details = next(
-            s for s in details_res.servers if s.name == server_name
-        )
-
         # For the integration test, we can check that calling the endpoint doesn't fail.
         # Previously we checked properties on the server detail, but this isn't supported on ServerSchemaResponse yet.
         await client.async_disable_server_service(server_name)
@@ -97,7 +92,9 @@ class TestServerLifecycle:
         update_res = await client.async_update_server(server_name)
         assert update_res.status in ["success", "pending"]
 
-    async def test_send_command(self, bedrock_server, wait_for_server_status, client_fixture):
+    async def test_send_command(
+        self, bedrock_server, wait_for_server_status, client_fixture
+    ):
         """Tests sending a command to the server."""
         client = client_fixture
         server_name = bedrock_server

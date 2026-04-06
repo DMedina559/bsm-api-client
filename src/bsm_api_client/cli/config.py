@@ -18,7 +18,10 @@ def load_config() -> Dict[str, Any]:
     if not config_path.exists():
         return {}
     with open(config_path, "r") as f:
-        return json.load(f)
+        data = json.load(f)
+        if isinstance(data, dict):
+            return data
+        return {}
 
 
 def save_config(config: Dict[str, Any]):
@@ -55,27 +58,30 @@ class Config:
     @property
     def base_url(self) -> str:
         """The API base URL."""
-        return self.get("base_url", DEFAULT_BASE_URL)
+        return str(self.get("base_url", DEFAULT_BASE_URL))
 
     @property
     def verify_ssl(self) -> bool:
         """Whether to verify SSL."""
-        return self.get("verify_ssl", True)
+        return bool(self.get("verify_ssl", True))
 
     @property
     def username(self) -> Optional[str]:
         """The username for authentication."""
-        return self.get("username")
+        val = self.get("username")
+        return str(val) if val is not None else None
 
     @property
     def password(self) -> Optional[str]:
         """The password for authentication."""
-        return self.get("password")
+        val = self.get("password")
+        return str(val) if val is not None else None
 
     @property
     def jwt_token(self) -> Optional[str]:
         """The JWT for authentication."""
-        return self.get("jwt_token")
+        val = self.get("jwt_token")
+        return str(val) if val is not None else None
 
     @jwt_token.setter
     def jwt_token(self, value: Optional[str]):

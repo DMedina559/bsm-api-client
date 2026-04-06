@@ -3,7 +3,7 @@ from .decorators import pass_async_context
 import questionary
 
 
-async def interactive_user_workflow(ctx, client):
+async def interactive_user_workflow(ctx, client):  # noqa: C901
     """Interactive menu for managing users."""
     while True:
         try:

@@ -1,7 +1,6 @@
-import asyncio
 import json
 import logging
-from typing import AsyncGenerator, List, Dict, Any, Optional
+from typing import AsyncGenerator, Dict, Any, Optional
 
 import aiohttp
 

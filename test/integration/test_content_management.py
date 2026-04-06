@@ -7,7 +7,6 @@ from bsm_api_client.models import (
     BackupActionPayload,
     RestoreActionPayload,
     FileNamePayload,
-    RestoreTypePayload,
 )
 
 

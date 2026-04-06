@@ -21,8 +21,18 @@ async def test_get_servers(client):
         mock_request.return_value = {
             "status": "success",
             "servers": [
-                {"name": "server1", "status": "RUNNING", "version": "1.0.0", "player_count": 0},
-                {"name": "server2", "status": "STOPPED", "version": "1.0.1", "player_count": 0},
+                {
+                    "name": "server1",
+                    "status": "RUNNING",
+                    "version": "1.0.0",
+                    "player_count": 0,
+                },
+                {
+                    "name": "server2",
+                    "status": "STOPPED",
+                    "version": "1.0.1",
+                    "player_count": 0,
+                },
             ],
         }
         result = await client.async_get_servers()
@@ -38,10 +48,17 @@ async def test_get_server_names(client):
         client, "async_get_servers", new_callable=AsyncMock
     ) as mock_details:
         from collections import namedtuple
-        ServerMock = namedtuple('ServerMock', ['name', 'status', 'version', 'player_count'])
+
+        ServerMock = namedtuple(
+            "ServerMock", ["name", "status", "version", "player_count"]
+        )
         mock_details.return_value.servers = [
-            ServerMock(name="server2", status="STOPPED", version="1.0.1", player_count=0),
-            ServerMock(name="server1", status="RUNNING", version="1.0.0", player_count=0),
+            ServerMock(
+                name="server2", status="STOPPED", version="1.0.1", player_count=0
+            ),
+            ServerMock(
+                name="server1", status="RUNNING", version="1.0.0", player_count=0
+            ),
         ]
         result = await client.async_get_server_names()
         assert result == ["server1", "server2"]

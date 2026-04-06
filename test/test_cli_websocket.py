@@ -1,5 +1,4 @@
 import pytest
-import asyncio
 from unittest.mock import MagicMock, AsyncMock, patch
 import click
 from bsm_api_client.cli.server import list_servers
@@ -51,9 +50,12 @@ async def test_list_servers_websocket_flow(mock_client, mock_ws_client):
     async def side_effect_sleep(seconds):
         raise KeyboardInterrupt("Break loop")
 
-    with patch("click.clear"), patch("click.secho"), patch("click.echo"), patch(
-        "asyncio.sleep", side_effect=side_effect_sleep
-    ) as mock_sleep:
+    with (
+        patch("click.clear"),
+        patch("click.secho"),
+        patch("click.echo"),
+        patch("asyncio.sleep", side_effect=side_effect_sleep) as mock_sleep,
+    ):
 
         with ctx.scope():
             try:
@@ -63,9 +65,7 @@ async def test_list_servers_websocket_flow(mock_client, mock_ws_client):
 
     mock_client.websocket_connect.assert_called_once()
 
-    mock_ws_client.subscribe.assert_any_call(
-        "event:after_server_statuses_updated"
-    )
+    mock_ws_client.subscribe.assert_any_call("event:after_server_statuses_updated")
     assert mock_client.async_get_servers.call_count >= 2
     # Verify sleep was called (fallback triggered after WS finished)
     mock_sleep.assert_called()
@@ -80,9 +80,12 @@ async def test_list_servers_fallback(mock_client):
     async def side_effect_sleep(seconds):
         raise KeyboardInterrupt("Break loop")
 
-    with patch("click.clear"), patch("click.secho"), patch("click.echo"), patch(
-        "asyncio.sleep", side_effect=side_effect_sleep
-    ) as mock_sleep:
+    with (
+        patch("click.clear"),
+        patch("click.secho"),
+        patch("click.echo"),
+        patch("asyncio.sleep", side_effect=side_effect_sleep) as mock_sleep,
+    ):
 
         with ctx.scope():
             try:
@@ -126,9 +129,11 @@ async def test_monitor_task_fallback(mock_client):
         "message": "Done via poll",
     }
 
-    with patch("click.secho") as mock_secho, patch("click.echo"), patch(
-        "asyncio.sleep"
-    ) as mock_sleep:  # Mock sleep to run immediately
+    with (
+        patch("click.secho") as mock_secho,
+        patch("click.echo"),
+        patch("asyncio.sleep"),
+    ):  # Mock sleep to run immediately
         await monitor_task(mock_client, "123", "Success", "Failure")
 
     mock_client.websocket_connect.assert_called_once()

@@ -106,7 +106,7 @@ class ClientBase:
 
         self._username = username
         self._password = password
-        self._request_timeout = request_timeout
+        self._request_timeout = aiohttp.ClientTimeout(total=request_timeout)
         self._verify_ssl = verify_ssl
 
         if session is None:
@@ -151,7 +151,7 @@ class ClientBase:
     async def __aexit__(self, exc_type, exc, tb) -> None:
         await self.close()
 
-    async def _extract_error_details(
+    async def _extract_error_details(  # noqa: C901
         self, response: aiohttp.ClientResponse
     ) -> Tuple[str, Dict[str, Any]]:
         """Extracts error details from an API response.
@@ -200,7 +200,7 @@ class ClientBase:
             ):  # If detail is complex, try to serialize it
                 try:
                     message = str(message)
-                except:  # Fallback if str conversion fails
+                except Exception:  # Fallback if str conversion fails
                     message = ""
             else:
                 message = ""
@@ -235,7 +235,7 @@ class ClientBase:
 
         return str(message), error_data
 
-    async def _handle_api_error(
+    async def _handle_api_error(  # noqa: C901
         self, response: aiohttp.ClientResponse, request_path_for_log: str
     ):
         """Processes an error response and raises the appropriate custom exception.
@@ -339,7 +339,7 @@ class ClientBase:
         )
         raise APIError(message, status_code=status, response_data=error_data)
 
-    async def _request(
+    async def _request(  # noqa: C901
         self,
         method: str,
         path: str,
@@ -406,7 +406,7 @@ class ClientBase:
                 json=json_data,
                 params=params,
                 headers=headers,
-                timeout=aiohttp.ClientTimeout(total=self._request_timeout),
+                timeout=self._request_timeout,
             ) as response:
                 _LOGGER.debug(
                     "Response Status for %s %s: %s", method, url, response.status
@@ -543,7 +543,7 @@ class ClientBase:
                 f"An unexpected error occurred during request to {url}: {e}"
             ) from e
 
-    async def authenticate(self) -> TokenResponse:
+    async def authenticate(self) -> TokenResponse:  # noqa: C901
         """Authenticates with the API and retrieves a JWT token.
 
         This method sends a POST request to the `/auth/token` endpoint with the
@@ -568,7 +568,7 @@ class ClientBase:
                 url,
                 json={"username": self._username, "password": self._password},
                 headers=headers,
-                timeout=aiohttp.ClientTimeout(total=self._request_timeout),
+                timeout=self._request_timeout,
             ) as response:
                 _LOGGER.debug("Response Status for POST %s: %s", url, response.status)
                 if not response.ok:
@@ -660,7 +660,7 @@ class ClientBase:
             async with self._session.get(
                 url,
                 headers=headers,
-                timeout=aiohttp.ClientTimeout(total=self._request_timeout),
+                timeout=self._request_timeout,
             ) as response:
                 _LOGGER.debug("Response Status for GET %s: %s", url, response.status)
                 if not response.ok:

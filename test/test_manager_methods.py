@@ -56,7 +56,10 @@ async def test_get_players(client):
             method="GET", path="/players/get", authenticated=True
         )
         assert len(result.players) == 1
-        assert getattr(result.players[0], "name", result.players[0].get("name", None)) == "player1"
+        assert (
+            getattr(result.players[0], "name", result.players[0].get("name", None))
+            == "player1"
+        )
 
 
 @pytest.mark.asyncio

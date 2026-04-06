@@ -1,11 +1,13 @@
 import os
 import asyncio
-import time
 import click
 import questionary
 from .decorators import pass_async_context, monitor_task
 from bsm_api_client.exceptions import AuthError
 from bsm_api_client.models import InstallServerPayload, CommandPayload
+from .properties import interactive_properties_workflow
+from .allowlist import interactive_allowlist_workflow
+from .permissions import interactive_permissions_workflow
 
 
 def _print_server_table(servers):
@@ -55,7 +57,7 @@ def server():
 )
 @click.option("--server-name", help="Display status for only a specific server.")
 @pass_async_context
-async def list_servers(ctx, loop, server_name):
+async def list_servers(ctx, loop, server_name):  # noqa: C901
     """Lists all configured Bedrock servers and their current operational status."""
     client = ctx.obj.get("client")
     if not client:
@@ -67,7 +69,9 @@ async def list_servers(ctx, loop, server_name):
         all_servers = response.servers or []
 
         if server_name:
-            servers_to_show = [s for s in all_servers if getattr(s, "name", "") == server_name]
+            servers_to_show = [
+                s for s in all_servers if getattr(s, "name", "") == server_name
+            ]
         else:
             servers_to_show = all_servers
 
@@ -268,15 +272,9 @@ async def restart_server(ctx, server_name: str):
         click.secho(f"Failed to restart server: {e}", fg="red")
 
 
-from bsm_api_client.models import InstallServerPayload, CommandPayload
-from .properties import interactive_properties_workflow
-from .allowlist import interactive_allowlist_workflow
-from .permissions import interactive_permissions_workflow
-
-
 @server.command("install")
 @click.pass_context
-async def install(ctx):
+async def install(ctx):  # noqa: C901
     """Guides you through installing and configuring a new Bedrock server instance."""
     client = ctx.obj.get("client")
     if not client:
