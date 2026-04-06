@@ -1,6 +1,6 @@
 import click
 
-from bsm_api_client import BedrockServerManagerApi, AuthError
+from bsm_api_client import AuthError, BedrockServerManagerApi
 
 
 def _validate_and_get_url(url: str) -> str:

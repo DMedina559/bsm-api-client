@@ -1,5 +1,6 @@
-import click
 import time
+
+import click
 import questionary
 
 

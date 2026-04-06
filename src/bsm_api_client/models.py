@@ -6,8 +6,9 @@ in the Bedrock Server Manager API client. These models correspond to the request
 and response bodies of the various API endpoints.
 """
 
+from typing import Any, Dict, List, Optional
+
 from pydantic import BaseModel, Field
-from typing import Optional, List, Dict, Any
 
 
 class TokenResponse(BaseModel):

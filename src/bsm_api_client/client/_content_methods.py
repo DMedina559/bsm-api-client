@@ -6,19 +6,21 @@ for managing server content such as backups, worlds, and addons.
 """
 
 import logging
+from typing import TYPE_CHECKING, Any, Callable, Dict, Optional
+
 import aiohttp
-from typing import Any, Dict, Optional, Callable, TYPE_CHECKING
+
 from ..models import (
-    RestoreTypePayload,
-    BackupActionPayload,
-    RestoreActionPayload,
-    FileNamePayload,
     ActionResponse,
-    ContentListResponse,
-    AddonListResponse,
     AddonActionPayload,
-    AddonSubpackPayload,
+    AddonListResponse,
     AddonReorderPayload,
+    AddonSubpackPayload,
+    BackupActionPayload,
+    ContentListResponse,
+    FileNamePayload,
+    RestoreActionPayload,
+    RestoreTypePayload,
 )
 
 if TYPE_CHECKING:
@@ -263,8 +265,9 @@ class ContentMethodsMixin:
         Returns:
             A dictionary containing the API response.
         """
-        import aiohttp
         import os
+
+        import aiohttp
 
         _LOGGER.info("Uploading content file: %s", file_path)
         data = aiohttp.FormData()

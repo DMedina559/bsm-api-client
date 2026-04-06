@@ -1,13 +1,16 @@
-import os
 import asyncio
+import os
+
 import click
 import questionary
-from .decorators import pass_async_context, monitor_task
+
 from bsm_api_client.exceptions import AuthError
-from bsm_api_client.models import InstallServerPayload, CommandPayload
-from .properties import interactive_properties_workflow
+from bsm_api_client.models import CommandPayload, InstallServerPayload
+
 from .allowlist import interactive_allowlist_workflow
+from .decorators import monitor_task, pass_async_context
 from .permissions import interactive_permissions_workflow
+from .properties import interactive_properties_workflow
 
 
 def _print_server_table(servers):

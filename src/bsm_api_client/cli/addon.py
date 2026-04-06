@@ -1,14 +1,17 @@
-import click
 import os
+
+import click
 import questionary
-from .decorators import pass_async_context, monitor_task
-from bsm_api_client.models import (
-    FileNamePayload,
-    AddonActionPayload,
-    AddonSubpackPayload,
-    AddonReorderPayload,
-)
 from questionary import Separator
+
+from bsm_api_client.models import (
+    AddonActionPayload,
+    AddonReorderPayload,
+    AddonSubpackPayload,
+    FileNamePayload,
+)
+
+from .decorators import monitor_task, pass_async_context
 
 
 @click.group()
@@ -116,19 +119,28 @@ async def manage_addons(ctx, server_name: str):  # noqa: C901
             )
 
             from questionary import Choice
-            menu_choices: list[Choice | Separator | str] = [Separator("--- Behavior Packs ---")]
+
+            menu_choices: list[Choice | Separator | str] = [
+                Separator("--- Behavior Packs ---")
+            ]
 
             for idx, pack in enumerate(bp, 1):
                 status = "🟢" if pack.status == "ACTIVE" else "⚪"
                 menu_choices.append(
-                    Choice(f"{idx}. {status} [BP] {pack.name} (v{'.'.join(map(str, pack.version))})", value=f"{idx}. {status} [BP] {pack.name} (v{'.'.join(map(str, pack.version))})")
+                    Choice(
+                        f"{idx}. {status} [BP] {pack.name} (v{'.'.join(map(str, pack.version))})",
+                        value=f"{idx}. {status} [BP] {pack.name} (v{'.'.join(map(str, pack.version))})",
+                    )
                 )
 
             menu_choices.append(Separator("--- Resource Packs ---"))
             for idx, pack in enumerate(rp, 1):
                 status = "🟢" if pack.status == "ACTIVE" else "⚪"
                 menu_choices.append(
-                    Choice(f"{idx}. {status} [RP] {pack.name} (v{'.'.join(map(str, pack.version))})", value=f"{idx}. {status} [RP] {pack.name} (v{'.'.join(map(str, pack.version))})")
+                    Choice(
+                        f"{idx}. {status} [RP] {pack.name} (v{'.'.join(map(str, pack.version))})",
+                        value=f"{idx}. {status} [RP] {pack.name} (v{'.'.join(map(str, pack.version))})",
+                    )
                 )
 
             menu_choices.extend(
@@ -155,6 +167,7 @@ async def manage_addons(ctx, server_name: str):  # noqa: C901
                     continue
 
                 from typing import List
+
                 ordered_uuids: List[str] = []
                 remaining_bp = list(active_bp)
 

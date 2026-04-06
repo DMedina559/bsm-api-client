@@ -1,5 +1,6 @@
 import click
 import questionary
+
 from bsm_api_client.models import AllowlistAddPayload, AllowlistRemovePayload
 
 
@@ -164,7 +165,8 @@ async def interactive_allowlist_workflow(client, server_name: str):  # noqa: C90
     else:
         click.secho("Allowlist is currently empty.", fg="yellow")
 
-    from typing import List, Dict, Any
+    from typing import Any, Dict, List
+
     new_players_to_add: List[Dict[str, Any]] = []
     click.echo("\nEnter new players to add. Press Enter on an empty line to finish.")
     while True:

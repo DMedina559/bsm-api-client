@@ -1,5 +1,6 @@
 import click
 import questionary
+
 from bsm_api_client.models import PropertiesPayload
 
 

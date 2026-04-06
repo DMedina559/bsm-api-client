@@ -1,14 +1,16 @@
 # tests/test_account_methods.py
+from unittest.mock import AsyncMock, patch
+
 import pytest
 import pytest_asyncio
-from unittest.mock import AsyncMock, patch
+
 from bsm_api_client.api_client import BedrockServerManagerApi
 from bsm_api_client.models import (
-    UserResponse,
-    ThemeUpdatePayload,
-    ProfileUpdatePayload,
-    ChangePasswordPayload,
     BaseApiResponse,
+    ChangePasswordPayload,
+    ProfileUpdatePayload,
+    ThemeUpdatePayload,
+    UserResponse,
 )
 
 

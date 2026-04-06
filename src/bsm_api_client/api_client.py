@@ -7,14 +7,15 @@ endpoint methods organized into mixins.
 """
 
 import logging
-from .client_base import ClientBase
-from .client._manager_methods import ManagerMethodsMixin
-from .client._server_info_methods import ServerInfoMethodsMixin
-from .client._server_action_methods import ServerActionMethodsMixin
-from .client._content_methods import ContentMethodsMixin
-from .client._plugin_methods import PluginMethodsMixin
+
 from .client._account_methods import AccountMethodsMixin
+from .client._content_methods import ContentMethodsMixin
+from .client._manager_methods import ManagerMethodsMixin
+from .client._plugin_methods import PluginMethodsMixin
+from .client._server_action_methods import ServerActionMethodsMixin
+from .client._server_info_methods import ServerInfoMethodsMixin
 from .client._users_methods import UsersMethodsMixin
+from .client_base import ClientBase
 
 _LOGGER = logging.getLogger(__name__.split(".")[0] + ".client")
 

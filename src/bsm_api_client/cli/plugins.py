@@ -1,6 +1,8 @@
-import click
 import json
+
+import click
 import questionary
+
 from bsm_api_client.models import PluginStatusSetPayload, TriggerEventPayload
 
 

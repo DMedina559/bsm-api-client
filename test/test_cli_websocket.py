@@ -1,9 +1,11 @@
-import pytest
-from unittest.mock import MagicMock, AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import click
+import pytest
+
+from bsm_api_client.cli.decorators import monitor_task
 from bsm_api_client.cli.server import list_servers
 from bsm_api_client.websocket_client import WebSocketClient
-from bsm_api_client.cli.decorators import monitor_task
 
 
 @pytest.fixture

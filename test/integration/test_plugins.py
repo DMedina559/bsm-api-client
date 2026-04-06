@@ -1,4 +1,5 @@
 import pytest
+
 from bsm_api_client.api_client import BedrockServerManagerApi
 from bsm_api_client.models import PluginStatusSetPayload, TriggerEventPayload
 

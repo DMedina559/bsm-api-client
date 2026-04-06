@@ -2,14 +2,14 @@
 """Mixin class for account-related API methods."""
 
 import logging
-from typing import Any, Dict, Optional, Callable, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Callable, Dict, Optional
 
 from ..models import (
-    UserResponse,
-    ThemeUpdatePayload,
-    ProfileUpdatePayload,
-    ChangePasswordPayload,
     BaseApiResponse,
+    ChangePasswordPayload,
+    ProfileUpdatePayload,
+    ThemeUpdatePayload,
+    UserResponse,
 )
 
 if TYPE_CHECKING:

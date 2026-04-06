@@ -1,6 +1,8 @@
+import asyncio
+
 import pytest
 import pytest_asyncio
-import asyncio
+
 from bsm_api_client.api_client import BedrockServerManagerApi
 from bsm_api_client.models import CommandPayload
 

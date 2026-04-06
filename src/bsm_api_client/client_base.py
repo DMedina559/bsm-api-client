@@ -6,31 +6,32 @@ functionality such as session management, authentication, and a core request
 method for interacting with the Bedrock Server Manager API.
 """
 
-import aiohttp
 import asyncio
 import logging
 from typing import (
     Any,
     Dict,
-    Optional,
-    Mapping,
-    Union,
     List,
+    Mapping,
+    Optional,
     Tuple,
+    Union,
 )
 from urllib.parse import urlparse
+
+import aiohttp
 
 # Import exceptions from the same package level
 from .exceptions import (
     APIError,
+    APIServerSideError,
     AuthError,
-    NotFoundError,
-    ServerNotFoundError,
-    ServerNotRunningError,
     CannotConnectError,
     InvalidInputError,
+    NotFoundError,
     OperationFailedError,
-    APIServerSideError,
+    ServerNotFoundError,
+    ServerNotRunningError,
 )
 from .models import TokenResponse
 from .websocket_client import WebSocketClient

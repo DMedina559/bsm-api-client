@@ -1,7 +1,7 @@
-import os
 import json
+import os
 from pathlib import Path
-from typing import Optional, Dict, Any
+from typing import Any, Dict, Optional
 
 CONFIG_FILE_NAME = ".bsm_cli_config.json"
 DEFAULT_BASE_URL = "http://127.0.0.1:11325"

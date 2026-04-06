@@ -1,6 +1,7 @@
 import click
 import questionary
 from questionary import Separator
+
 from .server import list_servers
 
 
@@ -87,6 +88,7 @@ async def main_menu(ctx: click.Context):  # noqa: C901
             )
 
             from questionary import Choice
+
             menu_choices: list[Choice | Separator | str] = ["Install New Server"]
             if server_names:
                 menu_choices.append("Manage Existing Server")
@@ -151,7 +153,8 @@ async def manage_server_menu(ctx: click.Context, server_name: str):  # noqa: C90
         group = cli.get_command(ctx, group_name)
         return group.get_command(ctx, cmd_name) if group else None
 
-    from typing import Dict, Tuple, Any, Callable, Union, Optional
+    from typing import Any, Callable, Dict, Optional, Tuple, Union
+
     import click
 
     # ---- Define static menu sections ----

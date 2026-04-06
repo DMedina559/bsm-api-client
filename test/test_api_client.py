@@ -1,14 +1,15 @@
 # tests/test_api_client.py
-import pytest
 from unittest.mock import AsyncMock, patch
+
+import pytest
+import pytest_asyncio
+
 from bsm_api_client.api_client import BedrockServerManagerApi
 from bsm_api_client.models import (
-    PropertiesPayload,
     PermissionsSetPayload,
     PlayerPermissionPayload,
+    PropertiesPayload,
 )
-
-import pytest_asyncio
 
 
 @pytest_asyncio.fixture

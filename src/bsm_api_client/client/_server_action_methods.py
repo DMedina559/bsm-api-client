@@ -7,17 +7,18 @@ starting, stopping, and sending commands.
 """
 
 import logging
-from typing import Any, Dict, Optional, Callable, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Callable, Dict, Optional
+
 from ..models import (
-    CommandPayload,
+    ActionResponse,
     AllowlistAddPayload,
     AllowlistRemovePayload,
+    BaseApiResponse,
+    CommandPayload,
     PermissionsSetPayload,
+    PermissionsUpdateResponse,
     PropertiesPayload,
     ServiceUpdatePayload,
-    ActionResponse,
-    BaseApiResponse,
-    PermissionsUpdateResponse,
 )
 
 if TYPE_CHECKING:

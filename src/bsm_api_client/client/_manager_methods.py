@@ -8,21 +8,23 @@ players, and installing new servers.
 """
 
 import logging
+from typing import TYPE_CHECKING, Any, Callable, Dict, Optional
+
 import aiohttp
-from typing import Any, Dict, Optional, Callable, TYPE_CHECKING
+
 from ..exceptions import APIError, CannotConnectError
 from ..models import (
     AddPlayersPayload,
-    SettingItemResponse,
-    PruneDownloadsPayload,
+    AddPlayersResponse,
+    AppInfoResponse,
+    CustomZipsResponse,
     InstallServerPayload,
     InstallServerResponse,
-    AppInfoResponse,
-    AddPlayersResponse,
     PlayerListResponse,
-    CustomZipsResponse,
-    SettingsResponse,
+    PruneDownloadsPayload,
     PruneDownloadsResponse,
+    SettingItemResponse,
+    SettingsResponse,
 )
 
 if TYPE_CHECKING:
@@ -41,7 +43,6 @@ class ManagerMethodsMixin:
     _session: aiohttp.ClientSession
     _request_timeout: aiohttp.ClientTimeout
     _handle_api_error: Callable[..., Any]
-
 
     async def async_get_info(self) -> AppInfoResponse:
         """Gets system and application information from the manager.
