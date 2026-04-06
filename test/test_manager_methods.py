@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, patch
 from bsm_api_client.api_client import BedrockServerManagerApi
 from bsm_api_client.models import (
     AddPlayersPayload,
-    SettingItem,
+    SettingItemResponse,
     PruneDownloadsPayload,
     InstallServerPayload,
 )
@@ -40,7 +40,7 @@ async def test_scan_players(client):
         mock_request.assert_called_once_with(
             method="POST", path="/players/scan", authenticated=True
         )
-        assert result["status"] == "success"
+        assert result.status == "success"
 
 
 @pytest.mark.asyncio
@@ -55,8 +55,8 @@ async def test_get_players(client):
         mock_request.assert_called_once_with(
             method="GET", path="/players/get", authenticated=True
         )
-        assert len(result["players"]) == 1
-        assert result["players"][0]["name"] == "player1"
+        assert len(result.players) == 1
+        assert getattr(result.players[0], "name", result.players[0].get("name", None)) == "player1"
 
 
 @pytest.mark.asyncio
@@ -72,7 +72,7 @@ async def test_add_players(client):
             json_data=payload.model_dump(),
             authenticated=True,
         )
-        assert result["status"] == "success"
+        assert result.status == "success"
 
 
 @pytest.mark.asyncio
@@ -87,14 +87,14 @@ async def test_get_all_settings(client):
         mock_request.assert_called_once_with(
             method="GET", path="/settings", authenticated=True
         )
-        assert result["settings"]["web"]["port"] == 8080
+        assert result.settings["web"]["port"] == 8080
 
 
 @pytest.mark.asyncio
 async def test_set_setting(client):
     """Test async_set_setting method."""
     with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
-        payload = SettingItem(key="web.port", value=8081)
+        payload = SettingItemResponse(key="web.port", value=8081)
         mock_request.return_value = {"status": "success", "message": "Setting updated."}
         result = await client.async_set_setting(payload)
         mock_request.assert_called_once_with(
@@ -103,7 +103,7 @@ async def test_set_setting(client):
             json_data=payload.model_dump(),
             authenticated=True,
         )
-        assert result["status"] == "success"
+        assert result.status == "success"
 
 
 @pytest.mark.asyncio
@@ -118,7 +118,7 @@ async def test_reload_settings(client):
         mock_request.assert_called_once_with(
             method="POST", path="/settings/reload", authenticated=True
         )
-        assert result["status"] == "success"
+        assert result.status == "success"
 
 
 @pytest.mark.asyncio
@@ -137,7 +137,7 @@ async def test_prune_downloads(client):
             json_data=payload.model_dump(),
             authenticated=True,
         )
-        assert result["status"] == "success"
+        assert result.status == "success"
 
 
 @pytest.mark.asyncio
@@ -178,4 +178,4 @@ async def test_get_install_status(client):
             path=f"/tasks/status/{task_id}",
             authenticated=True,
         )
-        assert result["status"] == "complete"
+        assert result.get("status") == "complete"

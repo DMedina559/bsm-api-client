@@ -2,6 +2,7 @@ import pytest
 import pytest_asyncio
 import asyncio
 from bsm_api_client.api_client import BedrockServerManagerApi
+from bsm_api_client.models import CommandPayload
 
 
 @pytest_asyncio.fixture
@@ -95,3 +96,15 @@ class TestServerLifecycle:
         # so we can only verify that the command is accepted.
         update_res = await client.async_update_server(server_name)
         assert update_res.status in ["success", "pending"]
+
+    async def test_send_command(self, bedrock_server, wait_for_server_status, client_fixture):
+        """Tests sending a command to the server."""
+        client = client_fixture
+        server_name = bedrock_server
+
+        await client.async_start_server(server_name)
+        await wait_for_server_status(client, server_name, is_running=True, timeout=90)
+
+        payload = CommandPayload(command="say hello from test")
+        command_res = await client.async_send_server_command(server_name, payload)
+        assert command_res.status == "success"

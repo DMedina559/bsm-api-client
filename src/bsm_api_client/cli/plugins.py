@@ -82,12 +82,14 @@ async def interactive_plugin_workflow(client):
                 is_enabled = config_dict.get("enabled", False)
                 version = config_dict.get("version", "N/A")
                 status = "🟢" if is_enabled else "⚪"
-                menu_choices.append(f"{status} {name} (v{version})")
+                menu_choices.append(
+                    questionary.Choice(title=f"{status} {name} (v{version})", value=name)
+                )
                 
             menu_choices.extend([
                 questionary.Separator("--- Actions ---"),
-                "Reload All Plugins",
-                "Back"
+                questionary.Choice(title="Reload All Plugins", value="RELOAD"),
+                questionary.Choice(title="Back", value="BACK")
             ])
             
             choice = await questionary.select(
@@ -95,10 +97,10 @@ async def interactive_plugin_workflow(client):
                 choices=menu_choices
             ).ask_async()
             
-            if not choice or choice == "Back":
+            if not choice or choice == "BACK":
                 return
                 
-            if choice == "Reload All Plugins":
+            if choice == "RELOAD":
                 click.secho("Reloading plugins...", fg="cyan")
                 try:
                     reload_response = await client.async_reload_plugins()
@@ -112,7 +114,7 @@ async def interactive_plugin_workflow(client):
                 continue
                 
             # Handle specific plugin
-            plugin_name = choice.split(" ", 1)[1].split(" (v")[0]
+            plugin_name = choice
             config_dict = plugins.get(plugin_name)
             
             if not config_dict:

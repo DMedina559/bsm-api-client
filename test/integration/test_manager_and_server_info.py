@@ -1,7 +1,7 @@
 import pytest
 import time
 from bsm_api_client.api_client import BedrockServerManagerApi
-from bsm_api_client.models import AddPlayersPayload, SettingItemResponse
+from bsm_api_client.models import AddPlayersPayload, SettingItemResponse, PruneDownloadsPayload
 
 
 @pytest.mark.asyncio
@@ -11,12 +11,26 @@ class TestManagerAndServerInfo:
     """
 
     async def test_get_info(self, server):
-        """Tests the unauthenticated /info endpoint."""
+        """Tests the unauthenticated /info endpoint and themes."""
         client = BedrockServerManagerApi(server, "admin", "password")
         try:
             info = await client.async_get_info()
             assert info.status == "success"
             assert "app_version" in info.info
+
+            themes = await client.async_get_themes()
+            assert themes is not None
+
+        finally:
+            await client.close()
+
+    async def test_prune_downloads(self, server):
+        """Tests pruning downloads cache."""
+        client = BedrockServerManagerApi(server, "admin", "password")
+        try:
+            payload = PruneDownloadsPayload(directory="stable", keep=1)
+            res = await client.async_prune_downloads(payload)
+            assert res.status == "success"
         finally:
             await client.close()
 
