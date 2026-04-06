@@ -29,7 +29,7 @@ async def get_props(ctx, server_name: str, property_name: str):
     response = await client.async_get_server_properties(server_name)
 
     if response.status == "success":
-        properties = response.data["properties"]
+        properties = response.properties
         if property_name:
             value = properties.get(property_name)
             if value is not None:

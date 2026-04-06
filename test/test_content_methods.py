@@ -8,6 +8,9 @@ from bsm_api_client.models import (
     BackupActionPayload,
     RestoreActionPayload,
     FileNamePayload,
+    AddonActionPayload,
+    AddonSubpackPayload,
+    AddonReorderPayload,
 )
 
 
@@ -23,7 +26,7 @@ async def client():
 async def test_list_server_backups(client):
     """Test async_list_server_backups method."""
     with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
-        mock_request.return_value = {"status": "success", "backups": ["backup1.zip"]}
+        mock_request.return_value = {"status": "success", "message": "ok", "backups": ["backup1.zip"]}
         result = await client.async_list_server_backups("test-server", "world")
         mock_request.assert_called_once_with(
             "GET", "/server/test-server/backup/list/world", authenticated=True
@@ -36,7 +39,7 @@ async def test_restore_select_backup_type(client):
     """Test async_restore_select_backup_type method."""
     with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
         payload = RestoreTypePayload(restore_type="world")
-        mock_request.return_value = {"status": "success", "redirect_url": "/some/url"}
+        mock_request.return_value = {"status": "success", "message": "ok", "redirect_url": "/some/url"}
         result = await client.async_restore_select_backup_type("test-server", payload)
         mock_request.assert_called_once_with(
             method="POST",
@@ -221,7 +224,72 @@ async def test_install_server_addon_error(client):
         assert "API Error" in str(excinfo.value)
 
 
-@pytest.mark.skip(reason="Content uploader is a disabled-by-default plugin")
+@pytest.mark.asyncio
+async def test_get_server_addons(client):
+    with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
+        mock_request.return_value = {"status": "success", "addons": {}}
+        result = await client.async_get_server_addons("test-server")
+        mock_request.assert_called_once_with(
+            "GET", "/server/test-server/addons", authenticated=True
+        )
+        assert result.status == "success"
+
+@pytest.mark.asyncio
+async def test_enable_server_addon(client):
+    with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
+        payload = AddonActionPayload(pack_uuid="123", pack_type="behavior")
+        mock_request.return_value = {"status": "success", "message": "Enabled"}
+        result = await client.async_enable_server_addon("test-server", payload)
+        mock_request.assert_called_once_with(
+            "POST", "/server/test-server/addon/enable", json_data=payload.model_dump(), authenticated=True
+        )
+        assert result.status == "success"
+
+@pytest.mark.asyncio
+async def test_disable_server_addon(client):
+    with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
+        payload = AddonActionPayload(pack_uuid="123", pack_type="behavior")
+        mock_request.return_value = {"status": "success", "message": "Disabled"}
+        result = await client.async_disable_server_addon("test-server", payload)
+        mock_request.assert_called_once_with(
+            "POST", "/server/test-server/addon/disable", json_data=payload.model_dump(), authenticated=True
+        )
+        assert result.status == "success"
+
+@pytest.mark.asyncio
+async def test_update_server_addon_subpack(client):
+    with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
+        payload = AddonSubpackPayload(pack_uuid="123", pack_type="behavior", subpack_name="test")
+        mock_request.return_value = {"status": "success", "message": "Subpack updated"}
+        result = await client.async_update_server_addon_subpack("test-server", payload)
+        mock_request.assert_called_once_with(
+            "POST", "/server/test-server/addon/subpack", json_data=payload.model_dump(), authenticated=True
+        )
+        assert result.status == "success"
+
+@pytest.mark.asyncio
+async def test_uninstall_server_addon(client):
+    with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
+        payload = AddonActionPayload(pack_uuid="123", pack_type="behavior")
+        mock_request.return_value = {"status": "success", "message": "Uninstalled"}
+        result = await client.async_uninstall_server_addon("test-server", payload)
+        mock_request.assert_called_once_with(
+            "POST", "/server/test-server/addon/uninstall", json_data=payload.model_dump(), authenticated=True
+        )
+        assert result.status == "success"
+
+@pytest.mark.asyncio
+async def test_reorder_server_addon(client):
+    with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
+        payload = AddonReorderPayload(pack_type="behavior", uuids=["123", "456"])
+        mock_request.return_value = {"status": "success", "message": "Reordered"}
+        result = await client.async_reorder_server_addon("test-server", payload)
+        mock_request.assert_called_once_with(
+            "POST", "/server/test-server/addon/reorder", json_data=payload.model_dump(), authenticated=True
+        )
+        assert result.status == "success"
+
+
 @pytest.mark.skip(reason="Content uploader is a disabled-by-default plugin")
 @pytest.mark.asyncio
 async def test_upload_content(client):

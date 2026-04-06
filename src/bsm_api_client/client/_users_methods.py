@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 from ..models import (
     BaseApiResponse,
-    User,
+    UserResponse,
 )
 
 _LOGGER = logging.getLogger(__name__.split(".")[0] + ".client.users")
@@ -26,17 +26,17 @@ class UsersMethodsMixin:
             is_retry: bool = False,
         ) -> Any: ...
 
-    async def async_get_users(self) -> List[User]:
+    async def async_get_users(self) -> List[UserResponse]:
         """Gets a list of all users.
 
         Returns:
-            A list of `User` objects.
+            A list of `UserResponse` objects.
         """
         _LOGGER.debug("Fetching users from /users/list")
         response = await self._request(
             method="GET", path="/users/list", authenticated=True
         )
-        return [User.model_validate(user) for user in response]
+        return [UserResponse.model_validate(user) for user in response]
 
     async def async_delete_user(self, user_id: int) -> BaseApiResponse:
         """Deletes a user.

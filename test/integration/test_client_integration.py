@@ -6,7 +6,7 @@ from bsm_api_client.models import (
     AllowlistAddPayload,
     AllowlistRemovePayload,
     PermissionsSetPayload,
-    PlayerPermission,
+    PlayerPermissionPayload,
 )
 
 
@@ -107,22 +107,27 @@ async def test_server_operations(server, bedrock_server):
         )
         assert permissions_response.status == "success"
         initial_permissions = []
-        if permissions_response.data:
-            initial_permissions = permissions_response.data.get("permissions", [])
+        if permissions_response.permissions:
+            initial_permissions = permissions_response.permissions
 
-        permission = PlayerPermission(
+        # we need to cast dictionaries to models to sum them properly
+        from bsm_api_client.models import PlayerPermissionPayload
+        
+        permission = PlayerPermissionPayload(
             name="TestPlayer", xuid="123456789", permission_level="operator"
         )
-        set_payload = PermissionsSetPayload(permissions=initial_permissions + [permission])
+        initial_models = [PlayerPermissionPayload(**p) for p in initial_permissions]
+        
+        set_payload = PermissionsSetPayload(permissions=initial_models + [permission])
         set_result = await client.async_set_server_permissions(server_name, set_payload)
         assert set_result.status == "success"
 
         permissions_response_after_set = await client.async_get_server_permissions_data(
             server_name
         )
-        assert permissions_response_after_set.data is not None
-        assert len(permissions_response_after_set.data["permissions"]) == len(initial_permissions) + 1
-        found_player = next((p for p in permissions_response_after_set.data["permissions"] if p["xuid"] == "123456789"), None)
+        assert permissions_response_after_set.permissions is not None
+        assert len(permissions_response_after_set.permissions) == len(initial_permissions) + 1
+        found_player = next((p for p in permissions_response_after_set.permissions if p["xuid"] == "123456789"), None)
         assert found_player is not None
         assert found_player["permission_level"] == "operator"
 

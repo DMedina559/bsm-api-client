@@ -7,7 +7,13 @@ for managing plugins through the Bedrock Server Manager API.
 
 import logging
 from typing import Any, Dict, Optional, List
-from ..models import PluginStatusSetPayload, TriggerEventPayload, PluginApiResponse
+from ..models import (
+    PluginStatusSetPayload,
+    TriggerEventPayload,
+    PluginStatusesResponse,
+    TriggerEventResponse,
+    ActionResponse
+)
 
 _LOGGER = logging.getLogger(__name__.split(".")[0] + ".client.plugins")
 
@@ -15,11 +21,11 @@ _LOGGER = logging.getLogger(__name__.split(".")[0] + ".client.plugins")
 class PluginMethodsMixin:
     """Mixin containing methods for interacting with Plugin Management API endpoints."""
 
-    async def async_get_plugin_statuses(self) -> PluginApiResponse:
+    async def async_get_plugin_statuses(self) -> PluginStatusesResponse:
         """Retrieves the status of all discovered plugins.
 
         Returns:
-            A `PluginApiResponse` object containing the statuses of all plugins.
+            A `PluginStatusesResponse` object containing the statuses of all plugins.
 
         Raises:
             APIError: For API-related errors.
@@ -28,11 +34,11 @@ class PluginMethodsMixin:
         response = await self._request(
             method="GET", path="/plugins", authenticated=True
         )
-        return PluginApiResponse.model_validate(response)
+        return PluginStatusesResponse.model_validate(response)
 
     async def async_set_plugin_status(
         self, plugin_name: str, payload: PluginStatusSetPayload
-    ) -> PluginApiResponse:
+    ) -> ActionResponse:
         """Enables or disables a specific plugin.
 
         Args:
@@ -40,7 +46,7 @@ class PluginMethodsMixin:
             payload: A `PluginStatusSetPayload` object with the new status.
 
         Returns:
-            A `PluginApiResponse` object confirming the status change.
+            A `ActionResponse` object confirming the status change.
 
         Raises:
             ValueError: If `plugin_name` is empty.
@@ -59,13 +65,13 @@ class PluginMethodsMixin:
             json_data=payload.model_dump(),
             authenticated=True,
         )
-        return PluginApiResponse.model_validate(response)
+        return ActionResponse.model_validate(response)
 
-    async def async_reload_plugins(self) -> PluginApiResponse:
+    async def async_reload_plugins(self) -> ActionResponse:
         """Triggers a full reload of all plugins.
 
         Returns:
-            A `PluginApiResponse` object confirming the reload.
+            A `ActionResponse` object confirming the reload.
 
         Raises:
             APIError: For API-related errors.
@@ -74,18 +80,18 @@ class PluginMethodsMixin:
         response = await self._request(
             method="PUT", path="/plugins/reload", authenticated=True
         )
-        return PluginApiResponse.model_validate(response)
+        return ActionResponse.model_validate(response)
 
     async def async_trigger_plugin_event(
         self, payload: TriggerEventPayload
-    ) -> PluginApiResponse:
+    ) -> TriggerEventResponse:
         """Triggers a custom plugin event.
 
         Args:
             payload: A `TriggerEventPayload` object with the event details.
 
         Returns:
-            A `PluginApiResponse` object confirming the event was triggered.
+            A `TriggerEventResponse` object confirming the event was triggered.
 
         Raises:
             APIError: For API-related errors.
@@ -101,4 +107,4 @@ class PluginMethodsMixin:
             json_data=payload.model_dump(),
             authenticated=True,
         )
-        return PluginApiResponse.model_validate(response)
+        return TriggerEventResponse.model_validate(response)

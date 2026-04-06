@@ -4,10 +4,10 @@ import logging
 from typing import Any, Dict, Optional, TYPE_CHECKING
 
 from ..models import (
-    User,
-    ThemeUpdate,
-    ProfileUpdate,
-    ChangePasswordRequest,
+    UserResponse,
+    ThemeUpdatePayload,
+    ProfileUpdatePayload,
+    ChangePasswordPayload,
     BaseApiResponse,
 )
 
@@ -33,23 +33,23 @@ class AccountMethodsMixin:
             is_retry: bool = False,
         ) -> Any: ...
 
-    async def async_get_account_details(self) -> User:
+    async def async_get_account_details(self) -> UserResponse:
         """Gets the current user's account details.
 
         Returns:
-            A `User` object containing the account details.
+            A `UserResponse` object containing the account details.
         """
         _LOGGER.debug("Fetching account details from /account")
         response = await self._request(
             method="GET", path="/account", authenticated=True
         )
-        return User.model_validate(response)
+        return UserResponse.model_validate(response)
 
-    async def async_update_theme(self, payload: ThemeUpdate) -> BaseApiResponse:
+    async def async_update_theme(self, payload: ThemeUpdatePayload) -> BaseApiResponse:
         """Updates the current user's theme.
 
         Args:
-            payload: A `ThemeUpdate` object containing the new theme.
+            payload: A `ThemeUpdatePayload` object containing the new theme.
 
         Returns:
             A `BaseApiResponse` object indicating the result of the operation.
@@ -63,11 +63,11 @@ class AccountMethodsMixin:
         )
         return BaseApiResponse.model_validate(response)
 
-    async def async_update_profile(self, payload: ProfileUpdate) -> BaseApiResponse:
+    async def async_update_profile(self, payload: ProfileUpdatePayload) -> BaseApiResponse:
         """Updates the current user's profile.
 
         Args:
-            payload: A `ProfileUpdate` object containing the new profile data.
+            payload: A `ProfileUpdatePayload` object containing the new profile data.
 
         Returns:
             A `BaseApiResponse` object indicating the result of the operation.
@@ -82,12 +82,12 @@ class AccountMethodsMixin:
         return BaseApiResponse.model_validate(response)
 
     async def async_change_password(
-        self, payload: ChangePasswordRequest
+        self, payload: ChangePasswordPayload
     ) -> BaseApiResponse:
         """Changes the current user's password.
 
         Args:
-            payload: A `ChangePasswordRequest` object.
+            payload: A `ChangePasswordPayload` object.
 
         Returns:
             A `BaseApiResponse` object indicating the result of the operation.

@@ -84,7 +84,7 @@ async def main_menu(ctx: click.Context):
             # --- Dynamically build menu choices ---
             response = await client.async_get_servers()
             server_names = (
-                [s["name"] for s in response.servers] if response.servers else []
+                [s.name for s in response.servers] if response.servers else []
             )
 
             menu_choices = ["Install New Server"]
@@ -162,6 +162,7 @@ async def manage_server_menu(ctx: click.Context, server_name: str):
         "Backup or Restore": _backup_restore_menu,
         "Manage World": _world_management_menu,
         "Install Addon": (get_cmd("addon", "install"), {}),
+        "Manage Addons": (get_cmd("addon", "manage"), {}),
     }
     config_map = {
         "Configure Properties": (get_cmd("properties", "set"), {}),
