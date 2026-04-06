@@ -7,7 +7,7 @@ starting, stopping, and sending commands.
 """
 
 import logging
-from typing import TYPE_CHECKING, Any, Callable, Dict, Optional
+from typing import Any, Callable
 
 from ..models import (
     ActionResponse,
@@ -20,9 +20,6 @@ from ..models import (
     PropertiesPayload,
     ServiceUpdatePayload,
 )
-
-if TYPE_CHECKING:
-    from ..client_base import ClientBase
 
 _LOGGER = logging.getLogger(__name__.split(".")[0] + ".client.server_actions")
 

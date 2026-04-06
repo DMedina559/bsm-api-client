@@ -153,7 +153,7 @@ async def manage_server_menu(ctx: click.Context, server_name: str):  # noqa: C90
         group = cli.get_command(ctx, group_name)
         return group.get_command(ctx, cmd_name) if group else None
 
-    from typing import Any, Callable, Dict, Optional, Tuple, Union
+    from typing import Any, Dict, Optional, Tuple
 
     import click
 

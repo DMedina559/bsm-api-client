@@ -6,7 +6,7 @@ for managing server content such as backups, worlds, and addons.
 """
 
 import logging
-from typing import TYPE_CHECKING, Any, Callable, Dict, Optional
+from typing import Any, Callable, Dict, Optional
 
 import aiohttp
 
@@ -20,11 +20,7 @@ from ..models import (
     ContentListResponse,
     FileNamePayload,
     RestoreActionPayload,
-    RestoreTypePayload,
 )
-
-if TYPE_CHECKING:
-    from ..client_base import ClientBase
 
 _LOGGER = logging.getLogger(__name__.split(".")[0] + ".client.content")
 
@@ -161,31 +157,6 @@ class ContentMethodsMixin:
         response = await self._request(
             "POST",
             f"/server/{server_name}/addon/reorder",
-            json_data=payload.model_dump(),
-            authenticated=True,
-        )
-        return ActionResponse.model_validate(response)
-
-    async def async_restore_select_backup_type(
-        self, server_name: str, payload: RestoreTypePayload
-    ) -> ActionResponse:
-        """Selects a restore type and gets a redirect URL for choosing a backup file.
-
-        Args:
-            server_name: The name of the server.
-            payload: A `RestoreTypePayload` object specifying the restore type.
-
-        Returns:
-            An `ActionResponse` object, typically containing a redirect URL.
-        """
-        _LOGGER.info(
-            "Selecting restore backup type '%s' for server '%s'",
-            payload.restore_type,
-            server_name,
-        )
-        response = await self._request(
-            method="POST",
-            path=f"/server/{server_name}/restore/select_backup_type",
             json_data=payload.model_dump(),
             authenticated=True,
         )

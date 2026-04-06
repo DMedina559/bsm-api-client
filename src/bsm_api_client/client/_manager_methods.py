@@ -8,7 +8,7 @@ players, and installing new servers.
 """
 
 import logging
-from typing import TYPE_CHECKING, Any, Callable, Dict, Optional
+from typing import Any, Callable, Dict
 
 import aiohttp
 
@@ -26,9 +26,6 @@ from ..models import (
     SettingItemResponse,
     SettingsResponse,
 )
-
-if TYPE_CHECKING:
-    from ..client_base import ClientBase
 
 _LOGGER = logging.getLogger(__name__.split(".")[0] + ".client.manager")
 

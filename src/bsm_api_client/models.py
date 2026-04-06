@@ -411,16 +411,6 @@ class PluginStatusSetPayload(BaseModel):
     enabled: bool
 
 
-class RestoreTypePayload(BaseModel):
-    """Request model for specifying the type of restore operation.
-
-    Attributes:
-        restore_type: The type of restore to perform (e.g., 'world', 'properties').
-    """
-
-    restore_type: str
-
-
 class RestoreActionPayload(BaseModel):
     """Request model for triggering a restore action.
 

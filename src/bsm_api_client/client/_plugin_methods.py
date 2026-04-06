@@ -6,6 +6,7 @@ for managing plugins through the Bedrock Server Manager API.
 """
 
 import logging
+from typing import Any, Callable
 
 from ..models import (
     ActionResponse,
@@ -16,9 +17,6 @@ from ..models import (
 )
 
 _LOGGER = logging.getLogger(__name__.split(".")[0] + ".client.plugins")
-
-
-from typing import Any, Callable
 
 
 class PluginMethodsMixin:

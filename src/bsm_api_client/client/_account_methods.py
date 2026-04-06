@@ -2,7 +2,7 @@
 """Mixin class for account-related API methods."""
 
 import logging
-from typing import TYPE_CHECKING, Any, Callable, Dict, Optional
+from typing import Any, Callable
 
 from ..models import (
     BaseApiResponse,
@@ -11,9 +11,6 @@ from ..models import (
     ThemeUpdatePayload,
     UserResponse,
 )
-
-if TYPE_CHECKING:
-    from ..client_base import ClientBase
 
 _LOGGER = logging.getLogger(__name__.split(".")[0] + ".client.account")
 
