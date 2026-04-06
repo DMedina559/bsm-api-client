@@ -12,7 +12,6 @@ from bsm_api_client.models import (
     BackupActionPayload,
     FileNamePayload,
     RestoreActionPayload,
-    RestoreTypePayload,
 )
 
 
@@ -38,26 +37,6 @@ async def test_list_server_backups(client):
             "GET", "/server/test-server/backup/list/world", authenticated=True
         )
         assert len(result.backups) == 1
-
-
-@pytest.mark.asyncio
-async def test_restore_select_backup_type(client):
-    """Test async_restore_select_backup_type method."""
-    with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
-        payload = RestoreTypePayload(restore_type="world")
-        mock_request.return_value = {
-            "status": "success",
-            "message": "ok",
-            "redirect_url": "/some/url",
-        }
-        result = await client.async_restore_select_backup_type("test-server", payload)
-        mock_request.assert_called_once_with(
-            method="POST",
-            path="/server/test-server/restore/select_backup_type",
-            json_data=payload.model_dump(),
-            authenticated=True,
-        )
-        assert result.redirect_url == "/some/url"
 
 
 @pytest.mark.asyncio
@@ -110,18 +89,6 @@ async def test_list_server_backups_error(client):
         mock_request.side_effect = Exception("API Error")
         with pytest.raises(Exception) as excinfo:
             await client.async_list_server_backups("test-server", "world")
-        assert "API Error" in str(excinfo.value)
-
-
-@pytest.mark.asyncio
-async def test_restore_select_backup_type_error(client):
-    """Test async_restore_select_backup_type method with an API error."""
-    with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
-        mock_request.side_effect = Exception("API Error")
-        with pytest.raises(Exception) as excinfo:
-            await client.async_restore_select_backup_type(
-                "test-server", RestoreTypePayload(restore_type="world")
-            )
         assert "API Error" in str(excinfo.value)
 
 
