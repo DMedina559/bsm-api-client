@@ -24,7 +24,7 @@
 
 # 1.1.0
 1. Added BSM 3.4.0 support
-2. Added methogs for plugin endpoints 
+2. Added methogs for plugin endpoints
 
 # 1.0.1
 
@@ -48,7 +48,7 @@
 
 1. Added support for Bedrock Server Manager (BSM) 3.3.0
 2. Added `async_reset_server_world`
-   - Corresponds to `DELETE /api/server/{server_name}/world/reset`. 
+   - Corresponds to `DELETE /api/server/{server_name}/world/reset`.
 
 # 0.5.1
 

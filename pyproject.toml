@@ -54,7 +54,7 @@ cli = [
 bsm-api-client = "bsm_api_client.cli.__main__:cli"
 
 [tool.setuptools.packages.find]
-where = ["src"] 
+where = ["src"]
 include = ["bsm_api_client*"]
 
 [tool.setuptools_scm]

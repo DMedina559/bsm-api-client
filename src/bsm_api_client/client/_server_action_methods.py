@@ -54,11 +54,15 @@ class ServerActionMethodsMixin:
     async def async_start_server(self, server_name: str) -> ActionResponse:
         """Starts the specified Bedrock server instance.
 
-        Args:
-            server_name: The unique name of the server instance to start.
+        :param server_name: The unique name of the server instance to start.
 
-        Returns:
-            An `ActionResponse` object confirming the action.
+        :returns: An `ActionResponse` object confirming the action.
+
+
+        .. rubric:: Example:
+        .. code-block:: python
+
+            response = await client.async_start_server('MyServer')
         """
         _LOGGER.info("Requesting start for server '%s'", server_name)
         response = await self._request(
@@ -71,11 +75,15 @@ class ServerActionMethodsMixin:
     async def async_enable_server_service(self, server_name: str) -> BaseApiResponse:
         """Enables the system service for the specified server.
 
-        Args:
-            server_name: The name of the server.
+        :param server_name: The name of the server.
 
-        Returns:
-            A `BaseApiResponse` object confirming the action.
+        :returns: A `BaseApiResponse` object confirming the action.
+
+
+        .. rubric:: Example:
+        .. code-block:: python
+
+            response = await client.async_enable_server_service('MyServer')
         """
         _LOGGER.info("Enabling service for server '%s'", server_name)
         return await self.async_configure_server_os_service(
@@ -85,11 +93,15 @@ class ServerActionMethodsMixin:
     async def async_disable_server_service(self, server_name: str) -> BaseApiResponse:
         """Disables the system service for the specified server.
 
-        Args:
-            server_name: The name of the server.
+        :param server_name: The name of the server.
 
-        Returns:
-            A `BaseApiResponse` object confirming the action.
+        :returns: A `BaseApiResponse` object confirming the action.
+
+
+        .. rubric:: Example:
+        .. code-block:: python
+
+            response = await client.async_disable_server_service('MyServer')
         """
         _LOGGER.info("Disabling service for server '%s'", server_name)
         return await self.async_configure_server_os_service(
@@ -101,12 +113,16 @@ class ServerActionMethodsMixin:
     ) -> BaseApiResponse:
         """Sets the autoupdate flag for the specified server.
 
-        Args:
-            server_name: The name of the server.
-            autoupdate: The desired autoupdate state.
+        :param server_name: The name of the server.
+        :param autoupdate: The desired autoupdate state.
 
-        Returns:
-            A `BaseApiResponse` object confirming the action.
+        :returns: A `BaseApiResponse` object confirming the action.
+
+
+        .. rubric:: Example:
+        .. code-block:: python
+
+            response = await client.async_set_server_autoupdate('MyServer')
         """
         _LOGGER.info(
             "Setting autoupdate for server '%s' to %s", server_name, autoupdate
@@ -120,12 +136,16 @@ class ServerActionMethodsMixin:
     ) -> BaseApiResponse:
         """Creates the system service for the specified server.
 
-        Args:
-            server_name: The name of the server.
-            autostart: Whether the service should start on boot.
+        :param server_name: The name of the server.
+        :param autostart: Whether the service should start on boot.
 
-        Returns:
-            A `BaseApiResponse` object confirming the action.
+        :returns: A `BaseApiResponse` object confirming the action.
+
+
+        .. rubric:: Example:
+        .. code-block:: python
+
+            response = await client.async_create_server_service('MyServer')
         """
         _LOGGER.info(
             "Creating service for server '%s' with autostart=%s",
@@ -139,11 +159,15 @@ class ServerActionMethodsMixin:
     async def async_stop_server(self, server_name: str) -> ActionResponse:
         """Stops the specified running Bedrock server instance.
 
-        Args:
-            server_name: The unique name of the server instance to stop.
+        :param server_name: The unique name of the server instance to stop.
 
-        Returns:
-            An `ActionResponse` object confirming the action.
+        :returns: An `ActionResponse` object confirming the action.
+
+
+        .. rubric:: Example:
+        .. code-block:: python
+
+            response = await client.async_stop_server('MyServer')
         """
         _LOGGER.info("Requesting stop for server '%s'", server_name)
         response = await self._request(
@@ -156,11 +180,15 @@ class ServerActionMethodsMixin:
     async def async_restart_server(self, server_name: str) -> ActionResponse:
         """Restarts the specified Bedrock server instance.
 
-        Args:
-            server_name: The unique name of the server instance to restart.
+        :param server_name: The unique name of the server instance to restart.
 
-        Returns:
-            An `ActionResponse` object confirming the action.
+        :returns: An `ActionResponse` object confirming the action.
+
+
+        .. rubric:: Example:
+        .. code-block:: python
+
+            response = await client.async_restart_server('MyServer')
         """
         _LOGGER.info("Requesting restart for server '%s'", server_name)
         response = await self._request(
@@ -175,12 +203,16 @@ class ServerActionMethodsMixin:
     ) -> ActionResponse:
         """Sends a command to the specified server's console.
 
-        Args:
-            server_name: The unique name of the target server instance.
-            command: A `CommandPayload` object containing the command to send.
+        :param server_name: The unique name of the target server instance.
+        :param command: A `CommandPayload` object containing the command to send.
 
-        Returns:
-            An `ActionResponse` object confirming the action.
+        :returns: An `ActionResponse` object confirming the action.
+
+
+        .. rubric:: Example:
+        .. code-block:: python
+
+            response = await client.async_send_server_command('MyServer')
         """
         _LOGGER.info(
             "Sending command to server '%s': '%s'", server_name, command.command
@@ -197,11 +229,15 @@ class ServerActionMethodsMixin:
     async def async_update_server(self, server_name: str) -> ActionResponse:
         """Checks for and applies updates to the specified server instance.
 
-        Args:
-            server_name: The unique name of the server instance to update.
+        :param server_name: The unique name of the server instance to update.
 
-        Returns:
-            An `ActionResponse` object confirming the action.
+        :returns: An `ActionResponse` object confirming the action.
+
+
+        .. rubric:: Example:
+        .. code-block:: python
+
+            response = await client.async_update_server('MyServer')
         """
         _LOGGER.info("Requesting update for server '%s'", server_name)
         response = await self._request(
@@ -216,12 +252,17 @@ class ServerActionMethodsMixin:
     ) -> BaseApiResponse:
         """Adds players to the server's allowlist.
 
-        Args:
-            server_name: The name of the server.
-            payload: An `AllowlistAddPayload` object with the players to add.
+        :param server_name: The name of the server.
+        :param payload: An `AllowlistAddPayload` object with the players to add.
 
-        Returns:
-            A `BaseApiResponse` object confirming the action.
+        :returns: A `BaseApiResponse` object confirming the action.
+
+
+        .. rubric:: Example:
+        .. code-block:: python
+
+            payload = ...
+            response = await client.async_add_server_allowlist(payload)
         """
         _LOGGER.info(
             "Adding players %s to allowlist for server '%s' (ignores limit: %s)",
@@ -243,12 +284,17 @@ class ServerActionMethodsMixin:
     ) -> BaseApiResponse:
         """Removes players from the server's allowlist.
 
-        Args:
-            server_name: The name of the server.
-            payload: An `AllowlistRemovePayload` object with the players to remove.
+        :param server_name: The name of the server.
+        :param payload: An `AllowlistRemovePayload` object with the players to remove.
 
-        Returns:
-            A `BaseApiResponse` object confirming the action.
+        :returns: A `BaseApiResponse` object confirming the action.
+
+
+        .. rubric:: Example:
+        .. code-block:: python
+
+            payload = ...
+            response = await client.async_remove_server_allowlist_players(payload)
         """
         _LOGGER.info(
             "Removing %d players from allowlist for server '%s': %s",
@@ -270,12 +316,17 @@ class ServerActionMethodsMixin:
     ) -> PermissionsUpdateResponse:
         """Updates permission levels for players on the server.
 
-        Args:
-            server_name: The name of the server.
-            payload: A `PermissionsSetPayload` object with the permissions to set.
+        :param server_name: The name of the server.
+        :param payload: A `PermissionsSetPayload` object with the permissions to set.
 
-        Returns:
-            A `PermissionsUpdateResponse` object confirming the action.
+        :returns: A `PermissionsUpdateResponse` object confirming the action.
+
+
+        .. rubric:: Example:
+        .. code-block:: python
+
+            payload = ...
+            response = await client.async_set_server_permissions(payload)
         """
         _LOGGER.info(
             "Setting permissions for server '%s': %s",
@@ -296,12 +347,17 @@ class ServerActionMethodsMixin:
     ) -> BaseApiResponse:
         """Updates key-value pairs in the server's properties file.
 
-        Args:
-            server_name: The name of the server.
-            payload: A `PropertiesPayload` object with the properties to update.
+        :param server_name: The name of the server.
+        :param payload: A `PropertiesPayload` object with the properties to update.
 
-        Returns:
-            A `BaseApiResponse` object confirming the action.
+        :returns: A `BaseApiResponse` object confirming the action.
+
+
+        .. rubric:: Example:
+        .. code-block:: python
+
+            payload = ...
+            response = await client.async_update_server_properties(payload)
         """
         _LOGGER.info(
             "Updating properties for server '%s': %s", server_name, payload.properties
@@ -320,12 +376,17 @@ class ServerActionMethodsMixin:
     ) -> BaseApiResponse:
         """Configures OS-specific service settings for the server.
 
-        Args:
-            server_name: The name of the server.
-            payload: A `ServiceUpdatePayload` object with the service settings.
+        :param server_name: The name of the server.
+        :param payload: A `ServiceUpdatePayload` object with the service settings.
 
-        Returns:
-            A `BaseApiResponse` object confirming the action.
+        :returns: A `BaseApiResponse` object confirming the action.
+
+
+        .. rubric:: Example:
+        .. code-block:: python
+
+            payload = ...
+            response = await client.async_configure_server_os_service(payload)
         """
         _LOGGER.info(
             "Requesting OS service config for server '%s' with payload: %s",
@@ -347,11 +408,15 @@ class ServerActionMethodsMixin:
         Warning:
             This action is irreversible and will delete all data associated with the server.
 
-        Args:
-            server_name: The unique name of the server instance to delete.
+        :param server_name: The unique name of the server instance to delete.
 
-        Returns:
-            An `ActionResponse` object confirming the action.
+        :returns: An `ActionResponse` object confirming the action.
+
+
+        .. rubric:: Example:
+        .. code-block:: python
+
+            response = await client.async_delete_server('MyServer')
         """
         _LOGGER.warning(
             "Requesting DELETION of server '%s'. THIS IS IRREVERSIBLE.", server_name

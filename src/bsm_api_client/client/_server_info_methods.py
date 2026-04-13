@@ -43,8 +43,13 @@ class ServerInfoMethodsMixin:
     async def async_get_servers(self) -> ServersListResponse:
         """Retrieves a list of all detected server instances with their status and version.
 
-        Returns:
-            A `ServersListResponse` object containing a list of servers.
+        :returns: A `ServersListResponse` object containing a list of servers.
+
+
+        .. rubric:: Example:
+        .. code-block:: python
+
+            response = await client.async_get_servers()
         """
         _LOGGER.debug("Fetching server list from /api/servers")
         response_data = await self._request("GET", "/servers", authenticated=True)
@@ -55,8 +60,13 @@ class ServerInfoMethodsMixin:
 
         This is a convenience wrapper around `async_get_servers`.
 
-        Returns:
-            A sorted list of server names.
+        :returns: A sorted list of server names.
+
+
+        .. rubric:: Example:
+        .. code-block:: python
+
+            response = await client.async_get_server_names()
         """
         _LOGGER.debug("Fetching server names list")
         server_details = await self.async_get_servers()
@@ -67,15 +77,18 @@ class ServerInfoMethodsMixin:
     async def async_get_server_validate(self, server_name: str) -> bool:
         """Validates the existence of a server's directory and executable.
 
-        Args:
-            server_name: The name of the server to validate.
+        :param server_name: The name of the server to validate.
 
-        Returns:
-            `True` if the server is valid, `False` otherwise.
+        :returns: `True` if the server is valid, `False` otherwise.
 
-        Raises:
-            ServerNotFoundError: If the server is not found.
-            APIError: For other API-related errors.
+        :raises ServerNotFoundError: If the server is not found.
+        :raises APIError: For other API-related errors.
+
+
+        .. rubric:: Example:
+        .. code-block:: python
+
+            response = await client.async_get_server_validate('MyServer')
         """
         _LOGGER.debug("Validating existence of server: '%s'", server_name)
         # Server names might have characters needing encoding, though install rules try to limit this.
@@ -107,11 +120,15 @@ class ServerInfoMethodsMixin:
     ) -> ServerProcessInfoResponse:
         """Gets runtime process information for a server.
 
-        Args:
-            server_name: The name of the server.
+        :param server_name: The name of the server.
 
-        Returns:
-            A `ServerProcessInfoResponse` object containing process information.
+        :returns: A `ServerProcessInfoResponse` object containing process information.
+
+
+        .. rubric:: Example:
+        .. code-block:: python
+
+            response = await client.async_get_server_process_info('MyServer')
         """
         _LOGGER.debug("Fetching status info for server '%s'", server_name)
         encoded_server_name = quote(server_name)
@@ -125,16 +142,13 @@ class ServerInfoMethodsMixin:
     async def async_get_world_icon_image(self, server_name: str) -> bytes:  # noqa: C901
         """Retrieves the world icon image for a server.
 
-        Args:
-            server_name: The name of the server.
+        :param server_name: The name of the server.
 
-        Returns:
-            The raw bytes of the world icon image.
+        :returns: The raw bytes of the world icon image.
 
-        Raises:
-            ValueError: If `server_name` is empty.
-            CannotConnectError: If a connection to the server cannot be established.
-            APIError: For other API-related errors.
+        :raises ValueError: If `server_name` is empty.
+        :raises CannotConnectError: If a connection to the server cannot be established.
+        :raises APIError: For other API-related errors.
         """
         if not server_name:
             raise ValueError("Server name cannot be empty.")
@@ -224,11 +238,15 @@ class ServerInfoMethodsMixin:
     ) -> ServerRunningStatusResponse:
         """Checks if the Bedrock server process is currently running.
 
-        Args:
-            server_name: The name of the server.
+        :param server_name: The name of the server.
 
-        Returns:
-            A `ServerRunningStatusResponse` object containing the running status.
+        :returns: A `ServerRunningStatusResponse` object containing the running status.
+
+
+        .. rubric:: Example:
+        .. code-block:: python
+
+            response = await client.async_get_world_icon_image('MyServer')
         """
         _LOGGER.debug("Fetching running status for server '%s'", server_name)
         encoded_server_name = quote(server_name)
@@ -245,11 +263,15 @@ class ServerInfoMethodsMixin:
     ) -> ServerConfigStatusResponse:
         """Gets the status string from the server's configuration file.
 
-        Args:
-            server_name: The name of the server.
+        :param server_name: The name of the server.
 
-        Returns:
-            A `ServerConfigStatusResponse` object containing the configuration status.
+        :returns: A `ServerConfigStatusResponse` object containing the configuration status.
+
+
+        .. rubric:: Example:
+        .. code-block:: python
+
+            response = await client.async_get_server_config_status('MyServer')
         """
         _LOGGER.debug("Fetching config status for server '%s'", server_name)
         encoded_server_name = quote(server_name)
@@ -263,11 +285,15 @@ class ServerInfoMethodsMixin:
     async def async_get_server_version(self, server_name: str) -> ServerVersionResponse:
         """Gets the installed Bedrock server version.
 
-        Args:
-            server_name: The name of the server.
+        :param server_name: The name of the server.
 
-        Returns:
-            A `ServerVersionResponse` object containing the server version.
+        :returns: A `ServerVersionResponse` object containing the server version.
+
+
+        .. rubric:: Example:
+        .. code-block:: python
+
+            response = await client.async_get_server_version('MyServer')
         """
         _LOGGER.debug("Fetching version for server '%s'", server_name)
         encoded_server_name = quote(server_name)
@@ -283,11 +309,15 @@ class ServerInfoMethodsMixin:
     ) -> PropertiesGetResponse:
         """Retrieves the server's properties.
 
-        Args:
-            server_name: The name of the server.
+        :param server_name: The name of the server.
 
-        Returns:
-            A `PropertiesGetResponse` object containing the server properties.
+        :returns: A `PropertiesGetResponse` object containing the server properties.
+
+
+        .. rubric:: Example:
+        .. code-block:: python
+
+            response = await client.async_get_server_properties('MyServer')
         """
         _LOGGER.debug("Fetching server.properties for server '%s'", server_name)
         encoded_server_name = quote(server_name)
@@ -303,11 +333,15 @@ class ServerInfoMethodsMixin:
     ) -> PermissionsGetResponse:
         """Retrieves player permissions from the server.
 
-        Args:
-            server_name: The name of the server.
+        :param server_name: The name of the server.
 
-        Returns:
-            A `PermissionsGetResponse` object containing the permissions data.
+        :returns: A `PermissionsGetResponse` object containing the permissions data.
+
+
+        .. rubric:: Example:
+        .. code-block:: python
+
+            response = await client.async_get_server_permissions_data('MyServer')
         """
         _LOGGER.debug("Fetching permissions.json data for server '%s'", server_name)
         encoded_server_name = quote(server_name)
@@ -323,11 +357,15 @@ class ServerInfoMethodsMixin:
     ) -> AllowlistGetResponse:
         """Retrieves the server's allowlist.
 
-        Args:
-            server_name: The name of the server.
+        :param server_name: The name of the server.
 
-        Returns:
-            A `AllowlistGetResponse` object containing the allowlist.
+        :returns: A `AllowlistGetResponse` object containing the allowlist.
+
+
+        .. rubric:: Example:
+        .. code-block:: python
+
+            response = await client.async_get_server_allowlist('MyServer')
         """
         _LOGGER.debug("Fetching allowlist.json for server '%s'", server_name)
         encoded_server_name = quote(server_name)
