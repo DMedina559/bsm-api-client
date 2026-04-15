@@ -1,12 +1,14 @@
-import pytest
-import pytest_asyncio
 import asyncio
 import os
+
+import pytest
+import pytest_asyncio
+
 from bsm_api_client.api_client import BedrockServerManagerApi
 from bsm_api_client.models import (
     BackupActionPayload,
-    RestoreActionPayload,
     FileNamePayload,
+    RestoreActionPayload,
 )
 
 
@@ -44,7 +46,7 @@ async def content_client(server, bedrock_server, wait_for_server_status):
     server_name = bedrock_server
     try:
         status_res = await client.async_get_server_running_status(server_name)
-        if status_res.data.get("running"):
+        if status_res.running:
             await client.async_stop_server(server_name)
             await wait_for_server_status(
                 client, server_name, is_running=False, timeout=90
@@ -52,7 +54,7 @@ async def content_client(server, bedrock_server, wait_for_server_status):
         yield client
     finally:
         status_res = await client.async_get_server_running_status(server_name)
-        if status_res.data.get("running"):
+        if status_res.running:
             await client.async_stop_server(server_name)
             await wait_for_server_status(
                 client, server_name, is_running=False, timeout=90
@@ -99,14 +101,26 @@ class TestContentManagement:
         )
         assert restore_result.status in ["success", "pending"]
 
+        # Wait a bit after the first restore to make sure the server status is idle for next actions.
+        await asyncio.sleep(5)
+
+        # Restore Latest All
+        latest_all = await client.async_restore_server_latest_all(server_name)
+        assert latest_all.status in ["success", "pending"]
+
+    async def test_custom_zips(self, content_client):
+        zips = await content_client.async_get_custom_zips()
+        assert zips.status == "success"
+
     async def test_world_and_addon_management(
-        self, bedrock_server, content_files, content_client
+        self, bedrock_server, content_files, content_client, wait_for_server_status
     ):
         """
         Tests listing and installing worlds and addons.
         """
         client = content_client
         server_name = bedrock_server
+
         dummy_world_file = content_files["world_file"]
         dummy_addon_file = content_files["addon_file"]
         worlds_list = await client.async_get_content_worlds()
@@ -125,6 +139,18 @@ class TestContentManagement:
             server_name, install_addon_payload
         )
         assert install_addon_result.status in ["success", "pending"]
+
+        # Note: The test previously failed here with "World directory for 'new-world-name' not found"
+        # This occurs because `test_manager_and_server_info.py` changes the level-name property of the server to `new-world-name`!
+        # Thus `get_server_addons` will error out because the level-name is mismatched in bedrock-server-manager unless the server is started and generates the world.
+        # We start and stop the server before calling get_addons to ensure the world folder is generated
+        await client.async_start_server(server_name)
+        await wait_for_server_status(client, server_name, is_running=True, timeout=90)
+        await client.async_stop_server(server_name)
+        await wait_for_server_status(client, server_name, is_running=False, timeout=90)
+
+        addons_res = await client.async_get_server_addons(server_name)
+        assert addons_res.status == "success"
 
     async def test_other_content_actions(
         self, bedrock_server, wait_for_server_status, content_client

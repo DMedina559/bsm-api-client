@@ -4,20 +4,23 @@
 This module provides the `ContentMethodsMixin` class, which includes methods
 for managing server content such as backups, worlds, and addons.
 """
-import logging
-from typing import Any, Dict, Optional, List, TYPE_CHECKING
-from ..models import (
-    RestoreTypePayload,
-    BackupActionPayload,
-    RestoreActionPayload,
-    FileNamePayload,
-    BackupRestoreResponse,
-    ContentListResponse,
-    ActionResponse,
-)
 
-if TYPE_CHECKING:
-    from ..client_base import ClientBase
+import logging
+from typing import Any, Callable, Dict, Optional
+
+import aiohttp
+
+from ..models import (
+    ActionResponse,
+    AddonActionPayload,
+    AddonListResponse,
+    AddonReorderPayload,
+    AddonSubpackPayload,
+    BackupActionPayload,
+    ContentListResponse,
+    FileNamePayload,
+    RestoreActionPayload,
+)
 
 _LOGGER = logging.getLogger(__name__.split(".")[0] + ".client.content")
 
@@ -30,33 +33,31 @@ ALLOWED_RESTORE_TYPES = ["world", "properties", "allowlist", "permissions"]
 class ContentMethodsMixin:
     """Mixin for content management endpoints (backups, worlds, addons)."""
 
-    _request: callable
-    if TYPE_CHECKING:
-
-        async def _request(
-            self: "ClientBase",
-            method: str,
-            path: str,
-            json_data: Optional[Dict[str, Any]] = None,
-            params: Optional[Dict[str, Any]] = None,
-            authenticated: bool = True,
-            is_retry: bool = False,
-        ) -> Any: ...
+    _request: Callable[..., Any]
+    _server_root_url: str
+    _jwt_token: Optional[str]
+    _session: aiohttp.ClientSession
+    _is_retrying: bool
+    _authenticate: Callable[..., Any]
+    _handle_api_error: Callable[..., Any]
 
     async def async_list_server_backups(
         self, server_name: str, backup_type: str
-    ) -> BackupRestoreResponse:
+    ) -> ActionResponse:
         """Lists backup files for a specific server and backup type.
 
-        Args:
-            server_name: The name of the server.
-            backup_type: The type of backups to list (e.g., "world", "properties").
+        :param server_name: The name of the server.
+        :param backup_type: The type of backups to list (e.g., "world", "properties").
 
-        Returns:
-            A `BackupRestoreResponse` object containing the list of backups.
+        :returns: An `ActionResponse` object containing the list of backups.
 
-        Raises:
-            ValueError: If an invalid `backup_type` is provided.
+        :raises ValueError: If an invalid `backup_type` is provided.
+
+
+        .. rubric:: Example:
+        .. code-block:: python
+
+            response = await client.async_list_server_backups('MyServer')
         """
         bt_lower = backup_type.lower()
         if bt_lower not in ALLOWED_BACKUP_LIST_TYPES:
@@ -77,38 +78,144 @@ class ContentMethodsMixin:
             f"/server/{server_name}/backup/list/{bt_lower}",
             authenticated=True,
         )
-        return BackupRestoreResponse.model_validate(response)
+        return ActionResponse.model_validate(response)
 
-    async def async_restore_select_backup_type(
-        self, server_name: str, payload: RestoreTypePayload
-    ) -> BackupRestoreResponse:
-        """Selects a restore type and gets a redirect URL for choosing a backup file.
+    async def async_get_server_addons(self, server_name: str) -> AddonListResponse:
+        """Retrieves a list of addons installed on a server's active world.
 
-        Args:
-            server_name: The name of the server.
-            payload: A `RestoreTypePayload` object specifying the restore type.
+        .. rubric:: Example:
+        .. code-block:: python
 
-        Returns:
-            A `BackupRestoreResponse` object, typically containing a redirect URL.
+            response = await client.async_get_server_addons('MyServer')
+        """
+        _LOGGER.debug("Fetching addons for server '%s'", server_name)
+        response = await self._request(
+            "GET", f"/server/{server_name}/addons", authenticated=True
+        )
+        return AddonListResponse.model_validate(response)
+
+    async def async_enable_server_addon(
+        self, server_name: str, payload: AddonActionPayload
+    ) -> ActionResponse:
+        """Enables an addon on a server.
+
+        .. rubric:: Example:
+        .. code-block:: python
+
+            payload = ...
+            response = await client.async_enable_server_addon(payload)
         """
         _LOGGER.info(
-            "Selecting restore backup type '%s' for server '%s'",
-            payload.restore_type,
-            server_name,
+            "Enabling addon '%s' for server '%s'", payload.pack_uuid, server_name
         )
         response = await self._request(
-            method="POST",
-            path=f"/server/{server_name}/restore/select_backup_type",
+            "POST",
+            f"/server/{server_name}/addon/enable",
             json_data=payload.model_dump(),
             authenticated=True,
         )
-        return BackupRestoreResponse.model_validate(response)
+        return ActionResponse.model_validate(response)
+
+    async def async_disable_server_addon(
+        self, server_name: str, payload: AddonActionPayload
+    ) -> ActionResponse:
+        """Disables an addon on a server.
+
+        .. rubric:: Example:
+        .. code-block:: python
+
+            payload = ...
+            response = await client.async_disable_server_addon(payload)
+        """
+        _LOGGER.info(
+            "Disabling addon '%s' for server '%s'", payload.pack_uuid, server_name
+        )
+        response = await self._request(
+            "POST",
+            f"/server/{server_name}/addon/disable",
+            json_data=payload.model_dump(),
+            authenticated=True,
+        )
+        return ActionResponse.model_validate(response)
+
+    async def async_update_server_addon_subpack(
+        self, server_name: str, payload: AddonSubpackPayload
+    ) -> ActionResponse:
+        """Updates an addon's active subpack.
+
+        .. rubric:: Example:
+        .. code-block:: python
+
+            payload = ...
+            response = await client.async_update_server_addon_subpack(payload)
+        """
+        _LOGGER.info(
+            "Updating subpack for addon '%s' on server '%s'",
+            payload.pack_uuid,
+            server_name,
+        )
+        response = await self._request(
+            "POST",
+            f"/server/{server_name}/addon/subpack",
+            json_data=payload.model_dump(),
+            authenticated=True,
+        )
+        return ActionResponse.model_validate(response)
+
+    async def async_uninstall_server_addon(
+        self, server_name: str, payload: AddonActionPayload
+    ) -> ActionResponse:
+        """Uninstalls an addon on a server.
+
+        .. rubric:: Example:
+        .. code-block:: python
+
+            payload = ...
+            response = await client.async_uninstall_server_addon(payload)
+        """
+        _LOGGER.info(
+            "Uninstalling addon '%s' for server '%s'", payload.pack_uuid, server_name
+        )
+        response = await self._request(
+            "POST",
+            f"/server/{server_name}/addon/uninstall",
+            json_data=payload.model_dump(),
+            authenticated=True,
+        )
+        return ActionResponse.model_validate(response)
+
+    async def async_reorder_server_addon(
+        self, server_name: str, payload: AddonReorderPayload
+    ) -> ActionResponse:
+        """Reorders active addons on a server.
+
+        .. rubric:: Example:
+        .. code-block:: python
+
+            payload = ...
+            response = await client.async_reorder_server_addon(payload)
+        """
+        _LOGGER.info(
+            "Reordering %s packs for server '%s'", payload.pack_type, server_name
+        )
+        response = await self._request(
+            "POST",
+            f"/server/{server_name}/addon/reorder",
+            json_data=payload.model_dump(),
+            authenticated=True,
+        )
+        return ActionResponse.model_validate(response)
 
     async def async_get_content_worlds(self) -> ContentListResponse:
         """Lists available world template files (.mcworld).
 
-        Returns:
-            A `ContentListResponse` object containing the list of world files.
+        :returns: A `ContentListResponse` object containing the list of world files.
+
+
+        .. rubric:: Example:
+        .. code-block:: python
+
+            response = await client.async_get_content_worlds()
         """
         _LOGGER.debug("Fetching available world files from /content/worlds")
         response = await self._request("GET", "/content/worlds", authenticated=True)
@@ -117,8 +224,13 @@ class ContentMethodsMixin:
     async def async_get_content_addons(self) -> ContentListResponse:
         """Lists available addon files (.mcpack, .mcaddon).
 
-        Returns:
-            A `ContentListResponse` object containing the list of addon files.
+        :returns: A `ContentListResponse` object containing the list of addon files.
+
+
+        .. rubric:: Example:
+        .. code-block:: python
+
+            response = await client.async_get_content_addons()
         """
         _LOGGER.debug("Fetching available addon files from /content/addons")
         response = await self._request("GET", "/content/addons", authenticated=True)
@@ -126,15 +238,20 @@ class ContentMethodsMixin:
 
     async def async_trigger_server_backup(
         self, server_name: str, payload: BackupActionPayload
-    ) -> BackupRestoreResponse:
+    ) -> ActionResponse:
         """Triggers a backup operation for a specific server.
 
-        Args:
-            server_name: The name of the server to back up.
-            payload: A `BackupActionPayload` object specifying the backup details.
+        :param server_name: The name of the server to back up.
+        :param payload: A `BackupActionPayload` object specifying the backup details.
 
-        Returns:
-            A `BackupRestoreResponse` object confirming the backup action.
+        :returns: An `ActionResponse` object confirming the backup action.
+
+
+        .. rubric:: Example:
+        .. code-block:: python
+
+            payload = ...
+            response = await client.async_trigger_server_backup(payload)
         """
         _LOGGER.info(
             "Triggering backup for server '%s', type: %s, file: %s",
@@ -149,16 +266,20 @@ class ContentMethodsMixin:
             json_data=payload.model_dump(),
             authenticated=True,
         )
-        return BackupRestoreResponse.model_validate(response)
+        return ActionResponse.model_validate(response)
 
     async def async_export_server_world(self, server_name: str) -> ActionResponse:
         """Exports the current world of a server to a .mcworld file.
 
-        Args:
-            server_name: The name of the server whose world to export.
+        :param server_name: The name of the server whose world to export.
 
-        Returns:
-            An `ActionResponse` object confirming the export action.
+        :returns: An `ActionResponse` object confirming the export action.
+
+
+        .. rubric:: Example:
+        .. code-block:: python
+
+            response = await client.async_export_server_world('MyServer')
         """
         _LOGGER.info("Triggering world export for server '%s'", server_name)
         response = await self._request(
@@ -172,14 +293,19 @@ class ContentMethodsMixin:
     async def async_upload_content(self, file_path: str) -> Dict[str, Any]:
         """Uploads a content file (e.g., .mcworld, .mcaddon) to the server.
 
-        Args:
-            file_path: The local path to the file to upload.
+        :param file_path: The local path to the file to upload.
 
-        Returns:
-            A dictionary containing the API response.
+        :returns: A dictionary containing the API response.
+
+
+        .. rubric:: Example:
+        .. code-block:: python
+
+            response = await client.async_upload_content()
         """
-        import aiohttp
         import os
+
+        import aiohttp
 
         _LOGGER.info("Uploading content file: %s", file_path)
         data = aiohttp.FormData()
@@ -207,16 +333,21 @@ class ContentMethodsMixin:
                 return await self.async_upload_content(file_path)
 
             await self._handle_api_error(response, "/api/content/upload")
-            return await response.json()
+            result = await response.json()
+            return dict(result)
 
     async def async_reset_server_world(self, server_name: str) -> ActionResponse:
         """Resets the current world of a server.
 
-        Args:
-            server_name: The name of the server whose world to reset.
+        :param server_name: The name of the server whose world to reset.
 
-        Returns:
-            An `ActionResponse` object confirming the reset action.
+        :returns: An `ActionResponse` object confirming the reset action.
+
+
+        .. rubric:: Example:
+        .. code-block:: python
+
+            response = await client.async_reset_server_world('MyServer')
         """
         _LOGGER.warning("Triggering world reset for server '%s'", server_name)
         response = await self._request(
@@ -227,16 +358,18 @@ class ContentMethodsMixin:
         )
         return ActionResponse.model_validate(response)
 
-    async def async_prune_server_backups(
-        self, server_name: str
-    ) -> BackupRestoreResponse:
+    async def async_prune_server_backups(self, server_name: str) -> ActionResponse:
         """Prunes old backups for a server based on its retention policies.
 
-        Args:
-            server_name: The name of the server whose backups to prune.
+        :param server_name: The name of the server whose backups to prune.
 
-        Returns:
-            A `BackupRestoreResponse` object confirming the prune action.
+        :returns: An `ActionResponse` object confirming the prune action.
+
+
+        .. rubric:: Example:
+        .. code-block:: python
+
+            response = await client.async_prune_server_backups('MyServer')
         """
         _LOGGER.info(
             "Triggering backup pruning for server '%s' (using server-defined retention)",
@@ -248,19 +381,24 @@ class ContentMethodsMixin:
             json_data=None,
             authenticated=True,
         )
-        return BackupRestoreResponse.model_validate(response)
+        return ActionResponse.model_validate(response)
 
     async def async_restore_server_backup(
         self, server_name: str, payload: RestoreActionPayload
-    ) -> BackupRestoreResponse:
+    ) -> ActionResponse:
         """Restores a server's world or configuration from a backup.
 
-        Args:
-            server_name: The name of the server.
-            payload: A `RestoreActionPayload` object specifying the restore details.
+        :param server_name: The name of the server.
+        :param payload: A `RestoreActionPayload` object specifying the restore details.
 
-        Returns:
-            A `BackupRestoreResponse` object confirming the restore action.
+        :returns: An `ActionResponse` object confirming the restore action.
+
+
+        .. rubric:: Example:
+        .. code-block:: python
+
+            payload = ...
+            response = await client.async_restore_server_backup(payload)
         """
         _LOGGER.info(
             "Requesting restore for server '%s', type: %s, file: '%s'",
@@ -275,21 +413,23 @@ class ContentMethodsMixin:
             json_data=payload.model_dump(),
             authenticated=True,
         )
-        return BackupRestoreResponse.model_validate(response)
+        return ActionResponse.model_validate(response)
 
-    async def async_restore_server_latest_all(
-        self, server_name: str
-    ) -> BackupRestoreResponse:
+    async def async_restore_server_latest_all(self, server_name: str) -> ActionResponse:
         """Restores a server from the latest 'all' backup.
 
         This restores the server's world and standard configuration files from
         their most recent backups.
 
-        Args:
-            server_name: The name of the server to restore.
+        :param server_name: The name of the server to restore.
 
-        Returns:
-            A `BackupRestoreResponse` object confirming the restore action.
+        :returns: An `ActionResponse` object confirming the restore action.
+
+
+        .. rubric:: Example:
+        .. code-block:: python
+
+            response = await client.async_restore_server_latest_all('MyServer')
         """
         _LOGGER.info(
             "Requesting restore of latest 'all' backup for server '%s'", server_name
@@ -301,19 +441,24 @@ class ContentMethodsMixin:
             json_data=payload,
             authenticated=True,
         )
-        return BackupRestoreResponse.model_validate(response)
+        return ActionResponse.model_validate(response)
 
     async def async_install_server_world(
         self, server_name: str, payload: FileNamePayload
     ) -> ActionResponse:
         """Installs a world to a server from a .mcworld file.
 
-        Args:
-            server_name: The name of the server.
-            payload: A `FileNamePayload` object with the name of the .mcworld file.
+        :param server_name: The name of the server.
+        :param payload: A `FileNamePayload` object with the name of the .mcworld file.
 
-        Returns:
-            An `ActionResponse` object confirming the installation.
+        :returns: An `ActionResponse` object confirming the installation.
+
+
+        .. rubric:: Example:
+        .. code-block:: python
+
+            payload = ...
+            response = await client.async_install_server_world(payload)
         """
         _LOGGER.info(
             "Requesting world install for server '%s' from file '%s'",
@@ -334,12 +479,17 @@ class ContentMethodsMixin:
     ) -> ActionResponse:
         """Installs an addon to a server from a .mcaddon or .mcpack file.
 
-        Args:
-            server_name: The name of the server.
-            payload: A `FileNamePayload` object with the name of the addon file.
+        :param server_name: The name of the server.
+        :param payload: A `FileNamePayload` object with the name of the addon file.
 
-        Returns:
-            An `ActionResponse` object confirming the installation.
+        :returns: An `ActionResponse` object confirming the installation.
+
+
+        .. rubric:: Example:
+        .. code-block:: python
+
+            payload = ...
+            response = await client.async_install_server_addon(payload)
         """
         _LOGGER.info(
             "Requesting addon install for server '%s' from file '%s'",

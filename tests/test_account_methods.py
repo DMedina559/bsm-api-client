@@ -1,14 +1,16 @@
 # tests/test_account_methods.py
+from unittest.mock import AsyncMock, patch
+
 import pytest
 import pytest_asyncio
-from unittest.mock import AsyncMock, patch
+
 from bsm_api_client.api_client import BedrockServerManagerApi
 from bsm_api_client.models import (
-    User,
-    ThemeUpdate,
-    ProfileUpdate,
-    ChangePasswordRequest,
     BaseApiResponse,
+    ChangePasswordPayload,
+    ProfileUpdatePayload,
+    ThemeUpdatePayload,
+    UserResponse,
 )
 
 
@@ -33,7 +35,7 @@ async def test_get_account_details(client):
             "theme": "default",
         }
         result = await client.async_get_account_details()
-        assert isinstance(result, User)
+        assert isinstance(result, UserResponse)
         assert result.username == "admin"
         mock_request.assert_called_once_with(
             method="GET", path="/account", authenticated=True
@@ -45,7 +47,7 @@ async def test_update_theme(client):
     """Test async_update_theme method."""
     with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
         mock_request.return_value = {"status": "success"}
-        payload = ThemeUpdate(theme="dark")
+        payload = ThemeUpdatePayload(theme="dark")
         result = await client.async_update_theme(payload)
         assert isinstance(result, BaseApiResponse)
         assert result.status == "success"
@@ -62,7 +64,9 @@ async def test_update_profile(client):
     """Test async_update_profile method."""
     with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
         mock_request.return_value = {"status": "success"}
-        payload = ProfileUpdate(full_name="Admin User", email="admin@example.com")
+        payload = ProfileUpdatePayload(
+            full_name="Admin User", email="admin@example.com"
+        )
         result = await client.async_update_profile(payload)
         assert isinstance(result, BaseApiResponse)
         assert result.status == "success"
@@ -79,7 +83,7 @@ async def test_change_password(client):
     """Test async_change_password method."""
     with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
         mock_request.return_value = {"status": "success"}
-        payload = ChangePasswordRequest(
+        payload = ChangePasswordPayload(
             current_password="password", new_password="new_password"
         )
         result = await client.async_change_password(payload)
@@ -112,7 +116,7 @@ async def test_update_theme_error(client):
     with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
         mock_request.side_effect = Exception("API Error")
         with pytest.raises(Exception) as excinfo:
-            await client.async_update_theme(ThemeUpdate(theme="dark"))
+            await client.async_update_theme(ThemeUpdatePayload(theme="dark"))
         assert "API Error" in str(excinfo.value)
 
 
@@ -123,7 +127,7 @@ async def test_update_profile_error(client):
         mock_request.side_effect = Exception("API Error")
         with pytest.raises(Exception) as excinfo:
             await client.async_update_profile(
-                ProfileUpdate(full_name="Admin User", email="admin@example.com")
+                ProfileUpdatePayload(full_name="Admin User", email="admin@example.com")
             )
         assert "API Error" in str(excinfo.value)
 
@@ -135,7 +139,7 @@ async def test_change_password_error(client):
         mock_request.side_effect = Exception("API Error")
         with pytest.raises(Exception) as excinfo:
             await client.async_change_password(
-                ChangePasswordRequest(
+                ChangePasswordPayload(
                     current_password="password", new_password="new_password"
                 )
             )

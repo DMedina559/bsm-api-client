@@ -6,22 +6,26 @@ for interacting with manager-level endpoints of the Bedrock Server Manager API.
 These methods handle operations such as getting system information, managing
 players, and installing new servers.
 """
+
 import logging
+from typing import Any, Callable, Dict
+
 import aiohttp
-from typing import Any, Dict, Optional, TYPE_CHECKING
+
 from ..exceptions import APIError, CannotConnectError
 from ..models import (
     AddPlayersPayload,
-    SettingItem,
-    PruneDownloadsPayload,
+    AddPlayersResponse,
+    AppInfoResponse,
+    CustomZipsResponse,
     InstallServerPayload,
     InstallServerResponse,
-    GeneralApiResponse,
+    PlayerListResponse,
+    PruneDownloadsPayload,
+    PruneDownloadsResponse,
+    SettingItemResponse,
     SettingsResponse,
 )
-
-if TYPE_CHECKING:
-    from ..client_base import ClientBase
 
 _LOGGER = logging.getLogger(__name__.split(".")[0] + ".client.manager")
 
@@ -29,78 +33,77 @@ _LOGGER = logging.getLogger(__name__.split(".")[0] + ".client.manager")
 class ManagerMethodsMixin:
     """Mixin for manager-level endpoints."""
 
-    _request: callable
-    if TYPE_CHECKING:
+    _request: Callable[..., Any]
+    _server_root_url: str
+    _api_base_segment: str
+    _base_url: str
+    _session: aiohttp.ClientSession
+    _request_timeout: aiohttp.ClientTimeout
+    _handle_api_error: Callable[..., Any]
 
-        async def _request(
-            self: "ClientBase",
-            method: str,
-            path: str,
-            json_data: Optional[Dict[str, Any]] = None,
-            params: Optional[Dict[str, Any]] = None,
-            authenticated: bool = True,
-            is_retry: bool = False,
-        ) -> Any: ...
-
-    async def async_get_info(self) -> GeneralApiResponse:
+    async def async_get_info(self) -> AppInfoResponse:
         """Gets system and application information from the manager.
 
         Returns:
-            A `GeneralApiResponse` object containing system and application information.
+            An `AppInfoResponse` object containing system and application information.
         """
         _LOGGER.debug("Fetching manager system and application information from /info")
         response = await self._request(method="GET", path="/info", authenticated=False)
-        return GeneralApiResponse.model_validate(response)
+        return AppInfoResponse.model_validate(response)
 
-    async def async_scan_players(self) -> Dict[str, Any]:
+    async def async_scan_players(self) -> AddPlayersResponse:
         """Triggers a scan of player logs across all servers.
 
         Returns:
-            A dictionary containing the result of the scan operation.
+            An `AddPlayersResponse` object containing the result of the scan operation.
         """
         _LOGGER.info("Triggering player log scan")
-        return await self._request(
+        response = await self._request(
             method="POST", path="/players/scan", authenticated=True
         )
+        return AddPlayersResponse.model_validate(response)
 
-    async def async_get_players(self) -> Dict[str, Any]:
+    async def async_get_players(self) -> PlayerListResponse:
         """Gets the global list of known players.
 
         Returns:
-            A dictionary containing the list of players.
+            A `PlayerListResponse` object containing the list of players.
         """
         _LOGGER.debug("Fetching global player list from /players/get")
-        return await self._request(
+        response = await self._request(
             method="GET", path="/players/get", authenticated=True
         )
+        return PlayerListResponse.model_validate(response)
 
-    async def async_add_players(self, payload: AddPlayersPayload) -> Dict[str, Any]:
+    async def async_add_players(self, payload: AddPlayersPayload) -> AddPlayersResponse:
         """Adds or updates players in the global list.
 
         Args:
             payload: An `AddPlayersPayload` object containing the players to add.
 
         Returns:
-            A dictionary containing the result of the add operation.
+            An `AddPlayersResponse` object containing the result of the add operation.
         """
         _LOGGER.info("Adding/updating global players: %s", payload.players)
-        return await self._request(
+        response = await self._request(
             method="POST",
             path="/players/add",
             json_data=payload.model_dump(),
             authenticated=True,
         )
+        return AddPlayersResponse.model_validate(response)
 
-    async def async_get_custom_zips(self) -> Dict[str, Any]:
+    async def async_get_custom_zips(self) -> CustomZipsResponse:
         """Retrieves a list of available custom server ZIP files.
 
         Returns:
-            A dictionary containing the list of custom ZIP files.
+            A `CustomZipsResponse` object containing the list of custom ZIP files.
         """
         _LOGGER.info("Fetching list of custom zips.")
-        return await self._request(
+        response = await self._request(
             method="GET", path="/downloads/list", authenticated=True
         )
+        return CustomZipsResponse.model_validate(response)
 
     async def async_get_themes(self) -> Dict[str, Any]:
         """Retrieves a list of available themes.
@@ -109,46 +112,52 @@ class ManagerMethodsMixin:
             A dictionary containing the list of themes.
         """
         _LOGGER.info("Fetching list of available themes.")
-        return await self._request(method="GET", path="/themes", authenticated=True)
+        result = await self._request(method="GET", path="/themes", authenticated=True)
+        return dict(result)
 
-    async def async_get_all_settings(self) -> Dict[str, Any]:
+    async def async_get_all_settings(self) -> SettingsResponse:
         """Retrieve all global application settings.
 
         Returns:
-            A dictionary containing all settings.
+            A `SettingsResponse` object containing all settings.
         """
         _LOGGER.info("Fetching all global application settings.")
-        return await self._request(method="GET", path="/settings", authenticated=True)
+        response = await self._request(
+            method="GET", path="/settings", authenticated=True
+        )
+        return SettingsResponse.model_validate(response)
 
-    async def async_set_setting(self, payload: SettingItem) -> Dict[str, Any]:
+    async def async_set_setting(self, payload: SettingItemResponse) -> SettingsResponse:
         """Sets a specific global application setting.
 
         Args:
-            payload: A `SettingItem` object containing the setting to set.
+            payload: A `SettingItemResponse` object containing the setting to set.
 
         Returns:
-            A dictionary containing the result of the set operation.
+            A `SettingsResponse` object containing the result of the set operation.
         """
         _LOGGER.info(
             "Setting global application setting '%s' to: %s", payload.key, payload.value
         )
-        return await self._request(
+        response = await self._request(
             method="POST",
             path="/settings",
             json_data=payload.model_dump(),
             authenticated=True,
         )
+        return SettingsResponse.model_validate(response)
 
-    async def async_reload_settings(self) -> Dict[str, Any]:
+    async def async_reload_settings(self) -> SettingsResponse:
         """Forces a reload of global application settings and logging configuration.
 
         Returns:
-            A dictionary containing the result of the reload operation.
+            A `SettingsResponse` object containing the result of the reload operation.
         """
         _LOGGER.info("Requesting reload of global settings and logging configuration.")
-        return await self._request(
+        response = await self._request(
             method="POST", path="/settings/reload", authenticated=True
         )
+        return SettingsResponse.model_validate(response)
 
     async def async_get_panorama_image(self) -> bytes:
         """Retrieves the panorama background image.
@@ -178,7 +187,7 @@ class ManagerMethodsMixin:
             async with self._session.get(
                 url,
                 headers={"Accept": "image/jpeg, */*"},  # Accept jpeg primarily
-                timeout=aiohttp.ClientTimeout(total=self._request_timeout),
+                timeout=self._request_timeout,
             ) as response:
                 _LOGGER.debug("Response Status for GET %s: %s", url, response.status)
                 if not response.ok:
@@ -203,14 +212,14 @@ class ManagerMethodsMixin:
 
     async def async_prune_downloads(
         self, payload: PruneDownloadsPayload
-    ) -> Dict[str, Any]:
+    ) -> PruneDownloadsResponse:
         """Triggers pruning of downloaded server archives.
 
         Args:
             payload: A `PruneDownloadsPayload` object containing the prune options.
 
         Returns:
-            A dictionary containing the result of the prune operation.
+            A `PruneDownloadsResponse` object containing the result of the prune operation.
         """
         _LOGGER.info(
             "Triggering download cache prune for directory '%s', keep: %s",
@@ -218,12 +227,13 @@ class ManagerMethodsMixin:
             payload.keep if payload.keep is not None else "server default",
         )
 
-        return await self._request(
+        response = await self._request(
             method="POST",
             path="/downloads/prune",
             json_data=payload.model_dump(),
             authenticated=True,
         )
+        return PruneDownloadsResponse.model_validate(response)
 
     async def async_install_new_server(
         self, payload: InstallServerPayload
@@ -261,8 +271,9 @@ class ManagerMethodsMixin:
             A dictionary containing the status of the task.
         """
         _LOGGER.info("Fetching installation status for task ID: %s", task_id)
-        return await self._request(
+        result = await self._request(
             method="GET",
             path=f"/tasks/status/{task_id}",
             authenticated=True,
         )
+        return dict(result)

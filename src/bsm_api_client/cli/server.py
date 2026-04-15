@@ -1,11 +1,16 @@
-import os
 import asyncio
-import time
+import os
+
 import click
 import questionary
-from .decorators import pass_async_context, monitor_task
+
 from bsm_api_client.exceptions import AuthError
-from bsm_api_client.models import InstallServerPayload, CommandPayload
+from bsm_api_client.models import CommandPayload, InstallServerPayload
+
+from .allowlist import interactive_allowlist_workflow
+from .decorators import monitor_task, pass_async_context
+from .permissions import interactive_permissions_workflow
+from .properties import interactive_properties_workflow
 
 
 def _print_server_table(servers):
@@ -18,9 +23,9 @@ def _print_server_table(servers):
         click.echo("  No servers found.")
     else:
         for server_data in servers:
-            name = server_data.get("name", "N/A")
-            status = server_data.get("status", "UNKNOWN").upper()
-            version = server_data.get("version", "UNKNOWN")
+            name = getattr(server_data, "name", "N/A")
+            status = getattr(server_data, "status", "UNKNOWN").upper()
+            version = getattr(server_data, "version", "UNKNOWN")
 
             color_map = {
                 "RUNNING": "green",
@@ -55,7 +60,7 @@ def server():
 )
 @click.option("--server-name", help="Display status for only a specific server.")
 @pass_async_context
-async def list_servers(ctx, loop, server_name):
+async def list_servers(ctx, loop, server_name):  # noqa: C901
     """Lists all configured Bedrock servers and their current operational status."""
     client = ctx.obj.get("client")
     if not client:
@@ -64,10 +69,12 @@ async def list_servers(ctx, loop, server_name):
 
     async def _display_status():
         response = await client.async_get_servers()
-        all_servers = response.servers
+        all_servers = response.servers or []
 
         if server_name:
-            servers_to_show = [s for s in all_servers if s.get("name") == server_name]
+            servers_to_show = [
+                s for s in all_servers if getattr(s, "name", "") == server_name
+            ]
         else:
             servers_to_show = all_servers
 
@@ -178,7 +185,7 @@ async def list_servers(ctx, loop, server_name):
 @click.option(
     "-s", "--server", "server_name", required=True, help="Name of the server to start."
 )
-@click.pass_context
+@pass_async_context
 async def start_server(ctx, server_name: str):
     """Starts a specific Bedrock server instance."""
     client = ctx.obj.get("client")
@@ -189,7 +196,14 @@ async def start_server(ctx, server_name: str):
     click.echo(f"Attempting to start server '{server_name}'...")
     try:
         response = await client.async_start_server(server_name)
-        if response.status == "success":
+        if response.task_id:
+            await monitor_task(
+                client,
+                response.task_id,
+                "Server started successfully",
+                "Failed to start server",
+            )
+        elif response.status == "success":
             click.secho(f"Server '{server_name}' started successfully.", fg="green")
         else:
             click.secho(f"Failed to start server: {response.message}", fg="red")
@@ -261,15 +275,9 @@ async def restart_server(ctx, server_name: str):
         click.secho(f"Failed to restart server: {e}", fg="red")
 
 
-from bsm_api_client.models import InstallServerPayload, CommandPayload
-from .properties import interactive_properties_workflow
-from .allowlist import interactive_allowlist_workflow
-from .permissions import interactive_permissions_workflow
-
-
 @server.command("install")
 @click.pass_context
-async def install(ctx):
+async def install(ctx):  # noqa: C901
     """Guides you through installing and configuring a new Bedrock server instance."""
     client = ctx.obj.get("client")
     if not client:
@@ -294,7 +302,7 @@ async def install(ctx):
         server_zip_path = None
         if target_version.upper() == "CUSTOM":
             response = await client.async_get_custom_zips()
-            available_files = response["custom_zips"]
+            available_files = response.custom_zips
 
             if not available_files:
                 click.secho(

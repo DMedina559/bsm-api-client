@@ -1,49 +1,63 @@
 changelog:
   categories:
+    - title: ⚠️ Breaking Changes
+      labels:
+        - breaking
     - title: 🚀 Features
       labels:
         - feat
-        - feature
-        - enhancement
-        - Feat
+      exclude:
+        labels:
+          - breaking
     - title: 🐛 Bug Fixes
       labels:
         - fix
-        - bug
-        - Fix
+      exclude:
+        labels:
+          - breaking
     - title: 📚 Documentation
       labels:
         - docs
-        - doc
-        - documentation
-        - Docs
+      exclude:
+        labels:
+          - breaking
     - title: 💄 Style & Refactoring
       labels:
         - style
         - refactor
-        - format
+        - remove
+      exclude:
+        labels:
+          - breaking
     - title: ⚡ Performance
       labels:
         - perf
-        - performance
+      exclude:
+        labels:
+          - breaking
     - title: 🧪 Tests
       labels:
         - test
-        - tests
+      exclude:
+        labels:
+          - breaking
     - title: 📦 Build & CI
       labels:
         - build
         - ci
-        - workflow
-        - actions
+      exclude:
+        labels:
+          - breaking
     - title: ⬆️ Dependencies
       labels:
         - dependencies
-        - deps
-        - dep
-        - depbot
+      exclude:
+        labels:
+          - breaking
     - title: 🧹 Chore
       labels:
         - chore
         - misc
-        - remove
+      exclude:
+        labels:
+          - breaking

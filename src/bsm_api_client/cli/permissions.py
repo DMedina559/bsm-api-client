@@ -1,6 +1,7 @@
 import click
 import questionary
-from bsm_api_client.models import PermissionsSetPayload
+
+from bsm_api_client.models import PermissionsSetPayload, PlayerPermissionPayload
 
 
 @click.group()
@@ -51,7 +52,7 @@ async def set_perm(ctx, server_name: str, player_name: str, level: str):
         player_data = next(
             (
                 p
-                for p in all_players_resp.get("players", [])
+                for p in all_players_resp.players or []
                 if p.get("name", "").lower() == player_name.lower()
             ),
             None,
@@ -70,7 +71,11 @@ async def set_perm(ctx, server_name: str, player_name: str, level: str):
         )
 
         payload = PermissionsSetPayload(
-            permissions=[{"name": player_name, "xuid": xuid, "permission_level": level}]
+            permissions=[
+                PlayerPermissionPayload(
+                    name=player_name, xuid=xuid, permission_level=level
+                )
+            ]
         )
         response = await client.async_set_server_permissions(server_name, payload)
 
@@ -98,7 +103,7 @@ async def list_perms(ctx, server_name: str):
     response = await client.async_get_server_permissions_data(server_name)
 
     if response.status == "success":
-        permissions = response.data.get("permissions", [])
+        permissions = response.permissions
         if not permissions:
             click.secho(
                 f"The permissions file for server '{server_name}' is empty.",
@@ -127,7 +132,7 @@ async def interactive_permissions_workflow(client, server_name: str):
 
     while True:
         player_response = await client.async_get_players()
-        all_players = player_response.get("players", [])
+        all_players = player_response.players or []
 
         if not all_players:
             click.secho(
@@ -160,11 +165,11 @@ async def interactive_permissions_workflow(client, server_name: str):
 
         payload = PermissionsSetPayload(
             permissions=[
-                {
-                    "name": selected_player["name"],
-                    "xuid": selected_player["xuid"],
-                    "permission_level": permission,
-                }
+                PlayerPermissionPayload(
+                    name=selected_player["name"],
+                    xuid=selected_player["xuid"],
+                    permission_level=permission,
+                )
             ]
         )
         perm_response = await client.async_set_server_permissions(server_name, payload)

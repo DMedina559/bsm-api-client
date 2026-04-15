@@ -1,5 +1,6 @@
 import click
 import questionary
+
 from bsm_api_client.models import AllowlistAddPayload, AllowlistRemovePayload
 
 
@@ -127,7 +128,7 @@ async def list_players(ctx, server_name: str):
     response = await client.async_get_server_allowlist(server_name)
 
     if response.status == "success":
-        players = response.data.get("existing_players", [])
+        players = response.players
         if not players:
             click.secho(
                 f"The allowlist for server '{server_name}' is empty.", fg="yellow"
@@ -146,7 +147,7 @@ async def list_players(ctx, server_name: str):
         click.secho(f"Failed to list allowlist: {response.message}", fg="red")
 
 
-async def interactive_allowlist_workflow(client, server_name: str):
+async def interactive_allowlist_workflow(client, server_name: str):  # noqa: C901
     """Guides the user through an interactive session to view and add players to the allowlist."""
     response = await client.async_get_server_allowlist(server_name)
     existing_players = response.players or []
@@ -164,7 +165,9 @@ async def interactive_allowlist_workflow(client, server_name: str):
     else:
         click.secho("Allowlist is currently empty.", fg="yellow")
 
-    new_players_to_add = []
+    from typing import Any, Dict, List
+
+    new_players_to_add: List[Dict[str, Any]] = []
     click.echo("\nEnter new players to add. Press Enter on an empty line to finish.")
     while True:
         player_name = await questionary.text("Player gamertag:").ask_async()

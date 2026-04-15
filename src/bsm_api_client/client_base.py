@@ -6,33 +6,34 @@ functionality such as session management, authentication, and a core request
 method for interacting with the Bedrock Server Manager API.
 """
 
-import aiohttp
 import asyncio
 import logging
 from typing import (
     Any,
     Dict,
-    Optional,
-    Mapping,
-    Union,
     List,
+    Mapping,
+    Optional,
     Tuple,
+    Union,
 )
 from urllib.parse import urlparse
+
+import aiohttp
 
 # Import exceptions from the same package level
 from .exceptions import (
     APIError,
+    APIServerSideError,
     AuthError,
-    NotFoundError,
-    ServerNotFoundError,
-    ServerNotRunningError,
     CannotConnectError,
     InvalidInputError,
+    NotFoundError,
     OperationFailedError,
-    APIServerSideError,
+    ServerNotFoundError,
+    ServerNotRunningError,
 )
-from .models import Token
+from .models import TokenResponse
 from .websocket_client import WebSocketClient
 
 _LOGGER = logging.getLogger(__name__.split(".")[0] + ".client.base")
@@ -66,15 +67,14 @@ class ClientBase:
         verify_ssl: bool = True,
     ):
         """Initializes the base API client.
-        Args:
-            base_url: The base URL of the Bedrock Server Manager (e.g., http://localhost:8080).
-            username: The username for authentication.
-            password: The password for authentication.
-            jwt_token: An optional JWT token to use for authentication.
-            session: An optional `aiohttp.ClientSession` to use for requests.
-            base_path: The base path for the API.
-            request_timeout: The timeout for requests in seconds.
-            verify_ssl: Whether to verify the SSL certificate.
+        :param base_url: The base URL of the Bedrock Server Manager (e.g., http://localhost:8080).
+        :param username: The username for authentication.
+        :param password: The password for authentication.
+        :param jwt_token: An optional JWT token to use for authentication.
+        :param session: An optional `aiohttp.ClientSession` to use for requests.
+        :param base_path: The base path for the API.
+        :param request_timeout: The timeout for requests in seconds.
+        :param verify_ssl: Whether to verify the SSL certificate.
         """
         if not base_url:
             raise ValueError("base_url must be provided.")
@@ -106,7 +106,7 @@ class ClientBase:
 
         self._username = username
         self._password = password
-        self._request_timeout = request_timeout
+        self._request_timeout = aiohttp.ClientTimeout(total=request_timeout)
         self._verify_ssl = verify_ssl
 
         if session is None:
@@ -138,7 +138,13 @@ class ClientBase:
         _LOGGER.debug("ClientBase initialized for base URL: %s", self._base_url)
 
     async def close(self) -> None:
-        """Closes the underlying aiohttp.ClientSession if it was created internally."""
+        """Closes the underlying aiohttp.ClientSession if it was created internally.
+
+        .. rubric:: Example:
+        .. code-block:: python
+
+            response = await client.close()
+        """
         if self._session and self._close_session and not self._session.closed:
             await self._session.close()
             _LOGGER.debug(
@@ -151,7 +157,7 @@ class ClientBase:
     async def __aexit__(self, exc_type, exc, tb) -> None:
         await self.close()
 
-    async def _extract_error_details(
+    async def _extract_error_details(  # noqa: C901
         self, response: aiohttp.ClientResponse
     ) -> Tuple[str, Dict[str, Any]]:
         """Extracts error details from an API response.
@@ -159,11 +165,15 @@ class ClientBase:
         Tries to parse a JSON response body to find a detailed error message.
         Falls back to using the response text or reason if JSON parsing fails.
 
-        Args:
-            response: The `aiohttp.ClientResponse` object from the failed request.
+        :param response: The `aiohttp.ClientResponse` object from the failed request.
 
-        Returns:
-            A tuple containing the error message string and the full error data dictionary.
+        :returns: A tuple containing the error message string and the full error data dictionary.
+
+
+        .. rubric:: Example:
+        .. code-block:: python
+
+            response = await client.__aenter__()
         """
         response_text = ""
         error_data: Dict[str, Any] = {}
@@ -200,7 +210,7 @@ class ClientBase:
             ):  # If detail is complex, try to serialize it
                 try:
                     message = str(message)
-                except:  # Fallback if str conversion fails
+                except Exception:  # Fallback if str conversion fails
                     message = ""
             else:
                 message = ""
@@ -235,7 +245,7 @@ class ClientBase:
 
         return str(message), error_data
 
-    async def _handle_api_error(
+    async def _handle_api_error(  # noqa: C901
         self, response: aiohttp.ClientResponse, request_path_for_log: str
     ):
         """Processes an error response and raises the appropriate custom exception.
@@ -244,19 +254,23 @@ class ClientBase:
         API response to the appropriate exception classes defined in the
         `exceptions` module.
 
-        Args:
-            response: The `aiohttp.ClientResponse` object from the failed request.
-            request_path_for_log: The path of the request for logging purposes.
+        :param response: The `aiohttp.ClientResponse` object from the failed request.
+        :param request_path_for_log: The path of the request for logging purposes.
 
-        Raises:
-            InvalidInputError: For 400 or 422 status codes.
-            AuthError: For 401 or 403 status codes.
-            ServerNotFoundError: For 404 status codes on server-specific endpoints.
-            NotFoundError: For other 404 status codes.
-            OperationFailedError: For 501 status codes.
-            ServerNotRunningError: If the error message indicates the server is not running.
-            APIServerSideError: For 5xx status codes.
-            APIError: For any other 4xx status codes.
+        :raises InvalidInputError: For 400 or 422 status codes.
+        :raises AuthError: For 401 or 403 status codes.
+        :raises ServerNotFoundError: For 404 status codes on server-specific endpoints.
+        :raises NotFoundError: For other 404 status codes.
+        :raises OperationFailedError: For 501 status codes.
+        :raises ServerNotRunningError: If the error message indicates the server is not running.
+        :raises APIServerSideError: For 5xx status codes.
+        :raises APIError: For any other 4xx status codes.
+
+
+        .. rubric:: Example:
+        .. code-block:: python
+
+            response = await client._handle_api_error()
         """
         message, error_data = await self._extract_error_details(response)
         status = response.status
@@ -339,7 +353,7 @@ class ClientBase:
         )
         raise APIError(message, status_code=status, response_data=error_data)
 
-    async def _request(
+    async def _request(  # noqa: C901
         self,
         method: str,
         path: str,
@@ -354,20 +368,23 @@ class ClientBase:
         required, and handles the request/response cycle, including error
         handling and automatic token refresh on 401 errors.
 
-        Args:
-            method: The HTTP method for the request (e.g., "GET", "POST").
-            path: The API endpoint path.
-            json_data: An optional dictionary to be sent as the JSON request body.
-            params: An optional dictionary of query parameters.
-            authenticated: Whether the request requires authentication.
-            is_retry: Whether this is a retry attempt after a token refresh.
+        :param method: The HTTP method for the request (e.g., "GET", "POST").
+        :param path: The API endpoint path.
+        :param json_data: An optional dictionary to be sent as the JSON request body.
+        :param params: An optional dictionary of query parameters.
+        :param authenticated: Whether the request requires authentication.
+        :param is_retry: Whether this is a retry attempt after a token refresh.
 
-        Returns:
-            The JSON response from the API as a dictionary or list.
+        :returns: The JSON response from the API as a dictionary or list.
 
-        Raises:
-            CannotConnectError: If a connection to the server cannot be established.
-            APIError: For various API-related errors.
+        :raises CannotConnectError: If a connection to the server cannot be established.
+        :raises APIError: For various API-related errors.
+
+
+        .. rubric:: Example:
+        .. code-block:: python
+
+            response = await client._request()
         """
         request_path_segment = path if path.startswith("/") else f"/{path}"
         url = f"{self._base_url}{request_path_segment}"
@@ -406,7 +423,7 @@ class ClientBase:
                 json=json_data,
                 params=params,
                 headers=headers,
-                timeout=aiohttp.ClientTimeout(total=self._request_timeout),
+                timeout=self._request_timeout,
             ) as response:
                 _LOGGER.debug(
                     "Response Status for %s %s: %s", method, url, response.status
@@ -543,39 +560,30 @@ class ClientBase:
                 f"An unexpected error occurred during request to {url}: {e}"
             ) from e
 
-    async def authenticate(self) -> Token:
+    async def authenticate(self) -> TokenResponse:  # noqa: C901
         """Authenticates with the API and retrieves a JWT token.
 
         This method sends a POST request to the `/auth/token` endpoint with the
         username and password provided during client initialization. The retrieved
         JWT token is stored internally for subsequent authenticated requests.
 
-        Returns:
-            A `Token` object containing the access token and token type.
+        :returns: A `TokenResponse` object containing the access token and token type.
 
-        Raises:
-            AuthError: If authentication fails due to invalid credentials,
+        :raises AuthError: If authentication fails due to invalid credentials,
                 connection issues, or other API errors.
         """
         _LOGGER.info("Attempting API authentication for user %s", self._username)
         self._jwt_token = None
         try:
-            # FastAPI's OAuth2PasswordRequestForm expects x-www-form-urlencoded data.
-            form_data = aiohttp.FormData()
-            form_data.add_field("username", self._username)
-            form_data.add_field("password", self._password)
-
-            # Make the request without using self._request to avoid auth loop and content-type issues
-            # Use _server_root_url for auth path as it's not under the general _api_base_segment (e.g. /api)
             url = f"{self._server_root_url}/auth/token"
             headers = {"Accept": "application/json"}  # Still expect JSON response
 
-            _LOGGER.debug("Request: POST %s (Form Data Auth to root path)", url)
+            _LOGGER.debug("Request: POST %s (JSON Auth)", url)
             async with self._session.post(
                 url,
-                data=form_data,
+                json={"username": self._username, "password": self._password},
                 headers=headers,
-                timeout=aiohttp.ClientTimeout(total=self._request_timeout),
+                timeout=self._request_timeout,
             ) as response:
                 _LOGGER.debug("Response Status for POST %s: %s", url, response.status)
                 if not response.ok:
@@ -603,7 +611,7 @@ class ClientBase:
                         f"Authentication response was not valid JSON: {json_error}"
                     )
 
-            token = Token.model_validate(response_data)
+            token = TokenResponse.model_validate(response_data)
             self._jwt_token = token.access_token
             _LOGGER.info("Authentication successful, token received.")
             return token
@@ -645,12 +653,15 @@ class ClientBase:
         This method calls the `GET /auth/logout` endpoint to invalidate the
         session on the server side and clears the internally stored JWT token.
 
-        Returns:
-            A dictionary containing the response from the API, typically a
-            success message.
+        :returns: A dictionary containing the response from the API, typically a success message.
 
-        Raises:
-            APIError: If the logout request fails.
+        :raises APIError: If the logout request fails.
+
+
+        .. rubric:: Example:
+        .. code-block:: python
+
+            response = await client.authenticate()
         """
         _LOGGER.info("Attempting API logout.")
         try:
@@ -667,7 +678,7 @@ class ClientBase:
             async with self._session.get(
                 url,
                 headers=headers,
-                timeout=aiohttp.ClientTimeout(total=self._request_timeout),
+                timeout=self._request_timeout,
             ) as response:
                 _LOGGER.debug("Response Status for GET %s: %s", url, response.status)
                 if not response.ok:
@@ -718,8 +729,13 @@ class ClientBase:
         """
         Connects to the WebSocket endpoint.
 
-        Returns:
-            A WebSocketClient instance.
+        :returns: A WebSocketClient instance.
+
+
+        .. rubric:: Example:
+        .. code-block:: python
+
+            response = await client.websocket_connect()
         """
         # Ensure we have a token or try to authenticate
         async with self._auth_lock:

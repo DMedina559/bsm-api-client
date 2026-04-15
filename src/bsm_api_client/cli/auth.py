@@ -1,6 +1,6 @@
 import click
-from .config import Config
-from bsm_api_client import BedrockServerManagerApi, AuthError
+
+from bsm_api_client import AuthError, BedrockServerManagerApi
 
 
 def _validate_and_get_url(url: str) -> str:
@@ -102,3 +102,5 @@ async def logout(ctx):
     config = ctx.obj["config"]
     config.jwt_token = None
     click.echo("Logged out.")
+    if "client" in ctx.obj and ctx.obj["client"]:
+        await ctx.obj["client"].close()

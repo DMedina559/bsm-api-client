@@ -1,18 +1,16 @@
 # src/bsm_api_client/client/_account_methods.py
 """Mixin class for account-related API methods."""
+
 import logging
-from typing import Any, Dict, Optional, TYPE_CHECKING
+from typing import Any, Callable
 
 from ..models import (
-    User,
-    ThemeUpdate,
-    ProfileUpdate,
-    ChangePasswordRequest,
     BaseApiResponse,
+    ChangePasswordPayload,
+    ProfileUpdatePayload,
+    ThemeUpdatePayload,
+    UserResponse,
 )
-
-if TYPE_CHECKING:
-    from ..client_base import ClientBase
 
 _LOGGER = logging.getLogger(__name__.split(".")[0] + ".client.account")
 
@@ -20,39 +18,38 @@ _LOGGER = logging.getLogger(__name__.split(".")[0] + ".client.account")
 class AccountMethodsMixin:
     """Mixin for account-related endpoints."""
 
-    _request: callable
-    if TYPE_CHECKING:
+    _request: Callable[..., Any]
 
-        async def _request(
-            self: "ClientBase",
-            method: str,
-            path: str,
-            json_data: Optional[Dict[str, Any]] = None,
-            params: Optional[Dict[str, Any]] = None,
-            authenticated: bool = True,
-            is_retry: bool = False,
-        ) -> Any: ...
-
-    async def async_get_account_details(self) -> User:
+    async def async_get_account_details(self) -> UserResponse:
         """Gets the current user's account details.
 
-        Returns:
-            A `User` object containing the account details.
+        :returns: A `UserResponse` object containing the account details.
+
+
+        .. rubric:: Example:
+        .. code-block:: python
+
+            response = await client.async_get_account_details()
         """
         _LOGGER.debug("Fetching account details from /account")
         response = await self._request(
             method="GET", path="/account", authenticated=True
         )
-        return User.model_validate(response)
+        return UserResponse.model_validate(response)
 
-    async def async_update_theme(self, payload: ThemeUpdate) -> BaseApiResponse:
+    async def async_update_theme(self, payload: ThemeUpdatePayload) -> BaseApiResponse:
         """Updates the current user's theme.
 
-        Args:
-            payload: A `ThemeUpdate` object containing the new theme.
+        :param payload: A `ThemeUpdatePayload` object containing the new theme.
 
-        Returns:
-            A `BaseApiResponse` object indicating the result of the operation.
+        :returns: A `BaseApiResponse` object indicating the result of the operation.
+
+
+        .. rubric:: Example:
+        .. code-block:: python
+
+            payload = ...
+            response = await client.async_update_theme(payload)
         """
         _LOGGER.info("Updating theme to %s", payload.theme)
         response = await self._request(
@@ -63,14 +60,21 @@ class AccountMethodsMixin:
         )
         return BaseApiResponse.model_validate(response)
 
-    async def async_update_profile(self, payload: ProfileUpdate) -> BaseApiResponse:
+    async def async_update_profile(
+        self, payload: ProfileUpdatePayload
+    ) -> BaseApiResponse:
         """Updates the current user's profile.
 
-        Args:
-            payload: A `ProfileUpdate` object containing the new profile data.
+        :param payload: A `ProfileUpdatePayload` object containing the new profile data.
 
-        Returns:
-            A `BaseApiResponse` object indicating the result of the operation.
+        :returns: A `BaseApiResponse` object indicating the result of the operation.
+
+
+        .. rubric:: Example:
+        .. code-block:: python
+
+            payload = ...
+            response = await client.async_update_profile(payload)
         """
         _LOGGER.info("Updating profile")
         response = await self._request(
@@ -82,15 +86,20 @@ class AccountMethodsMixin:
         return BaseApiResponse.model_validate(response)
 
     async def async_change_password(
-        self, payload: ChangePasswordRequest
+        self, payload: ChangePasswordPayload
     ) -> BaseApiResponse:
         """Changes the current user's password.
 
-        Args:
-            payload: A `ChangePasswordRequest` object.
+        :param payload: A `ChangePasswordPayload` object.
 
-        Returns:
-            A `BaseApiResponse` object indicating the result of the operation.
+        :returns: A `BaseApiResponse` object indicating the result of the operation.
+
+
+        .. rubric:: Example:
+        .. code-block:: python
+
+            payload = ...
+            response = await client.async_change_password(payload)
         """
         _LOGGER.info("Changing password")
         response = await self._request(

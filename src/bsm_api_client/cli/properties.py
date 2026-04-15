@@ -1,5 +1,6 @@
 import click
 import questionary
+
 from bsm_api_client.models import PropertiesPayload
 
 
@@ -29,7 +30,7 @@ async def get_props(ctx, server_name: str, property_name: str):
     response = await client.async_get_server_properties(server_name)
 
     if response.status == "success":
-        properties = response.data["properties"]
+        properties = response.properties
         if property_name:
             value = properties.get(property_name)
             if value is not None:
@@ -101,7 +102,7 @@ async def set_props(ctx, server_name: str, properties: tuple[str]):
         click.secho(f"An error occurred: {e}", fg="red")
 
 
-async def interactive_properties_workflow(client, server_name: str):
+async def interactive_properties_workflow(client, server_name: str):  # noqa: C901
     """Guides a user through an interactive session to edit `server.properties`."""
     click.secho("\n--- Interactive Server Properties Configuration ---", bold=True)
     click.echo("Loading current server properties...")

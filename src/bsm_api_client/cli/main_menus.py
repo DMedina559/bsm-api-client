@@ -1,7 +1,7 @@
 import click
 import questionary
 from questionary import Separator
-from .decorators import pass_async_context
+
 from .server import list_servers
 
 
@@ -63,7 +63,7 @@ async def _backup_restore_menu(ctx: click.Context, server_name: str):
             break
 
 
-async def main_menu(ctx: click.Context):
+async def main_menu(ctx: click.Context):  # noqa: C901
     """Displays the main application menu and drives interactive mode."""
     client = ctx.obj.get("client")
     if not client:
@@ -84,20 +84,23 @@ async def main_menu(ctx: click.Context):
             # --- Dynamically build menu choices ---
             response = await client.async_get_servers()
             server_names = (
-                [s["name"] for s in response.servers] if response.servers else []
+                [s.name for s in response.servers] if response.servers else []
             )
 
-            menu_choices = ["Install New Server"]
+            from questionary import Choice
+
+            menu_choices: list[Choice | Separator | str] = ["Install New Server"]
             if server_names:
                 menu_choices.append("Manage Existing Server")
 
             menu_choices.append("Manage Plugins")
+            menu_choices.append("Manage Users")
             menu_choices.append(Separator("--- Application ---"))
             menu_choices.append("Exit")
 
             choice = await questionary.select(
                 "\nChoose an action:",
-                choices=menu_choices,
+                choices=menu_choices,  # type: ignore
                 use_indicator=True,
             ).ask_async()
 
@@ -126,6 +129,13 @@ async def main_menu(ctx: click.Context):
                     "Press any key to return to the main menu..."
                 ).ask_async()
 
+            elif choice == "Manage Users":
+                users_group = cli.get_command(ctx, "users")
+                await ctx.invoke(users_group)
+                await questionary.press_any_key_to_continue(
+                    "Press any key to return to the main menu..."
+                ).ask_async()
+
         except (click.Abort, KeyboardInterrupt):
             click.echo("\nAction cancelled. Returning to the main menu.")
             click.pause()
@@ -134,7 +144,7 @@ async def main_menu(ctx: click.Context):
             click.pause("Press any key to return to the main menu...")
 
 
-async def manage_server_menu(ctx: click.Context, server_name: str):
+async def manage_server_menu(ctx: click.Context, server_name: str):  # noqa: C901
     """Displays the menu for managing a specific, existing server."""
     cli = ctx.obj["cli"]
 
@@ -143,8 +153,12 @@ async def manage_server_menu(ctx: click.Context, server_name: str):
         group = cli.get_command(ctx, group_name)
         return group.get_command(ctx, cmd_name) if group else None
 
+    from typing import Any, Dict, Optional, Tuple
+
+    import click
+
     # ---- Define static menu sections ----
-    control_map = {
+    control_map: Dict[str, Tuple[Optional[click.Command], Dict[str, Any]]] = {
         "Start Server": (get_cmd("server", "start"), {}),
         "Stop Server": (get_cmd("server", "stop"), {}),
         "Restart Server": (get_cmd("server", "restart"), {}),
@@ -154,17 +168,18 @@ async def manage_server_menu(ctx: click.Context, server_name: str):
         "Backup or Restore": _backup_restore_menu,
         "Manage World": _world_management_menu,
         "Install Addon": (get_cmd("addon", "install"), {}),
+        "Manage Addons": (get_cmd("addon", "manage"), {}),
     }
-    config_map = {
+    config_map: Dict[str, Tuple[Optional[click.Command], Dict[str, Any]]] = {
         "Configure Properties": (get_cmd("properties", "set"), {}),
         "Configure Allowlist": (get_cmd("allowlist", "add"), {}),
         "Configure Permissions": (get_cmd("permissions", "set"), {}),
     }
-    maintenance_map = {
+    maintenance_map: Dict[str, Tuple[Optional[click.Command], Dict[str, Any]]] = {
         "Update Server": (get_cmd("server", "update"), {}),
         "Delete Server": (get_cmd("server", "delete"), {}),
     }
-    system_map = {
+    system_map: Dict[str, Tuple[Optional[click.Command], Dict[str, Any]]] = {
         "Configure Service": (get_cmd("system", "configure-service"), {}),
         "Monitor Resource Usage": (get_cmd("system", "monitor"), {}),
     }
@@ -206,11 +221,11 @@ async def manage_server_menu(ctx: click.Context, server_name: str):
     while True:
         click.clear()
         click.secho(f"--- Managing Server: {server_name} ---", fg="magenta", bold=True)
-        await ctx.invoke(list_servers, server_name=server_name)
+        await ctx.invoke(list_servers, server_name=server_name)  # type: ignore
 
         choice = await questionary.select(
             f"\nSelect an action for '{server_name}':",
-            choices=menu_choices,
+            choices=menu_choices,  # type: ignore
             use_indicator=True,
         ).ask_async()
 
@@ -243,7 +258,7 @@ async def manage_server_menu(ctx: click.Context, server_name: str):
                     click.pause()
                     return
             elif hasattr(action, "commands"):
-                ctx.invoke(action, server_name=server_name)
+                ctx.invoke(action, server_name=server_name)  # type: ignore
 
             click.pause("\nPress any key to return to the server menu...")
 

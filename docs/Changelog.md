@@ -1,5 +1,5 @@
 <div style="text-align: center;">
-    <img src="https://raw.githubusercontent.com/dmedina559/bedrock-server-manager/main/src/bedrock_server_manager/web/static/image/icon/favicon.svg" alt="BSM Logo" width="150">
+    <img src="https://raw.githubusercontent.com/DMedina559/bsm-frontend/main/frontend/public/image/icon/favicon.svg" alt="BSM Logo" width="150">
 </div>
 
 # bsm-api-client Changelog
@@ -24,7 +24,7 @@
 
 # 1.1.0
 1. Added BSM 3.4.0 support
-2. Added methogs for plugin endpoints 
+2. Added methogs for plugin endpoints
 
 # 1.0.1
 
@@ -48,7 +48,7 @@
 
 1. Added support for Bedrock Server Manager (BSM) 3.3.0
 2. Added `async_reset_server_world`
-   - Corresponds to `DELETE /api/server/{server_name}/world/reset`. 
+   - Corresponds to `DELETE /api/server/{server_name}/world/reset`.
 
 # 0.5.1
 

@@ -18,7 +18,7 @@ jobs:
           script: |
             const title = context.payload.pull_request.title;
             const labelsToAdd = new Set();
-            
+
             // Map regex patterns to labels
             // Patterns cover "type:", "type/", and "type " formats
             const mappings = [

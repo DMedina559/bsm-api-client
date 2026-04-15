@@ -1,8 +1,11 @@
-import click
 import os
+
+import click
 import questionary
-from .decorators import pass_async_context, monitor_task
+
 from bsm_api_client.models import BackupActionPayload, RestoreActionPayload
+
+from .decorators import monitor_task, pass_async_context
 
 
 @click.group()
@@ -95,7 +98,7 @@ async def create_backup(ctx, server_name: str, backup_type: str, file_to_backup:
     help="Path to the backup file to restore; skips interactive menu.",
 )
 @pass_async_context
-async def restore_backup(ctx, server_name: str, backup_file_path: str):
+async def restore_backup(ctx, server_name: str, backup_file_path: str):  # noqa: C901
     """Restores server data from a specified backup file."""
     client = ctx.obj.get("client")
     if not client:

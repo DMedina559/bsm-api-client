@@ -1,20 +1,20 @@
 # src/bsm_api_client/__init__.py
 """Python client library for the Bedrock Server Manager API."""
+
 import logging
 from importlib import metadata
 
+from .api_client import BedrockServerManagerApi
 from .exceptions import (
     APIError,
+    APIServerSideError,
     AuthError,
-    NotFoundError,
-    ServerNotFoundError,
-    ServerNotRunningError,
     CannotConnectError,
     InvalidInputError,
     OperationFailedError,
-    APIServerSideError,
+    ServerNotFoundError,
+    ServerNotRunningError,
 )
-from .api_client import BedrockServerManagerApi
 from .websocket_client import WebSocketClient
 
 __all__ = [

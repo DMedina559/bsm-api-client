@@ -5,11 +5,13 @@ This module defines the Pydantic models used for data validation and serializati
 in the Bedrock Server Manager API client. These models correspond to the request
 and response bodies of the various API endpoints.
 """
+
+from typing import Any, Dict, List, Optional
+
 from pydantic import BaseModel, Field
-from typing import Optional, List, Dict, Any
 
 
-class Token(BaseModel):
+class TokenResponse(BaseModel):
     """Response model for successful authentication.
 
     Attributes:
@@ -31,12 +33,16 @@ class ActionResponse(BaseModel):
         message: A descriptive message about the outcome of the action.
         details: Optional additional details about the action's result.
         task_id: The ID of the background task if one was created.
+        redirect_url: An optional URL for redirection after the operation.
+        backups: A list of available backups.
     """
 
     status: str = "success"
     message: str
     details: Optional[Any] = None
     task_id: Optional[str] = None
+    redirect_url: Optional[str] = None
+    backups: Optional[Any] = None
 
 
 class BaseApiResponse(BaseModel):
@@ -51,38 +57,38 @@ class BaseApiResponse(BaseModel):
     message: Optional[str] = None
 
 
-class User(BaseModel):
-    """Represents a user account.
+class UserResponse(BaseModel):
+    """Pydantic model representing a user.
 
     Attributes:
         id: The user's ID.
         username: The user's username.
         identity_type: The type of identity (e.g., "local").
-        role: The user's role (e.g., "admin").
-        is_active: Whether the user account is active.
-        theme: The user's preferred theme.
+        role: The user's role.
+        is_active: Whether the user is active.
+        theme: The user's preferred theme. Defaults to "default".
     """
 
     id: int
     username: str
-    identity_type: str
+    identity_type: Optional[str] = None
     role: str
     is_active: bool
     theme: str = "default"
 
 
-class ThemeUpdate(BaseModel):
-    """Request model for updating a user's theme.
+class ThemeUpdatePayload(BaseModel):
+    """Request payload for updating the user's theme.
 
     Attributes:
-        theme: The name of the theme to set.
+        theme: The new theme name.
     """
 
     theme: str
 
 
-class ProfileUpdate(BaseModel):
-    """Request model for updating a user's profile.
+class ProfileUpdatePayload(BaseModel):
+    """Request payload for updating user profile details.
 
     Attributes:
         full_name: The user's full name.
@@ -93,12 +99,12 @@ class ProfileUpdate(BaseModel):
     email: str
 
 
-class ChangePasswordRequest(BaseModel):
-    """Request model for changing a user's password.
+class ChangePasswordPayload(BaseModel):
+    """Request payload for changing the user's password.
 
     Attributes:
-        current_password: The user's current password.
-        new_password: The new password to set.
+        current_password: The current password for verification.
+        new_password: The new password.
     """
 
     current_password: str
@@ -109,42 +115,55 @@ class InstallServerPayload(BaseModel):
     """Request model for installing a new server.
 
     Attributes:
-        server_name: The name for the new server.
-        server_version: The version of the server to install (e.g., "1.20.10").
-                        Defaults to "LATEST".
-        server_zip_path: Optional path to a custom server ZIP file.
-        overwrite: Whether to overwrite an existing server with the same name.
+        server_name: Name for the new server.
+        server_version: Version to install (e.g., 'LATEST', '1.20.10.01', 'CUSTOM'). Defaults to "LATEST".
+        server_zip_path: Path to a custom ZIP file, if 'CUSTOM' version is selected.
+        overwrite: If True, confirm overwriting an existing installation.
     """
 
     server_name: str = Field(..., min_length=1, max_length=50)
     server_version: str = "LATEST"
     server_zip_path: Optional[str] = None
-    overwrite: bool = False
+    overwrite: Optional[bool] = False
 
 
 class InstallServerResponse(BaseModel):
     """Response model for server installation requests.
 
     Attributes:
-        status: The status of the installation request.
-        message: A message describing the result.
-        task_id: The ID of the background task if installation started.
-        server_name: The name of the server being installed.
+        status: Status of the installation ('success', 'confirm_needed', 'pending').
+        message: Descriptive message about the operation.
+        server_name: Name of the server, especially if confirmation is needed.
+        task_id: Task ID for background installation.
     """
 
     status: str
     message: str
-    task_id: Optional[str] = None
     server_name: Optional[str] = None
+    task_id: Optional[str] = None
 
 
 class PropertiesPayload(BaseModel):
     """Request model for updating server.properties.
 
     Attributes:
-        properties: A dictionary of server properties to update.
+        properties: Dictionary of properties to set.
     """
 
+    properties: Dict[str, Any]
+
+
+class PropertiesGetResponse(BaseModel):
+    """Response model for server properties.
+
+    Attributes:
+        status: The status of the response.
+        message: An optional descriptive message.
+        properties: Dictionary of properties to set.
+    """
+
+    status: str
+    message: Optional[str] = None
     properties: Dict[str, Any]
 
 
@@ -152,35 +171,49 @@ class AllowlistAddPayload(BaseModel):
     """Request model for adding players to the allowlist.
 
     Attributes:
-        players: A list of player names or XUIDs to add.
-        ignoresPlayerLimit: Whether adding these players ignores the player limit.
+        players: List of player gamertags to add.
+        ignoresPlayerLimit: Set 'ignoresPlayerLimit' for these players.
     """
 
     players: List[str]
     ignoresPlayerLimit: bool = False
 
 
+class AllowlistGetResponse(BaseModel):
+    """Response model for server allowlist.
+
+    Attributes:
+        status: The status of the response.
+        message: An optional descriptive message.
+        players: The list of players on the allowlist.
+    """
+
+    status: str
+    message: Optional[str] = None
+    players: List[Dict[str, Any]]
+
+
 class AllowlistRemovePayload(BaseModel):
     """Request model for removing players from the allowlist.
 
     Attributes:
-        players: A list of player names or XUIDs to remove.
+        players: List of player gamertags to remove.
     """
 
     players: List[str]
 
 
-class PlayerPermission(BaseModel):
-    """Represents a single player's permission data.
+class PlayerPermissionPayload(BaseModel):
+    """Represents a single player's permission data sent from the client.
 
     Attributes:
-        name: The player's name.
-        xuid: The player's Xbox User ID.
-        permission_level: The permission level to assign (e.g., "operator").
+        xuid: The player's XUID.
+        name: The player's Name.
+        permission_level: The permission level.
     """
 
-    name: str
     xuid: str
+    name: str
     permission_level: str
 
 
@@ -188,51 +221,59 @@ class PermissionsSetPayload(BaseModel):
     """Request model for setting multiple player permissions.
 
     Attributes:
-        permissions: A list of PlayerPermission objects.
+        permissions: List of player permission entries.
     """
 
-    permissions: List[PlayerPermission]
+    permissions: List[PlayerPermissionPayload]
+
+
+class PermissionsGetResponse(BaseModel):
+    """Response model for server permissions.
+
+    Attributes:
+        status: The status of the response.
+        message: An optional descriptive message.
+        permissions: The list of permissions on the server.
+    """
+
+    status: str
+    message: Optional[str] = None
+    permissions: List[Dict[str, Any]]
+
+
+class PermissionsUpdateResponse(BaseModel):
+    """Response model for permissions update.
+
+    Attributes:
+        status: The status of the response.
+        message: An optional descriptive message.
+        errors: A dictionary of errors, if any occurred.
+    """
+
+    status: str
+    message: Optional[str] = None
+    errors: Optional[Dict[str, str]] = None
 
 
 class ServiceUpdatePayload(BaseModel):
     """Request model for updating server-specific service settings.
 
     Attributes:
-        autoupdate: Enable or disable automatic updates for the server.
-        autostart: Enable or disable automatic startup for the server.
+        autoupdate: Enable/disable automatic updates for the server.
+        autostart: Enable/disable service autostart for the server.
     """
 
     autoupdate: Optional[bool] = None
     autostart: Optional[bool] = None
 
 
-class BackupRestoreResponse(BaseModel):
-    """Generic API response model for backup and restore operations.
-
-    Attributes:
-        status: The status of the operation.
-        message: A descriptive message.
-        details: Optional additional details.
-        redirect_url: An optional URL for redirection after the operation.
-        backups: A list of available backups.
-        task_id: The ID of the background task if one was created.
-    """
-
-    status: str
-    message: Optional[str] = None
-    details: Optional[Any] = None
-    redirect_url: Optional[str] = None
-    backups: Optional[List[Any]] = None
-    task_id: Optional[str] = None
-
-
 class ContentListResponse(BaseModel):
-    """Response for listing content like worlds and addons.
+    """Response model for content listing endpoints.
 
     Attributes:
         status: The status of the request.
-        message: A descriptive message.
-        files: A list of file names.
+        message: An optional descriptive message.
+        files: A list of filenames found.
     """
 
     status: str
@@ -240,12 +281,12 @@ class ContentListResponse(BaseModel):
     files: Optional[List[str]] = None
 
 
-class SettingItem(BaseModel):
+class SettingItemResponse(BaseModel):
     """Request model for a single setting key-value pair.
 
     Attributes:
-        key: The key of the setting.
-        value: The value of the setting.
+        key: The dot-notation key of the setting (e.g., 'web.port').
+        value: The new value for the setting.
     """
 
     key: str
@@ -257,7 +298,7 @@ class SettingsResponse(BaseModel):
 
     Attributes:
         status: The status of the request.
-        message: A descriptive message.
+        message: An optional descriptive message.
         settings: A dictionary of all settings.
         setting: The specific setting that was modified.
     """
@@ -265,54 +306,14 @@ class SettingsResponse(BaseModel):
     status: str
     message: Optional[str] = None
     settings: Optional[Dict[str, Any]] = None
-    setting: Optional[SettingItem] = None
-
-
-class GeneralApiResponse(BaseModel):
-    """A general-purpose API response model for various endpoints.
-
-    Attributes:
-        status: The response status.
-        message: An optional descriptive message.
-        data: A generic dictionary for any other data.
-        servers: A list of servers.
-        info: System or application information.
-        players: A list of players.
-        files_deleted: The number of files deleted.
-        files_kept: The number of files kept.
-        properties: A dictionary of server properties.
-    """
-
-    status: str
-    message: Optional[str] = None
-    data: Optional[Dict[str, Any]] = None
-    servers: Optional[List[Dict[str, Any]]] = None
-    info: Optional[Dict[str, Any]] = None
-    players: Optional[List[Dict[str, Any]]] = None
-    files_deleted: Optional[int] = None
-    files_kept: Optional[int] = None
-    properties: Optional[Dict[str, Any]] = None
-
-
-class PluginApiResponse(BaseModel):
-    """Generic API response model for plugin operations.
-
-    Attributes:
-        status: The response status.
-        message: An optional descriptive message.
-        data: A generic field for any other data related to the plugin.
-    """
-
-    status: str
-    message: Optional[str] = None
-    data: Optional[Any] = None
+    setting: Optional[SettingItemResponse] = None
 
 
 class CommandPayload(BaseModel):
     """Request model for sending a command to a server.
 
     Attributes:
-        command: The command string to execute on the server.
+        command: The command to send to the server.
     """
 
     command: str = Field(..., min_length=1)
@@ -322,62 +323,100 @@ class PruneDownloadsPayload(BaseModel):
     """Request model for pruning the download cache.
 
     Attributes:
-        directory: The directory to prune.
-        keep: The number of files to keep.
+        directory: The subdirectory within the main download cache to prune (e.g., 'stable' or 'preview').
+        keep: Number of most recent files to keep. Defaults to config if omitted.
     """
 
     directory: str = Field(..., min_length=1)
     keep: Optional[int] = Field(None, ge=0)
 
 
+class PruneDownloadsResponse(BaseModel):
+    """Response model for pruning downloads.
+
+    Attributes:
+        status: The status of the response.
+        message: An optional descriptive message.
+        files_deleted: The number of files deleted.
+        files_kept: The number of files kept.
+    """
+
+    status: str
+    message: Optional[str] = None
+    files_deleted: Optional[int] = None
+    files_kept: Optional[int] = None
+
+
 class AddPlayersPayload(BaseModel):
     """Request model for manually adding players to the database.
 
     Attributes:
-        players: A list of player strings, typically "name:xuid".
+        players: List of player strings, e.g., ["PlayerOne:123xuid", "PlayerTwo:456xuid"]
     """
 
     players: List[str]
+
+
+class AddPlayersResponse(BaseModel):
+    """Response model for adding players, typically returns just inherited fields or single item data.
+
+    Attributes:
+        status: The status of the response.
+        message: An optional descriptive message.
+        details: Optional data payload.
+        count: Optional count of added players.
+    """
+
+    status: str
+    message: Optional[str] = None
+    details: Optional[Dict[str, Any]] = None
+    count: Optional[int] = None
 
 
 class TriggerEventPayload(BaseModel):
     """Request model for triggering a custom plugin event.
 
     Attributes:
-        event_name: The name of the event to trigger.
-        payload: An optional dictionary of data to pass with the event.
+        event_name: The namespaced name of the event to trigger (e.g., 'myplugin:myevent').
+        payload: Optional dictionary payload for the event.
     """
 
     event_name: str = Field(..., min_length=1)
     payload: Optional[Dict[str, Any]] = None
 
 
+class TriggerEventResponse(BaseModel):
+    """Response model for triggering a custom plugin event."""
+
+    status: str
+    message: Optional[str] = None
+    details: Optional[Dict[str, Any]] = None
+
+
+class PluginStatusesResponse(BaseModel):
+    """Response model for plugin statuses."""
+
+    status: str
+    message: Optional[str] = None
+    plugins: Optional[Dict[str, Dict[str, Any]]] = None
+
+
 class PluginStatusSetPayload(BaseModel):
     """Request model for setting a plugin's enabled status.
 
     Attributes:
-        enabled: The desired enabled state of the plugin.
+        enabled: Set to true to enable the plugin, false to disable.
     """
 
     enabled: bool
-
-
-class RestoreTypePayload(BaseModel):
-    """Request model for specifying the type of restore operation.
-
-    Attributes:
-        restore_type: The type of restore to perform (e.g., "world", "server").
-    """
-
-    restore_type: str
 
 
 class RestoreActionPayload(BaseModel):
     """Request model for triggering a restore action.
 
     Attributes:
-        restore_type: The type of restore to perform.
-        backup_file: The specific backup file to use for the restore.
+        restore_type: Type of restore: 'world', 'properties', 'allowlist', 'permissions', or 'all'.
+        backup_file: Name of the backup file (basename) to restore from (required if not 'all').
     """
 
     restore_type: str
@@ -388,8 +427,8 @@ class BackupActionPayload(BaseModel):
     """Request model for triggering a backup action.
 
     Attributes:
-        backup_type: The type of backup to perform (e.g., "world", "server").
-        file_to_backup: The specific file or world to backup.
+        backup_type: Type of backup: 'world', 'config', or 'all'.
+        file_to_backup: Name of config file if backup_type is 'config' (e.g., 'server.properties').
     """
 
     backup_type: str
@@ -397,10 +436,184 @@ class BackupActionPayload(BaseModel):
 
 
 class FileNamePayload(BaseModel):
-    """A simple model for payloads that only contain a filename.
+    """Payload for file-based operations.
 
     Attributes:
-        filename: The name of the file.
+        filename: The name of the file to operate on.
     """
 
     filename: str
+
+
+class SetupStatusResponse(BaseModel):
+    """Response model for setup status.
+
+    Attributes:
+        needs_setup: Whether the setup is needed.
+    """
+
+    needs_setup: bool
+
+
+class AuditLogResponse(BaseModel):
+    """Response model for audit logs."""
+
+    id: int
+    user_id: int
+    action: str
+    details: Optional[Dict[str, Any]] = None
+    timestamp: str
+
+
+class CustomZipsResponse(BaseModel):
+    """Response model for custom zips list."""
+
+    status: str
+    message: Optional[str] = None
+    custom_zips: List[str]
+
+
+class AppInfoResponse(BaseModel):
+    """Response model for app/system info."""
+
+    status: str
+    message: Optional[str] = None
+    info: Optional[Dict[str, Any]] = None
+
+
+class ThemeListResponse(BaseModel):
+    """Response model for theme lists."""
+
+    status: str
+    message: Optional[str] = None
+    themes: Optional[List[str]] = None
+
+
+class PlayerListResponse(BaseModel):
+    """Response model for player lists."""
+
+    status: str
+    message: Optional[str] = None
+    players: Optional[List[Dict[str, Any]]] = None
+
+
+class ServerSchemaResponse(BaseModel):
+    """Schema representing server information in lists."""
+
+    name: str
+    status: str
+    version: str
+    player_count: int
+
+
+class ServersListResponse(BaseModel):
+    """Response model for lists of server data."""
+
+    status: str
+    message: Optional[str] = None
+    servers: Optional[List[ServerSchemaResponse]] = None
+
+
+class ServerRunningStatusResponse(BaseModel):
+    """Response model for server running status."""
+
+    status: str
+    message: Optional[str] = None
+    running: Optional[bool] = None
+
+
+class ServerConfigStatusResponse(BaseModel):
+    """Response model for server config status."""
+
+    status: str
+    message: Optional[str] = None
+    config_status: Optional[str] = None
+
+
+class ServerVersionResponse(BaseModel):
+    """Response model for server installed version."""
+
+    status: str
+    message: Optional[str] = None
+    version: Optional[str] = None
+
+
+class ServerProcessInfoResponse(BaseModel):
+    """Response model for server process info."""
+
+    status: str
+    message: Optional[str] = None
+    process_info: Optional[Dict[str, Any]] = None
+
+
+class ServerSettingItemPayload(BaseModel):
+    """Request model for a single server setting key-value pair."""
+
+    key: str
+    value: Any
+
+
+class ServerSettingsResponse(BaseModel):
+    """Response model for server settings operations."""
+
+    status: str
+    message: Optional[str] = None
+    settings: Optional[Dict[str, Any]] = None
+    setting: Optional[ServerSettingItemPayload] = None
+
+
+class UpdateUserRolePayload(BaseModel):
+    """Request payload for updating a user's role."""
+
+    role: str
+
+
+class AddonSchemaResponse(BaseModel):
+    """Schema representing an individual addon."""
+
+    name: str
+    uuid: str
+    version: List[int]
+    status: str
+    active_subpack: Optional[str] = None
+    path: Optional[str] = None
+    icon: Optional[str] = None
+    subpacks: Optional[List[Dict[str, Any]]] = None
+
+
+class AddonTypeGroupSchemaResponse(BaseModel):
+    """Schema grouping behavior and resource packs."""
+
+    behavior_packs: Optional[List[AddonSchemaResponse]] = None
+    resource_packs: Optional[List[AddonSchemaResponse]] = None
+
+
+class AddonListResponse(BaseModel):
+    """Response model for retrieving all addons on a server."""
+
+    status: str
+    message: Optional[str] = None
+    addons: Optional[AddonTypeGroupSchemaResponse] = None
+
+
+class AddonActionPayload(BaseModel):
+    """Request model for modifying a specific addon (e.g. enable, disable, uninstall)."""
+
+    pack_uuid: str
+    pack_type: str
+
+
+class AddonSubpackPayload(BaseModel):
+    """Request model for changing the active subpack of an addon."""
+
+    pack_uuid: str
+    pack_type: str
+    subpack_name: Optional[str] = None
+    model_config = {"extra": "allow"}
+
+
+class AddonReorderPayload(BaseModel):
+    """Request model for reordering active addons."""
+
+    pack_type: str
+    uuids: List[str]

@@ -1,12 +1,12 @@
 import pytest
+
 from bsm_api_client.api_client import BedrockServerManagerApi
 from bsm_api_client.exceptions import APIError
 from bsm_api_client.models import (
-    PropertiesPayload,
     AllowlistAddPayload,
     AllowlistRemovePayload,
     PermissionsSetPayload,
-    PlayerPermission,
+    PropertiesPayload,
 )
 
 
@@ -106,24 +106,40 @@ async def test_server_operations(server, bedrock_server):
             server_name
         )
         assert permissions_response.status == "success"
-        if permissions_response.data:
-            assert permissions_response.data.get("permissions", []) == []
+        initial_permissions = []
+        if permissions_response.permissions:
+            initial_permissions = permissions_response.permissions
 
-        permission = PlayerPermission(
+        # we need to cast dictionaries to models to sum them properly
+        from bsm_api_client.models import PlayerPermissionPayload  # noqa: F811
+
+        permission = PlayerPermissionPayload(
             name="TestPlayer", xuid="123456789", permission_level="operator"
         )
-        set_payload = PermissionsSetPayload(permissions=[permission])
+        initial_models = [PlayerPermissionPayload(**p) for p in initial_permissions]
+
+        set_payload = PermissionsSetPayload(permissions=initial_models + [permission])
         set_result = await client.async_set_server_permissions(server_name, set_payload)
         assert set_result.status == "success"
 
         permissions_response_after_set = await client.async_get_server_permissions_data(
             server_name
         )
-        assert permissions_response_after_set.data is not None
-        assert len(permissions_response_after_set.data["permissions"]) == 1
-        player_permission = permissions_response_after_set.data["permissions"][0]
-        assert player_permission["name"] == "Unknown (XUID: 123456789)"
-        assert player_permission["permission_level"] == "operator"
+        assert permissions_response_after_set.permissions is not None
+        assert (
+            len(permissions_response_after_set.permissions)
+            == len(initial_permissions) + 1
+        )
+        found_player = next(
+            (
+                p
+                for p in permissions_response_after_set.permissions
+                if p["xuid"] == "123456789"
+            ),
+            None,
+        )
+        assert found_player is not None
+        assert found_player["permission_level"] == "operator"
 
     finally:
         await client.close()

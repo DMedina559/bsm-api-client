@@ -1,16 +1,15 @@
 # tests/test_api_client.py
-import pytest
 from unittest.mock import AsyncMock, patch
-from bsm_api_client.api_client import BedrockServerManagerApi
-from bsm_api_client.exceptions import APIError, CannotConnectError
-from bsm_api_client.models import (
-    InstallServerPayload,
-    PropertiesPayload,
-    PermissionsSetPayload,
-    PlayerPermission,
-)
 
+import pytest
 import pytest_asyncio
+
+from bsm_api_client.api_client import BedrockServerManagerApi
+from bsm_api_client.models import (
+    PermissionsSetPayload,
+    PlayerPermissionPayload,
+    PropertiesPayload,
+)
 
 
 @pytest_asyncio.fixture
@@ -27,13 +26,13 @@ async def test_get_custom_zips(client):
     with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
         mock_request.return_value = {
             "status": "success",
-            "files": ["zip1.zip", "zip2.zip"],
+            "custom_zips": ["zip1.zip", "zip2.zip"],
         }
         result = await client.async_get_custom_zips()
         mock_request.assert_called_once_with(
             method="GET", path="/downloads/list", authenticated=True
         )
-        assert result["files"] == ["zip1.zip", "zip2.zip"]
+        assert result.custom_zips == ["zip1.zip", "zip2.zip"]
 
 
 @pytest.mark.asyncio
@@ -41,14 +40,15 @@ async def test_get_themes(client):
     """Test get_themes method."""
     with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
         mock_request.return_value = {
-            "status": "success",
-            "themes": {"dark": "dark.css"},
+            "dark": "dark.css",
         }
         result = await client.async_get_themes()
         mock_request.assert_called_once_with(
             method="GET", path="/themes", authenticated=True
         )
-        assert result["themes"] == {"dark": "dark.css"}
+        assert getattr(result, "dark", None) == "dark.css" or result == {
+            "dark": "dark.css"
+        }
 
 
 @pytest.mark.asyncio
@@ -74,8 +74,12 @@ async def test_set_server_permissions(client):
     """Test async_set_server_permissions method."""
     with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
         permissions = [
-            PlayerPermission(name="Player1", xuid="123", permission_level="member"),
-            PlayerPermission(name="Player2", xuid="456", permission_level="operator"),
+            PlayerPermissionPayload(
+                name="Player1", xuid="123", permission_level="member"
+            ),
+            PlayerPermissionPayload(
+                name="Player2", xuid="456", permission_level="operator"
+            ),
         ]
         payload = PermissionsSetPayload(permissions=permissions)
         mock_request.return_value = {

@@ -1,6 +1,8 @@
 # src/bsm_api_client/cli/content.py
 """CLI commands for content management."""
+
 import click
+
 from .decorators import pass_async_context
 
 
