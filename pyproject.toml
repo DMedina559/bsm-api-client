@@ -41,7 +41,7 @@ dev = [
     "bedrock-server-manager >=3.9.0a3,<3.10.0",
 ]
 cli = [
-    "click >=8.2.0,<8.4",
+    "click >=8.2.0,<8.5",
     "questionary >=2.1.0,<2.2",
 ]
 
