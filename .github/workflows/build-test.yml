@@ -10,11 +10,11 @@ on:
       - 'src/bsm_api_client/**'
       - 'tests/**'
       - 'pyproject.toml'
-  pull_request:
-    paths:
-      - 'src/bsm_api_client/**'
-      - 'tests/**'
-      - 'pyproject.toml'
+  #pull_request:
+  #  paths:
+  #    - 'src/bsm_api_client/**'
+  #    - 'tests/**'
+  #    - 'pyproject.toml'
 
 jobs:
   build-and-test:
