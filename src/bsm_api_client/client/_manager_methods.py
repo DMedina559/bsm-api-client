@@ -8,7 +8,7 @@ players, and installing new servers.
 """
 
 import logging
-from typing import Any, Callable, Dict
+from typing import Any, Callable, Dict, cast
 
 import aiohttp
 
@@ -49,7 +49,7 @@ class ManagerMethodsMixin:
         """
         _LOGGER.debug("Fetching manager system and application information from /info")
         response = await self._request(method="GET", path="/info", authenticated=False)
-        return AppInfoResponse.model_validate(response)
+        return cast(AppInfoResponse, AppInfoResponse.model_validate(response))
 
     async def async_scan_players(self) -> AddPlayersResponse:
         """Triggers a scan of player logs across all servers.
@@ -61,7 +61,7 @@ class ManagerMethodsMixin:
         response = await self._request(
             method="POST", path="/players/scan", authenticated=True
         )
-        return AddPlayersResponse.model_validate(response)
+        return cast(AddPlayersResponse, AddPlayersResponse.model_validate(response))
 
     async def async_get_players(self) -> PlayerListResponse:
         """Gets the global list of known players.
@@ -73,7 +73,7 @@ class ManagerMethodsMixin:
         response = await self._request(
             method="GET", path="/players/get", authenticated=True
         )
-        return PlayerListResponse.model_validate(response)
+        return cast(PlayerListResponse, PlayerListResponse.model_validate(response))
 
     async def async_add_players(self, payload: AddPlayersPayload) -> AddPlayersResponse:
         """Adds or updates players in the global list.
@@ -91,7 +91,7 @@ class ManagerMethodsMixin:
             json_data=payload.model_dump(),
             authenticated=True,
         )
-        return AddPlayersResponse.model_validate(response)
+        return cast(AddPlayersResponse, AddPlayersResponse.model_validate(response))
 
     async def async_get_custom_zips(self) -> CustomZipsResponse:
         """Retrieves a list of available custom server ZIP files.
@@ -103,7 +103,7 @@ class ManagerMethodsMixin:
         response = await self._request(
             method="GET", path="/downloads/list", authenticated=True
         )
-        return CustomZipsResponse.model_validate(response)
+        return cast(CustomZipsResponse, CustomZipsResponse.model_validate(response))
 
     async def async_get_themes(self) -> Dict[str, Any]:
         """Retrieves a list of available themes.
@@ -125,7 +125,7 @@ class ManagerMethodsMixin:
         response = await self._request(
             method="GET", path="/settings", authenticated=True
         )
-        return SettingsResponse.model_validate(response)
+        return cast(SettingsResponse, SettingsResponse.model_validate(response))
 
     async def async_set_setting(self, payload: SettingItemResponse) -> SettingsResponse:
         """Sets a specific global application setting.
@@ -145,7 +145,7 @@ class ManagerMethodsMixin:
             json_data=payload.model_dump(),
             authenticated=True,
         )
-        return SettingsResponse.model_validate(response)
+        return cast(SettingsResponse, SettingsResponse.model_validate(response))
 
     async def async_reload_settings(self) -> SettingsResponse:
         """Forces a reload of global application settings and logging configuration.
@@ -157,7 +157,7 @@ class ManagerMethodsMixin:
         response = await self._request(
             method="POST", path="/settings/reload", authenticated=True
         )
-        return SettingsResponse.model_validate(response)
+        return cast(SettingsResponse, SettingsResponse.model_validate(response))
 
     async def async_get_panorama_image(self) -> bytes:
         """Retrieves the panorama background image.
@@ -196,7 +196,7 @@ class ManagerMethodsMixin:
                     raise APIError(
                         f"Panorama image request failed with status {response.status}"
                     )
-                return await response.read()  # Returns bytes
+                return cast(bytes, await response.read())  # Returns bytes
         except aiohttp.ClientError as e:
             _LOGGER.error("AIOHTTP client error fetching panorama: %s", e)
             raise CannotConnectError(
@@ -233,7 +233,9 @@ class ManagerMethodsMixin:
             json_data=payload.model_dump(),
             authenticated=True,
         )
-        return PruneDownloadsResponse.model_validate(response)
+        return cast(
+            PruneDownloadsResponse, PruneDownloadsResponse.model_validate(response)
+        )
 
     async def async_install_new_server(
         self, payload: InstallServerPayload
@@ -259,7 +261,9 @@ class ManagerMethodsMixin:
             json_data=payload.model_dump(),
             authenticated=True,
         )
-        return InstallServerResponse.model_validate(response)
+        return cast(
+            InstallServerResponse, InstallServerResponse.model_validate(response)
+        )
 
     async def async_get_task_status(self, task_id: str) -> Dict[str, Any]:
         """Retrieves the status of a background task.

@@ -8,7 +8,7 @@ Server Manager API.
 
 import asyncio
 import logging
-from typing import Any, Callable, List, Optional
+from typing import Any, Callable, List, Optional, cast
 from urllib.parse import quote
 
 import aiohttp
@@ -53,7 +53,9 @@ class ServerInfoMethodsMixin:
         """
         _LOGGER.debug("Fetching server list from /api/servers")
         response_data = await self._request("GET", "/servers", authenticated=True)
-        return ServersListResponse.model_validate(response_data)
+        return cast(
+            ServersListResponse, ServersListResponse.model_validate(response_data)
+        )
 
     async def async_get_server_names(self) -> List[str]:
         """Fetches a list of server names.
@@ -137,7 +139,10 @@ class ServerInfoMethodsMixin:
             f"/server/{encoded_server_name}/process_info",
             authenticated=True,
         )
-        return ServerProcessInfoResponse.model_validate(response)
+        return cast(
+            ServerProcessInfoResponse,
+            ServerProcessInfoResponse.model_validate(response),
+        )
 
     async def async_get_world_icon_image(self, server_name: str) -> bytes:  # noqa: C901
         """Retrieves the world icon image for a server.
@@ -215,7 +220,7 @@ class ServerInfoMethodsMixin:
                     raise APIError(
                         f"World icon request failed with status {response.status}"
                     )  # Should be caught by _handle_api_error
-                return await response.read()  # Returns bytes
+                return cast(bytes, await response.read())  # Returns bytes
         except aiohttp.ClientError as e:
             _LOGGER.error(
                 "AIOHTTP client error fetching world icon for '%s': %s", server_name, e
@@ -256,7 +261,10 @@ class ServerInfoMethodsMixin:
             f"/server/{encoded_server_name}/status",
             authenticated=True,
         )
-        return ServerRunningStatusResponse.model_validate(response)
+        return cast(
+            ServerRunningStatusResponse,
+            ServerRunningStatusResponse.model_validate(response),
+        )
 
     async def async_get_server_config_status(
         self, server_name: str
@@ -280,7 +288,10 @@ class ServerInfoMethodsMixin:
             f"/server/{encoded_server_name}/config_status",
             authenticated=True,
         )
-        return ServerConfigStatusResponse.model_validate(response)
+        return cast(
+            ServerConfigStatusResponse,
+            ServerConfigStatusResponse.model_validate(response),
+        )
 
     async def async_get_server_version(self, server_name: str) -> ServerVersionResponse:
         """Gets the installed Bedrock server version.
@@ -302,7 +313,9 @@ class ServerInfoMethodsMixin:
             f"/server/{encoded_server_name}/version",
             authenticated=True,
         )
-        return ServerVersionResponse.model_validate(response)
+        return cast(
+            ServerVersionResponse, ServerVersionResponse.model_validate(response)
+        )
 
     async def async_get_server_properties(
         self, server_name: str
@@ -326,7 +339,9 @@ class ServerInfoMethodsMixin:
             f"/server/{encoded_server_name}/properties/get",
             authenticated=True,
         )
-        return PropertiesGetResponse.model_validate(response)
+        return cast(
+            PropertiesGetResponse, PropertiesGetResponse.model_validate(response)
+        )
 
     async def async_get_server_permissions_data(
         self, server_name: str
@@ -350,7 +365,9 @@ class ServerInfoMethodsMixin:
             f"/server/{encoded_server_name}/permissions/get",
             authenticated=True,
         )
-        return PermissionsGetResponse.model_validate(response)
+        return cast(
+            PermissionsGetResponse, PermissionsGetResponse.model_validate(response)
+        )
 
     async def async_get_server_allowlist(
         self, server_name: str
@@ -374,4 +391,4 @@ class ServerInfoMethodsMixin:
             f"/server/{encoded_server_name}/allowlist/get",
             authenticated=True,
         )
-        return AllowlistGetResponse.model_validate(response)
+        return cast(AllowlistGetResponse, AllowlistGetResponse.model_validate(response))

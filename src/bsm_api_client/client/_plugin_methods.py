@@ -6,7 +6,7 @@ for managing plugins through the Bedrock Server Manager API.
 """
 
 import logging
-from typing import Any, Callable
+from typing import Any, Callable, cast
 
 from ..models import (
     ActionResponse,
@@ -41,7 +41,9 @@ class PluginMethodsMixin:
         response = await self._request(
             method="GET", path="/plugins", authenticated=True
         )
-        return PluginStatusesResponse.model_validate(response)
+        return cast(
+            PluginStatusesResponse, PluginStatusesResponse.model_validate(response)
+        )
 
     async def async_set_plugin_status(
         self, plugin_name: str, payload: PluginStatusSetPayload
@@ -76,7 +78,7 @@ class PluginMethodsMixin:
             json_data=payload.model_dump(),
             authenticated=True,
         )
-        return ActionResponse.model_validate(response)
+        return cast(ActionResponse, ActionResponse.model_validate(response))
 
     async def async_reload_plugins(self) -> ActionResponse:
         """Triggers a full reload of all plugins.
@@ -95,7 +97,7 @@ class PluginMethodsMixin:
         response = await self._request(
             method="PUT", path="/plugins/reload", authenticated=True
         )
-        return ActionResponse.model_validate(response)
+        return cast(ActionResponse, ActionResponse.model_validate(response))
 
     async def async_trigger_plugin_event(
         self, payload: TriggerEventPayload
@@ -126,4 +128,4 @@ class PluginMethodsMixin:
             json_data=payload.model_dump(),
             authenticated=True,
         )
-        return TriggerEventResponse.model_validate(response)
+        return cast(TriggerEventResponse, TriggerEventResponse.model_validate(response))

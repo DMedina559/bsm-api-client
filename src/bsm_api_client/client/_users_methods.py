@@ -1,7 +1,7 @@
 """Mixin class for users-related API methods."""
 
 import logging
-from typing import TYPE_CHECKING, Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, cast
 
 from ..models import (
     BaseApiResponse,
@@ -60,7 +60,7 @@ class UsersMethodsMixin:
         response = await self._request(
             method="POST", path=f"/users/{user_id}/delete", authenticated=True
         )
-        return BaseApiResponse.model_validate(response)
+        return cast(BaseApiResponse, BaseApiResponse.model_validate(response))
 
     async def async_update_user_role(self, user_id: int, role: str) -> BaseApiResponse:
         """Updates a user's role.
@@ -83,7 +83,7 @@ class UsersMethodsMixin:
             json_data={"role": role},
             authenticated=True,
         )
-        return BaseApiResponse.model_validate(response)
+        return cast(BaseApiResponse, BaseApiResponse.model_validate(response))
 
     async def async_disable_user(self, user_id: int) -> BaseApiResponse:
         """Disables a user.
@@ -102,7 +102,7 @@ class UsersMethodsMixin:
         response = await self._request(
             method="POST", path=f"/users/{user_id}/disable", authenticated=True
         )
-        return BaseApiResponse.model_validate(response)
+        return cast(BaseApiResponse, BaseApiResponse.model_validate(response))
 
     async def async_enable_user(self, user_id: int) -> BaseApiResponse:
         """Enables a user.
@@ -121,7 +121,7 @@ class UsersMethodsMixin:
         response = await self._request(
             method="POST", path=f"/users/{user_id}/enable", authenticated=True
         )
-        return BaseApiResponse.model_validate(response)
+        return cast(BaseApiResponse, BaseApiResponse.model_validate(response))
 
     async def async_generate_invite_token(self, role: str) -> Dict[str, Any]:
         """Generates an invite token.
@@ -143,4 +143,4 @@ class UsersMethodsMixin:
             json_data={"role": role},
             authenticated=True,
         )
-        return dict(response)
+        return cast(Dict[str, Any], dict(response))

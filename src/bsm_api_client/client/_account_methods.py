@@ -2,7 +2,7 @@
 """Mixin class for account-related API methods."""
 
 import logging
-from typing import Any, Callable
+from typing import Any, Callable, cast
 
 from ..models import (
     BaseApiResponse,
@@ -35,7 +35,7 @@ class AccountMethodsMixin:
         response = await self._request(
             method="GET", path="/account", authenticated=True
         )
-        return UserResponse.model_validate(response)
+        return cast(UserResponse, UserResponse.model_validate(response))
 
     async def async_update_theme(self, payload: ThemeUpdatePayload) -> BaseApiResponse:
         """Updates the current user's theme.
@@ -58,7 +58,7 @@ class AccountMethodsMixin:
             json_data=payload.model_dump(),
             authenticated=True,
         )
-        return BaseApiResponse.model_validate(response)
+        return cast(BaseApiResponse, BaseApiResponse.model_validate(response))
 
     async def async_update_profile(
         self, payload: ProfileUpdatePayload
@@ -83,7 +83,7 @@ class AccountMethodsMixin:
             json_data=payload.model_dump(),
             authenticated=True,
         )
-        return BaseApiResponse.model_validate(response)
+        return cast(BaseApiResponse, BaseApiResponse.model_validate(response))
 
     async def async_change_password(
         self, payload: ChangePasswordPayload
@@ -108,4 +108,4 @@ class AccountMethodsMixin:
             json_data=payload.model_dump(),
             authenticated=True,
         )
-        return BaseApiResponse.model_validate(response)
+        return cast(BaseApiResponse, BaseApiResponse.model_validate(response))

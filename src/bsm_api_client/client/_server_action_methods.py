@@ -7,7 +7,7 @@ starting, stopping, and sending commands.
 """
 
 import logging
-from typing import Any, Callable
+from typing import Any, Callable, cast
 
 from ..models import (
     ActionResponse,
@@ -70,7 +70,7 @@ class ServerActionMethodsMixin:
             f"/server/{server_name}/start",
             authenticated=True,
         )
-        return ActionResponse.model_validate(response)
+        return cast(ActionResponse, ActionResponse.model_validate(response))
 
     async def async_enable_server_service(self, server_name: str) -> BaseApiResponse:
         """Enables the system service for the specified server.
@@ -175,7 +175,7 @@ class ServerActionMethodsMixin:
             f"/server/{server_name}/stop",
             authenticated=True,
         )
-        return ActionResponse.model_validate(response)
+        return cast(ActionResponse, ActionResponse.model_validate(response))
 
     async def async_restart_server(self, server_name: str) -> ActionResponse:
         """Restarts the specified Bedrock server instance.
@@ -196,7 +196,7 @@ class ServerActionMethodsMixin:
             f"/server/{server_name}/restart",
             authenticated=True,
         )
-        return ActionResponse.model_validate(response)
+        return cast(ActionResponse, ActionResponse.model_validate(response))
 
     async def async_send_server_command(
         self, server_name: str, command: CommandPayload
@@ -224,7 +224,7 @@ class ServerActionMethodsMixin:
             json_data=command.model_dump(),
             authenticated=True,
         )
-        return ActionResponse.model_validate(response)
+        return cast(ActionResponse, ActionResponse.model_validate(response))
 
     async def async_update_server(self, server_name: str) -> ActionResponse:
         """Checks for and applies updates to the specified server instance.
@@ -245,7 +245,7 @@ class ServerActionMethodsMixin:
             f"/server/{server_name}/update",
             authenticated=True,
         )
-        return ActionResponse.model_validate(response)
+        return cast(ActionResponse, ActionResponse.model_validate(response))
 
     async def async_add_server_allowlist(
         self, server_name: str, payload: AllowlistAddPayload
@@ -277,7 +277,7 @@ class ServerActionMethodsMixin:
             json_data=payload.model_dump(),
             authenticated=True,
         )
-        return BaseApiResponse.model_validate(response)
+        return cast(BaseApiResponse, BaseApiResponse.model_validate(response))
 
     async def async_remove_server_allowlist_players(
         self, server_name: str, payload: AllowlistRemovePayload
@@ -309,7 +309,7 @@ class ServerActionMethodsMixin:
             json_data=payload.model_dump(),
             authenticated=True,
         )
-        return BaseApiResponse.model_validate(response)
+        return cast(BaseApiResponse, BaseApiResponse.model_validate(response))
 
     async def async_set_server_permissions(
         self, server_name: str, payload: PermissionsSetPayload
@@ -340,7 +340,10 @@ class ServerActionMethodsMixin:
             json_data=payload.model_dump(),
             authenticated=True,
         )
-        return PermissionsUpdateResponse.model_validate(response)
+        return cast(
+            PermissionsUpdateResponse,
+            PermissionsUpdateResponse.model_validate(response),
+        )
 
     async def async_update_server_properties(
         self, server_name: str, payload: PropertiesPayload
@@ -369,7 +372,7 @@ class ServerActionMethodsMixin:
             json_data=payload.model_dump(),
             authenticated=True,
         )
-        return BaseApiResponse.model_validate(response)
+        return cast(BaseApiResponse, BaseApiResponse.model_validate(response))
 
     async def async_configure_server_os_service(
         self, server_name: str, payload: ServiceUpdatePayload
@@ -400,7 +403,7 @@ class ServerActionMethodsMixin:
             json_data=payload.model_dump(),
             authenticated=True,
         )
-        return BaseApiResponse.model_validate(response)
+        return cast(BaseApiResponse, BaseApiResponse.model_validate(response))
 
     async def async_delete_server(self, server_name: str) -> ActionResponse:
         """Permanently deletes a server instance.
@@ -426,4 +429,4 @@ class ServerActionMethodsMixin:
             f"/server/{server_name}/delete",
             authenticated=True,
         )
-        return ActionResponse.model_validate(response)
+        return cast(ActionResponse, ActionResponse.model_validate(response))

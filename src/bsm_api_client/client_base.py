@@ -16,6 +16,7 @@ from typing import (
     Optional,
     Tuple,
     Union,
+    cast,
 )
 from urllib.parse import urlparse
 
@@ -614,7 +615,7 @@ class ClientBase:
             token = TokenResponse.model_validate(response_data)
             self._jwt_token = token.access_token
             _LOGGER.info("Authentication successful, token received.")
-            return token
+            return cast(TokenResponse, token)
 
         except AuthError:  # Re-raise specific AuthErrors
             _LOGGER.error("Authentication failed.")
