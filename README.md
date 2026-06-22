@@ -4,9 +4,7 @@
 
 # bsm-api-client
 
-[![PyPI version](https://img.shields.io/pypi/v/bsm-api-client.svg)](https://pypi.org/project/bsm-api-client/)
-[![Python Versions](https://img.shields.io/pypi/pyversions/bsm_api_client.svg)](https://pypi.org/project/bsm-api-client/)
-[![License](https://img.shields.io/pypi/l/bsm-api-client.svg)](https://github.com/dmedina559/bsm-api-client/blob/main/LICENSE)
+<img alt="Stable" src="https://img.shields.io/pypi/v/bsm-api-client?label=Stable&color=blue"> <img alt="Pre-Release" src="https://img.shields.io/pypi/v/bsm-api-client?include_prereleases&label=Pre-Release&color=red"> <img alt="Tests" src="https://img.shields.io/github/actions/workflow/status/dmedina559/bsm-api-client/build-test.yml?label=Tests&event=push">
 
 ## Introduction
 
@@ -22,7 +20,6 @@
     *   Server Listing, Status & Configuration
     *   Server Actions (Start, Stop, Command, Update, etc.)
     *   Content Management (Backups, Worlds, Addons)
-    *   OS-specific Task Scheduling (Cron for Linux, Task Scheduler for Windows)
 *   Custom exceptions for specific API errors, providing context like status codes and API messages.
 *   Supports connecting via HTTP or HTTPS.
 
