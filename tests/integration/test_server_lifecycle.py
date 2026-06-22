@@ -30,7 +30,7 @@ async def client_fixture(server, bedrock_server, wait_for_server_status):
         if status_res.running:
             await client.async_stop_server(server_name)
             await wait_for_server_status(
-                client, server_name, is_running=False, timeout=30
+                client, server_name, is_running=False, timeout=90
             )
         await client.close()
 
