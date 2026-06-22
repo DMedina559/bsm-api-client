@@ -4,8 +4,17 @@
 
 # bsm-api-client
 
-<img alt="Stable" src="https://img.shields.io/pypi/v/bsm-api-client?label=Stable&color=blue"> <img alt="Pre-Release" src="https://img.shields.io/pypi/v/bsm-api-client?include_prereleases&label=Pre-Release&color=red"> <img alt="Tests" src="https://img.shields.io/github/actions/workflow/status/dmedina559/bsm-api-client/build-test.yml?label=Tests&event=push">
-
+<p align="center">
+  <a href="https://pypi.org/project/bsm-api-client/">
+    <img alt="Stable" src="https://img.shields.io/pypi/v/bsm-api-client?label=Stable&color=blue">
+  </a>
+  <a href="https://pypi.org/project/bsm-api-client/">
+    <img alt="Pre-Release" src="https://img.shields.io/pypi/v/bsm-api-client?include_prereleases&label=Pre-Release&color=red">
+  </a>
+  <a href="https://github.com/dmedina559/bsm-api-client/actions">
+    <img alt="Tests" src="https://img.shields.io/github/actions/workflow/status/dmedina559/bsm-api-client/build-test.yml?label=Tests&event=push">
+  </a>
+</p>
 ## Introduction
 
 `bsm-api-client` is an asynchronous Python client library for interacting with the Bedrock Server Manager API. It provides a convenient way to manage Minecraft Bedrock Dedicated Servers through the manager's HTTP API.
