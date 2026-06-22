@@ -17,6 +17,7 @@ from .addon import addon
 from .allowlist import allowlist
 from .auth import auth
 from .backup import backup
+from .bans import bans
 from .config import Config
 from .content import content
 from .decorators import AsyncGroup
@@ -74,6 +75,7 @@ cli.add_command(backup)
 cli.add_command(player)
 cli.add_command(plugin)
 cli.add_command(allowlist)
+cli.add_command(bans)
 cli.add_command(permissions)
 cli.add_command(properties)
 cli.add_command(system)
