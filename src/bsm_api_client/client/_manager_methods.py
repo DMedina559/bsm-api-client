@@ -59,7 +59,7 @@ class ManagerMethodsMixin:
         """
         _LOGGER.info("Triggering player log scan")
         response = await self._request(
-            method="POST", path="/players/scan", authenticated=True
+            method="PUT", path="/players/scan", authenticated=True
         )
         return cast(AddPlayersResponse, AddPlayersResponse.model_validate(response))
 
@@ -155,7 +155,7 @@ class ManagerMethodsMixin:
         """
         _LOGGER.info("Requesting reload of global settings and logging configuration.")
         response = await self._request(
-            method="POST", path="/settings/reload", authenticated=True
+            method="PUT", path="/settings/reload", authenticated=True
         )
         return cast(SettingsResponse, SettingsResponse.model_validate(response))
 

@@ -115,33 +115,6 @@ async def test_get_server_running_status(client):
 
 
 @pytest.mark.asyncio
-async def test_get_server_config_status(client):
-    """Test async_get_server_config_status method."""
-    with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
-        mock_request.return_value = {
-            "status": "success",
-            "config_status": "RUNNING",
-        }
-        result = await client.async_get_server_config_status("test-server")
-        mock_request.assert_called_once_with(
-            "GET", "/server/test-server/config_status", authenticated=True
-        )
-        assert result.config_status == "RUNNING"
-
-
-@pytest.mark.asyncio
-async def test_get_server_version(client):
-    """Test async_get_server_version method."""
-    with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
-        mock_request.return_value = {"status": "success", "version": "1.0.0"}
-        result = await client.async_get_server_version("test-server")
-        mock_request.assert_called_once_with(
-            "GET", "/server/test-server/version", authenticated=True
-        )
-        assert result.version == "1.0.0"
-
-
-@pytest.mark.asyncio
 async def test_get_server_properties(client):
     """Test async_get_server_properties method."""
     with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:

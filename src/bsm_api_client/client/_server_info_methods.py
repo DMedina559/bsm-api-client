@@ -18,11 +18,11 @@ from ..models import (
     AllowlistGetResponse,
     PermissionsGetResponse,
     PropertiesGetResponse,
-    ServerConfigStatusResponse,
     ServerProcessInfoResponse,
     ServerRunningStatusResponse,
+    ServerSettingItemPayload,
+    ServerSettingsResponse,
     ServersListResponse,
-    ServerVersionResponse,
 )
 
 _LOGGER = logging.getLogger(__name__.split(".")[0] + ".client.server_info")
@@ -266,57 +266,6 @@ class ServerInfoMethodsMixin:
             ServerRunningStatusResponse.model_validate(response),
         )
 
-    async def async_get_server_config_status(
-        self, server_name: str
-    ) -> ServerConfigStatusResponse:
-        """Gets the status string from the server's configuration file.
-
-        :param server_name: The name of the server.
-
-        :returns: A `ServerConfigStatusResponse` object containing the configuration status.
-
-
-        .. rubric:: Example:
-        .. code-block:: python
-
-            response = await client.async_get_server_config_status('MyServer')
-        """
-        _LOGGER.debug("Fetching config status for server '%s'", server_name)
-        encoded_server_name = quote(server_name)
-        response = await self._request(
-            "GET",
-            f"/server/{encoded_server_name}/config_status",
-            authenticated=True,
-        )
-        return cast(
-            ServerConfigStatusResponse,
-            ServerConfigStatusResponse.model_validate(response),
-        )
-
-    async def async_get_server_version(self, server_name: str) -> ServerVersionResponse:
-        """Gets the installed Bedrock server version.
-
-        :param server_name: The name of the server.
-
-        :returns: A `ServerVersionResponse` object containing the server version.
-
-
-        .. rubric:: Example:
-        .. code-block:: python
-
-            response = await client.async_get_server_version('MyServer')
-        """
-        _LOGGER.debug("Fetching version for server '%s'", server_name)
-        encoded_server_name = quote(server_name)
-        response = await self._request(
-            "GET",
-            f"/server/{encoded_server_name}/version",
-            authenticated=True,
-        )
-        return cast(
-            ServerVersionResponse, ServerVersionResponse.model_validate(response)
-        )
-
     async def async_get_server_properties(
         self, server_name: str
     ) -> PropertiesGetResponse:
@@ -392,3 +341,43 @@ class ServerInfoMethodsMixin:
             authenticated=True,
         )
         return cast(AllowlistGetResponse, AllowlistGetResponse.model_validate(response))
+
+    async def async_get_server_settings(
+        self, server_name: str
+    ) -> ServerSettingsResponse:
+        """Retrieves all settings for a specific server.
+
+        :param server_name: The name of the server.
+        :returns: A ServerSettingsResponse.
+        """
+        _LOGGER.debug("Fetching settings for server '%s'", server_name)
+        response = await self._request(
+            "GET",
+            f"/server/{server_name}/settings/get",
+            authenticated=True,
+        )
+        return cast(
+            ServerSettingsResponse, ServerSettingsResponse.model_validate(response)
+        )
+
+    async def async_set_server_setting(
+        self, server_name: str, payload: ServerSettingItemPayload
+    ) -> ServerSettingsResponse:
+        """Sets a specific setting for a server.
+
+        :param server_name: The name of the server.
+        :param payload: The ServerSettingItemPayload payload.
+        :returns: A ServerSettingsResponse.
+        """
+        _LOGGER.debug(
+            "Setting setting for server '%s': %s", server_name, payload.model_dump()
+        )
+        response = await self._request(
+            "POST",
+            f"/server/{server_name}/settings/set",
+            json_data=payload.model_dump(),
+            authenticated=True,
+        )
+        return cast(
+            ServerSettingsResponse, ServerSettingsResponse.model_validate(response)
+        )

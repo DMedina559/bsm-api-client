@@ -13,12 +13,13 @@ from ..models import (
     ActionResponse,
     AllowlistAddPayload,
     AllowlistRemovePayload,
+    BanAddRequest,
+    BanRemoveRequest,
     BaseApiResponse,
     CommandPayload,
     PermissionsSetPayload,
     PermissionsUpdateResponse,
     PropertiesPayload,
-    ServiceUpdatePayload,
 )
 
 _LOGGER = logging.getLogger(__name__.split(".")[0] + ".client.server_actions")
@@ -71,90 +72,6 @@ class ServerActionMethodsMixin:
             authenticated=True,
         )
         return cast(ActionResponse, ActionResponse.model_validate(response))
-
-    async def async_enable_server_service(self, server_name: str) -> BaseApiResponse:
-        """Enables the system service for the specified server.
-
-        :param server_name: The name of the server.
-
-        :returns: A `BaseApiResponse` object confirming the action.
-
-
-        .. rubric:: Example:
-        .. code-block:: python
-
-            response = await client.async_enable_server_service('MyServer')
-        """
-        _LOGGER.info("Enabling service for server '%s'", server_name)
-        return await self.async_configure_server_os_service(
-            server_name, ServiceUpdatePayload(autostart=True)
-        )
-
-    async def async_disable_server_service(self, server_name: str) -> BaseApiResponse:
-        """Disables the system service for the specified server.
-
-        :param server_name: The name of the server.
-
-        :returns: A `BaseApiResponse` object confirming the action.
-
-
-        .. rubric:: Example:
-        .. code-block:: python
-
-            response = await client.async_disable_server_service('MyServer')
-        """
-        _LOGGER.info("Disabling service for server '%s'", server_name)
-        return await self.async_configure_server_os_service(
-            server_name, ServiceUpdatePayload(autostart=False)
-        )
-
-    async def async_set_server_autoupdate(
-        self, server_name: str, autoupdate: bool
-    ) -> BaseApiResponse:
-        """Sets the autoupdate flag for the specified server.
-
-        :param server_name: The name of the server.
-        :param autoupdate: The desired autoupdate state.
-
-        :returns: A `BaseApiResponse` object confirming the action.
-
-
-        .. rubric:: Example:
-        .. code-block:: python
-
-            response = await client.async_set_server_autoupdate('MyServer')
-        """
-        _LOGGER.info(
-            "Setting autoupdate for server '%s' to %s", server_name, autoupdate
-        )
-        return await self.async_configure_server_os_service(
-            server_name, ServiceUpdatePayload(autoupdate=autoupdate)
-        )
-
-    async def async_create_server_service(
-        self, server_name: str, autostart: bool
-    ) -> BaseApiResponse:
-        """Creates the system service for the specified server.
-
-        :param server_name: The name of the server.
-        :param autostart: Whether the service should start on boot.
-
-        :returns: A `BaseApiResponse` object confirming the action.
-
-
-        .. rubric:: Example:
-        .. code-block:: python
-
-            response = await client.async_create_server_service('MyServer')
-        """
-        _LOGGER.info(
-            "Creating service for server '%s' with autostart=%s",
-            server_name,
-            autostart,
-        )
-        return await self.async_configure_server_os_service(
-            server_name, ServiceUpdatePayload(autostart=autostart)
-        )
 
     async def async_stop_server(self, server_name: str) -> ActionResponse:
         """Stops the specified running Bedrock server instance.
@@ -335,7 +252,7 @@ class ServerActionMethodsMixin:
         )
 
         response = await self._request(
-            "PUT",
+            "POST",
             f"/server/{server_name}/permissions/set",
             json_data=payload.model_dump(),
             authenticated=True,
@@ -374,37 +291,6 @@ class ServerActionMethodsMixin:
         )
         return cast(BaseApiResponse, BaseApiResponse.model_validate(response))
 
-    async def async_configure_server_os_service(
-        self, server_name: str, payload: ServiceUpdatePayload
-    ) -> BaseApiResponse:
-        """Configures OS-specific service settings for the server.
-
-        :param server_name: The name of the server.
-        :param payload: A `ServiceUpdatePayload` object with the service settings.
-
-        :returns: A `BaseApiResponse` object confirming the action.
-
-
-        .. rubric:: Example:
-        .. code-block:: python
-
-            payload = ...
-            response = await client.async_configure_server_os_service(payload)
-        """
-        _LOGGER.info(
-            "Requesting OS service config for server '%s' with payload: %s",
-            server_name,
-            payload.model_dump(),
-        )
-
-        response = await self._request(
-            "POST",
-            f"/server/{server_name}/service/update",
-            json_data=payload.model_dump(),
-            authenticated=True,
-        )
-        return cast(BaseApiResponse, BaseApiResponse.model_validate(response))
-
     async def async_delete_server(self, server_name: str) -> ActionResponse:
         """Permanently deletes a server instance.
 
@@ -430,3 +316,57 @@ class ServerActionMethodsMixin:
             authenticated=True,
         )
         return cast(ActionResponse, ActionResponse.model_validate(response))
+
+    async def async_get_server_bans(self, server_name: str) -> dict[str, Any]:
+        """Get all bans for a specific server.
+
+        :param server_name: The name of the server.
+        :returns: A dictionary containing the bans.
+        """
+        _LOGGER.debug("Fetching bans for server '%s'", server_name)
+        response = await self._request(
+            "GET",
+            f"/server/{server_name}/bans/get",
+            authenticated=True,
+        )
+        return dict(response)
+
+    async def async_add_server_ban(
+        self, server_name: str, payload: "BanAddRequest"
+    ) -> dict[str, Any]:
+        """Add a player to the server ban list.
+
+        :param server_name: The name of the server.
+        :param payload: The BanAddRequest payload.
+        :returns: A dictionary response.
+        """
+        _LOGGER.debug(
+            "Adding ban for server '%s': %s", server_name, payload.model_dump()
+        )
+        response = await self._request(
+            "POST",
+            f"/server/{server_name}/bans/add",
+            json_data=payload.model_dump(),
+            authenticated=True,
+        )
+        return dict(response)
+
+    async def async_remove_server_ban(
+        self, server_name: str, payload: "BanRemoveRequest"
+    ) -> dict[str, Any]:
+        """Remove a player from the server ban list.
+
+        :param server_name: The name of the server.
+        :param payload: The BanRemoveRequest payload.
+        :returns: A dictionary response.
+        """
+        _LOGGER.debug(
+            "Removing ban for server '%s': %s", server_name, payload.model_dump()
+        )
+        response = await self._request(
+            "DELETE",
+            f"/server/{server_name}/bans/remove",
+            json_data=payload.model_dump(),
+            authenticated=True,
+        )
+        return dict(response)
