@@ -3,14 +3,16 @@ import time
 import click
 import questionary
 
+from ..models import ServerSettingItemPayload
+
 
 @click.group()
 def system():
-    """Manages OS-level integrations and server resource monitoring."""
+    """Manages server OS-level resource monitoring and settings."""
     pass
 
 
-@system.command("configure-service")
+@system.command("settings")
 @click.option(
     "-s",
     "--server",
@@ -19,82 +21,43 @@ def system():
     help="Name of the server to configure.",
 )
 @click.pass_context
-async def configure_service(ctx, server_name: str):
-    """Configures OS-specific service settings for a Bedrock server."""
+async def server_settings(ctx, server_name: str):
+    """Configures autostart and autoupdate settings for a Bedrock server."""
     client = ctx.obj.get("client")
     if not client:
         click.secho("You are not logged in.", fg="red")
         return
 
     click.secho(
-        f"Starting interactive service configuration for '{server_name}'...",
+        f"Starting interactive settings configuration for '{server_name}'...",
         fg="yellow",
     )
-    await interactive_service_workflow(client, server_name)
 
-
-@system.command("enable-service")
-@click.option(
-    "-s",
-    "--server",
-    "server_name",
-    required=True,
-    help="Name of the server service to enable.",
-)
-@click.pass_context
-async def enable_service(ctx, server_name: str):
-    """Enables a server's system service for automatic startup."""
-    client = ctx.obj.get("client")
-    if not client:
-        click.secho("You are not logged in.", fg="red")
+    settings_response = await client.async_get_server_settings(server_name)
+    if settings_response.status != "success" or not settings_response.settings:
+        click.secho(
+            f"Failed to fetch server settings: {settings_response.message}", fg="red"
+        )
         return
 
-    click.echo(f"Attempting to enable system service for '{server_name}'...")
-    response = await client.async_enable_server_service(server_name)
-    if response.status == "success":
-        click.secho("Service enabled successfully.", fg="green")
-    else:
-        click.secho(f"Failed to enable service: {response.message}", fg="red")
+    settings = settings_response.settings
 
+    current_autoupdate = settings.get("settings", {}).get("autoupdate", False)
+    current_autostart = settings.get("settings", {}).get("autostart", False)
 
-@system.command("disable-service")
-@click.option(
-    "-s",
-    "--server",
-    "server_name",
-    required=True,
-    help="Name of the server service to disable.",
-)
-@click.pass_context
-async def disable_service(ctx, server_name: str):
-    """Disables a server's system service from starting automatically."""
-    client = ctx.obj.get("client")
-    if not client:
-        click.secho("You are not logged in.", fg="red")
-        return
-
-    click.echo(f"Attempting to disable system service for '{server_name}'...")
-    response = await client.async_disable_server_service(server_name)
-    if response.status == "success":
-        click.secho("Service disabled successfully.", fg="green")
-    else:
-        click.secho(f"Failed to disable service: {response.message}", fg="red")
-
-
-async def interactive_service_workflow(client, server_name: str):
-    """Guides the user through an interactive workflow to configure server services."""
     click.secho(
-        f"\n--- Interactive Service Configuration for '{server_name}' ---", bold=True
+        f"\n--- Interactive Settings Configuration for '{server_name}' ---", bold=True
     )
 
     autoupdate_choice = await questionary.confirm(
-        "Enable check for updates when the server starts?", default=False
+        "Enable check for updates when the server starts?", default=current_autoupdate
     ).ask_async()
 
-    if autoupdate_choice is not None:
-        response = await client.async_set_server_autoupdate(
-            server_name, autoupdate_choice
+    if autoupdate_choice is not None and autoupdate_choice != current_autoupdate:
+        payload = ServerSettingItemPayload(
+            key="settings.autoupdate", value=autoupdate_choice
         )
+        response = await client.async_set_server_setting(server_name, payload)
         if response.status == "success":
             click.secho(
                 f"Autoupdate setting configured to '{autoupdate_choice}'.", fg="green"
@@ -102,28 +65,24 @@ async def interactive_service_workflow(client, server_name: str):
         else:
             click.secho(f"Failed to set autoupdate: {response.message}", fg="red")
 
-    setup_service_choice = await questionary.confirm(
-        "Create or update the system service for this server?",
-        default=True,
+    autostart_choice = await questionary.confirm(
+        "Enable the server to start automatically when the manager starts?",
+        default=current_autostart,
     ).ask_async()
 
-    if setup_service_choice:
-        enable_autostart_choice = await questionary.confirm(
-            "Enable the service to start automatically when you log in?",
-            default=False,
-        ).ask_async()
-
-        response = await client.async_create_server_service(
-            server_name, enable_autostart_choice
+    if autostart_choice is not None and autostart_choice != current_autostart:
+        payload = ServerSettingItemPayload(
+            key="settings.autostart", value=autostart_choice
         )
+        response = await client.async_set_server_setting(server_name, payload)
         if response.status == "success":
-            click.secho("System service configured successfully.", fg="green")
-        else:
             click.secho(
-                f"Failed to configure system service: {response.message}", fg="red"
+                f"Autostart setting configured to '{autostart_choice}'.", fg="green"
             )
+        else:
+            click.secho(f"Failed to set autostart: {response.message}", fg="red")
 
-    click.secho("\nService configuration complete.", fg="green", bold=True)
+    click.secho("\nSettings configuration complete.", fg="green", bold=True)
 
 
 @system.command("monitor")
