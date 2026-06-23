@@ -3,10 +3,7 @@
 import logging
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, cast
 
-from ..models import (
-    BaseApiResponse,
-    UserResponse,
-)
+from ..models import ActionResponse, BaseApiResponse, UserResponse
 
 _LOGGER = logging.getLogger(__name__.split(".")[0] + ".client.users")
 
@@ -143,4 +140,4 @@ class UsersMethodsMixin:
             json_data={"role": role},
             authenticated=True,
         )
-        return cast(Dict[str, Any], dict(response))
+        return cast(ActionResponse, ActionResponse.model_validate(response))

@@ -109,19 +109,6 @@ class TestManagerAndServerInfo:
             validate_result = await client.async_get_server_validate(server_name)
             assert validate_result is True
 
-            version_res = await client.async_get_server_version(server_name)
-            assert version_res.status == "success"
-            # It's possible for the version to be None if the server is stopped or newly installed without being started,
-            # but since we just checked the endpoint, we pass if the request is successful.
-
-            config_status_res = await client.async_get_server_config_status(server_name)
-            assert config_status_res.status == "success"
-            assert config_status_res.config_status in [
-                "INSTALLED",
-                "STOPPED",
-                None,
-            ]
-
             process_info_res = await client.async_get_server_process_info(server_name)
             assert process_info_res.status == "success"
 

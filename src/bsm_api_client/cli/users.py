@@ -154,7 +154,7 @@ async def interactive_user_workflow(ctx, client):  # noqa: C901
                 ).ask_async()
                 if role:
                     response = await client.async_generate_invite_token(role)
-                    click.echo(f"Invite Link: {response}")
+                    click.echo(f"Invite Link: {response.registration_url}")
                     await questionary.press_any_key_to_continue().ask_async()
 
         except Exception as e:
@@ -243,4 +243,4 @@ async def invite(ctx, role: str):
     """Generate an invite link for a new user."""
     client = ctx.obj["client"]
     response = await client.async_generate_invite_token(role)
-    click.echo(response)
+    click.echo(f"Invite Link: {response.registration_url}")

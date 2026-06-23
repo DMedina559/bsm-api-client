@@ -177,7 +177,7 @@ class ContentMethodsMixin:
             "Uninstalling addon '%s' for server '%s'", payload.pack_uuid, server_name
         )
         response = await self._request(
-            "POST",
+            "DELETE",
             f"/server/{server_name}/addon/uninstall",
             json_data=payload.model_dump(),
             authenticated=True,

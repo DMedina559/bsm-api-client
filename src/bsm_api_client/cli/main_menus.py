@@ -63,6 +63,35 @@ async def _backup_restore_menu(ctx: click.Context, server_name: str):
             break
 
 
+async def _bans_menu(ctx: click.Context, server_name: str):
+    """Displays a sub-menu for ban management actions."""
+    bans_group = ctx.obj["cli"].get_command(ctx, "bans")
+    if not bans_group:
+        click.secho("Error: Bans command group not found.", fg="red")
+        return
+
+    menu_map = {
+        "List Bans": bans_group.get_command(ctx, "list"),
+        "Add Ban": bans_group.get_command(ctx, "add"),
+        "Remove Ban": bans_group.get_command(ctx, "remove"),
+        "Back": None,
+    }
+
+    while True:
+        choice = await questionary.select(
+            f"Bans for '{server_name}':",
+            choices=list(menu_map.keys()),
+            use_indicator=True,
+        ).ask_async()
+
+        if choice is None or choice == "Back":
+            return
+        command = menu_map.get(choice)
+        if command:
+            await ctx.invoke(command, server_name=server_name)
+            break
+
+
 async def main_menu(ctx: click.Context):  # noqa: C901
     """Displays the main application menu and drives interactive mode."""
     client = ctx.obj.get("client")
@@ -170,17 +199,18 @@ async def manage_server_menu(ctx: click.Context, server_name: str):  # noqa: C90
         "Install Addon": (get_cmd("addon", "install"), {}),
         "Manage Addons": (get_cmd("addon", "manage"), {}),
     }
-    config_map: Dict[str, Tuple[Optional[click.Command], Dict[str, Any]]] = {
+    config_map: Dict[str, Any] = {
         "Configure Properties": (get_cmd("properties", "set"), {}),
         "Configure Allowlist": (get_cmd("allowlist", "add"), {}),
         "Configure Permissions": (get_cmd("permissions", "set"), {}),
+        "Configure Ban List": _bans_menu,
     }
     maintenance_map: Dict[str, Tuple[Optional[click.Command], Dict[str, Any]]] = {
         "Update Server": (get_cmd("server", "update"), {}),
         "Delete Server": (get_cmd("server", "delete"), {}),
     }
     system_map: Dict[str, Tuple[Optional[click.Command], Dict[str, Any]]] = {
-        "Configure Service": (get_cmd("system", "configure-service"), {}),
+        "Configure Settings": (get_cmd("system", "settings"), {}),
         "Monitor Resource Usage": (get_cmd("system", "monitor"), {}),
     }
 
@@ -243,7 +273,7 @@ async def manage_server_menu(ctx: click.Context, server_name: str):  # noqa: C90
                 command_obj, kwargs = action
                 if not command_obj:
                     continue
-                if command_obj.name == "send-command":
+                if hasattr(command_obj, "name") and command_obj.name == "send-command":
                     cmd_str = await questionary.text(
                         "Enter command to send:"
                     ).ask_async()
@@ -253,7 +283,7 @@ async def manage_server_menu(ctx: click.Context, server_name: str):  # noqa: C90
                         continue
                 kwargs["server_name"] = server_name
                 await ctx.invoke(command_obj, **kwargs)
-                if command_obj.name == "delete":
+                if hasattr(command_obj, "name") and command_obj.name == "delete":
                     click.echo("\nServer has been deleted. Returning to main menu.")
                     click.pause()
                     return
@@ -263,5 +293,8 @@ async def manage_server_menu(ctx: click.Context, server_name: str):  # noqa: C90
             click.pause("\nPress any key to return to the server menu...")
 
         except Exception as e:
+            import traceback
+
             click.secho(f"An error occurred while executing '{choice}': {e}", fg="red")
+            click.secho(traceback.format_exc(), fg="red", dim=True)
             click.pause()

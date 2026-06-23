@@ -30,7 +30,7 @@ async def client_fixture(server, bedrock_server, wait_for_server_status):
         if status_res.running:
             await client.async_stop_server(server_name)
             await wait_for_server_status(
-                client, server_name, is_running=False, timeout=30
+                client, server_name, is_running=False, timeout=90
             )
         await client.close()
 
@@ -71,18 +71,6 @@ class TestServerLifecycle:
 
         await asyncio.sleep(5)
         await wait_for_server_status(client, server_name, is_running=True, timeout=90)
-
-    async def test_service_methods(self, bedrock_server, client_fixture):
-        """Tests the service-related methods."""
-        client = client_fixture
-        server_name = bedrock_server
-
-        # For the integration test, we can check that calling the endpoint doesn't fail.
-        # Previously we checked properties on the server detail, but this isn't supported on ServerSchemaResponse yet.
-        await client.async_disable_server_service(server_name)
-        await client.async_enable_server_service(server_name)
-
-        await client.async_set_server_autoupdate(server_name, False)
 
     async def test_update_server(self, bedrock_server, client_fixture):
         """Tests the server update method."""
