@@ -120,7 +120,7 @@ class UsersMethodsMixin:
         )
         return cast(BaseApiResponse, BaseApiResponse.model_validate(response))
 
-    async def async_generate_invite_token(self, role: str) -> Dict[str, Any]:
+    async def async_generate_invite_token(self, role: str) -> ActionResponse:
         """Generates an invite token.
 
         :param role: The role for the new user.

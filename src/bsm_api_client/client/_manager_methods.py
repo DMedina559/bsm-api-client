@@ -25,6 +25,7 @@ from ..models import (
     PruneDownloadsResponse,
     SettingItemResponse,
     SettingsResponse,
+    ThemeListResponse,
 )
 
 _LOGGER = logging.getLogger(__name__.split(".")[0] + ".client.manager")
@@ -105,15 +106,17 @@ class ManagerMethodsMixin:
         )
         return cast(CustomZipsResponse, CustomZipsResponse.model_validate(response))
 
-    async def async_get_themes(self) -> Dict[str, Any]:
+    async def async_get_themes(self) -> ThemeListResponse:
         """Retrieves a list of available themes.
 
         Returns:
-            A dictionary containing the list of themes.
+            A `ThemeListResponse` containing the list of themes.
         """
         _LOGGER.info("Fetching list of available themes.")
-        result = await self._request(method="GET", path="/themes", authenticated=True)
-        return dict(result)
+        result = await self._request(
+            method="GET", path="/info/themes", authenticated=True
+        )
+        return cast(ThemeListResponse, ThemeListResponse.model_validate(result))
 
     async def async_get_all_settings(self) -> SettingsResponse:
         """Retrieve all global application settings.
@@ -123,7 +126,7 @@ class ManagerMethodsMixin:
         """
         _LOGGER.info("Fetching all global application settings.")
         response = await self._request(
-            method="GET", path="/settings", authenticated=True
+            method="GET", path="/settings/get", authenticated=True
         )
         return cast(SettingsResponse, SettingsResponse.model_validate(response))
 
@@ -141,7 +144,7 @@ class ManagerMethodsMixin:
         )
         response = await self._request(
             method="POST",
-            path="/settings",
+            path="/settings/set",
             json_data=payload.model_dump(),
             authenticated=True,
         )
@@ -228,7 +231,7 @@ class ManagerMethodsMixin:
         )
 
         response = await self._request(
-            method="POST",
+            method="PUT",
             path="/downloads/prune",
             json_data=payload.model_dump(),
             authenticated=True,

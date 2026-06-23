@@ -266,7 +266,7 @@ async def test_uninstall_server_addon(client):
         mock_request.return_value = {"status": "success", "message": "Uninstalled"}
         result = await client.async_uninstall_server_addon("test-server", payload)
         mock_request.assert_called_once_with(
-            "POST",
+            "DELETE",
             "/server/test-server/addon/uninstall",
             json_data=payload.model_dump(),
             authenticated=True,
@@ -350,7 +350,7 @@ async def test_prune_server_backups(client):
         }
         result = await client.async_prune_server_backups("test-server")
         mock_request.assert_called_once_with(
-            "POST",
+            "PUT",
             "/server/test-server/backups/prune",
             json_data=None,
             authenticated=True,

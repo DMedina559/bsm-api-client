@@ -40,15 +40,15 @@ async def test_get_themes(client):
     """Test get_themes method."""
     with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
         mock_request.return_value = {
-            "dark": "dark.css",
+            "status": "success",
+            "themes": ["dark"],
         }
         result = await client.async_get_themes()
         mock_request.assert_called_once_with(
-            method="GET", path="/themes", authenticated=True
+            method="GET", path="/info/themes", authenticated=True
         )
-        assert getattr(result, "dark", None) == "dark.css" or result == {
-            "dark": "dark.css"
-        }
+        assert result.status == "success"
+        assert result.themes == ["dark"]
 
 
 @pytest.mark.asyncio
@@ -61,7 +61,7 @@ async def test_prune_server_backups(client):
         }
         result = await client.async_prune_server_backups("test-server")
         mock_request.assert_called_once_with(
-            "POST",
+            "PUT",
             "/server/test-server/backups/prune",
             json_data=None,
             authenticated=True,
@@ -88,7 +88,7 @@ async def test_set_server_permissions(client):
         }
         result = await client.async_set_server_permissions("test-server", payload)
         mock_request.assert_called_once_with(
-            "PUT",
+            "POST",
             "/server/test-server/permissions/set",
             json_data=payload.model_dump(),
             authenticated=True,

@@ -376,7 +376,7 @@ class ContentMethodsMixin:
             server_name,
         )
         response = await self._request(
-            "POST",
+            "PUT",
             f"/server/{server_name}/backups/prune",
             json_data=None,
             authenticated=True,

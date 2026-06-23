@@ -40,7 +40,7 @@ async def test_scan_players(client):
         mock_request.return_value = {"status": "success", "message": "Scan complete."}
         result = await client.async_scan_players()
         mock_request.assert_called_once_with(
-            method="POST", path="/players/scan", authenticated=True
+            method="PUT", path="/players/scan", authenticated=True
         )
         assert result.status == "success"
 
@@ -90,7 +90,7 @@ async def test_get_all_settings(client):
         }
         result = await client.async_get_all_settings()
         mock_request.assert_called_once_with(
-            method="GET", path="/settings", authenticated=True
+            method="GET", path="/settings/get", authenticated=True
         )
         assert result.settings["web"]["port"] == 8080
 
@@ -104,7 +104,7 @@ async def test_set_setting(client):
         result = await client.async_set_setting(payload)
         mock_request.assert_called_once_with(
             method="POST",
-            path="/settings",
+            path="/settings/set",
             json_data=payload.model_dump(),
             authenticated=True,
         )
@@ -121,7 +121,7 @@ async def test_reload_settings(client):
         }
         result = await client.async_reload_settings()
         mock_request.assert_called_once_with(
-            method="POST", path="/settings/reload", authenticated=True
+            method="PUT", path="/settings/reload", authenticated=True
         )
         assert result.status == "success"
 
@@ -137,7 +137,7 @@ async def test_prune_downloads(client):
         }
         result = await client.async_prune_downloads(payload)
         mock_request.assert_called_once_with(
-            method="POST",
+            method="PUT",
             path="/downloads/prune",
             json_data=payload.model_dump(),
             authenticated=True,
