@@ -14,7 +14,7 @@ class ActionResponse(BaseModel):
     message: str = Field(..., title="Message")
     details: Any = Field(None, title="Details")
     task_id: str | None = Field(None, title="Task Id")
-    redirect_url: str | None = Field(None, title="Redirect Url")
+    registration_url: str | None = Field(None, title="Registration Url")
     backups: Any = Field(None, title="Backups")
 
 
