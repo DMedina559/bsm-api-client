@@ -579,10 +579,10 @@ class ClientBase:
             url = f"{self._server_root_url}/auth/token"
             headers = {"Accept": "application/json"}  # Still expect JSON response
 
-            _LOGGER.debug("Request: POST %s (JSON Auth)", url)
+            _LOGGER.debug("Request: POST %s (Form Auth)", url)
             async with self._session.post(
                 url,
-                json={"username": self._username, "password": self._password},
+                data={"username": self._username, "password": self._password},
                 headers=headers,
                 timeout=self._request_timeout,
             ) as response:
