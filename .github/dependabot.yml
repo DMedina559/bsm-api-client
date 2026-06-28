@@ -6,7 +6,15 @@
 version: 2
 updates:
   - package-ecosystem: "pip"
-    directory: "/"
+    directory: "/packages/bsm-api-client"
+    target-branch: "dev"
+    schedule:
+      interval: "daily"
+    commit-message:
+      prefix: "dep"
+
+  - package-ecosystem: "pip"
+    directory: "/packages/bsm-cli"
     target-branch: "dev"
     schedule:
       interval: "daily"
