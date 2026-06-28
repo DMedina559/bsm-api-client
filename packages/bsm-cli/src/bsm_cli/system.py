@@ -3,7 +3,7 @@ import time
 import click
 import questionary
 
-from ..models import ServerSettingItemPayload
+from bsm_api_client.models import ServerSettingItemPayload
 
 
 @click.group()

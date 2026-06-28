@@ -1,7 +1,7 @@
 import click
 import questionary
 
-from ..models import BanAddRequest, BanRemoveRequest
+from bsm_api_client.models import BanAddRequest, BanRemoveRequest
 
 
 @click.group()

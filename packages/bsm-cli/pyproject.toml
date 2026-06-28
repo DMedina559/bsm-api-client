@@ -1,0 +1,70 @@
+[build-system]
+requires = ["setuptools>=80.9", "setuptools_scm"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "bsm-cli"
+dynamic = ["version"]
+authors = [
+    { name="DMedina559", email="dmedina559-github@outlook.com" },
+]
+description = "A CLI for managing Bedrock servers via BSM API"
+readme = "README.md"
+license-files = ["LICENSE"]
+requires-python = ">=3.11"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Operating System :: OS Independent",
+    "Intended Audience :: Developers",
+]
+dependencies = [
+    "click >=8.2.0,<8.5",
+    "questionary >=2.1.0,<2.2",
+    "bsm-api-client",
+]
+keywords = ["minecraft", "bedrock", "server", "manager", "cli"]
+
+[project.optional-dependencies]
+dev = [
+    "pytest >=8.4.0,<9.2",
+    "pytest-mock >=3.14.0,<3.16",
+    "pytest-asyncio >= 1.1.0,< 1.5",
+    "black >=25.1.0,<26.6",
+    "flake8 >=7.3.0,<7.4",
+    "isort >=5.13.0,<8.1",
+    "mypy >=1.10.0,<2.2",
+    "bedrock-server-manager >=3.10.0b2,<3.11.0",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/DMedina559/bsm-api-client"
+
+[project.scripts]
+bsm-cli = "bsm_cli.__main__:cli"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["bsm_cli*"]
+
+[tool.setuptools_scm]
+root = "../.."
+local_scheme = "no-local-version"
+
+[tool.black]
+
+[tool.isort]
+profile = "black"
+line_length = 88
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"

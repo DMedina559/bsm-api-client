@@ -1,8 +1,7 @@
 import click
 import questionary
+from bsm_cli.server import list_servers
 from questionary import Separator
-
-from .server import list_servers
 
 
 async def _world_management_menu(ctx: click.Context, server_name: str):

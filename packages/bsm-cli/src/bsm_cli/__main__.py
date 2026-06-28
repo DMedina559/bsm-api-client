@@ -10,26 +10,26 @@ except ImportError:
 
 from contextlib import asynccontextmanager
 
-from bsm_api_client import BedrockServerManagerApi
+from bsm_cli.account import account
+from bsm_cli.addon import addon
+from bsm_cli.allowlist import allowlist
+from bsm_cli.auth import auth
+from bsm_cli.backup import backup
+from bsm_cli.bans import bans
+from bsm_cli.config import Config
+from bsm_cli.content import content
+from bsm_cli.decorators import AsyncGroup
+from bsm_cli.main_menus import main_menu
+from bsm_cli.permissions import permissions
+from bsm_cli.player import player
+from bsm_cli.plugins import plugin
+from bsm_cli.properties import properties
+from bsm_cli.server import server
+from bsm_cli.system import system
+from bsm_cli.users import users
+from bsm_cli.world import world
 
-from .account import account
-from .addon import addon
-from .allowlist import allowlist
-from .auth import auth
-from .backup import backup
-from .bans import bans
-from .config import Config
-from .content import content
-from .decorators import AsyncGroup
-from .main_menus import main_menu
-from .permissions import permissions
-from .player import player
-from .plugins import plugin
-from .properties import properties
-from .server import server
-from .system import system
-from .users import users
-from .world import world
+from bsm_api_client import BedrockServerManagerApi
 
 
 @click.group(cls=AsyncGroup, invoke_without_command=True)

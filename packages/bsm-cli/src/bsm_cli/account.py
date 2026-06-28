@@ -1,9 +1,8 @@
-# src/bsm_api_client/cli/account.py
+# src/bsm_cli/account.py
 """CLI commands for account management."""
 
 import click
-
-from .decorators import pass_async_context
+from bsm_cli.decorators import pass_async_context
 
 
 @click.group()

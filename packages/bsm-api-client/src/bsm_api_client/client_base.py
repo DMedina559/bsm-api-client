@@ -8,16 +8,7 @@ method for interacting with the Bedrock Server Manager API.
 
 import asyncio
 import logging
-from typing import (
-    Any,
-    Dict,
-    List,
-    Mapping,
-    Optional,
-    Tuple,
-    Union,
-    cast,
-)
+from typing import Any, Dict, List, Mapping, Optional, Tuple, Union, cast
 from urllib.parse import urlparse
 
 import aiohttp
