@@ -38,6 +38,7 @@ dev = [
     "isort >=5.13.0,<8.1",
     "mypy >=1.10.0,<2.2",
     "bedrock-server-manager >=3.10.0b2,<3.11.0",
+    "pre-commit >=4.6.0,<4.7",
 ]
 
 [project.urls]
