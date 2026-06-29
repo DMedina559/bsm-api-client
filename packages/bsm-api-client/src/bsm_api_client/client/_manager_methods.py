@@ -173,23 +173,16 @@ class ManagerMethodsMixin:
             APIError: For any other API-related errors.
         """
         _LOGGER.info("Fetching panorama image.")
-        # This request might return non-JSON data.
-        # The _request method expects JSON or handleable errors.
-        # We need to make a raw request or adapt _request.
-        # For now, let's assume _request can handle non-JSON if status is OK
-        # by returning the raw response object or its content.
-        # However, current _request tries to parse JSON.
-        # A direct session call is safer for binary data.
 
-        url = f"{self._server_root_url}/api/panorama"  # Assuming /api prefix is appropriate here
-        if "/api" not in self._api_base_segment:  # If base_path was not /api
+        url = f"{self._server_root_url}/api/panorama"
+        if "/api" not in self._api_base_segment:
             url = f"{self._base_url}/panorama"
 
         _LOGGER.debug("Request: GET %s for panorama image", url)
         try:
             async with self._session.get(
                 url,
-                headers={"Accept": "image/jpeg, */*"},  # Accept jpeg primarily
+                headers={"Accept": "image/jpeg, */*"},
                 timeout=self._request_timeout,
             ) as response:
                 _LOGGER.debug("Response Status for GET %s: %s", url, response.status)

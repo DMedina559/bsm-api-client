@@ -2,6 +2,7 @@ import asyncio
 import os
 import subprocess
 import sys
+import tempfile
 
 import aiohttp
 import pytest
@@ -15,7 +16,7 @@ from bsm_api_client.models import InstallServerPayload
 def server():  # noqa: C901
     """
     A pytest fixture that starts the bedrock-server-manager web server
-    and sets it up for testing.
+    and sets it up for testing in an isolated temporary directory.
     """
     host = "0.0.0.0"
     port = 11325
@@ -23,75 +24,94 @@ def server():  # noqa: C901
     connect_host = "127.0.0.1"
     base_url = f"http://{connect_host}:{port}"
 
-    # Remove the database file if it exists, to ensure a clean setup
-    db_path = os.path.expanduser("~/bedrock-server-manager/bedrock_server_manager.db")
-    if os.path.exists(db_path):
-        os.remove(db_path)
+    # Use a temporary directory for complete isolation
+    with tempfile.TemporaryDirectory() as temp_dir:
+        # Copy the current environment and hijack the data directory paths.
+        # This prevents the test server from ever touching your real BSM installation.
+        env = os.environ.copy()
+        env["HOME"] = temp_dir
+        env["USERPROFILE"] = temp_dir
+        env["APPDATA"] = temp_dir
+        env["LOCALAPPDATA"] = temp_dir
+        env["XDG_DATA_HOME"] = temp_dir
+        env["XDG_CONFIG_HOME"] = temp_dir
 
-    # Start the server
-    server_log = open("bedrock_server_manager_test.log", "w")
-    process = subprocess.Popen(
-        [
-            sys.executable,
-            "-m",
-            "bedrock_server_manager",
-            "web",
-            "start",
-            "--host",
-            host,
-        ],
-        stdout=server_log,
-        stderr=server_log,
-    )
+        print(f"\n[Test Server] Starting isolated instance in: {temp_dir}")
+        server_log = open("bedrock_server_manager_test.log", "w")
+        process = subprocess.Popen(
+            [
+                sys.executable,
+                "-m",
+                "bedrock_server_manager",
+                "web",
+                "start",
+                "--host",
+                host,
+            ],
+            env=env,
+            stdout=server_log,
+            stderr=server_log,
+        )
 
-    try:
+        try:
 
-        async def wait_and_setup():
-            needs_setup = False
-            # Wait for the server to start
-            for _ in range(60):  # 60 * 0.5s = 30s timeout
-                try:
+            async def wait_and_setup():
+                needs_setup = False
+                # Wait for the server to start
+                for _ in range(60):  # 60 * 0.5s = 30s timeout
+                    try:
+                        async with aiohttp.ClientSession() as session:
+                            async with session.get(
+                                f"{base_url}/api/setup/status"
+                            ) as response:
+                                if response.status == 200:
+                                    data = await response.json()
+                                    needs_setup = data.get("needs_setup", False)
+                                    print(
+                                        f"[Test Server] Reached API. needs_setup = {needs_setup}"
+                                    )
+                                    break
+                    except aiohttp.ClientConnectorError:
+                        await asyncio.sleep(0.5)
+                else:
+                    pytest.fail("Server did not start within 30 seconds.")
+
+                # Perform initial setup
+                if needs_setup:
+                    print("[Test Server] Creating first user: admin / password")
                     async with aiohttp.ClientSession() as session:
-                        async with session.get(
-                            f"{base_url}/api/setup/status"
+                        payload = {"username": "admin", "password": "password"}
+                        async with session.post(
+                            f"{base_url}/api/setup/create-first-user", json=payload
                         ) as response:
-                            if response.status == 200:
-                                data = await response.json()
-                                needs_setup = data.get("needs_setup", False)
-                                break
-                except aiohttp.ClientConnectorError:
-                    await asyncio.sleep(0.5)
-            else:
-                pytest.fail("Server did not start within 30 seconds.")
-
-            # Perform initial setup
-            if needs_setup:
-                async with aiohttp.ClientSession() as session:
-                    payload = {"username": "admin", "password": "password"}
-                    async with session.post(
-                        f"{base_url}/api/setup/create-first-user", json=payload
-                    ) as response:
-                        if response.status == 400:
-                            text = await response.text()
-                            if "Setup already completed" in text:
-                                pass
+                            if response.status == 400:
+                                text = await response.text()
+                                if "Setup already completed" in text:
+                                    print("[Test Server] Setup was already completed.")
+                                else:
+                                    pytest.fail(f"Failed to setup server (400): {text}")
+                            elif response.status != 200:
+                                pytest.fail(
+                                    f"Failed to setup server ({response.status}): {await response.text()}"
+                                )
                             else:
-                                pytest.fail(f"Failed to setup server: {text}")
-                        elif response.status != 200:
-                            pytest.fail(
-                                f"Failed to setup server: {await response.text()}"
-                            )
+                                print("[Test Server] First user created successfully.")
+                else:
+                    print(
+                        "[Test Server] WARNING: Server skipped setup on a fresh database!"
+                    )
 
-        asyncio.run(wait_and_setup())
-        yield base_url
-    finally:
-        process.terminate()
-        process.wait()
-        server_log.close()
-        if process.returncode != 0 and process.returncode != -15:  # -15 is SIGTERM
-            print(
-                f"Server exited with an error (code {process.returncode}). Check bedrock_server_manager_test.log for details."
-            )
+            asyncio.run(wait_and_setup())
+            yield base_url
+        finally:
+            process.terminate()
+            process.wait()
+            server_log.close()
+            # Allow clean exits (0) or SIGTERM terminations (15 / -15)
+            if process.returncode not in (0, 15, -15):
+                print(
+                    f"Server exited with an error (code {process.returncode}). Check bedrock_server_manager_test.log for details."
+                )
 
 
 @pytest_asyncio.fixture(scope="session")
