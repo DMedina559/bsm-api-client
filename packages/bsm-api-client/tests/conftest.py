@@ -25,35 +25,44 @@ def server():  # noqa: C901
     base_url = f"http://{connect_host}:{port}"
 
     # Use a temporary directory for complete isolation
-    with tempfile.TemporaryDirectory() as temp_dir:
+    with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as temp_dir:
         # Copy the current environment and hijack the data directory paths.
         # This prevents the test server from ever touching your real BSM installation.
-        env = os.environ.copy()
-        env["HOME"] = temp_dir
-        env["USERPROFILE"] = temp_dir
-        env["APPDATA"] = temp_dir
-        env["LOCALAPPDATA"] = temp_dir
-        env["XDG_DATA_HOME"] = temp_dir
-        env["XDG_CONFIG_HOME"] = temp_dir
+        # Save original env vars we are about to modify
+        keys_to_modify = [
+            "HOME",
+            "USERPROFILE",
+            "APPDATA",
+            "LOCALAPPDATA",
+            "XDG_DATA_HOME",
+            "XDG_CONFIG_HOME",
+            "BSM_DATA_DIR",
+        ]
+        old_env_vars = {k: os.environ.get(k) for k in keys_to_modify}
 
-        print(f"\n[Test Server] Starting isolated instance in: {temp_dir}")
-        server_log = open("bedrock_server_manager_test.log", "w")
-        process = subprocess.Popen(
-            [
-                sys.executable,
-                "-m",
-                "bedrock_server_manager",
-                "web",
-                "start",
-                "--host",
-                host,
-            ],
-            env=env,
-            stdout=server_log,
-            stderr=server_log,
-        )
-
+        process = None
+        server_log = None
         try:
+            for k in keys_to_modify:
+                os.environ[k] = temp_dir
+            env = os.environ.copy()
+
+            print(f"\n[Test Server] Starting isolated instance in: {temp_dir}")
+            server_log = open("bedrock_server_manager_test.log", "w")
+            process = subprocess.Popen(
+                [
+                    sys.executable,
+                    "-m",
+                    "bedrock_server_manager",
+                    "web",
+                    "start",
+                    "--host",
+                    host,
+                ],
+                env=env,
+                stdout=server_log,
+                stderr=server_log,
+            )
 
             async def wait_and_setup():
                 needs_setup = False
@@ -104,14 +113,20 @@ def server():  # noqa: C901
             asyncio.run(wait_and_setup())
             yield base_url
         finally:
-            process.terminate()
-            process.wait()
-            server_log.close()
-            # Allow clean exits (0) or SIGTERM terminations (15 / -15)
-            if process.returncode not in (0, 15, -15):
-                print(
-                    f"Server exited with an error (code {process.returncode}). Check bedrock_server_manager_test.log for details."
-                )
+            for k, v in old_env_vars.items():
+                if v is None:
+                    os.environ.pop(k, None)
+                else:
+                    os.environ[k] = v
+            if process is not None:
+                process.terminate()
+                process.wait()
+                if process.returncode not in (0, 15, -15):
+                    print(
+                        f"Server exited with an error (code {process.returncode}). Check bedrock_server_manager_test.log for details."
+                    )
+            if server_log is not None:
+                server_log.close()
 
 
 @pytest_asyncio.fixture(scope="session")

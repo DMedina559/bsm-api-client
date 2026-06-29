@@ -18,6 +18,9 @@ async def content_files():
     Fixture to create dummy content files for testing world/addon installation.
     """
     bsm_dir = os.path.expanduser("~/bedrock-server-manager")
+    # Fallback to BSM_DATA_DIR if set (like in tests)
+    if os.environ.get("BSM_DATA_DIR"):
+        bsm_dir = os.environ["BSM_DATA_DIR"]
     worlds_dir = os.path.join(bsm_dir, "content", "worlds")
     addons_dir = os.path.join(bsm_dir, "content", "addons")
     os.makedirs(worlds_dir, exist_ok=True)
