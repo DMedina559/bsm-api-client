@@ -573,7 +573,11 @@ class ClientBase:
             _LOGGER.debug("Request: POST %s (Form Auth)", url)
             async with self._session.post(
                 url,
-                data={"username": self._username, "password": self._password},
+                data={
+                    "grant_type": "password",
+                    "username": self._username,
+                    "password": self._password,
+                },
                 headers=headers,
                 timeout=self._request_timeout,
             ) as response:
