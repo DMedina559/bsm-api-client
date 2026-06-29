@@ -23,7 +23,7 @@ classifiers = [
 dependencies = [
     "click >=8.2.0,<8.5",
     "questionary >=2.1.0,<2.2",
-    "bsm-api-client",
+    "bsm-api-client >=1.6.0b3,<1.7",
 ]
 keywords = ["minecraft", "bedrock", "server", "manager", "cli"]
 
