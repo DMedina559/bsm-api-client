@@ -1,3 +1,14 @@
+[tool.pytest.ini_options]
+testpaths = [
+    "packages/bsm-cli/tests",
+    "packages/bsm-api-client/tests",
+]
+
+pythonpath = [
+    "packages/bsm-cli/src",
+    "packages/bsm-api-client/src",
+]
+
 [tool.black]
 
 [tool.isort]

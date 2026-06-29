@@ -43,5 +43,4 @@ jobs:
 
     - name: Run Pytest
       run: |
-        python -m pytest packages/bsm-api-client
-        python -m pytest packages/bsm-cli
+        python -m pytest
