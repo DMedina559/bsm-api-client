@@ -28,10 +28,26 @@ jobs:
           python -m pip install --upgrade pip
           pip install build setuptools-scm
 
-      - name: Build package
-        run: python -m build
+      - name: Build and publish bsm-api-client
+        run: |
+          cd packages/bsm-api-client
+          python -m build
         env:
           SETUPTOOLS_SCM_PRETEND_VERSION: ${{ github.ref_name }}
 
-      - name: Publish to PyPI
+      - name: Publish bsm-api-client to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: packages/bsm-api-client/dist/
+
+      - name: Build and publish bsm-cli
+        run: |
+          cd packages/bsm-cli
+          python -m build
+        env:
+          SETUPTOOLS_SCM_PRETEND_VERSION: ${{ github.ref_name }}
+
+      - name: Publish bsm-cli to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: packages/bsm-cli/dist/
