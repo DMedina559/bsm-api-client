@@ -139,9 +139,7 @@ async def main_menu(ctx: click.Context):  # noqa: C901
                 server_group = cli.get_command(ctx, "server")
                 install_cmd = server_group.get_command(ctx, "install")
                 await ctx.invoke(install_cmd)
-                await questionary.press_any_key_to_continue(
-                    "Press any key to return to the main menu..."
-                ).ask_async()
+                click.pause("Press any key to return to the main menu...")
 
             elif choice == "Manage Existing Server":
                 server_name = await questionary.select(
@@ -153,16 +151,12 @@ async def main_menu(ctx: click.Context):  # noqa: C901
             elif choice == "Manage Plugins":
                 plugin_group = cli.get_command(ctx, "plugin")
                 await ctx.invoke(plugin_group)
-                await questionary.press_any_key_to_continue(
-                    "Press any key to return to the main menu..."
-                ).ask_async()
+                click.pause("Press any key to return to the main menu...")
 
             elif choice == "Manage Users":
                 users_group = cli.get_command(ctx, "users")
                 await ctx.invoke(users_group)
-                await questionary.press_any_key_to_continue(
-                    "Press any key to return to the main menu..."
-                ).ask_async()
+                click.pause("Press any key to return to the main menu...")
 
         except (click.Abort, KeyboardInterrupt):
             click.echo("\nAction cancelled. Returning to the main menu.")

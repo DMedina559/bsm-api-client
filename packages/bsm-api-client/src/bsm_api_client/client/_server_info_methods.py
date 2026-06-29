@@ -20,6 +20,7 @@ from ..models import (
     PropertiesGetResponse,
     ServerProcessInfoResponse,
     ServerRunningStatusResponse,
+    ServerSchemaResponse,
     ServerSettingItemPayload,
     ServerSettingsResponse,
     ServersListResponse,
@@ -116,6 +117,24 @@ class ServerInfoMethodsMixin:
                 "API error during validation for server '%s': %s", server_name, e
             )
             raise
+
+    async def async_get_server_summary(self, server_name: str) -> ServerSchemaResponse:
+        """Retrieves the basic summary information for a specific server instance.
+
+        :param server_name: The name of the server.
+        :returns: A `ServerSchemaResponse` object containing the server summary.
+
+        .. rubric:: Example:
+        .. code-block:: python
+
+            response = await client.async_get_server_summary('MyServer')
+        """
+        _LOGGER.debug("Fetching summary for server '%s'", server_name)
+        encoded_server_name = quote(server_name)
+        response = await self._request(
+            "GET", f"/server/{encoded_server_name}/summary", authenticated=True
+        )
+        return cast(ServerSchemaResponse, ServerSchemaResponse.model_validate(response))
 
     async def async_get_server_process_info(
         self, server_name: str

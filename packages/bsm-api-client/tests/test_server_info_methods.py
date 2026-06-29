@@ -88,6 +88,26 @@ async def test_get_server_validate_not_found(client):
 
 
 @pytest.mark.asyncio
+async def test_get_server_summary(client):
+    """Test async_get_server_summary method."""
+    with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
+        mock_request.return_value = {
+            "name": "server1",
+            "status": "RUNNING",
+            "version": "1.0.0",
+            "player_count": 5,
+            "players": [{"name": "player1", "xuid": "123"}],
+        }
+        result = await client.async_get_server_summary("server1")
+        mock_request.assert_called_once_with(
+            "GET", "/server/server1/summary", authenticated=True
+        )
+        assert result.name == "server1"
+        assert result.status == "RUNNING"
+        assert result.player_count == 5
+
+
+@pytest.mark.asyncio
 async def test_get_server_process_info(client):
     """Test async_get_server_process_info method."""
     with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
