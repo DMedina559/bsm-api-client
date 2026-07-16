@@ -2,7 +2,7 @@
     <img src="https://raw.githubusercontent.com/DMedina559/bsm-frontend/main/frontend/public/image/icon/favicon.svg" alt="BSM Logo" width="150">
 </div>
 
-# bsm-api-client
+# bsm-cli
 
 <p align="center">
   <a href="https://github.com/DMedina559/bsm-api-client/releases">
@@ -18,21 +18,29 @@
 
 ## Introduction
 
-This repository is a monorepo containing the following Python packages for interacting with the Bedrock Server Manager API:
+`bsm-cli` is a command-line interface tool for managing Minecraft Bedrock Dedicated Servers via the Bedrock Server Manager API.
 
-*   [`bsm-api-client`](packages/bsm-api-client/README.md): An asynchronous Python client library.
-*   [`bsm-cli`](packages/bsm-cli/README.md): A command-line interface tool for managing servers via the API.
+## Features
+
+*   Full CLI interface using `click` and `questionary`.
+*   Interactive menus for server management.
+*   Realtime server state updates via WebSocket.
+*   Seamlessly manages configuration for server and backups.
 
 ## Installation
 
 Install the library using pip:
 
 ```bash
-pip install bsm-api-client
-```
-
-Or if you wish to use the Command Line Interface CLI:
-
-```bash
 pip install bsm-cli
 ```
+
+## Quick Start
+
+You can invoke the CLI using:
+
+```bash
+bsm-cli
+```
+
+Which will trigger the interactive menu allowing you to manage and configure your Bedrock Dedicated Servers.

@@ -1,64 +1,13 @@
-# pyproject.toml
-[build-system]
-requires = ["setuptools>=80.9", "setuptools_scm"]
-build-backend = "setuptools.build_meta"
-
-[project]
-name = "bsm-api-client"
-dynamic = ["version"]
-authors = [
-    { name="DMedina559", email="dmedina559-github@outlook.com" },
-]
-description = "A Python client library for the Bedrock Server Manager API"
-readme = "README.md"
-license-files = ["LICENSE"]
-requires-python = ">=3.11"
-classifiers = [
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
-    "Programming Language :: Python :: 3.13",
-    "Operating System :: OS Independent",
-    "Intended Audience :: Developers",
-    "Topic :: Software Development :: Libraries :: Python Modules",
-    "Framework :: AsyncIO",
-]
-dependencies = [
-    "aiohttp >= 3.8.0,<4.0.0",
-    "pydantic >= 2.11.0,< 2.14",
-]
-keywords = ["minecraft", "bedrock", "server", "manager", "api", "client", "asyncio", "aiohttp", "bsm"]
-
-[project.optional-dependencies]
-dev = [
-    "pytest >=8.4.0,<9.1",
-    "pytest-mock >=3.14.0,<3.16",
-    "pytest-asyncio >= 1.1.0,< 1.4",
-    "black >=25.1.0,<26.4",
-    "flake8 >=7.3.0,<7.4",
-    "isort >=5.13.0,<8.1",
-    "mypy >=1.10.0,<1.21",
-    "bedrock-server-manager >=3.9.0a3,<3.10.0",
-]
-cli = [
-    "click >=8.2.0,<8.4",
-    "questionary >=2.1.0,<2.2",
+[tool.pytest.ini_options]
+testpaths = [
+    "packages/bsm-cli/tests",
+    "packages/bsm-api-client/tests",
 ]
 
-[project.urls]
-"Homepage" = "https://github.com/DMedina559/bsm-api-client"
-"Bug Tracker" = "https://github.com/DMedina559/bsm-api-client/issues"
-"Changelog" = "https://github.com/DMedina559/bsm-api-client/blob/main/docs/CHANGELOG.md"
-
-[project.scripts]
-bsm-api-client = "bsm_api_client.cli.__main__:cli"
-
-[tool.setuptools.packages.find]
-where = ["src"]
-include = ["bsm_api_client*"]
-
-[tool.setuptools_scm]
-local_scheme = "no-local-version"
+pythonpath = [
+    "packages/bsm-cli/src",
+    "packages/bsm-api-client/src",
+]
 
 [tool.black]
 
@@ -71,7 +20,3 @@ python_version = "3.11"
 warn_return_any = true
 warn_unused_configs = true
 ignore_missing_imports = true
-
-[tool.pytest.ini_options]
-testpaths = ["tests"]
-asyncio_mode = "auto"
