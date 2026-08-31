@@ -21,7 +21,7 @@ classifiers = [
     "Intended Audience :: Developers",
 ]
 dependencies = [
-    "click >=8.2.0,<8.5",
+    "click >=8.2.0,<8.6",
     "questionary >=2.1.0,<2.2",
     "bsm-api-client >=1.6.0b3,<1.7",
 ]
