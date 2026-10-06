@@ -31,6 +31,20 @@ _LOGGER = logging.getLogger(__name__.split(".")[0] + ".client.base")
 
 
 class ClientBase:
+    """Base class containing core API client logic.
+
+    This class manages the HTTP session, authentication state, and provides
+    low-level methods for making requests to the API. It is not intended to be
+    used directly by end-users, but rather extended by the main API client class.
+
+    Attributes:
+        _host: The hostname of the Bedrock Server Manager.
+        _port: The port of the Bedrock Server Manager.
+        _username: The username for authentication.
+        _password: The password for authentication.
+        _session: The `aiohttp.ClientSession` used for making requests.
+        _jwt_token: The JWT token used for authentication.
+    """
     async def _dynamic_request(
         self,
         method: str,
@@ -46,20 +60,7 @@ class ClientBase:
         """Implemented by DynamicOpenAPIMixin on BedrockServerManagerApi."""
         raise NotImplementedError
 
-    """Base class containing core API client logic.
 
-    This class manages the HTTP session, authentication state, and provides
-    low-level methods for making requests to the API. It is not intended to be
-    used directly by end-users, but rather extended by the main API client class.
-
-    Attributes:
-        _host: The hostname of the Bedrock Server Manager.
-        _port: The port of the Bedrock Server Manager.
-        _username: The username for authentication.
-        _password: The password for authentication.
-        _session: The `aiohttp.ClientSession` used for making requests.
-        _jwt_token: The JWT token used for authentication.
-    """
 
     def __init__(
         self,
