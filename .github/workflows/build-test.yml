@@ -46,7 +46,7 @@ jobs:
       run: |
         python tools/export_bsm_openapi.py --output openapi.json
         python tools/generate_client.py openapi.json
-        python -c "import bsm_api_client.generated"
+        PYTHONPATH=packages/bsm-api-client/src python -c "import bsm_api_client.generated"
 
     - name: Run Pytest
       run: |
