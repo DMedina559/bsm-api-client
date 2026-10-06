@@ -194,7 +194,7 @@ class DynamicOpenAPIMixin:
         *,
         query: Optional[Mapping[str, Any]],
         json_data: Any,
-        authenticated: bool,
+        authenticated: bool = True,
         form_data: Optional[Mapping[str, Any]] = None,
         headers: Optional[Mapping[str, str]] = None,
         is_retry: bool = False,
