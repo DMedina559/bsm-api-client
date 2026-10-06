@@ -1,6 +1,6 @@
 """Tests for runtime OpenAPI discovery."""
 
-from unittest.mock import AsyncMock, MagicMock
+import sys\nfrom types import ModuleType\nfrom unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
@@ -112,3 +112,27 @@ async def test_openapi_discovery_uses_configured_api_base_path():
         headers={"Accept": "application/json", "Authorization": "Bearer token"},
         timeout=90,
     )
+
+
+@pytest.mark.asyncio
+async def test_generated_client_bridge_reuses_token(monkeypatch):
+    client = DummyClient()
+    client._verify_ssl = False
+    captured = {}
+
+    class GeneratedClient:
+        def __init__(self, **kwargs):
+            captured.update(kwargs)
+
+    generated = ModuleType("bsm_api_client.generated")
+    generated.AuthenticatedClient = GeneratedClient
+    monkeypatch.setitem(sys.modules, "bsm_api_client.generated", generated)
+
+    result = await client.async_get_generated_client()
+
+    assert isinstance(result, GeneratedClient)
+    assert captured == {
+        "base_url": "http://localhost",
+        "token": "token",
+        "verify_ssl": False,
+    }
