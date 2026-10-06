@@ -64,7 +64,7 @@ class DynamicOpenAPIMixin:
                 grouped.setdefault(plugin_name, []).append(operation)
         return {name: tuple(items) for name, items in grouped.items()}
 
-    async def async_discover_api(
+    async def async_get_generated_client(self) -> Any:\n        \"\"\"Return the generated client using the current authentication state.\"\"\"\n        if not self._jwt_token:\n            await self.authenticate()\n        try:\n            from .generated import AuthenticatedClient\n        except ImportError as exc:\n            raise RuntimeError(\n                \"The generated OpenAPI client is not present. Run the OpenAPI generation tools.\"\n            ) from exc\n        return AuthenticatedClient(\n            base_url=self._server_root_url,\n            token=self._jwt_token,\n            verify_ssl=self._verify_ssl,\n        )\n\n    async def async_discover_api(
         self, *, force: bool = False
     ) -> Mapping[str, DiscoveredOperation]:
         """Fetch /openapi.json and index every HTTP operation exposed by BSM."""
