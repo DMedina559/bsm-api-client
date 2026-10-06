@@ -16,11 +16,13 @@ from .client._server_action_methods import ServerActionMethodsMixin
 from .client._server_info_methods import ServerInfoMethodsMixin
 from .client._users_methods import UsersMethodsMixin
 from .client_base import ClientBase
+from .dynamic import DynamicOpenAPIMixin
 
 _LOGGER = logging.getLogger(__name__.split(".")[0] + ".client")
 
 
 class BedrockServerManagerApi(
+    DynamicOpenAPIMixin,
     ManagerMethodsMixin,
     ServerInfoMethodsMixin,
     ServerActionMethodsMixin,
