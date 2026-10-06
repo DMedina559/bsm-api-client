@@ -366,96 +366,31 @@ class ClientBase:
             is_retry=is_retry,
         )
 
-    async def authenticate(self) -> TokenResponse:  # noqa: C901
-        """Authenticates with the API and retrieves a JWT token.
-
-        This method sends a POST request to the `/auth/token` endpoint with the
-        username and password provided during client initialization. The retrieved
-        JWT token is stored internally for subsequent authenticated requests.
-
-        :returns: A `TokenResponse` object containing the access token and token type.
-
-        :raises AuthError: If authentication fails due to invalid credentials,
-                connection issues, or other API errors.
-        """
-        _LOGGER.info("Attempting API authentication for user %s", self._username)
-        self._jwt_token = None
+    async def authenticate(self) -> TokenResponse:
+        """Authenticate against BSM's OpenAPI-described OAuth2 token endpoint."""
+        if not self._username or not self._password:
+            raise AuthError("Username and password are required to authenticate.")
+        response_data = await self._dynamic_request(
+            "POST",
+            "/auth/token",
+            query=None,
+            json_data=None,
+            form_data={
+                "grant_type": "password",
+                "username": self._username,
+                "password": self._password,
+                "remember_me": False,
+            },
+            headers={"Accept": "application/json"},
+            authenticated=False,
+        )
         try:
-            url = f"{self._server_root_url}/auth/token"
-            headers = {"Accept": "application/json"}  # Still expect JSON response
-
-            _LOGGER.debug("Request: POST %s (Form Auth)", url)
-            async with self._session.post(
-                url,
-                data={
-                    "grant_type": "password",
-                    "username": self._username,
-                    "password": self._password,
-                },
-                headers=headers,
-                timeout=self._request_timeout,
-            ) as response:
-                _LOGGER.debug("Response Status for POST %s: %s", url, response.status)
-                if not response.ok:
-                    # Use _handle_api_error for consistent error raising based on status
-                    await self._handle_api_error(response, "/auth/token")
-                    # Should be unreachable if _handle_api_error raises
-                    raise AuthError(
-                        f"Authentication failed with status {response.status}"
-                    )
-
-                try:
-                    response_data = await response.json(content_type=None)
-                except (
-                    aiohttp.ContentTypeError,
-                    ValueError,
-                    asyncio.TimeoutError,
-                ) as json_error:
-                    resp_text = await response.text()
-                    _LOGGER.error(
-                        "Auth response was not valid JSON: %s. Raw: %s",
-                        json_error,
-                        resp_text[:200],
-                    )
-                    raise AuthError(
-                        f"Authentication response was not valid JSON: {json_error}"
-                    )
-
             token = TokenResponse.model_validate(response_data)
-            self._jwt_token = token.access_token
-            _LOGGER.info("Authentication successful, token received.")
-            return cast(TokenResponse, token)
-
-        except AuthError:  # Re-raise specific AuthErrors
-            _LOGGER.error("Authentication failed.")
+        except Exception as exc:
             self._jwt_token = None
-            raise
-        except APIError as e:  # Catch errors from _handle_api_error
-            _LOGGER.error("API error during authentication: %s", e)
-            self._jwt_token = None
-            # Wrap it in AuthError if it's not already one (e.g. 400 from _handle_api_error)
-            if not isinstance(e, AuthError):
-                raise AuthError(f"API error during login: {e.args[0]}") from e
-            raise e
-        except aiohttp.ClientConnectionError as e:
-            target_address = (
-                f"{self._host}{f':{self._port}' if self._port is not None else ''}"
-            )
-            _LOGGER.error(
-                "Connection error during authentication to %s: %s", target_address, e
-            )
-            self._jwt_token = None
-            raise AuthError(
-                f"Connection error during login to {target_address}: {e}"
-            ) from e
-        except asyncio.TimeoutError as e:
-            _LOGGER.error("Timeout during authentication: %s", e)
-            self._jwt_token = None
-            raise AuthError(f"Timeout during login: {e}") from e
-        except Exception as e:
-            _LOGGER.exception("Unexpected error during authentication: %s", e)
-            self._jwt_token = None
-            raise AuthError(f"An unexpected error occurred during login: {e}") from e
+            raise AuthError("Authentication response was invalid.") from exc
+        self._jwt_token = token.access_token
+        return cast(TokenResponse, token)
 
     async def async_logout(self) -> Dict[str, Any]:
         """Logs the current user out.
