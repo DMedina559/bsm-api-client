@@ -194,9 +194,9 @@ class DynamicOpenAPIMixin:
         *,
         query: Optional[Mapping[str, Any]],
         json_data: Any,
+        authenticated: bool,
         form_data: Optional[Mapping[str, Any]] = None,
         headers: Optional[Mapping[str, str]] = None,
-        authenticated: bool,
         is_retry: bool = False,
     ) -> Any:
         url = f"{self._server_root_url}{path if path.startswith('/') else '/' + path}"
