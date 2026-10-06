@@ -1,6 +1,8 @@
 """Tests for runtime OpenAPI discovery."""
 
-import sys\nfrom types import ModuleType\nfrom unittest.mock import AsyncMock, MagicMock
+import sys
+from types import ModuleType
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
