@@ -18,7 +18,6 @@ from .exceptions import (
     APIError,
     APIServerSideError,
     AuthError,
-    CannotConnectError,
     InvalidInputError,
     NotFoundError,
     OperationFailedError,
