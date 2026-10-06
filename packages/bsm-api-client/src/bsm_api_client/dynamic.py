@@ -287,7 +287,7 @@ class DynamicOpenAPIMixin:
             lowered = tag.lower()
             for prefix in ("plugin:", "plugin."):
                 if lowered.startswith(prefix):
-                    return tag[len(prefix) :]
+                    return tag.removeprefix(prefix)
         parts = [part for part in operation.path.split("/") if part]
         if len(parts) >= 2 and parts[0] in {"plugin", "plugins"}:
             return parts[1]
