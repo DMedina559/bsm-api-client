@@ -9,7 +9,7 @@ import sys
 import tempfile
 import urllib.request
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_OUTPUT = (
@@ -21,9 +21,9 @@ def load_schema(source: str) -> dict[str, Any]:
     """Load OpenAPI JSON from a URL or local file."""
     if source.startswith(("http://", "https://")):
         with urllib.request.urlopen(source) as response:  # noqa: S310
-            return json.load(response)
+            return cast(dict[str, Any], json.load(response))
     with Path(source).open(encoding="utf-8") as handle:
-        return json.load(handle)
+        return cast(dict[str, Any], json.load(handle))
 
 
 def generate(schema: dict[str, Any], output: Path) -> None:
