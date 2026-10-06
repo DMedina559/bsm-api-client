@@ -21,12 +21,18 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
-          python-version: '3.10'
+          python-version: '3.11'
 
       - name: Install build dependencies
         run: |
           python -m pip install --upgrade pip
           pip install build setuptools-scm
+          pip install 'bedrock-server-manager>=4.0.0b4,<4.1.0' 'openapi-python-client>=0.29.1,<0.30'
+
+      - name: Generate BSM OpenAPI client
+        run: |
+          python tools/export_bsm_openapi.py --output openapi.json
+          python tools/generate_client.py openapi.json
 
       - name: Build and publish bsm-api-client
         run: |
