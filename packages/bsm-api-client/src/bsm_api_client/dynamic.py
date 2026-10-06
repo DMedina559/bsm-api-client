@@ -119,6 +119,7 @@ class DynamicOpenAPIMixin:
         path_params: Optional[Mapping[str, Any]] = None,
         query: Optional[Mapping[str, Any]] = None,
         json_data: Any = None,
+        form_data: Optional[Mapping[str, Any]] = None,
         headers: Optional[Mapping[str, str]] = None,
         authenticated: bool = True,
     ) -> Any:
@@ -138,6 +139,7 @@ class DynamicOpenAPIMixin:
             path,
             query=query,
             json_data=json_data,
+            form_data=form_data,
             headers=headers,
             authenticated=authenticated,
         )
@@ -150,6 +152,7 @@ class DynamicOpenAPIMixin:
         path_params: Optional[Mapping[str, Any]] = None,
         query: Optional[Mapping[str, Any]] = None,
         json_data: Any = None,
+        form_data: Optional[Mapping[str, Any]] = None,
         headers: Optional[Mapping[str, str]] = None,
         authenticated: bool = True,
     ) -> Any:
@@ -159,6 +162,7 @@ class DynamicOpenAPIMixin:
             self._render_path(path, path_params or {}),
             query=query,
             json_data=json_data,
+            form_data=form_data,
             headers=headers,
             authenticated=authenticated,
         )
@@ -190,7 +194,8 @@ class DynamicOpenAPIMixin:
         *,
         query: Optional[Mapping[str, Any]],
         json_data: Any,
-        headers: Optional[Mapping[str, str]],
+        form_data: Optional[Mapping[str, Any]] = None,
+        headers: Optional[Mapping[str, str]] = None,
         authenticated: bool,
         is_retry: bool = False,
     ) -> Any:
@@ -210,6 +215,7 @@ class DynamicOpenAPIMixin:
                 url,
                 params=dict(query or {}),
                 json=json_data,
+                data=dict(form_data) if form_data is not None else None,
                 headers=request_headers,
                 timeout=self._request_timeout,
             )
@@ -227,6 +233,7 @@ class DynamicOpenAPIMixin:
                     path,
                     query=query,
                     json_data=json_data,
+                    form_data=form_data,
                     headers=headers,
                     authenticated=authenticated,
                     is_retry=True,
