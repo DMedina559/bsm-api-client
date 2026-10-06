@@ -89,3 +89,26 @@ async def test_dynamic_operation_renders_path_and_forwards_payload():
 def test_missing_path_parameter_is_rejected():
     with pytest.raises(ValueError, match="server_name"):
         DummyClient._render_path("/server/{server_name}/start", {})
+
+
+@pytest.mark.asyncio
+async def test_openapi_discovery_uses_configured_api_base_path():
+    client = DummyClient()
+    client._base_url = "http://localhost/custom-api"
+    response = AsyncMock()
+    response.status = 200
+    response.ok = True
+    response.json = AsyncMock(return_value={"paths": {}})
+    context = AsyncMock()
+    context.__aenter__.return_value = response
+    context.__aexit__.return_value = None
+    client._session.get.return_value = context
+
+    schema = await client._fetch_openapi_schema()
+
+    assert schema == {"paths": {}}
+    client._session.get.assert_called_once_with(
+        "http://localhost/custom-api/openapi.json",
+        headers={"Accept": "application/json", "Authorization": "Bearer token"},
+        timeout=90,
+    )
