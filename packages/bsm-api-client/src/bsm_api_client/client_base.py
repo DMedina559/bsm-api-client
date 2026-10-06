@@ -393,82 +393,18 @@ class ClientBase:
         return cast(TokenResponse, token)
 
     async def async_logout(self) -> Dict[str, Any]:
-        """Logs the current user out.
-
-        This method calls the `GET /auth/logout` endpoint to invalidate the
-        session on the server side and clears the internally stored JWT token.
-
-        :returns: A dictionary containing the response from the API, typically a success message.
-
-        :raises APIError: If the logout request fails.
-
-
-        .. rubric:: Example:
-        .. code-block:: python
-
-            response = await client.authenticate()
-        """
-        _LOGGER.info("Attempting API logout.")
+        """Log out through the shared REST transport and clear the local token."""
         try:
-            # Logout path is /auth/logout, relative to server root, not under the main API base segment.
-            # Called directly using _session.get for consistency with authenticate().
-            url = f"{self._server_root_url}/auth/logout"
-            headers = dict(self._default_headers)
-            if (
-                self._jwt_token
-            ):  # Should be present if authenticated=True logic was to be mimicked
-                headers["Authorization"] = f"Bearer {self._jwt_token}"
-
-            _LOGGER.debug("Request: GET %s (Logout to root path)", url)
-            async with self._session.get(
-                url,
-                headers=headers,
-                timeout=self._request_timeout,
-            ) as response:
-                _LOGGER.debug("Response Status for GET %s: %s", url, response.status)
-                if not response.ok:
-                    await self._handle_api_error(response, "/auth/logout")
-                    # Should be unreachable
-                    raise APIError(f"Logout failed with status {response.status}")
-
-                try:
-                    response_data = (
-                        await response.json(content_type=None)
-                        if response.content_length != 0
-                        else {}
-                    )
-                except (
-                    aiohttp.ContentTypeError,
-                    ValueError,
-                    asyncio.TimeoutError,
-                ) as json_error:
-                    resp_text = await response.text()
-                    _LOGGER.warning(
-                        "Logout response was not valid JSON: %s. Raw: %s",
-                        json_error,
-                        resp_text[:200],
-                    )
-                    # Still consider logout successful on server if HTTP 200 OK, even if response body is weird
-                    response_data = {
-                        "status": "success_with_parsing_issue",
-                        "message": "Logout successful, but response parsing failed.",
-                    }
-
-            # Clear local token regardless of exact response content, if HTTP call was ok
+            response = await self._dynamic_request(
+                "GET",
+                "/auth/logout",
+                query=None,
+                json_data=None,
+                authenticated=bool(self._jwt_token),
+            )
+            return cast(Dict[str, Any], response or {})
+        finally:
             self._jwt_token = None
-            _LOGGER.info("Logout request successful. Local token cleared.")
-            return response_data  # Typically an empty dict or success message
-        except APIError as e:
-            _LOGGER.error("API error during logout: %s", e)
-            # Decide if to clear local token even on error.
-            # If auth error (401), token might be invalid anyway.
-            if isinstance(e, AuthError):
-                self._jwt_token = None
-                _LOGGER.warning("AuthError during logout, cleared local token anyway.")
-            raise
-        except Exception as e:
-            _LOGGER.exception("Unexpected error during logout: %s", e)
-            raise APIError(f"An unexpected error occurred during logout: {e}") from e
 
     async def websocket_connect(self) -> WebSocketClient:
         """
