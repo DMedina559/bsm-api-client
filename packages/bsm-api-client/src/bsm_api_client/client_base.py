@@ -32,6 +32,21 @@ _LOGGER = logging.getLogger(__name__.split(".")[0] + ".client.base")
 
 
 class ClientBase:
+    async def _dynamic_request(
+        self,
+        method: str,
+        path: str,
+        *,
+        query: Optional[Mapping[str, Any]] = None,
+        json_data: Any = None,
+        authenticated: bool = True,
+        form_data: Optional[Mapping[str, Any]] = None,
+        headers: Optional[Mapping[str, str]] = None,
+        is_retry: bool = False,
+    ) -> Any:
+        """Implemented by DynamicOpenAPIMixin on BedrockServerManagerApi."""
+        raise NotImplementedError
+
     """Base class containing core API client logic.
 
     This class manages the HTTP session, authentication state, and provides
