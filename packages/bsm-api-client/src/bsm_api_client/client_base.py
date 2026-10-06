@@ -345,7 +345,7 @@ class ClientBase:
         )
         raise APIError(message, status_code=status, response_data=error_data)
 
-    async def _request(  # noqa: C901
+    async def _request(
         self,
         method: str,
         path: str,
@@ -354,203 +354,17 @@ class ClientBase:
         authenticated: bool = True,
         is_retry: bool = False,
     ) -> Any:
-        """Internal method to make API requests.
-
-        This method constructs the full URL, adds authentication headers if
-        required, and handles the request/response cycle, including error
-        handling and automatic token refresh on 401 errors.
-
-        :param method: The HTTP method for the request (e.g., "GET", "POST").
-        :param path: The API endpoint path.
-        :param json_data: An optional dictionary to be sent as the JSON request body.
-        :param params: An optional dictionary of query parameters.
-        :param authenticated: Whether the request requires authentication.
-        :param is_retry: Whether this is a retry attempt after a token refresh.
-
-        :returns: The JSON response from the API as a dictionary or list.
-
-        :raises CannotConnectError: If a connection to the server cannot be established.
-        :raises APIError: For various API-related errors.
-
-
-        .. rubric:: Example:
-        .. code-block:: python
-
-            response = await client._request()
-        """
+        """Compatibility request adapter backed by the OpenAPI transport."""
         request_path_segment = path if path.startswith("/") else f"/{path}"
-        url = f"{self._base_url}{request_path_segment}"
-
-        headers: Dict[str, str] = dict(self._default_headers)
-        if json_data is not None:
-            headers["Content-Type"] = "application/json"
-
-        if authenticated:
-            async with self._auth_lock:
-                if not self._jwt_token and not is_retry:
-                    _LOGGER.debug(
-                        "No token for auth request to %s, attempting login.", url
-                    )
-                    try:
-                        await self.authenticate()
-                    except AuthError:
-                        raise
-            if authenticated and not self._jwt_token:
-                _LOGGER.error(
-                    "Auth required for %s but no token after lock/login attempt.", url
-                )
-                raise AuthError(
-                    "Authentication required but no token available after login attempt."
-                )
-            if authenticated and self._jwt_token:
-                headers["Authorization"] = f"Bearer {self._jwt_token}"
-
-        _LOGGER.debug(
-            "Request: %s %s (Params: %s, Auth: %s)", method, url, params, authenticated
+        return await self._dynamic_request(
+            method,
+            f"{self._api_base_segment}{request_path_segment}",
+            query=params,
+            json_data=json_data,
+            headers=None,
+            authenticated=authenticated,
+            is_retry=is_retry,
         )
-        try:
-            async with self._session.request(
-                method,
-                url,
-                json=json_data,
-                params=params,
-                headers=headers,
-                timeout=self._request_timeout,
-            ) as response:
-                _LOGGER.debug(
-                    "Response Status for %s %s: %s", method, url, response.status
-                )
-
-                if not response.ok:
-                    if response.status == 401 and authenticated and not is_retry:
-                        _LOGGER.warning(
-                            "Received 401 for %s, attempting token refresh and retry.",
-                            url,
-                        )
-                        async with self._auth_lock:
-                            self._jwt_token = None
-                        return await self._request(
-                            method,
-                            request_path_segment,
-                            json_data=json_data,
-                            params=params,
-                            authenticated=True,
-                            is_retry=True,
-                        )
-                    await self._handle_api_error(response, request_path_segment)
-                    raise APIError(  # Should be unreachable
-                        "Error handler did not raise, this should not happen."
-                    )
-
-                _LOGGER.debug(
-                    "API request successful for %s [%s]",
-                    request_path_segment,
-                    response.status,
-                )
-                if response.status == 204 or response.content_length == 0:
-                    return {
-                        "status": "success",
-                        "message": "Operation successful (No Content)",
-                    }
-
-                try:
-                    json_response: Union[Dict[str, Any], List[Any]] = (
-                        await response.json(content_type=None)
-                    )
-                    if (
-                        isinstance(json_response, dict)
-                        and json_response.get("status") == "error"
-                    ):
-                        message = json_response.get(
-                            "message", "Unknown error in successful HTTP response."
-                        )
-                        _LOGGER.error(
-                            "API success status (%s) but error in JSON body for %s: %s. Data: %s",
-                            response.status,
-                            request_path_segment,
-                            message,
-                            json_response,
-                        )
-                        if "is not running" in message.lower():
-                            raise ServerNotRunningError(
-                                message,
-                                status_code=response.status,
-                                response_data=json_response,
-                            )
-                        raise APIError(
-                            message,
-                            status_code=response.status,
-                            response_data=json_response,
-                        )
-
-                    if (
-                        isinstance(json_response, dict)
-                        and json_response.get("status") == "confirm_needed"
-                    ):
-                        _LOGGER.info(
-                            "API returned 'confirm_needed' status for %s",
-                            request_path_segment,
-                        )
-                        # Calling method handles this specific status.
-                    return json_response
-                except (
-                    aiohttp.ContentTypeError,
-                    ValueError,
-                    asyncio.TimeoutError,
-                ) as json_error:
-                    resp_text = await response.text()
-                    _LOGGER.warning(
-                        "Successful API response (%s) for %s not valid JSON (%s). Raw: %s",
-                        response.status,
-                        request_path_segment,
-                        json_error,
-                        resp_text[:200],
-                    )
-                    return {
-                        "status": "success_with_parsing_issue",
-                        "message": "Operation successful (Non-JSON or malformed JSON response)",
-                        "raw_response": resp_text,
-                    }
-
-        except aiohttp.ClientConnectionError as e:
-            # Construct target address string for error message
-            target_address = (
-                f"{self._host}{f':{self._port}' if self._port is not None else ''}"
-            )
-            _LOGGER.error(
-                "API connection error for %s: %s", url, e
-            )  # url already has full path
-            raise CannotConnectError(
-                f"Connection Error: Cannot connect to host {target_address}.",  # Use specific target_address
-                original_exception=e,
-            ) from e
-        except asyncio.TimeoutError as e:
-            _LOGGER.error("API request timed out for %s: %s", url, e)
-            raise CannotConnectError(
-                f"Request timed out for {url}", original_exception=e
-            ) from e
-        except aiohttp.ClientError as e:
-            _LOGGER.error("Generic aiohttp client error for %s: %s", url, e)
-            raise CannotConnectError(
-                f"AIOHTTP Client Error: {e}", original_exception=e
-            ) from e
-        except (
-            APIError,
-            AuthError,
-            NotFoundError,
-            ServerNotFoundError,
-            ServerNotRunningError,
-            CannotConnectError,
-            InvalidInputError,
-            OperationFailedError,
-            APIServerSideError,
-        ) as e:
-            raise e
-        except Exception as e:
-            _LOGGER.exception("Unexpected error during API request to %s: %s", url, e)
-            raise APIError(
-                f"An unexpected error occurred during request to {url}: {e}"
-            ) from e
 
     async def authenticate(self) -> TokenResponse:  # noqa: C901
         """Authenticates with the API and retrieves a JWT token.
