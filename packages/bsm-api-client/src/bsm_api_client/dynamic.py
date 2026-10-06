@@ -187,7 +187,7 @@ class DynamicOpenAPIMixin:
             raise APIError("Server returned an invalid OpenAPI document.")
         return data
 
-    async def _dynamic_request(
+    async def _dynamic_request(  # noqa: C901
         self,
         method: str,
         path: str,
