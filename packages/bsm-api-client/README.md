@@ -22,10 +22,10 @@
 
 ## Features
 
-*   Fully asynchronous using `asyncio` and `aiohttp`.
+*   Fully asynchronous with a generated OpenAPI client plus an `aiohttp` compatibility/WebSocket transport.
 *   Context manager support for session management.
 *   Handles authentication (JWT) automatically, including token refresh attempts.
-*   Provides methods for most BSM API endpoints:
+*   Generates the typed REST surface from BSM 4.x FastAPI OpenAPI at release time.\n*   Discovers new core and plugin FastAPI endpoints at runtime without waiting for a client release.\n*   Provides compatibility methods for the established BSM client API:
     *   Manager Information & Global Actions
     *   Server Listing, Status & Configuration
     *   Server Actions (Start, Stop, Command, Update, etc.)
@@ -105,3 +105,30 @@ async def main():
 if __name__ == "__main__":
     asyncio.run(main())
 ```
+
+
+## Generated and dynamic API
+
+BSM 4.x is the source of truth for the REST contract. Release builds export
+`/api/openapi.json` from the pinned BSM beta and generate
+`bsm_api_client.generated`. The existing `BedrockServerManagerApi` methods
+remain as compatibility adapters while consumers migrate to generated endpoint
+modules.
+
+For endpoints added after the installed client was released (including plugin
+FastAPI routers), discover and invoke them at runtime:
+
+```python
+operations = await client.async_discover_api()
+for operation_id, operation in operations.items():
+    print(operation_id, operation.method, operation.path)
+
+result = await client.async_call_operation(
+    "some_operation_id",
+    path_params={"server_name": "MyServer"},
+)
+```
+
+Call `await client.async_refresh_api()` after plugins are reloaded to detect a
+changed schema. WebSocket routes remain handled by `WebSocketClient`, because
+OpenAPI describes HTTP operations rather than WebSocket routes.
