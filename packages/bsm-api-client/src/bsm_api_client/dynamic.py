@@ -6,7 +6,7 @@ import hashlib
 import json
 import re
 from dataclasses import dataclass
-from typing import Any, Dict, Mapping, Optional
+from typing import TYPE_CHECKING, Any, Dict, Mapping, Optional
 from urllib.parse import quote
 
 from .exceptions import APIError
@@ -37,6 +37,19 @@ class DiscoveredOperation:
 
 class DynamicOpenAPIMixin:
     """Discover and invoke API operations unknown at package build time."""
+
+    if TYPE_CHECKING:
+        _default_headers: Mapping[str, str]
+        _jwt_token: Optional[str]
+        _base_url: str
+        _server_root_url: str
+        _api_base_segment: str
+        _request_timeout: Any
+        _verify_ssl: bool
+        _session: Any
+
+        async def authenticate(self) -> Any: ...
+        async def _handle_api_error(self, response: Any, path: str) -> Any: ...
 
     _openapi_schema: Optional[Dict[str, Any]] = None
     _openapi_fingerprint: Optional[str] = None
