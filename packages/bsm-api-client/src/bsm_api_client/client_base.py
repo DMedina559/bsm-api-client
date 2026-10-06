@@ -45,6 +45,7 @@ class ClientBase:
         _session: The `aiohttp.ClientSession` used for making requests.
         _jwt_token: The JWT token used for authentication.
     """
+
     async def _dynamic_request(
         self,
         method: str,
@@ -59,8 +60,6 @@ class ClientBase:
     ) -> Any:
         """Implemented by DynamicOpenAPIMixin on BedrockServerManagerApi."""
         raise NotImplementedError
-
-
 
     def __init__(
         self,
