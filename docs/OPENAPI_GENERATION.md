@@ -6,8 +6,16 @@ after a client release.
 
 ## Regenerate
 
-Install development dependencies, run a BSM 4.x instance with the desired
-plugins loaded, then run:
+Install development dependencies. For the release client, export the schema from
+the pinned BSM beta in an isolated environment and generate from it:
+
+```bash
+python tools/export_bsm_openapi.py --output openapi.json
+python tools/generate_client.py openapi.json
+```
+
+For development against a running BSM instance (including its loaded plugins),
+you can also generate directly from the live schema:
 
 ```bash
 python tools/generate_client.py http://localhost:11325/api/openapi.json
