@@ -66,7 +66,7 @@ async def export_schema(output: Path) -> None:
             await context.settings.set("paths.plugins", str(plugins_dir))
             context.plugin_manager.plugin_dirs = [plugins_dir]
 
-            app = create_web_app(context)
+            app = await asyncio.to_thread(create_web_app, context)
             output.parent.mkdir(parents=True, exist_ok=True)
             output.write_text(
                 json.dumps(app.openapi(), indent=2, sort_keys=True) + "\n",
