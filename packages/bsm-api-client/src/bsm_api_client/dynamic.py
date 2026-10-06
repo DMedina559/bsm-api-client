@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Dict, Mapping, Optional
 from urllib.parse import quote
 
-from .exceptions import APIError
+from .exceptions import APIError, CannotConnectError
 
 _HTTP_METHODS = {"get", "put", "post", "delete", "options", "head", "patch", "trace"}
 _PATH_PARAMETER_RE = re.compile(r"{([^}]+)}")
@@ -204,14 +204,21 @@ class DynamicOpenAPIMixin:
             request_headers["Authorization"] = f"Bearer {self._jwt_token}"
         if json_data is not None:
             request_headers.setdefault("Content-Type", "application/json")
-        async with self._session.request(
-            method.upper(),
-            url,
-            params=dict(query or {}),
-            json=json_data,
-            headers=request_headers,
-            timeout=self._request_timeout,
-        ) as response:
+        try:
+            response_context = self._session.request(
+                method.upper(),
+                url,
+                params=dict(query or {}),
+                json=json_data,
+                headers=request_headers,
+                timeout=self._request_timeout,
+            )
+            response = await response_context.__aenter__()
+        except Exception as exc:
+            raise CannotConnectError(
+                f"Unable to connect to {url}", original_exception=exc
+            ) from exc
+        try:
             if response.status == 401 and authenticated and not is_retry:
                 self._jwt_token = None
                 await self.authenticate()
@@ -232,6 +239,8 @@ class DynamicOpenAPIMixin:
                 return await response.json(content_type=None)
             except (ValueError, TypeError):
                 return await response.text()
+        finally:
+            await response_context.__aexit__(None, None, None)
 
     @staticmethod
     def _index_operations(schema: Mapping[str, Any]) -> Dict[str, DiscoveredOperation]:
