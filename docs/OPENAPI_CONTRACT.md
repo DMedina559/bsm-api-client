@@ -18,6 +18,12 @@ The BSM typed-contract revision targeted by this client already sets explicit op
 | `deprecated` | Advertise migrations before removing an operation. |
 | `x-bsm-plugin` | Plugin ownership at the operation or path-item level; takes precedence over tags/path inference. |
 
+Discovery also supports the backend’s built-in display tags: `Download Page Plugin`
+becomes `download_page_plugin`, and `Content Uploader Plugin` becomes
+`content_uploader_plugin`. This fallback applies only to a single unambiguous
+plugin tag, after explicit metadata, `Plugin:<name>` tags, and plugin paths.
+`Plugin Management` and `plugin-json-ui` do not identify a plugin owner.
+
 ```python
 router.get(
     "/api/plugin/discord/status",

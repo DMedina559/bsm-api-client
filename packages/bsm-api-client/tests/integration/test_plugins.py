@@ -81,3 +81,56 @@ class TestPluginSystem:
             assert reload_res.status == "success"
         finally:
             await client.close()
+
+
+@pytest.mark.parametrize(
+    "module,class_name,tag,paths",
+    [
+        (
+            "download_page_plugin",
+            "DownloadPagePlugin",
+            "Download Page Plugin",
+            {"/api/download_page/ui", "/api/download_page/download"},
+        ),
+        (
+            "content_uploader_plugin",
+            "ContentUploaderPlugin",
+            "Content Uploader Plugin",
+            {"/content/upload/ui", "/api/content/upload"},
+        ),
+    ],
+)
+def test_builtin_plugin_operation_discovery(
+    monkeypatch, tmp_path, module, class_name, tag, paths
+):
+    """Discover actual backend router schemas without starting plugin tasks."""
+    import importlib
+    import json
+    from unittest.mock import AsyncMock
+
+    from bsm_cli.__main__ import cli
+    from bsm_cli.config import Config
+    from click.testing import CliRunner
+    from fastapi import APIRouter, FastAPI
+
+    plugin_class = getattr(
+        importlib.import_module(f"bedrock_server_manager.plugins.default.{module}"),
+        class_name,
+    )
+    plugin = plugin_class.__new__(plugin_class)
+    plugin.router = APIRouter(tags=[tag])
+    plugin._define_routes()
+    app = FastAPI()
+    app.include_router(plugin.router)
+    schema = app.openapi()
+    monkeypatch.setattr(
+        BedrockServerManagerApi, "_fetch_openapi_schema", AsyncMock(return_value=schema)
+    )
+    monkeypatch.setattr("bsm_cli.config.get_config_path", lambda: tmp_path / "cli.json")
+    Config().update(base_url="http://localhost", username="admin", password="password")
+    result = CliRunner().invoke(cli, ["--json", "plugin", "operations", module])
+    assert result.exit_code == 0, result.output
+    rows = json.loads(result.stdout)
+    assert {row["path"] for row in rows} == paths
+    assert all(row["plugin"] == module for row in rows)
+    assert not result.stderr
