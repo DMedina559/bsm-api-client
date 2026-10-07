@@ -179,3 +179,9 @@ data
 
 
 *Zone.Identifier
+
+# Generated REST implementation is rebuilt from the pinned BSM schema.
+packages/bsm-api-client/src/bsm_api_client/generated/
+openapi.json
+
+.mypy_cache*/

@@ -37,4 +37,5 @@ repos:
     rev: v2.3.1
     hooks:
       - id: mypy
-        additional_dependencies: [types-requests, types-PyYAML]
+        additional_dependencies: [types-requests, types-PyYAML, attrs]
+        args: [--cache-dir=.mypy_cache_precommit]
