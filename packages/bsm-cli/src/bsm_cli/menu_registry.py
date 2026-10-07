@@ -24,13 +24,15 @@ async def command_menu(ctx, group):
         value = await _prompt_parameter(ctx, param)
         if value is _CANCEL:
             return
-        kwargs[param.name] = value
+        if value is not _DEFAULT:
+            kwargs[param.name] = value
     result = ctx.invoke(command, **kwargs)
     if inspect.isawaitable(result):
         await result
 
 
 _CANCEL = object()
+_DEFAULT = object()
 
 
 def _multiple_values(param, value):
@@ -58,7 +60,8 @@ async def _prompt_parameter(ctx, param):
     if value is None:
         return _CANCEL
     if not value and not param.required:
-        return param.process_value(ctx, param.get_default(ctx))
+        # Let Context.invoke resolve defaults and hide Click's internal UNSET.
+        return _DEFAULT
     if getattr(param, "confirmation_prompt", False):
         confirmation = await ask(
             "Confirm " + param.name.replace("_", " ") + ":"

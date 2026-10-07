@@ -347,3 +347,32 @@ def test_missing_upload_file_is_input_error(client):
     assert result.exit_code == 2, result.output
     assert json.loads(result.stderr)["exit_code"] == 2
     client.async_call_operation.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("name", ["diff", "operations"])
+async def test_registry_blank_api_options(client, monkeypatch, capsys, name):
+    import click
+    from bsm_cli.api import api
+    from bsm_cli.menu_registry import command_menu
+
+    class Answer:
+        def __init__(self, value):
+            self.value = value
+
+        async def ask_async(self):
+            return self.value
+
+    monkeypatch.setattr(
+        "bsm_cli.menu_registry.questionary.select", lambda *a, **k: Answer(name)
+    )
+    monkeypatch.setattr(
+        "bsm_cli.menu_registry.questionary.text", lambda *a, **k: Answer("")
+    )
+    with click.Context(cli, obj={"client": client, "json_output": False}) as ctx:
+        await command_menu(ctx, api)
+    output = capsys.readouterr().out
+    assert output
+    if name == "operations":
+        assert "demo_action" in output
+        assert "/api/info" in output
