@@ -118,7 +118,12 @@ async def test_server_operations(server, bedrock_server):
         )
         initial_models = [PlayerPermissionPayload(**p) for p in initial_permissions]
 
-        set_payload = PermissionsSetPayload(permissions=initial_models + [permission])
+        # Permissions are upserted by XUID; an earlier test may already have it.
+        expected_permissions = {p.xuid: p for p in initial_models}
+        expected_permissions[permission.xuid] = permission
+        set_payload = PermissionsSetPayload(
+            permissions=list(expected_permissions.values())
+        )
         set_result = await client.async_set_server_permissions(server_name, set_payload)
         assert set_result.status == "success"
 
@@ -126,9 +131,8 @@ async def test_server_operations(server, bedrock_server):
             server_name
         )
         assert permissions_response_after_set.permissions is not None
-        assert (
-            len(permissions_response_after_set.permissions)
-            == len(initial_permissions) + 1
+        assert len(permissions_response_after_set.permissions) == len(
+            expected_permissions
         )
         found_player = next(
             (

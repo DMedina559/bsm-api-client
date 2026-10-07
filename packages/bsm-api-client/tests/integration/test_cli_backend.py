@@ -30,7 +30,7 @@ from click.testing import CliRunner
         ("users", "invite", "user"),
         ("server", "list"),
         ("player", "scan"),
-        ("player", "add", "-p", "CLI Test:123456789"),
+        ("player", "add", "-p", "CLI Test:987654321"),
         ("plugin", "list"),
         ("plugin", "reload"),
         ("plugin", "trigger-event", "cli_test_event"),
