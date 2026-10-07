@@ -9,6 +9,21 @@ import tempfile
 from pathlib import Path
 
 
+def normalize_response_descriptions(schema: dict) -> dict:
+    """Keep FastAPI's default HTTP 422 description stable across Python versions."""
+    for item in schema.get("paths", {}).values():
+        for operation in item.values():
+            if not isinstance(operation, dict):
+                continue
+            response = operation.get("responses", {}).get("422", {})
+            if response.get("description") in {
+                "Unprocessable Entity",
+                "Unprocessable Content",
+            }:
+                response["description"] = "Unprocessable Entity"
+    return schema
+
+
 async def export_schema(output: Path) -> None:
     """Create an isolated BSM app and export its FastAPI OpenAPI document."""
     from bedrock_server_manager.config import bcm_config
@@ -69,7 +84,12 @@ async def export_schema(output: Path) -> None:
             app = await asyncio.to_thread(create_web_app, context)
             output.parent.mkdir(parents=True, exist_ok=True)
             output.write_text(
-                json.dumps(app.openapi(), indent=2, sort_keys=True) + "\n",
+                json.dumps(
+                    normalize_response_descriptions(app.openapi()),
+                    indent=2,
+                    sort_keys=True,
+                )
+                + "\n",
                 encoding="utf-8",
             )
         finally:

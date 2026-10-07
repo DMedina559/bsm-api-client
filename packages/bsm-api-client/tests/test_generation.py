@@ -5,7 +5,6 @@ import json
 from pathlib import Path
 
 import pytest
-
 from bsm_api_client.generated_adapter import operation_module
 from bsm_api_client.openapi import generated_schema, index_operations
 
@@ -59,3 +58,41 @@ def test_failed_publication_restores_existing_package(tmp_path, monkeypatch):
     with pytest.raises(OSError, match="replacement failed"):
         generator.publish_package(package, output)
     assert (output / "previous.txt").read_text() == "working client"
+
+
+@pytest.mark.parametrize("phrase", ["Unprocessable Entity", "Unprocessable Content"])
+def test_export_normalizes_python_http_status_descriptions(phrase):
+    spec = importlib.util.spec_from_file_location(
+        "export_bsm_openapi", ROOT / "tools/export_bsm_openapi.py"
+    )
+    assert spec is not None and spec.loader is not None
+    exporter = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(exporter)
+    schema = {
+        "paths": {
+            "/test": {
+                "parameters": [],
+                "get": {
+                    "responses": {
+                        "422": {"description": phrase},
+                        "200": {"description": "OK"},
+                    }
+                },
+                "post": {
+                    "responses": {"422": {"description": "Custom validation message"}}
+                },
+            }
+        }
+    }
+    normalized = exporter.normalize_response_descriptions(schema)
+    assert (
+        normalized["paths"]["/test"]["get"]["responses"]["422"]["description"]
+        == "Unprocessable Entity"
+    )
+    assert (
+        normalized["paths"]["/test"]["get"]["responses"]["200"]["description"] == "OK"
+    )
+    assert (
+        normalized["paths"]["/test"]["post"]["responses"]["422"]["description"]
+        == "Custom validation message"
+    )

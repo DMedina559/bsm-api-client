@@ -92,3 +92,11 @@ monitoring for compatibility.
 models. HTTP failures preserve the complete error envelope and expose
 `api_code`, `api_message`, and `api_details` on exceptions. The client does not
 import or require the backend package at runtime.
+
+
+The exporter normalizes FastAPI's default HTTP 422 description to
+`Unprocessable Entity`. Python 3.14 renamed the HTTP status phrase to
+`Unprocessable Content`; that documentation wording must not change the shipped
+schema or fail generation checks. Custom response descriptions are preserved.
+CI validates source tests, wheel installs, regeneration, and backend integration
+on Python 3.11, 3.12, 3.13, and 3.14, with independent matrix jobs.
