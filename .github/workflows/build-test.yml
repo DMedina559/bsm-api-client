@@ -50,3 +50,10 @@ jobs:
     - name: Run Pytest
       run: |
         python -m pytest
+
+    - name: Show integration diagnostics
+      if: failure()
+      run: |
+        if [ -f bedrock_server_manager_test.log ]; then
+          tail -n 160 bedrock_server_manager_test.log
+        fi

@@ -117,6 +117,7 @@ class TestContentManagement:
             server_name, backup_payload
         )
         assert backup_result.status in ["success", "pending", "accepted"]
+        await wait_for_action(client, backup_result)
         list_response = None
         for _ in range(90):  # Increased timeout
             list_response = await client.async_list_server_backups(server_name, "world")
