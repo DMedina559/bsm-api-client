@@ -13,14 +13,11 @@ from bsm_api_client.models import (
 
 
 @pytest_asyncio.fixture(scope="class")
-async def content_files():
+async def content_files(server, server_data_dir):
     """
     Fixture to create dummy content files for testing world/addon installation.
     """
-    bsm_dir = os.path.expanduser("~/bedrock-server-manager")
-    # Fallback to BSM_DATA_DIR if set (like in tests)
-    if os.environ.get("BSM_DATA_DIR"):
-        bsm_dir = os.environ["BSM_DATA_DIR"]
+    bsm_dir = str(server_data_dir)
     worlds_dir = os.path.join(bsm_dir, "content", "worlds")
     addons_dir = os.path.join(bsm_dir, "content", "addons")
     os.makedirs(worlds_dir, exist_ok=True)
