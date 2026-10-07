@@ -55,13 +55,13 @@ async def content_files(server, server_data_dir):
 
 async def wait_for_action(client, response):
     """Require background content operations to finish before the next action."""
-    assert response.status in {"success", "pending"}, response
+    assert response.status in {"success", "pending", "accepted"}, response
     if not response.task_id:
         return
     for _ in range(90):
         task = await client.async_get_task_status(response.task_id)
-        assert task["status"] not in {"error", "failed"}, task
-        if task["status"] == "success":
+        assert task["status"] not in {"error", "failed", "cancelled"}, task
+        if task["status"] in {"success", "completed"}:
             result = task.get("result")
             if isinstance(result, dict):
                 assert result.get("status") not in {"error", "failed", "skipped"}, task
@@ -116,7 +116,7 @@ class TestContentManagement:
         backup_result = await client.async_trigger_server_backup(
             server_name, backup_payload
         )
-        assert backup_result.status in ["success", "pending"]
+        assert backup_result.status in ["success", "pending", "accepted"]
         list_response = None
         for _ in range(90):  # Increased timeout
             list_response = await client.async_list_server_backups(server_name, "world")
@@ -195,7 +195,7 @@ class TestContentManagement:
         worlds_before_list = await client.async_get_content_worlds()
         worlds_before = worlds_before_list.files or []
         export_result = await client.async_export_server_world(server_name)
-        assert export_result.status in ["success", "pending"]
+        assert export_result.status in ["success", "pending", "accepted"]
         await wait_for_action(client, export_result)
         for _ in range(90):  # Increased timeout
             worlds_after_list = await client.async_get_content_worlds()

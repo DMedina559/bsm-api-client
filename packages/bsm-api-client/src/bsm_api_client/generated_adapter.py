@@ -6,7 +6,7 @@ import importlib
 import json
 from functools import lru_cache
 from importlib.resources import files
-from typing import Any, get_args, get_type_hints
+from typing import Any, cast, get_args, get_type_hints
 
 import httpx
 
@@ -24,11 +24,14 @@ class SharedTransport(httpx.AsyncBaseTransport):
         path = request.url.raw_path.decode("ascii").split("?", 1)[0]
         if path.startswith("/api/"):
             path = self.owner._api_base_segment + path[4:]
-        return await self.owner._dynamic_request(
-            request.method,
-            path,
-            authenticated=self.authenticated,
-            raw_request=request,
+        return cast(
+            httpx.Response,
+            await self.owner._dynamic_request(
+                request.method,
+                path,
+                authenticated=self.authenticated,
+                raw_request=request,
+            ),
         )
 
 

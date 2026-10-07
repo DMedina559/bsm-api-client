@@ -21,6 +21,14 @@ class APIError(Exception):
         # Extract common fields from API response if available for convenience
         self.api_message: str = self.response_data.get("message", "")
         self.api_errors: Dict[str, Any] = self.response_data.get("errors", {})
+        envelope = self.response_data.get("error", {})
+        if isinstance(envelope, dict):
+            self.api_code: Optional[str] = envelope.get("code")
+            self.api_message = envelope.get("message", self.api_message)
+            self.api_details: Dict[str, Any] = envelope.get("details", {})
+        else:
+            self.api_code = None
+            self.api_details = {}
 
     def __str__(self):
         base_str = super().__str__()
