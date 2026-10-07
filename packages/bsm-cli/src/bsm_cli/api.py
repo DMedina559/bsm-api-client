@@ -7,6 +7,9 @@ from pathlib import Path
 from typing import Any
 
 import click
+from bsm_api_client.exceptions import InvalidInputError, NotFoundError
+from bsm_api_client.openapi import resolve
+
 from bsm_cli.completion import (
     cached_schema,
     complete_operation,
@@ -15,9 +18,6 @@ from bsm_cli.completion import (
 )
 from bsm_cli.decorators import pass_async_context
 from bsm_cli.output import emit, get_client
-
-from bsm_api_client.exceptions import InvalidInputError, NotFoundError
-from bsm_api_client.openapi import resolve
 
 
 async def discover(ctx, *, force=False):
@@ -38,9 +38,18 @@ def assignments(values):
     return result
 
 
+def _non_null_schema(schema, spec):
+    if "anyOf" in spec:
+        choices = [resolve(schema, item) for item in spec["anyOf"]]
+        return next((item for item in choices if item.get("type") != "null"), spec)
+    return spec
+
+
 def parameter_value(schema, parameter, value):
     spec = resolve(schema, parameter.get("schema", {}))
+    spec = _non_null_schema(schema, spec)
     kind = spec.get("type", "string")
+    parsed: Any
     try:
         if kind == "integer":
             parsed = int(value)
@@ -72,10 +81,18 @@ async def invoke(ctx, operation_id, param, json_body, form, plugin_name=None, fi
     if file and json_body is not None:
         raise click.BadParameter("Choose --json or --file/--form.")
     body = request_body(operation, json_body, form or file)
-    files = {
-        name: (Path(path).name, Path(path).read_bytes(), "application/octet-stream")
-        for name, path in assignments(file).items()
-    }
+    files = {}
+    for name, path in assignments(file).items():
+        try:
+            files[name] = (
+                Path(path).name,
+                Path(path).read_bytes(),
+                "application/octet-stream",
+            )
+        except OSError as exc:
+            raise click.BadParameter(
+                f"Cannot read file '{path}': {exc}", param_hint="--file"
+            ) from exc
     result = await client.async_call_operation(
         operation_id,
         path_params=locations["path"],
@@ -234,6 +251,8 @@ async def refresh(ctx):
             config.set(
                 "server_cache", {"base_url": config.base_url, "names": sorted(names)}
             )
+        else:
+            config.set("server_cache", None)
     from bsm_api_client.openapi import diff_schemas
 
     return emit(

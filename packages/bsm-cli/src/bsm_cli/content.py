@@ -2,7 +2,9 @@
 """CLI commands for content management."""
 
 import click
+
 from bsm_cli.decorators import pass_async_context
+from bsm_cli.output import emit, get_client
 
 
 @click.group()
@@ -16,6 +18,6 @@ def content():
 @pass_async_context
 async def upload(ctx, file_path):
     """Upload a content file."""
-    client = ctx.obj["client"]
+    client = get_client(ctx)
     response = await client.async_upload_content(file_path)
-    click.echo(response)
+    return emit(ctx, response)

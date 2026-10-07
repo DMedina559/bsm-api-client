@@ -6,7 +6,6 @@ import json
 from typing import Any
 
 import click
-
 from bsm_api_client.exceptions import (
     AuthError,
     CannotConnectError,
@@ -60,6 +59,8 @@ def normalize_error(error: Exception) -> click.ClickException:
 
 
 def fail(error: Exception) -> None:
+    if isinstance(error, click.Abort):
+        raise error
     raise normalize_error(error)
 
 

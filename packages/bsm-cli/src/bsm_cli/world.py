@@ -2,11 +2,11 @@ import os
 
 import click
 import questionary
+from bsm_api_client.models import FileNamePayload
+
 from bsm_cli.completion import complete_server
 from bsm_cli.decorators import monitor_task, pass_async_context
 from bsm_cli.output import fail, get_client
-
-from bsm_api_client.models import FileNamePayload
 
 
 @click.group()
@@ -28,11 +28,11 @@ def world():
     "-f",
     "--file",
     "world_file_path",
-    type=click.Path(exists=True, dir_okay=False, resolve_path=True),
-    help="Path to the .mcworld file to install. Skips interactive menu.",
+    help="Filename in the backend content/worlds directory; skips interactive menu.",
 )
+@click.option("-y", "--yes", is_flag=True, help="Bypass the confirmation prompt.")
 @pass_async_context
-async def install_world(ctx, server_name: str, world_file_path: str):
+async def install_world(ctx, server_name: str, world_file_path: str, yes: bool):
     """Installs a world from a .mcworld file, replacing the server's current world."""
     client = get_client(ctx)
 
@@ -70,9 +70,12 @@ async def install_world(ctx, server_name: str, world_file_path: str):
             fg="red",
             bold=True,
         )
-        if not await questionary.confirm(
-            "This action cannot be undone. Are you sure?", default=False
-        ).ask_async():
+        if (
+            not yes
+            and not await questionary.confirm(
+                "This action cannot be undone. Are you sure?", default=False
+            ).ask_async()
+        ):
             raise click.Abort()
 
         click.echo(f"Installing world '{filename}'...")

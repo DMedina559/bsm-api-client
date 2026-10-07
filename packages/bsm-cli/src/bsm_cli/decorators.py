@@ -2,7 +2,6 @@ import asyncio
 import functools
 
 import click
-
 from bsm_api_client.exceptions import AuthError, OperationFailedError
 
 
@@ -136,7 +135,20 @@ async def _watch_with_refresh(client, task_id, success_message, failure_message)
 async def _watch_task(client, task_id, success_message, failure_message):
     ws_client = await client.websocket_connect()
     async with ws_client:
-        async for message in ws_client.listen():
+        await ws_client.subscribe(f"task:{task_id}")
+        # Completion can precede the subscription; always check the snapshot.
+        if _task_finished(
+            await client.async_get_task_status(task_id),
+            success_message,
+            failure_message,
+        ):
+            return True
+        messages = ws_client.listen().__aiter__()
+        while True:
+            try:
+                message = await asyncio.wait_for(anext(messages), timeout=5)
+            except (TimeoutError, StopAsyncIteration):
+                return False
             if (
                 message.get("topic") == f"task:{task_id}"
                 and message.get("type") == "task_update"
