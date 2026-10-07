@@ -28,8 +28,6 @@ _LOGGER = logging.getLogger(__name__.split(".")[0] + ".client.content")
 
 # Define allowed types for validation to avoid magic strings
 ALLOWED_BACKUP_LIST_TYPES = ["world", "properties", "allowlist", "permissions"]
-ALLOWED_BACKUP_ACTION_TYPES = ["world", "config", "all"]
-ALLOWED_RESTORE_TYPES = ["world", "properties", "allowlist", "permissions"]
 
 
 class ContentMethodsMixin(GeneratedOperationMethods):

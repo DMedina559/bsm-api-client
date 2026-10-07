@@ -2,7 +2,6 @@ from unittest.mock import AsyncMock, MagicMock
 
 import aiohttp
 import pytest
-
 from bsm_api_client.exceptions import AuthError
 from bsm_api_client.websocket_client import WebSocketClient
 
@@ -118,3 +117,14 @@ async def test_context_manager(mock_session, mock_ws_response):
         assert client._ws == mock_ws_response
 
     mock_ws_response.close.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_websocket_ipv6_authority():
+    from bsm_api_client import BedrockServerManagerApi
+
+    async with BedrockServerManagerApi(
+        "http://[::1]:11325", jwt_token="token"
+    ) as client:
+        websocket = await client.websocket_connect()
+        assert websocket._url == "ws://[::1]:11325/ws"

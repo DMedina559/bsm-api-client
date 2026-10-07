@@ -104,7 +104,7 @@ class ClientBase:
 
         # Robustly parse the input base_url string
         parsed_uri = urlparse(base_url)
-        if not parsed_uri.scheme or not parsed_uri.netloc:
+        if parsed_uri.scheme not in {"http", "https"} or not parsed_uri.hostname:
             raise ValueError(
                 f"Invalid base_url provided: '{base_url}'. Must include scheme (http/https) and hostname."
             )
@@ -451,8 +451,7 @@ class ClientBase:
 
         ws_scheme = "wss" if self._use_ssl else "ws"
         # Typically the websocket endpoint is at /ws relative to the server root
-        ws_url = (
-            f"{ws_scheme}://{self._host}{f':{self._port}' if self._port else ''}/ws"
-        )
+        authority = urlparse(self._server_root_url).netloc
+        ws_url = f"{ws_scheme}://{authority}/ws"
 
         return WebSocketClient(self._session, ws_url, self._jwt_token)

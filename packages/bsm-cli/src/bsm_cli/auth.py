@@ -1,7 +1,7 @@
 import click
-from bsm_cli.output import emit, fail
+from bsm_api_client import BedrockServerManagerApi
 
-from bsm_api_client import AuthError, BedrockServerManagerApi
+from bsm_cli.output import emit
 
 
 def _validate_and_get_url(url: str) -> str:
@@ -34,65 +34,47 @@ def auth():
 @click.pass_context
 async def login(ctx, base_url, username, password, verify_ssl, token):
     """Logs in to the Bedrock Server Manager API."""
+    return await _login(ctx, base_url, username, password, verify_ssl, token)
+
+
+async def _login(ctx, base_url, username, password, verify_ssl, token):
     config = ctx.obj["config"]
+    validated_url = _validate_and_get_url(base_url or config.base_url)
+    supplied_token = bool(token)
+    if not token:
+        username = username or click.prompt("Username")
+        password = password or click.prompt("Password", hide_input=True)
+        async with BedrockServerManagerApi(
+            base_url=validated_url,
+            username=username,
+            password=password,
+            verify_ssl=verify_ssl,
+        ) as client:
+            token = (await client.authenticate()).access_token
 
-    if base_url:
-        validated_url = _validate_and_get_url(base_url)
-        config.set("base_url", validated_url)
-
-    config.set("verify_ssl", verify_ssl)
-
-    if token:
-        config.jwt_token = token
-        return emit(ctx, {"status": "success", "message": "Token set."})
-
-    if not username and not password and not token:
-        await interactive_login(ctx)
-        return
-
-    if username and not password:
-        password = click.prompt("Password", hide_input=True)
-
-    client = BedrockServerManagerApi(
-        base_url=config.base_url,
-        username=username,
-        password=password,
-        verify_ssl=config.verify_ssl,
+    # Commit the destination and credentials together only after login succeeds.
+    config.update(
+        base_url=validated_url,
+        verify_ssl=verify_ssl,
+        jwt_token=token,
+        username=None,
+        password=None,
+        openapi_cache=None,
+        server_cache=None,
     )
-    try:
-        token_data = await client.authenticate()
-        config.jwt_token = token_data.access_token
-        return emit(ctx, {"status": "success", "message": "Login successful."})
-    except AuthError as e:
-        fail(e)
-    finally:
-        await client.close()
+    return emit(
+        ctx,
+        {
+            "status": "success",
+            "message": "Token set." if supplied_token else "Login successful.",
+        },
+    )
 
 
 async def interactive_login(ctx):
-    """Handles the interactive login prompt."""
+    """Use the same login path from interactive menus."""
     config = ctx.obj["config"]
-    username = click.prompt("Username")
-    password = click.prompt("Password", hide_input=True)
-
-    validated_url = _validate_and_get_url(config.base_url)
-    if validated_url != config.base_url:
-        config.set("base_url", validated_url)
-
-    client = BedrockServerManagerApi(
-        base_url=validated_url,
-        username=username,
-        password=password,
-        verify_ssl=config.verify_ssl,
-    )
-    try:
-        token_data = await client.authenticate()
-        config.jwt_token = token_data.access_token
-        return emit(ctx, {"status": "success", "message": "Login successful."})
-    except AuthError as e:
-        fail(e)
-    finally:
-        await client.close()
+    return await _login(ctx, config.base_url, None, None, config.verify_ssl, None)
 
 
 @auth.command()
@@ -100,7 +82,7 @@ async def interactive_login(ctx):
 async def logout(ctx):
     """Logs out from the Bedrock Server Manager API."""
     config = ctx.obj["config"]
-    config.jwt_token = None
+    config.update(jwt_token=None, username=None, password=None)
     result = {"status": "success", "message": "Logged out."}
     if "client" in ctx.obj and ctx.obj["client"]:
         await ctx.obj["client"].close()

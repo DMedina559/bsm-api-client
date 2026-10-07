@@ -1,7 +1,7 @@
 # Generated REST client
 
 BSM's installed FastAPI application is the source of truth. This branch targets
-BSM `refactor!/move-api-to-pydantic` at `6dd7cb83f5e3b8d7fc4a1a1a73237464b2c1bcbf`, which supplies explicit
+BSM `refactor!/move-api-to-pydantic` at `833eb28fde7b5a43140933405aa5fb0f4700eddd`, which supplies explicit
 operation IDs such as `start_server`, `list_servers`, and `create_backup`.
 Both development extras and the release workflow pin that revision. Update the
 pins together when adopting another BSM revision.
@@ -22,7 +22,9 @@ before calling `app.openapi()`. The release export uses an empty plugin director
 Generation uses `openapi-python-client >=0.29.1,<0.30`, checks that every operation
 was generated, and writes a module registry plus the exact input schema into
 `bsm_api_client.generated`. Wheel and source-distribution builds include both JSON
-files. Generated files are ignored by Git and must never be edited by hand.
+files. Generated files are committed so fresh clones, editable installs, wheels, and
+source distributions work without installing the backend or running generation.
+Regenerate and commit them when updating the backend pin; never edit them by hand.
 
 For a development instance with plugins, an explicit live schema can also be used:
 

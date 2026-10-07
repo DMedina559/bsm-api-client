@@ -180,8 +180,7 @@ data
 
 *Zone.Identifier
 
-# Generated REST implementation is rebuilt from the pinned BSM schema.
-packages/bsm-api-client/src/bsm_api_client/generated/
-openapi.json
+# Ignore scratch exports; the generated package is shipped in Git.
+/openapi.json
 
 .mypy_cache*/

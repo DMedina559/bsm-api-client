@@ -29,7 +29,6 @@ from .openapi import (
     serialize_query,
 )
 
-_HTTP_METHODS = {"get", "put", "post", "delete", "options", "head", "patch", "trace"}
 _PATH_PARAMETER_RE = re.compile(r"{([^}]+)}")
 
 
@@ -336,11 +335,6 @@ class DynamicOpenAPIMixin(GeneratedOperationMethods):
         return index_operations(schema)
 
     @staticmethod
-    def _fallback_operation_id(method: str, path: str) -> str:
-        cleaned = re.sub(r"[^a-zA-Z0-9]+", "_", path).strip("_")
-        return f"{method.lower()}_{cleaned}"
-
-    @staticmethod
     def _render_path(path: str, values: Mapping[str, Any]) -> str:
         required = set(_PATH_PARAMETER_RE.findall(path))
         missing = required.difference(values)
@@ -354,10 +348,6 @@ class DynamicOpenAPIMixin(GeneratedOperationMethods):
                 "{" + name + "}", quote(str(values[name]), safe="")
             )
         return rendered
-
-    @staticmethod
-    def _plugin_name(operation: DiscoveredOperation) -> Optional[str]:
-        return operation.plugin
 
 
 def _query_values(query: Mapping[str, Any]) -> Dict[str, Any]:

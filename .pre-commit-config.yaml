@@ -1,3 +1,5 @@
+exclude: ^packages/bsm-api-client/src/bsm_api_client/generated/
+
 ci:
   autofix_commit_msg: |
     [pre-commit.ci] auto fixes from pre-commit.com hooks
