@@ -110,10 +110,9 @@ if __name__ == "__main__":
 ## Generated and dynamic API
 
 BSM 4.x is the source of truth for the REST contract. Release builds export
-`/api/openapi.json` from the pinned BSM beta and generate
+`/api/openapi.json` from the pinned BSM dev revision and generate
 `bsm_api_client.generated`. The existing `BedrockServerManagerApi` methods
-remain as compatibility adapters while consumers migrate to generated endpoint
-modules.
+are compatibility adapters that invoke generated operations by stable ID.
 
 For endpoints added after the installed client was released (including plugin
 FastAPI routers), discover and invoke them at runtime:
@@ -132,3 +131,21 @@ result = await client.async_call_operation(
 Call `await client.async_refresh_api()` after plugins are reloaded to detect a
 changed schema. WebSocket routes remain handled by `WebSocketClient`, because
 OpenAPI describes HTTP operations rather than WebSocket routes.
+
+
+Inspect `client.capabilities.has("start_server")`, `client.capabilities.plugins`,
+and `client.capabilities.runtime_only` after discovery. `client.api_diff()` compares
+against the schema shipped in the client, including referenced model changes.
+`ApiOperation` supplies the same metadata to the CLI and Python callers.
+
+Generated calls use the facade's shared authentication/retry/error transport:
+
+```python
+response = await client.async_call_generated(
+    "start_server", parameters={"server_name": "MyServer"}, detailed=True
+)
+print(response.parsed)  # Generated typed response
+```
+
+See [generation](../../docs/OPENAPI_GENERATION.md) and
+[contract conventions](../../docs/OPENAPI_CONTRACT.md) for development and plugins.
