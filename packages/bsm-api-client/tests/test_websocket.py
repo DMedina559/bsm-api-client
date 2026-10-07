@@ -2,6 +2,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import aiohttp
 import pytest
+
 from bsm_api_client.exceptions import AuthError
 from bsm_api_client.websocket_client import WebSocketClient
 
