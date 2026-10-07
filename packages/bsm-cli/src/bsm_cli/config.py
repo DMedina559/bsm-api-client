@@ -55,6 +55,12 @@ class Config:
         self._config[key] = value
         save_config(self._config)
 
+    def update(self, **values: Any) -> None:
+        """Save related configuration values in one write."""
+        updated = {**self._config, **values}
+        save_config(updated)
+        self._config = updated
+
     @property
     def base_url(self) -> str:
         """The API base URL."""

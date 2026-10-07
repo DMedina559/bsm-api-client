@@ -30,8 +30,9 @@ class TestManagerAndServerInfo:
         finally:
             await client.close()
 
-    async def test_prune_downloads(self, server):
+    async def test_prune_downloads(self, server, server_data_dir):
         """Tests pruning downloads cache."""
+        (server_data_dir / ".downloads" / "stable").mkdir(parents=True, exist_ok=True)
         client = BedrockServerManagerApi(server, "admin", "password")
         try:
             payload = PruneDownloadsPayload(directory="stable", keep=1)

@@ -69,12 +69,9 @@ def generate(schema: dict[str, Any], output: Path) -> None:
             )
         import shutil
 
-        if output.exists():
-            shutil.rmtree(output)
-        shutil.copytree(package, output)
-        shutil.copyfile(schema_path, output / "openapi.json")
+        shutil.copyfile(schema_path, package / "openapi.json")
         registry = {}
-        for module in output.glob("api/*/*.py"):
+        for module in package.glob("api/*/*.py"):
             if module.name == "__init__.py":
                 continue
             tree = ast.parse(module.read_text(encoding="utf-8"))
@@ -102,7 +99,7 @@ def generate(schema: dict[str, Any], output: Path) -> None:
                 )
                 operation_id = schema["paths"][path][method]["operationId"]
                 registry[operation_id] = ".".join(
-                    module.relative_to(output).with_suffix("").parts
+                    module.relative_to(package).with_suffix("").parts
                 )
         expected = {
             details["operationId"]
@@ -116,9 +113,32 @@ def generate(schema: dict[str, Any], output: Path) -> None:
             raise RuntimeError(
                 f"Generator omitted operations: {sorted(expected - registry.keys())}"
             )
-        (output / "operations.json").write_text(
+        (package / "operations.json").write_text(
             json.dumps(registry, indent=2, sort_keys=True) + "\n", encoding="utf-8"
         )
+
+        publish_package(package, output)
+
+
+def publish_package(package: Path, output: Path) -> None:
+    """Replace a validated package, restoring the old package on failure."""
+    import shutil
+
+    output.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(
+        prefix=".bsm-generated-", dir=output.parent
+    ) as staging:
+        replacement = Path(staging) / "generated"
+        backup = Path(staging) / "previous"
+        shutil.copytree(package, replacement)
+        if output.exists():
+            output.rename(backup)
+        try:
+            replacement.rename(output)
+        except BaseException:
+            if backup.exists():
+                backup.rename(output)
+            raise
 
 
 def main() -> None:

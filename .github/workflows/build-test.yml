@@ -9,6 +9,9 @@ on:
     paths:
       - 'packages/**'
       - 'tools/**'
+      - '.github/workflows/build-test.yml'
+      - '.pre-commit-config.yaml'
+      - '.gitignore'
 
 jobs:
   build-and-test:
@@ -41,11 +44,18 @@ jobs:
       run: |
         pre-commit run --all-files
 
+    - name: Check fresh-checkout client and distributions
+      run: |
+        python -m pytest --ignore=packages/bsm-api-client/tests/integration
+        python -m build packages/bsm-api-client
+        python tools/check_distributions.py packages/bsm-api-client/dist/*
+
     - name: Validate OpenAPI generation
       run: |
         python tools/export_bsm_openapi.py --output openapi.json
         python tools/generate_client.py openapi.json
         PYTHONPATH=packages/bsm-api-client/src python -c "import bsm_api_client.generated"
+        git diff --exit-code -- packages/bsm-api-client/src/bsm_api_client/generated
 
     - name: Run Pytest
       run: |
