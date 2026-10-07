@@ -7,8 +7,9 @@ starting, stopping, and sending commands.
 """
 
 import logging
-from typing import Any, Callable, cast
+from typing import Any, cast
 
+from ..generated_adapter import GeneratedOperationMethods
 from ..models import (
     ActionResponse,
     AllowlistAddPayload,
@@ -45,12 +46,8 @@ ALLOWED_SERVER_PROPERTIES_TO_UPDATE = [
 ]
 
 
-class ServerActionMethodsMixin:
+class ServerActionMethodsMixin(GeneratedOperationMethods):
     """Mixin for server action endpoints."""
-
-    _request: Callable[..., Any]
-    is_linux_server: Callable[..., bool]
-    is_windows_server: Callable[..., bool]
 
     async def async_start_server(self, server_name: str) -> ActionResponse:
         """Starts the specified Bedrock server instance.
@@ -66,10 +63,8 @@ class ServerActionMethodsMixin:
             response = await client.async_start_server('MyServer')
         """
         _LOGGER.info("Requesting start for server '%s'", server_name)
-        response = await self._request(
-            "POST",
-            f"/server/{server_name}/start",
-            authenticated=True,
+        response = await self.async_call_generated(
+            "start_server", parameters={"server_name": server_name}, authenticated=True
         )
         return cast(ActionResponse, ActionResponse.model_validate(response))
 
@@ -87,10 +82,8 @@ class ServerActionMethodsMixin:
             response = await client.async_stop_server('MyServer')
         """
         _LOGGER.info("Requesting stop for server '%s'", server_name)
-        response = await self._request(
-            "POST",
-            f"/server/{server_name}/stop",
-            authenticated=True,
+        response = await self.async_call_generated(
+            "stop_server", parameters={"server_name": server_name}, authenticated=True
         )
         return cast(ActionResponse, ActionResponse.model_validate(response))
 
@@ -108,9 +101,9 @@ class ServerActionMethodsMixin:
             response = await client.async_restart_server('MyServer')
         """
         _LOGGER.info("Requesting restart for server '%s'", server_name)
-        response = await self._request(
-            "POST",
-            f"/server/{server_name}/restart",
+        response = await self.async_call_generated(
+            "restart_server",
+            parameters={"server_name": server_name},
             authenticated=True,
         )
         return cast(ActionResponse, ActionResponse.model_validate(response))
@@ -135,10 +128,10 @@ class ServerActionMethodsMixin:
             "Sending command to server '%s': '%s'", server_name, command.command
         )
 
-        response = await self._request(
-            "POST",
-            f"/server/{server_name}/send_command",
-            json_data=command.model_dump(),
+        response = await self.async_call_generated(
+            "send_command",
+            parameters={"server_name": server_name},
+            body=command.model_dump(),
             authenticated=True,
         )
         return cast(ActionResponse, ActionResponse.model_validate(response))
@@ -157,10 +150,8 @@ class ServerActionMethodsMixin:
             response = await client.async_update_server('MyServer')
         """
         _LOGGER.info("Requesting update for server '%s'", server_name)
-        response = await self._request(
-            "POST",
-            f"/server/{server_name}/update",
-            authenticated=True,
+        response = await self.async_call_generated(
+            "update_server", parameters={"server_name": server_name}, authenticated=True
         )
         return cast(ActionResponse, ActionResponse.model_validate(response))
 
@@ -188,10 +179,10 @@ class ServerActionMethodsMixin:
             payload.ignoresPlayerLimit,
         )
 
-        response = await self._request(
-            "POST",
-            f"/server/{server_name}/allowlist/add",
-            json_data=payload.model_dump(),
+        response = await self.async_call_generated(
+            "add_allowlist_players",
+            parameters={"server_name": server_name},
+            body=payload.model_dump(),
             authenticated=True,
         )
         return cast(BaseApiResponse, BaseApiResponse.model_validate(response))
@@ -220,10 +211,10 @@ class ServerActionMethodsMixin:
             payload.players,
         )
 
-        response = await self._request(
-            "DELETE",
-            f"/server/{server_name}/allowlist/remove",
-            json_data=payload.model_dump(),
+        response = await self.async_call_generated(
+            "remove_allowlist_players",
+            parameters={"server_name": server_name},
+            body=payload.model_dump(),
             authenticated=True,
         )
         return cast(BaseApiResponse, BaseApiResponse.model_validate(response))
@@ -251,10 +242,10 @@ class ServerActionMethodsMixin:
             payload.permissions,
         )
 
-        response = await self._request(
-            "POST",
-            f"/server/{server_name}/permissions/set",
-            json_data=payload.model_dump(),
+        response = await self.async_call_generated(
+            "set_permissions",
+            parameters={"server_name": server_name},
+            body=payload.model_dump(),
             authenticated=True,
         )
         return cast(
@@ -283,10 +274,10 @@ class ServerActionMethodsMixin:
             "Updating properties for server '%s': %s", server_name, payload.properties
         )
 
-        response = await self._request(
-            "POST",
-            f"/server/{server_name}/properties/set",
-            json_data=payload.model_dump(),
+        response = await self.async_call_generated(
+            "set_properties",
+            parameters={"server_name": server_name},
+            body=payload.model_dump(),
             authenticated=True,
         )
         return cast(BaseApiResponse, BaseApiResponse.model_validate(response))
@@ -310,10 +301,8 @@ class ServerActionMethodsMixin:
         _LOGGER.warning(
             "Requesting DELETION of server '%s'. THIS IS IRREVERSIBLE.", server_name
         )
-        response = await self._request(
-            "DELETE",
-            f"/server/{server_name}/delete",
-            authenticated=True,
+        response = await self.async_call_generated(
+            "delete_server", parameters={"server_name": server_name}, authenticated=True
         )
         return cast(ActionResponse, ActionResponse.model_validate(response))
 
@@ -324,9 +313,9 @@ class ServerActionMethodsMixin:
         :returns: A dictionary containing the bans.
         """
         _LOGGER.debug("Fetching bans for server '%s'", server_name)
-        response = await self._request(
-            "GET",
-            f"/server/{server_name}/bans/get",
+        response = await self.async_call_generated(
+            "get_server_bans",
+            parameters={"server_name": server_name},
             authenticated=True,
         )
         return dict(response)
@@ -343,10 +332,10 @@ class ServerActionMethodsMixin:
         _LOGGER.debug(
             "Adding ban for server '%s': %s", server_name, payload.model_dump()
         )
-        response = await self._request(
-            "POST",
-            f"/server/{server_name}/bans/add",
-            json_data=payload.model_dump(),
+        response = await self.async_call_generated(
+            "add_server_ban",
+            parameters={"server_name": server_name},
+            body=payload.model_dump(),
             authenticated=True,
         )
         return dict(response)
@@ -363,10 +352,10 @@ class ServerActionMethodsMixin:
         _LOGGER.debug(
             "Removing ban for server '%s': %s", server_name, payload.model_dump()
         )
-        response = await self._request(
-            "DELETE",
-            f"/server/{server_name}/bans/remove",
-            json_data=payload.model_dump(),
+        response = await self.async_call_generated(
+            "remove_server_ban",
+            parameters={"server_name": server_name},
+            body=payload.model_dump(),
             authenticated=True,
         )
         return dict(response)

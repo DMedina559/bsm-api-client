@@ -2,40 +2,37 @@
 
 from __future__ import annotations
 
+import asyncio
 import hashlib
 import json
 import re
-from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Dict, Mapping, Optional
 from urllib.parse import quote
 
-from .exceptions import APIError, CannotConnectError
+import httpx
+
+from .exceptions import (
+    APIError,
+    AuthError,
+    CannotConnectError,
+    InvalidInputError,
+    NotFoundError,
+)
+from .generated_adapter import GeneratedOperationMethods, SharedTransport
+from .openapi import (
+    ApiCapabilities,
+    DiscoveredOperation,
+    diff_schemas,
+    generated_schema,
+    index_operations,
+    serialize_query,
+)
 
 _HTTP_METHODS = {"get", "put", "post", "delete", "options", "head", "patch", "trace"}
 _PATH_PARAMETER_RE = re.compile(r"{([^}]+)}")
 
 
-@dataclass(frozen=True)
-class DiscoveredOperation:
-    """An operation discovered from a BSM OpenAPI document."""
-
-    operation_id: str
-    method: str
-    path: str
-    tags: tuple[str, ...] = ()
-    summary: Optional[str] = None
-    description: Optional[str] = None
-    deprecated: bool = False
-
-    @property
-    def namespace(self) -> str:
-        if self.tags:
-            return self.tags[0]
-        parts = [p for p in self.path.split("/") if p and not p.startswith("{")]
-        return parts[0] if parts else "default"
-
-
-class DynamicOpenAPIMixin:
+class DynamicOpenAPIMixin(GeneratedOperationMethods):
     """Discover and invoke API operations unknown at package build time."""
 
     if TYPE_CHECKING:
@@ -47,6 +44,8 @@ class DynamicOpenAPIMixin:
         _request_timeout: Any
         _verify_ssl: bool
         _session: Any
+
+        _auth_lock: asyncio.Lock
 
         async def authenticate(self) -> Any: ...
         async def _handle_api_error(self, response: Any, path: str) -> Any: ...
@@ -68,30 +67,59 @@ class DynamicOpenAPIMixin:
         return getattr(self, "_discovered_operations", {})
 
     @property
+    def discovered_operations(self) -> Mapping[str, DiscoveredOperation]:
+        return self.operations
+
+    @property
+    def capabilities(self) -> ApiCapabilities:
+        return ApiCapabilities(self.operations)
+
+    @property
     def plugins(self) -> Mapping[str, tuple[DiscoveredOperation, ...]]:
-        """Group plugin operations using plugin tags or /plugins/<name> paths."""
-        grouped: Dict[str, list[DiscoveredOperation]] = {}
-        for operation in self.operations.values():
-            plugin_name = self._plugin_name(operation)
-            if plugin_name:
-                grouped.setdefault(plugin_name, []).append(operation)
-        return {name: tuple(items) for name, items in grouped.items()}
+        return self.capabilities.plugins
+
+    def api_diff(
+        self, against: Optional[Mapping[str, Any]] = None
+    ) -> Dict[str, list[str]]:
+        if self.schema is None:
+            raise InvalidInputError("Discover the API before comparing schemas.")
+        try:
+            build_schema = generated_schema()
+        except InvalidInputError:
+            if against is None:
+                raise
+            build_schema = {"paths": {}}
+        return diff_schemas(
+            against if against is not None else build_schema,
+            self.schema,
+            generated_ids=set(index_operations(build_schema)),
+        )
 
     async def async_get_generated_client(self) -> Any:
         """Return the generated client using the current authentication state."""
         if not self._jwt_token:
-            await self.authenticate()
+            await self._ensure_authenticated()
         try:
             from .generated import AuthenticatedClient
         except ImportError as exc:
             raise RuntimeError(
                 "The generated OpenAPI client is not present. Run the OpenAPI generation tools."
             ) from exc
-        return AuthenticatedClient(
+        if not self._jwt_token:
+            raise AuthError("Authentication did not provide a token.")
+        generated = AuthenticatedClient(
             base_url=self._server_root_url,
             token=self._jwt_token,
             verify_ssl=self._verify_ssl,
         )
+        transport = httpx.AsyncClient(
+            base_url=self._server_root_url, transport=SharedTransport(self, True)
+        )
+        generated.set_async_httpx_client(transport)
+        if not hasattr(self, "_generated_http_clients"):
+            self._generated_http_clients = []
+        self._generated_http_clients.append(transport)
+        return generated
 
     async def async_discover_api(
         self, *, force: bool = False
@@ -101,9 +129,14 @@ class DynamicOpenAPIMixin:
             return self.operations
         schema = await self._fetch_openapi_schema()
         canonical = json.dumps(schema, sort_keys=True, separators=(",", ":")).encode()
+        try:
+            generated_ids = set(index_operations(generated_schema()))
+        except InvalidInputError:
+            generated_ids = set()
+        operations = index_operations(schema, generated_ids)
         self._openapi_schema = schema
         self._openapi_fingerprint = hashlib.sha256(canonical).hexdigest()
-        self._discovered_operations = self._index_operations(schema)
+        self._discovered_operations = operations
         return self.operations
 
     async def async_refresh_api(self) -> bool:
@@ -121,6 +154,7 @@ class DynamicOpenAPIMixin:
         json_data: Any = None,
         form_data: Optional[Mapping[str, Any]] = None,
         headers: Optional[Mapping[str, str]] = None,
+        files: Optional[Mapping[str, Any]] = None,
         authenticated: bool = True,
     ) -> Any:
         """Invoke an operation discovered from the live OpenAPI schema."""
@@ -129,11 +163,27 @@ class DynamicOpenAPIMixin:
         try:
             operation = self.operations[operation_id]
         except KeyError as exc:
-            raise KeyError(
+            raise NotFoundError(
                 f"Unknown OpenAPI operationId {operation_id!r}. "
                 "Refresh discovery to check for newly registered routes."
             ) from exc
+        if json_data is not None and (form_data is not None or files):
+            raise InvalidInputError("Choose either JSON or form data.")
         path = self._render_path(operation.path, path_params or {})
+        query = serialize_query(operation.parameters, query or {})
+        if files:
+            request = httpx.Request(
+                operation.method,
+                self._server_root_url + path,
+                params=_query_values(query or {}),
+                data=dict(form_data or {}),
+                files=files,
+                headers=headers,
+            )
+            response = await self._dynamic_request(
+                operation.method, path, authenticated=authenticated, raw_request=request
+            )
+            return _response_value(response)
         return await self._dynamic_request(
             operation.method,
             path,
@@ -167,23 +217,19 @@ class DynamicOpenAPIMixin:
             authenticated=authenticated,
         )
 
-    async def _fetch_openapi_schema(self) -> Dict[str, Any]:
-        headers = dict(self._default_headers)
-        if self._jwt_token:
-            headers["Authorization"] = f"Bearer {self._jwt_token}"
-        url = f"{self._base_url}/openapi.json"
-        async with self._session.get(
-            url, headers=headers, timeout=self._request_timeout
-        ) as response:
-            if response.status == 401 and not self._jwt_token:
+    async def _ensure_authenticated(self, stale_token: Optional[str] = None) -> None:
+        async with self._auth_lock:
+            if self._jwt_token is None or self._jwt_token == stale_token:
+                self._jwt_token = None
                 await self.authenticate()
-                return await self._fetch_openapi_schema()
-            if not response.ok:
-                await self._handle_api_error(
-                    response, f"{self._api_base_segment}/openapi.json"
-                )
-            data = await response.json(content_type=None)
-        if not isinstance(data, dict) or "paths" not in data:
+                if not self._jwt_token:
+                    raise AuthError("Authentication did not provide a token.")
+
+    async def _fetch_openapi_schema(self) -> Dict[str, Any]:
+        data = await self._dynamic_request(
+            "GET", f"{self._api_base_segment}/openapi.json", authenticated=True
+        )
+        if not isinstance(data, dict) or not isinstance(data.get("paths"), dict):
             raise APIError("Server returned an invalid OpenAPI document.")
         return data
 
@@ -198,13 +244,18 @@ class DynamicOpenAPIMixin:
         form_data: Optional[Mapping[str, Any]] = None,
         headers: Optional[Mapping[str, str]] = None,
         is_retry: bool = False,
+        raw_request: Optional[httpx.Request] = None,
     ) -> Any:
         url = f"{self._server_root_url}{path if path.startswith('/') else '/' + path}"
         request_headers = dict(self._default_headers)
+        if raw_request is not None:
+            request_headers.update(raw_request.headers)
+            request_headers.pop("host", None)
         if headers:
             request_headers.update(headers)
         if authenticated and not self._jwt_token:
-            await self.authenticate()
+            await self._ensure_authenticated()
+        token_used = self._jwt_token
         if authenticated and self._jwt_token:
             request_headers["Authorization"] = f"Bearer {self._jwt_token}"
         if json_data is not None:
@@ -213,9 +264,17 @@ class DynamicOpenAPIMixin:
             response_context = self._session.request(
                 method.upper(),
                 url,
-                params=dict(query or {}),
+                params=(
+                    raw_request.url.params.multi_items()
+                    if raw_request is not None
+                    else _query_values(query or {})
+                ),
                 json=json_data,
-                data=dict(form_data) if form_data is not None else None,
+                data=(
+                    await raw_request.aread()
+                    if raw_request is not None
+                    else (dict(form_data) if form_data is not None else None)
+                ),
                 headers=request_headers,
                 timeout=self._request_timeout,
             )
@@ -226,8 +285,7 @@ class DynamicOpenAPIMixin:
             ) from exc
         try:
             if response.status == 401 and authenticated and not is_retry:
-                self._jwt_token = None
-                await self.authenticate()
+                await self._ensure_authenticated(stale_token=token_used)
                 return await self._dynamic_request(
                     method,
                     path,
@@ -237,9 +295,21 @@ class DynamicOpenAPIMixin:
                     headers=headers,
                     authenticated=authenticated,
                     is_retry=True,
+                    raw_request=raw_request,
                 )
             if not response.ok:
                 await self._handle_api_error(response, path)
+            if raw_request is not None:
+                return httpx.Response(
+                    response.status,
+                    headers={
+                        key: value
+                        for key, value in response.headers.items()
+                        if key.lower() not in {"content-encoding", "content-length"}
+                    },
+                    content=await response.read(),
+                    request=raw_request,
+                )
             if response.status == 204 or response.content_length == 0:
                 return None
             try:
@@ -251,33 +321,7 @@ class DynamicOpenAPIMixin:
 
     @staticmethod
     def _index_operations(schema: Mapping[str, Any]) -> Dict[str, DiscoveredOperation]:
-        result: Dict[str, DiscoveredOperation] = {}
-        paths = schema.get("paths", {})
-        if not isinstance(paths, Mapping):
-            return result
-        for path, path_item in paths.items():
-            if not isinstance(path_item, Mapping):
-                continue
-            for method, details in path_item.items():
-                if method.lower() not in _HTTP_METHODS or not isinstance(
-                    details, Mapping
-                ):
-                    continue
-                operation_id = details.get("operationId")
-                if not operation_id:
-                    operation_id = DynamicOpenAPIMixin._fallback_operation_id(
-                        method, str(path)
-                    )
-                result[str(operation_id)] = DiscoveredOperation(
-                    operation_id=str(operation_id),
-                    method=method.upper(),
-                    path=str(path),
-                    tags=tuple(str(tag) for tag in details.get("tags", [])),
-                    summary=details.get("summary"),
-                    description=details.get("description"),
-                    deprecated=bool(details.get("deprecated", False)),
-                )
-        return result
+        return index_operations(schema)
 
     @staticmethod
     def _fallback_operation_id(method: str, path: str) -> str:
@@ -289,7 +333,9 @@ class DynamicOpenAPIMixin:
         required = set(_PATH_PARAMETER_RE.findall(path))
         missing = required.difference(values)
         if missing:
-            raise ValueError(f"Missing path parameters: {', '.join(sorted(missing))}")
+            raise InvalidInputError(
+                f"Missing path parameters: {', '.join(sorted(missing))}"
+            )
         rendered = path
         for name in required:
             rendered = rendered.replace(
@@ -299,12 +345,24 @@ class DynamicOpenAPIMixin:
 
     @staticmethod
     def _plugin_name(operation: DiscoveredOperation) -> Optional[str]:
-        for tag in operation.tags:
-            lowered = tag.lower()
-            for prefix in ("plugin:", "plugin."):
-                if lowered.startswith(prefix):
-                    return tag.removeprefix(prefix)
-        parts = [part for part in operation.path.split("/") if part]
-        if len(parts) >= 2 and parts[0] in {"plugin", "plugins"}:
-            return parts[1]
+        return operation.plugin
+
+
+def _query_values(query: Mapping[str, Any]) -> Dict[str, Any]:
+    def value(item: Any) -> Any:
+        if isinstance(item, bool):
+            return "true" if item else "false"
+        if isinstance(item, (list, tuple)):
+            return [value(child) for child in item]
+        return item
+
+    return {key: value(item) for key, item in query.items() if item is not None}
+
+
+def _response_value(response: httpx.Response) -> Any:
+    if not response.content:
         return None
+    try:
+        return response.json()
+    except ValueError:
+        return response.content

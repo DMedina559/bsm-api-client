@@ -26,27 +26,23 @@ def server():  # noqa: C901
 
     # Use a temporary directory for complete isolation
     with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as temp_dir:
-        # Copy the current environment and hijack the data directory paths.
-        # This prevents the test server from ever touching your real BSM installation.
-        # Save original env vars we are about to modify
-        keys_to_modify = [
-            "HOME",
-            "USERPROFILE",
-            "APPDATA",
-            "LOCALAPPDATA",
-            "XDG_DATA_HOME",
-            "XDG_CONFIG_HOME",
-            "BSM_DATA_DIR",
-        ]
-        old_env_vars = {k: os.environ.get(k) for k in keys_to_modify}
+        import socket
+        from pathlib import Path
+
+        root = Path(temp_dir)
+        config_dir = root / "config"
+        data_dir = root / "data"
+        config_dir.mkdir()
+        data_dir.mkdir()
+        with socket.socket() as listener:
+            listener.bind(("127.0.0.1", 0))
+            port = listener.getsockname()[1]
+        base_url = f"http://{connect_host}:{port}"
+        env = os.environ.copy()
 
         process = None
         server_log = None
         try:
-            for k in keys_to_modify:
-                os.environ[k] = temp_dir
-            env = os.environ.copy()
-
             print(f"\n[Test Server] Starting isolated instance in: {temp_dir}")
             server_log = open("bedrock_server_manager_test.log", "w")
             process = subprocess.Popen(
@@ -54,10 +50,18 @@ def server():  # noqa: C901
                     sys.executable,
                     "-m",
                     "bedrock_server_manager",
+                    "--config-dir",
+                    str(config_dir),
+                    "--data-dir",
+                    str(data_dir),
+                    "--db-url",
+                    f"sqlite+aiosqlite:///{data_dir / 'bsm.db'}",
                     "web",
                     "start",
                     "--host",
                     host,
+                    "--port",
+                    str(port),
                 ],
                 env=env,
                 stdout=server_log,
@@ -113,11 +117,6 @@ def server():  # noqa: C901
             asyncio.run(wait_and_setup())
             yield base_url
         finally:
-            for k, v in old_env_vars.items():
-                if v is None:
-                    os.environ.pop(k, None)
-                else:
-                    os.environ[k] = v
             if process is not None:
                 process.terminate()
                 process.wait()
@@ -137,9 +136,10 @@ async def bedrock_server(server):
     """
     server_name = "test-server"
     client = BedrockServerManagerApi(server, "admin", "password")
+    installed = False
     try:
         payload = InstallServerPayload(
-            server_name=server_name, version="LATEST", overwrite=True
+            server_name=server_name, server_version="LATEST", overwrite=True
         )
         install_result = await client.async_install_new_server(payload)
 
@@ -150,6 +150,11 @@ async def bedrock_server(server):
                     install_result.task_id
                 )
                 if status_response["status"] == "success":
+                    result = status_response.get("result") or {}
+                    if isinstance(result, dict) and result.get("status") == "error":
+                        pytest.fail(
+                            f"Installation task failed: {result.get('message')}"
+                        )
                     break
                 elif status_response["status"] == "error":
                     pytest.fail(
@@ -160,37 +165,42 @@ async def bedrock_server(server):
         elif install_result.status != "success":
             pytest.fail(f"Failed to install server: {install_result.message}")
 
+        assert await client.async_get_server_validate(server_name)
+        installed = True
         yield server_name
 
     finally:
         try:
-            # Ensure the server is stopped before trying to delete it
-            status_res = await client.async_get_server_running_status(server_name)
-            if status_res.running:
-                await client.async_stop_server(server_name)
-                # Give it a moment to stop
-                for _ in range(30):
+            if installed:
+                # Ensure the server is stopped before trying to delete it
+                status_res = await client.async_get_server_running_status(server_name)
+                if status_res.running:
+                    await client.async_stop_server(server_name)
+                    # Give it a moment to stop
+                    for _ in range(30):
+                        await asyncio.sleep(1)
+                        status_res = await client.async_get_server_running_status(
+                            server_name
+                        )
+                        if not status_res.running:
+                            break
+                    else:
+                        pytest.fail(
+                            f"Server {server_name} did not stop within 30 seconds before deletion."
+                        )
+
+                delete_result = await client.async_delete_server(server_name)
+                assert delete_result.status in ["pending", "success"]
+
+                for _ in range(10):
                     await asyncio.sleep(1)
-                    status_res = await client.async_get_server_running_status(
-                        server_name
-                    )
-                    if not status_res.running:
+                    servers = await client.async_get_server_names()
+                    if server_name not in servers:
                         break
                 else:
                     pytest.fail(
-                        f"Server {server_name} did not stop within 30 seconds before deletion."
+                        f"Server {server_name} was not deleted within 10 seconds."
                     )
-
-            delete_result = await client.async_delete_server(server_name)
-            assert delete_result.status in ["pending", "success"]
-
-            for _ in range(10):
-                await asyncio.sleep(1)
-                servers = await client.async_get_server_names()
-                if server_name not in servers:
-                    break
-            else:
-                pytest.fail(f"Server {server_name} was not deleted within 10 seconds.")
         finally:
             await client.close()
 

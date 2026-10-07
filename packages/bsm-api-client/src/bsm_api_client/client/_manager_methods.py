@@ -8,11 +8,9 @@ players, and installing new servers.
 """
 
 import logging
-from typing import Any, Callable, Dict, cast
+from typing import Any, Dict, cast
 
-import aiohttp
-
-from ..exceptions import APIError, CannotConnectError
+from ..generated_adapter import GeneratedOperationMethods
 from ..models import (
     AddPlayersPayload,
     AddPlayersResponse,
@@ -31,16 +29,8 @@ from ..models import (
 _LOGGER = logging.getLogger(__name__.split(".")[0] + ".client.manager")
 
 
-class ManagerMethodsMixin:
+class ManagerMethodsMixin(GeneratedOperationMethods):
     """Mixin for manager-level endpoints."""
-
-    _request: Callable[..., Any]
-    _server_root_url: str
-    _api_base_segment: str
-    _base_url: str
-    _session: aiohttp.ClientSession
-    _request_timeout: aiohttp.ClientTimeout
-    _handle_api_error: Callable[..., Any]
 
     async def async_get_info(self) -> AppInfoResponse:
         """Gets system and application information from the manager.
@@ -49,7 +39,9 @@ class ManagerMethodsMixin:
             An `AppInfoResponse` object containing system and application information.
         """
         _LOGGER.debug("Fetching manager system and application information from /info")
-        response = await self._request(method="GET", path="/info", authenticated=False)
+        response = await self.async_call_generated(
+            "get_system_info", authenticated=False
+        )
         return cast(AppInfoResponse, AppInfoResponse.model_validate(response))
 
     async def async_scan_players(self) -> AddPlayersResponse:
@@ -59,9 +51,7 @@ class ManagerMethodsMixin:
             An `AddPlayersResponse` object containing the result of the scan operation.
         """
         _LOGGER.info("Triggering player log scan")
-        response = await self._request(
-            method="PUT", path="/players/scan", authenticated=True
-        )
+        response = await self.async_call_generated("scan_players", authenticated=True)
         return cast(AddPlayersResponse, AddPlayersResponse.model_validate(response))
 
     async def async_get_players(self) -> PlayerListResponse:
@@ -71,9 +61,7 @@ class ManagerMethodsMixin:
             A `PlayerListResponse` object containing the list of players.
         """
         _LOGGER.debug("Fetching global player list from /players/get")
-        response = await self._request(
-            method="GET", path="/players/get", authenticated=True
-        )
+        response = await self.async_call_generated("list_players", authenticated=True)
         return cast(PlayerListResponse, PlayerListResponse.model_validate(response))
 
     async def async_add_players(self, payload: AddPlayersPayload) -> AddPlayersResponse:
@@ -86,11 +74,8 @@ class ManagerMethodsMixin:
             An `AddPlayersResponse` object containing the result of the add operation.
         """
         _LOGGER.info("Adding/updating global players: %s", payload.players)
-        response = await self._request(
-            method="POST",
-            path="/players/add",
-            json_data=payload.model_dump(),
-            authenticated=True,
+        response = await self.async_call_generated(
+            "add_players", body=payload.model_dump(), authenticated=True
         )
         return cast(AddPlayersResponse, AddPlayersResponse.model_validate(response))
 
@@ -101,9 +86,7 @@ class ManagerMethodsMixin:
             A `CustomZipsResponse` object containing the list of custom ZIP files.
         """
         _LOGGER.info("Fetching list of custom zips.")
-        response = await self._request(
-            method="GET", path="/downloads/list", authenticated=True
-        )
+        response = await self.async_call_generated("list_downloads", authenticated=True)
         return cast(CustomZipsResponse, CustomZipsResponse.model_validate(response))
 
     async def async_get_themes(self) -> ThemeListResponse:
@@ -113,9 +96,7 @@ class ManagerMethodsMixin:
             A `ThemeListResponse` containing the list of themes.
         """
         _LOGGER.info("Fetching list of available themes.")
-        result = await self._request(
-            method="GET", path="/info/themes", authenticated=True
-        )
+        result = await self.async_call_generated("list_themes", authenticated=True)
         return cast(ThemeListResponse, ThemeListResponse.model_validate(result))
 
     async def async_get_all_settings(self) -> SettingsResponse:
@@ -125,9 +106,7 @@ class ManagerMethodsMixin:
             A `SettingsResponse` object containing all settings.
         """
         _LOGGER.info("Fetching all global application settings.")
-        response = await self._request(
-            method="GET", path="/settings/get", authenticated=True
-        )
+        response = await self.async_call_generated("get_settings", authenticated=True)
         return cast(SettingsResponse, SettingsResponse.model_validate(response))
 
     async def async_set_setting(self, payload: SettingItemResponse) -> SettingsResponse:
@@ -142,11 +121,8 @@ class ManagerMethodsMixin:
         _LOGGER.info(
             "Setting global application setting '%s' to: %s", payload.key, payload.value
         )
-        response = await self._request(
-            method="POST",
-            path="/settings/set",
-            json_data=payload.model_dump(),
-            authenticated=True,
+        response = await self.async_call_generated(
+            "set_setting", body=payload.model_dump(), authenticated=True
         )
         return cast(SettingsResponse, SettingsResponse.model_validate(response))
 
@@ -157,8 +133,8 @@ class ManagerMethodsMixin:
             A `SettingsResponse` object containing the result of the reload operation.
         """
         _LOGGER.info("Requesting reload of global settings and logging configuration.")
-        response = await self._request(
-            method="PUT", path="/settings/reload", authenticated=True
+        response = await self.async_call_generated(
+            "reload_settings", authenticated=True
         )
         return cast(SettingsResponse, SettingsResponse.model_validate(response))
 
@@ -172,39 +148,10 @@ class ManagerMethodsMixin:
             CannotConnectError: If a connection to the server cannot be established.
             APIError: For any other API-related errors.
         """
-        _LOGGER.info("Fetching panorama image.")
-
-        url = f"{self._server_root_url}/api/panorama"
-        if "/api" not in self._api_base_segment:
-            url = f"{self._base_url}/panorama"
-
-        _LOGGER.debug("Request: GET %s for panorama image", url)
-        try:
-            async with self._session.get(
-                url,
-                headers={"Accept": "image/jpeg, */*"},
-                timeout=self._request_timeout,
-            ) as response:
-                _LOGGER.debug("Response Status for GET %s: %s", url, response.status)
-                if not response.ok:
-                    await self._handle_api_error(response, "/api/panorama")
-                    # Should be unreachable
-                    raise APIError(
-                        f"Panorama image request failed with status {response.status}"
-                    )
-                return cast(bytes, await response.read())  # Returns bytes
-        except aiohttp.ClientError as e:
-            _LOGGER.error("AIOHTTP client error fetching panorama: %s", e)
-            raise CannotConnectError(
-                f"AIOHTTP Client Error fetching panorama: {e}", original_exception=e
-            ) from e
-        except APIError:  # Re-raise APIError from _handle_api_error
-            raise
-        except Exception as e:
-            _LOGGER.exception("Unexpected error fetching panorama: %s", e)
-            raise APIError(
-                f"An unexpected error occurred fetching panorama: {e}"
-            ) from e
+        response = await self.async_call_generated(
+            "get_panorama", authenticated=False, detailed=True
+        )
+        return cast(bytes, response.content)
 
     async def async_prune_downloads(
         self, payload: PruneDownloadsPayload
@@ -223,11 +170,8 @@ class ManagerMethodsMixin:
             payload.keep if payload.keep is not None else "server default",
         )
 
-        response = await self._request(
-            method="PUT",
-            path="/downloads/prune",
-            json_data=payload.model_dump(),
-            authenticated=True,
+        response = await self.async_call_generated(
+            "prune_downloads", body=payload.model_dump(), authenticated=True
         )
         return cast(
             PruneDownloadsResponse, PruneDownloadsResponse.model_validate(response)
@@ -251,11 +195,8 @@ class ManagerMethodsMixin:
             payload.overwrite,
         )
 
-        response = await self._request(
-            method="POST",
-            path="/server/install",
-            json_data=payload.model_dump(),
-            authenticated=True,
+        response = await self.async_call_generated(
+            "install_server", body=payload.model_dump(), authenticated=True
         )
         return cast(
             InstallServerResponse, InstallServerResponse.model_validate(response)
@@ -271,9 +212,7 @@ class ManagerMethodsMixin:
             A dictionary containing the status of the task.
         """
         _LOGGER.info("Fetching installation status for task ID: %s", task_id)
-        result = await self._request(
-            method="GET",
-            path=f"/tasks/status/{task_id}",
-            authenticated=True,
+        result = await self.async_call_generated(
+            "get_task_status", parameters={"task_id": task_id}, authenticated=True
         )
         return dict(result)

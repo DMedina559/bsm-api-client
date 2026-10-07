@@ -5,7 +5,6 @@ import logging
 from importlib import metadata
 
 from .api_client import BedrockServerManagerApi
-from .dynamic import DiscoveredOperation
 from .exceptions import (
     APIError,
     APIServerSideError,
@@ -16,11 +15,15 @@ from .exceptions import (
     ServerNotFoundError,
     ServerNotRunningError,
 )
+from .openapi import ApiCapabilities, ApiOperation, DiscoveredOperation, diff_schemas
 from .websocket_client import WebSocketClient
 
 __all__ = [
     "BedrockServerManagerApi",
     "DiscoveredOperation",
+    "ApiOperation",
+    "ApiCapabilities",
+    "diff_schemas",
     "APIError",
     "AuthError",
     "ServerNotFoundError",
