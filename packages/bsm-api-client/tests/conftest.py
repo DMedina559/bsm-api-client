@@ -226,8 +226,12 @@ async def wait_for_server_status(server_data_dir):
                     return
             await asyncio.sleep(1)
         status_str = "running" if is_running else "stopped"
+        log = server_data_dir / "servers" / server_name / "server_output.txt"
+        output = (
+            log.read_text(errors="replace")[-2000:] if log.exists() else "No output"
+        )
         pytest.fail(
-            f"Server did not enter '{status_str}' state within {timeout} seconds."
+            f"Server did not enter '{status_str}' state within {timeout} seconds.\n{output}"
         )
 
     return _wait_for_server_status
