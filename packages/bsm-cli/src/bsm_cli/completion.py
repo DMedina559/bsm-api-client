@@ -1,5 +1,7 @@
 """Offline shell completion scoped to the selected BSM server."""
 
+from collections.abc import Mapping
+
 from click.shell_completion import CompletionItem
 
 
@@ -11,7 +13,10 @@ def cached_schema(ctx):
 
         config = Config()
     cached = config.get("openapi_cache", {})
-    return cached.get("schema", {}) if cached.get("base_url") == config.base_url else {}
+    if not isinstance(cached, Mapping) or cached.get("base_url") != config.base_url:
+        return {}
+    schema = cached.get("schema")
+    return schema if isinstance(schema, Mapping) else {}
 
 
 def complete_operation(ctx, param, incomplete):
@@ -56,5 +61,11 @@ def complete_server(ctx, param, incomplete):
 
         config = Config()
     cache = config.get("server_cache", {})
-    names = cache.get("names", []) if cache.get("base_url") == config.base_url else []
-    return [name for name in names if name.startswith(incomplete)]
+    if not isinstance(cache, Mapping) or cache.get("base_url") != config.base_url:
+        return []
+    names = cache.get("names")
+    if not isinstance(names, list):
+        return []
+    return [
+        name for name in names if isinstance(name, str) and name.startswith(incomplete)
+    ]
