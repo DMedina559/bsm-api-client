@@ -21,15 +21,33 @@ async def command_menu(ctx, group):
         return await command_menu(ctx, command)
     kwargs = {}
     for param in command.params:
-        default = param.get_default(ctx)
-        if param.required or getattr(param, "prompt", None):
+        # process_value applies Click's missing/default handling, including UNSET.
+        default = (
+            param.process_value(ctx, param.get_default(ctx))
+            if not param.required
+            else None
+        )
+        if (
+            param.required
+            or getattr(param, "prompt", None)
+            or isinstance(param, click.Option)
+        ):
             value = await questionary.text(
-                param.name.replace("_", " ") + ":"
+                param.name.replace("_", " ")
+                + (" (blank for default):" if not param.required else ":")
             ).ask_async()
             if value is None:
                 return
+            if not value and not param.required:
+                kwargs[param.name] = default
+                continue
             kwargs[param.name] = param.type_cast_value(
-                ctx, value.split() if param.nargs == -1 else value
+                ctx,
+                (
+                    value.split()
+                    if param.nargs == -1 or getattr(param, "multiple", False)
+                    else value
+                ),
             )
         else:
             kwargs[param.name] = default

@@ -8,6 +8,32 @@ from bsm_cli.server import list_servers
 from bsm_api_client.websocket_client import WebSocketClient
 
 
+@pytest.mark.parametrize("status", ["completed", "success"])
+def test_typed_task_completion(status):
+    from bsm_cli.decorators import _task_finished
+
+    assert _task_finished({"status": status, "message": "Done"}, "Finished", "Failed")
+
+
+@pytest.mark.parametrize("status", ["failed", "cancelled"])
+def test_typed_task_failure(status):
+    from bsm_cli.decorators import _task_finished
+
+    from bsm_api_client.exceptions import OperationFailedError
+
+    with pytest.raises(OperationFailedError, match="Server failed") as error:
+        _task_finished(
+            {
+                "status": status,
+                "message": "Task failed",
+                "error": {"code": "server_error", "message": "Server failed"},
+            },
+            "Finished",
+            "Failed",
+        )
+    assert error.value.api_code == "server_error"
+
+
 @pytest.fixture
 def mock_client():
     client = AsyncMock()

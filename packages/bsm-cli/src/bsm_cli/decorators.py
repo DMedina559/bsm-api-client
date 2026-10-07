@@ -7,6 +7,24 @@ from bsm_api_client.exceptions import AuthError, OperationFailedError
 
 
 class AsyncGroup(click.Group):
+    def parse_args(self, ctx, args):
+        root_args = args[
+            : next((i for i, arg in enumerate(args) if arg in self.commands), len(args))
+        ]
+        json_output = "--json" in root_args
+        try:
+            return super().parse_args(ctx, args)
+        except click.ClickException as error:
+            if not json_output:
+                raise
+            from bsm_cli.output import echo_json
+
+            echo_json(
+                {"error": error.format_message(), "exit_code": error.exit_code},
+                err=True,
+            )
+            raise click.exceptions.Exit(error.exit_code) from error
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.async_context_settings = {}
@@ -138,10 +156,13 @@ def _task_finished(data, success_message, failure_message):
         "error",
         "failed",
     }
-    if status in {"error", "failed"} or failed_result:
+    if status in {"error", "failed", "cancelled"} or failed_result:
         detail = result.get("message", message) if failed_result else message
+        error = data.get("error")
+        if isinstance(error, dict):
+            detail = error.get("message", detail)
         raise OperationFailedError(f"{failure_message}: {detail}", response_data=data)
-    if status == "success":
+    if status in {"success", "completed"}:
         click.secho(f"{success_message}: {message}", fg="green")
         return True
     return False

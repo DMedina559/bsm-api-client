@@ -80,6 +80,52 @@ def run(*args):
     return CliRunner().invoke(cli, list(args))
 
 
+def test_dynamic_error_response_exits_nonzero(client):
+    client.async_call_operation.return_value = {
+        "status": "error",
+        "message": "Rejected",
+    }
+    result = run(
+        "--json", "api", "call", "demo_action", "--param", "name=test", "--json", "{}"
+    )
+    assert result.exit_code == 1
+    assert not result.stdout
+    assert "Rejected" in json.loads(result.stderr)["error"]
+
+
+def test_root_parse_error_respects_json():
+    result = run("--json", "--unknown")
+    assert result.exit_code == 2
+    assert json.loads(result.stderr)["exit_code"] == 2
+
+
+@pytest.mark.asyncio
+async def test_registry_menu_accepts_optional_body_and_missing_defaults(
+    client, monkeypatch
+):
+    import click
+    from bsm_cli.api import api
+    from bsm_cli.menu_registry import command_menu
+
+    class Answer:
+        def __init__(self, value):
+            self.value = value
+
+        async def ask_async(self):
+            return self.value
+
+    monkeypatch.setattr(
+        "bsm_cli.menu_registry.questionary.select", lambda *a, **k: Answer("call")
+    )
+    values = iter(["demo_action", "name=test", "{}", "", ""])
+    monkeypatch.setattr(
+        "bsm_cli.menu_registry.questionary.text", lambda *a, **k: Answer(next(values))
+    )
+    with click.Context(cli, obj={"client": client, "json_output": True}) as ctx:
+        await command_menu(ctx, api)
+    assert client.async_call_operation.call_args.kwargs["json_data"] == {}
+
+
 def test_json_operations_and_plugin_scope(client):
     result = run("--json", "api", "operations", "--tag", "Plugin:demo")
     assert result.exit_code == 0, result.output

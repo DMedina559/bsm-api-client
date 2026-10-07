@@ -134,9 +134,31 @@ class RecordingClient:
         @functools.wraps(target)
         async def record(*args, **kwargs):
             result = await target(*args, **kwargs)
-            if getattr(result, "status", None) in {"error", "failed"}:
+            status = (
+                result.get("status")
+                if isinstance(result, dict)
+                else getattr(result, "status", None)
+            )
+            error = result.get("error") if isinstance(result, dict) else None
+            if status in {"error", "failed", "cancelled"} or isinstance(error, dict):
                 raise OperationFailedError(
-                    getattr(result, "message", None) or "Operation failed"
+                    (
+                        (error or result).get("message", "Operation failed")
+                        if isinstance(result, dict)
+                        else getattr(result, "message", None) or "Operation failed"
+                    ),
+                    response_data=(
+                        result
+                        if isinstance(result, dict)
+                        else (
+                            result.model_dump(mode="json")
+                            if hasattr(result, "model_dump")
+                            else {
+                                "status": status,
+                                "message": getattr(result, "message", None),
+                            }
+                        )
+                    ),
                 )
             if self.record:
                 self.results.append(result)
