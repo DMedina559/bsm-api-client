@@ -6,10 +6,9 @@ for managing server content such as backups, worlds, and addons.
 """
 
 import logging
-from typing import Any, Callable, Dict, Optional, cast
+from typing import TYPE_CHECKING, Any, Dict, cast
 
-import aiohttp
-
+from ..generated_adapter import GeneratedOperationMethods
 from ..models import (
     ActionResponse,
     AddonActionPayload,
@@ -22,6 +21,9 @@ from ..models import (
     RestoreActionPayload,
 )
 
+if TYPE_CHECKING:
+    from ..dynamic import DynamicOpenAPIMixin
+
 _LOGGER = logging.getLogger(__name__.split(".")[0] + ".client.content")
 
 # Define allowed types for validation to avoid magic strings
@@ -30,16 +32,8 @@ ALLOWED_BACKUP_ACTION_TYPES = ["world", "config", "all"]
 ALLOWED_RESTORE_TYPES = ["world", "properties", "allowlist", "permissions"]
 
 
-class ContentMethodsMixin:
+class ContentMethodsMixin(GeneratedOperationMethods):
     """Mixin for content management endpoints (backups, worlds, addons)."""
-
-    _request: Callable[..., Any]
-    _server_root_url: str
-    _jwt_token: Optional[str]
-    _session: aiohttp.ClientSession
-    _is_retrying: bool
-    _authenticate: Callable[..., Any]
-    _handle_api_error: Callable[..., Any]
 
     async def async_list_server_backups(
         self, server_name: str, backup_type: str
@@ -73,9 +67,9 @@ class ContentMethodsMixin:
             "Fetching '%s' backups list for server '%s'", bt_lower, server_name
         )
 
-        response = await self._request(
-            "GET",
-            f"/server/{server_name}/backup/list/{bt_lower}",
+        response = await self.async_call_generated(
+            "list_server_backups",
+            parameters={"server_name": server_name, "backup_type": bt_lower},
             authenticated=True,
         )
         return cast(ActionResponse, ActionResponse.model_validate(response))
@@ -89,8 +83,10 @@ class ContentMethodsMixin:
             response = await client.async_get_server_addons('MyServer')
         """
         _LOGGER.debug("Fetching addons for server '%s'", server_name)
-        response = await self._request(
-            "GET", f"/server/{server_name}/addons", authenticated=True
+        response = await self.async_call_generated(
+            "list_server_addons",
+            parameters={"server_name": server_name},
+            authenticated=True,
         )
         return cast(AddonListResponse, AddonListResponse.model_validate(response))
 
@@ -108,10 +104,10 @@ class ContentMethodsMixin:
         _LOGGER.info(
             "Enabling addon '%s' for server '%s'", payload.pack_uuid, server_name
         )
-        response = await self._request(
-            "POST",
-            f"/server/{server_name}/addon/enable",
-            json_data=payload.model_dump(),
+        response = await self.async_call_generated(
+            "enable_addon",
+            parameters={"server_name": server_name},
+            body=payload.model_dump(),
             authenticated=True,
         )
         return cast(ActionResponse, ActionResponse.model_validate(response))
@@ -130,10 +126,10 @@ class ContentMethodsMixin:
         _LOGGER.info(
             "Disabling addon '%s' for server '%s'", payload.pack_uuid, server_name
         )
-        response = await self._request(
-            "POST",
-            f"/server/{server_name}/addon/disable",
-            json_data=payload.model_dump(),
+        response = await self.async_call_generated(
+            "disable_addon",
+            parameters={"server_name": server_name},
+            body=payload.model_dump(),
             authenticated=True,
         )
         return cast(ActionResponse, ActionResponse.model_validate(response))
@@ -154,10 +150,10 @@ class ContentMethodsMixin:
             payload.pack_uuid,
             server_name,
         )
-        response = await self._request(
-            "POST",
-            f"/server/{server_name}/addon/subpack",
-            json_data=payload.model_dump(),
+        response = await self.async_call_generated(
+            "update_addon_subpack",
+            parameters={"server_name": server_name},
+            body=payload.model_dump(),
             authenticated=True,
         )
         return cast(ActionResponse, ActionResponse.model_validate(response))
@@ -176,10 +172,10 @@ class ContentMethodsMixin:
         _LOGGER.info(
             "Uninstalling addon '%s' for server '%s'", payload.pack_uuid, server_name
         )
-        response = await self._request(
-            "DELETE",
-            f"/server/{server_name}/addon/uninstall",
-            json_data=payload.model_dump(),
+        response = await self.async_call_generated(
+            "uninstall_addon",
+            parameters={"server_name": server_name},
+            body=payload.model_dump(),
             authenticated=True,
         )
         return cast(ActionResponse, ActionResponse.model_validate(response))
@@ -198,10 +194,10 @@ class ContentMethodsMixin:
         _LOGGER.info(
             "Reordering %s packs for server '%s'", payload.pack_type, server_name
         )
-        response = await self._request(
-            "POST",
-            f"/server/{server_name}/addon/reorder",
-            json_data=payload.model_dump(),
+        response = await self.async_call_generated(
+            "reorder_addons",
+            parameters={"server_name": server_name},
+            body=payload.model_dump(),
             authenticated=True,
         )
         return cast(ActionResponse, ActionResponse.model_validate(response))
@@ -218,7 +214,9 @@ class ContentMethodsMixin:
             response = await client.async_get_content_worlds()
         """
         _LOGGER.debug("Fetching available world files from /content/worlds")
-        response = await self._request("GET", "/content/worlds", authenticated=True)
+        response = await self.async_call_generated(
+            "list_available_worlds", authenticated=True
+        )
         return cast(ContentListResponse, ContentListResponse.model_validate(response))
 
     async def async_get_content_addons(self) -> ContentListResponse:
@@ -233,7 +231,9 @@ class ContentMethodsMixin:
             response = await client.async_get_content_addons()
         """
         _LOGGER.debug("Fetching available addon files from /content/addons")
-        response = await self._request("GET", "/content/addons", authenticated=True)
+        response = await self.async_call_generated(
+            "list_available_addons", authenticated=True
+        )
         return cast(ContentListResponse, ContentListResponse.model_validate(response))
 
     async def async_trigger_server_backup(
@@ -260,10 +260,10 @@ class ContentMethodsMixin:
             payload.file_to_backup or "N/A",
         )
 
-        response = await self._request(
-            "POST",
-            f"/server/{server_name}/backup/action",
-            json_data=payload.model_dump(),
+        response = await self.async_call_generated(
+            "create_backup",
+            parameters={"server_name": server_name},
+            body=payload.model_dump(),
             authenticated=True,
         )
         return cast(ActionResponse, ActionResponse.model_validate(response))
@@ -282,10 +282,10 @@ class ContentMethodsMixin:
             response = await client.async_export_server_world('MyServer')
         """
         _LOGGER.info("Triggering world export for server '%s'", server_name)
-        response = await self._request(
-            "POST",
-            f"/server/{server_name}/world/export",
-            json_data=None,
+        response = await self.async_call_generated(
+            "export_world",
+            parameters={"server_name": server_name},
+            body=None,
             authenticated=True,
         )
         return cast(ActionResponse, ActionResponse.model_validate(response))
@@ -303,38 +303,23 @@ class ContentMethodsMixin:
 
             response = await client.async_upload_content()
         """
-        import os
+        from pathlib import Path
 
-        import aiohttp
+        from ..exceptions import NotFoundError
 
-        _LOGGER.info("Uploading content file: %s", file_path)
-        data = aiohttp.FormData()
-        data.add_field(
-            "file",
-            open(file_path, "rb"),
-            filename=os.path.basename(file_path),
-            content_type="application/octet-stream",
-        )
-
-        # Note: aiohttp requires direct session usage for multipart/form-data
-        # We bypass the generic _request helper here.
-        url = f"{self._server_root_url}/api/content/upload"
-        headers = {}
-        if self._jwt_token:
-            headers["Authorization"] = f"Bearer {self._jwt_token}"
-
-        async with self._session.post(url, data=data, headers=headers) as response:
-            if response.status == 401 and not self._is_retrying:
-                _LOGGER.info("Token expired, attempting to refresh and retry.")
-                self._is_retrying = True
-                await self._authenticate()
-                # Clear the flag before retrying
-                self._is_retrying = False
-                return await self.async_upload_content(file_path)
-
-            await self._handle_api_error(response, "/api/content/upload")
-            result = await response.json()
-            return dict(result)
+        dynamic = cast("DynamicOpenAPIMixin", self)
+        await dynamic.async_discover_api()
+        if "upload_content" not in dynamic.operations:
+            raise NotFoundError(
+                "This server does not advertise an upload_content operation in OpenAPI."
+            )
+        path = Path(file_path)
+        with path.open("rb") as handle:
+            response = await dynamic.async_call_operation(
+                "upload_content",
+                files={"file": (path.name, handle.read(), "application/octet-stream")},
+            )
+        return cast(Dict[str, Any], response)
 
     async def async_reset_server_world(self, server_name: str) -> ActionResponse:
         """Resets the current world of a server.
@@ -350,10 +335,10 @@ class ContentMethodsMixin:
             response = await client.async_reset_server_world('MyServer')
         """
         _LOGGER.warning("Triggering world reset for server '%s'", server_name)
-        response = await self._request(
-            "DELETE",
-            f"/server/{server_name}/world/reset",
-            json_data=None,
+        response = await self.async_call_generated(
+            "reset_world",
+            parameters={"server_name": server_name},
+            body=None,
             authenticated=True,
         )
         return cast(ActionResponse, ActionResponse.model_validate(response))
@@ -375,10 +360,10 @@ class ContentMethodsMixin:
             "Triggering backup pruning for server '%s' (using server-defined retention)",
             server_name,
         )
-        response = await self._request(
-            "PUT",
-            f"/server/{server_name}/backups/prune",
-            json_data=None,
+        response = await self.async_call_generated(
+            "prune_backups",
+            parameters={"server_name": server_name},
+            body=None,
             authenticated=True,
         )
         return cast(ActionResponse, ActionResponse.model_validate(response))
@@ -407,10 +392,10 @@ class ContentMethodsMixin:
             payload.backup_file,
         )
 
-        response = await self._request(
-            "POST",
-            f"/server/{server_name}/restore/action",
-            json_data=payload.model_dump(),
+        response = await self.async_call_generated(
+            "restore_backup",
+            parameters={"server_name": server_name},
+            body=payload.model_dump(),
             authenticated=True,
         )
         return cast(ActionResponse, ActionResponse.model_validate(response))
@@ -435,10 +420,10 @@ class ContentMethodsMixin:
             "Requesting restore of latest 'all' backup for server '%s'", server_name
         )
         payload = {"restore_type": "all"}
-        response = await self._request(
-            "POST",
-            f"/server/{server_name}/restore/action",  # Path targets the generic restore action endpoint
-            json_data=payload,
+        response = await self.async_call_generated(
+            "restore_backup",
+            parameters={"server_name": server_name},
+            body=payload,
             authenticated=True,
         )
         return cast(ActionResponse, ActionResponse.model_validate(response))
@@ -466,10 +451,10 @@ class ContentMethodsMixin:
             payload.filename,
         )
 
-        response = await self._request(
-            "POST",
-            f"/server/{server_name}/world/install",
-            json_data=payload.model_dump(),
+        response = await self.async_call_generated(
+            "install_world",
+            parameters={"server_name": server_name},
+            body=payload.model_dump(),
             authenticated=True,
         )
         return cast(ActionResponse, ActionResponse.model_validate(response))
@@ -497,10 +482,10 @@ class ContentMethodsMixin:
             payload.filename,
         )
 
-        response = await self._request(
-            "POST",
-            f"/server/{server_name}/addon/install",
-            json_data=payload.model_dump(),
+        response = await self.async_call_generated(
+            "install_addon",
+            parameters={"server_name": server_name},
+            body=payload.model_dump(),
             authenticated=True,
         )
         return cast(ActionResponse, ActionResponse.model_validate(response))

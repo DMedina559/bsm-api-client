@@ -84,6 +84,7 @@ async def test_dynamic_operation_renders_path_and_forwards_payload():
         query={"force": True},
         json_data={"value": 1},
         headers=None,
+        form_data=None,
         authenticated=True,
     )
 
@@ -97,22 +98,12 @@ def test_missing_path_parameter_is_rejected():
 async def test_openapi_discovery_uses_configured_api_base_path():
     client = DummyClient()
     client._base_url = "http://localhost/custom-api"
-    response = AsyncMock()
-    response.status = 200
-    response.ok = True
-    response.json = AsyncMock(return_value={"paths": {}})
-    context = AsyncMock()
-    context.__aenter__.return_value = response
-    context.__aexit__.return_value = None
-    client._session.get.return_value = context
-
+    client._api_base_segment = "/custom-api"
+    client._dynamic_request = AsyncMock(return_value={"paths": {}})
     schema = await client._fetch_openapi_schema()
-
     assert schema == {"paths": {}}
-    client._session.get.assert_called_once_with(
-        "http://localhost/custom-api/openapi.json",
-        headers={"Accept": "application/json", "Authorization": "Bearer token"},
-        timeout=90,
+    client._dynamic_request.assert_awaited_once_with(
+        "GET", "/custom-api/openapi.json", authenticated=True
     )
 
 
@@ -126,6 +117,9 @@ async def test_generated_client_bridge_reuses_token(monkeypatch):
         def __init__(self, **kwargs):
             captured.update(kwargs)
 
+        def set_async_httpx_client(self, transport):
+            self.transport = transport
+
     generated = ModuleType("bsm_api_client.generated")
     generated.AuthenticatedClient = GeneratedClient
     monkeypatch.setitem(sys.modules, "bsm_api_client.generated", generated)
@@ -133,6 +127,7 @@ async def test_generated_client_bridge_reuses_token(monkeypatch):
     result = await client.async_get_generated_client()
 
     assert isinstance(result, GeneratedClient)
+    await result.transport.aclose()
     assert captured == {
         "base_url": "http://localhost",
         "token": "token",

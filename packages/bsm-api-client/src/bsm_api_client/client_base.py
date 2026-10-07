@@ -46,6 +46,18 @@ class ClientBase:
         _jwt_token: The JWT token used for authentication.
     """
 
+    async def async_call_generated(
+        self,
+        operation_id: str,
+        *,
+        parameters: Optional[Dict[str, Any]] = None,
+        body: Any = None,
+        authenticated: bool = True,
+        detailed: bool = False,
+    ) -> Any:
+        """Implemented by DynamicOpenAPIMixin."""
+        raise NotImplementedError
+
     async def _dynamic_request(
         self,
         method: str,
@@ -140,6 +152,7 @@ class ClientBase:
             "Accept": "application/json",
         }
         self._auth_lock = asyncio.Lock()
+        self._generated_http_clients: list[Any] = []
 
         _LOGGER.debug("ClientBase initialized for base URL: %s", self._base_url)
 
@@ -151,6 +164,9 @@ class ClientBase:
 
             response = await client.close()
         """
+        for generated_http_client in getattr(self, "_generated_http_clients", []):
+            await generated_http_client.aclose()
+        self._generated_http_clients = []
         if self._session and self._close_session and not self._session.closed:
             await self._session.close()
             _LOGGER.debug(
@@ -384,18 +400,14 @@ class ClientBase:
         """Authenticate against BSM's OpenAPI-described OAuth2 token endpoint."""
         if not self._username or not self._password:
             raise AuthError("Username and password are required to authenticate.")
-        response_data = await self._dynamic_request(
-            "POST",
-            "/auth/token",
-            query=None,
-            json_data=None,
-            form_data={
+        response_data = await self.async_call_generated(
+            "login",
+            body={
                 "grant_type": "password",
                 "username": self._username,
                 "password": self._password,
                 "remember_me": False,
             },
-            headers={"Accept": "application/json"},
             authenticated=False,
         )
         try:
@@ -409,12 +421,8 @@ class ClientBase:
     async def async_logout(self) -> Dict[str, Any]:
         """Log out through the shared REST transport and clear the local token."""
         try:
-            response = await self._dynamic_request(
-                "GET",
-                "/auth/logout",
-                query=None,
-                json_data=None,
-                authenticated=bool(self._jwt_token),
+            response = await self.async_call_generated(
+                "logout", authenticated=bool(self._jwt_token)
             )
             return cast(Dict[str, Any], response or {})
         finally:

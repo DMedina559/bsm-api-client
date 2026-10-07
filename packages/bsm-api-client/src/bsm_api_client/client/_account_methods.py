@@ -2,8 +2,9 @@
 """Mixin class for account-related API methods."""
 
 import logging
-from typing import Any, Callable, cast
+from typing import cast
 
+from ..generated_adapter import GeneratedOperationMethods
 from ..models import (
     BaseApiResponse,
     ChangePasswordPayload,
@@ -15,10 +16,8 @@ from ..models import (
 _LOGGER = logging.getLogger(__name__.split(".")[0] + ".client.account")
 
 
-class AccountMethodsMixin:
+class AccountMethodsMixin(GeneratedOperationMethods):
     """Mixin for account-related endpoints."""
-
-    _request: Callable[..., Any]
 
     async def async_get_account_details(self) -> UserResponse:
         """Gets the current user's account details.
@@ -32,9 +31,7 @@ class AccountMethodsMixin:
             response = await client.async_get_account_details()
         """
         _LOGGER.debug("Fetching account details from /account")
-        response = await self._request(
-            method="GET", path="/account", authenticated=True
-        )
+        response = await self.async_call_generated("get_account", authenticated=True)
         return cast(UserResponse, UserResponse.model_validate(response))
 
     async def async_update_theme(self, payload: ThemeUpdatePayload) -> BaseApiResponse:
@@ -52,11 +49,8 @@ class AccountMethodsMixin:
             response = await client.async_update_theme(payload)
         """
         _LOGGER.info("Updating theme to %s", payload.theme)
-        response = await self._request(
-            method="POST",
-            path="/account/theme",
-            json_data=payload.model_dump(),
-            authenticated=True,
+        response = await self.async_call_generated(
+            "update_account_theme", body=payload.model_dump(), authenticated=True
         )
         return cast(BaseApiResponse, BaseApiResponse.model_validate(response))
 
@@ -77,11 +71,8 @@ class AccountMethodsMixin:
             response = await client.async_update_profile(payload)
         """
         _LOGGER.info("Updating profile")
-        response = await self._request(
-            method="POST",
-            path="/account/profile",
-            json_data=payload.model_dump(),
-            authenticated=True,
+        response = await self.async_call_generated(
+            "update_account_profile", body=payload.model_dump(), authenticated=True
         )
         return cast(BaseApiResponse, BaseApiResponse.model_validate(response))
 
@@ -102,10 +93,7 @@ class AccountMethodsMixin:
             response = await client.async_change_password(payload)
         """
         _LOGGER.info("Changing password")
-        response = await self._request(
-            method="POST",
-            path="/account/change-password",
-            json_data=payload.model_dump(),
-            authenticated=True,
+        response = await self.async_call_generated(
+            "change_password", body=payload.model_dump(), authenticated=True
         )
         return cast(BaseApiResponse, BaseApiResponse.model_validate(response))

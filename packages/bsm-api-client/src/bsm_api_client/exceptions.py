@@ -84,7 +84,7 @@ class ServerNotRunningError(APIError):
     pass
 
 
-class InvalidInputError(APIError):
+class InvalidInputError(APIError, ValueError):
     """Client-side input validation error (e.g., 400 Bad Request)."""
 
     pass

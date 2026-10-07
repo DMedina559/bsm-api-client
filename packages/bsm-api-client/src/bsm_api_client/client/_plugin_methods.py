@@ -6,8 +6,9 @@ for managing plugins through the Bedrock Server Manager API.
 """
 
 import logging
-from typing import Any, Callable, cast
+from typing import cast
 
+from ..generated_adapter import GeneratedOperationMethods
 from ..models import (
     ActionResponse,
     PluginStatusesResponse,
@@ -19,10 +20,8 @@ from ..models import (
 _LOGGER = logging.getLogger(__name__.split(".")[0] + ".client.plugins")
 
 
-class PluginMethodsMixin:
+class PluginMethodsMixin(GeneratedOperationMethods):
     """Mixin containing methods for interacting with Plugin Management API endpoints."""
-
-    _request: Callable[..., Any]
 
     async def async_get_plugin_statuses(self) -> PluginStatusesResponse:
         """Retrieves the status of all discovered plugins.
@@ -38,9 +37,7 @@ class PluginMethodsMixin:
             response = await client.async_get_plugin_statuses()
         """
         _LOGGER.info("Requesting status of all plugins.")
-        response = await self._request(
-            method="GET", path="/plugins", authenticated=True
-        )
+        response = await self.async_call_generated("list_plugins", authenticated=True)
         return cast(
             PluginStatusesResponse, PluginStatusesResponse.model_validate(response)
         )
@@ -72,10 +69,10 @@ class PluginMethodsMixin:
         _LOGGER.info(
             "Setting plugin '%s' to enabled state: %s.", plugin_name, payload.enabled
         )
-        response = await self._request(
-            method="POST",
-            path=f"/plugins/{plugin_name}",
-            json_data=payload.model_dump(),
+        response = await self.async_call_generated(
+            "set_plugin_status",
+            parameters={"plugin_name": plugin_name},
+            body=payload.model_dump(),
             authenticated=True,
         )
         return cast(ActionResponse, ActionResponse.model_validate(response))
@@ -94,9 +91,7 @@ class PluginMethodsMixin:
             response = await client.async_reload_plugins()
         """
         _LOGGER.info("Requesting reload of all plugins.")
-        response = await self._request(
-            method="PUT", path="/plugins/reload", authenticated=True
-        )
+        response = await self.async_call_generated("reload_plugins", authenticated=True)
         return cast(ActionResponse, ActionResponse.model_validate(response))
 
     async def async_trigger_plugin_event(
@@ -122,10 +117,7 @@ class PluginMethodsMixin:
             payload.event_name,
             payload.payload,
         )
-        response = await self._request(
-            method="POST",
-            path="/plugins/trigger_event",
-            json_data=payload.model_dump(),
-            authenticated=True,
+        response = await self.async_call_generated(
+            "trigger_plugin_event", body=payload.model_dump(), authenticated=True
         )
         return cast(TriggerEventResponse, TriggerEventResponse.model_validate(response))
