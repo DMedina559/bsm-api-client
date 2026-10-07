@@ -1,5 +1,8 @@
 import asyncio
+import json
 import os
+import uuid
+import zipfile
 
 import pytest
 import pytest_asyncio
@@ -26,15 +29,45 @@ async def content_files(server, server_data_dir):
     dummy_addon_file = "test_addon.mcpack"
     world_path = os.path.join(worlds_dir, dummy_world_file)
     addon_path = os.path.join(addons_dir, dummy_addon_file)
-    with open(world_path, "w") as f:
-        f.write("dummy world content")
-    with open(addon_path, "w") as f:
-        f.write("dummy addon content")
+    with zipfile.ZipFile(world_path, "w") as archive:
+        archive.writestr("levelname.txt", "Test World")
+    manifest = {
+        "format_version": 2,
+        "header": {
+            "name": "Test Addon",
+            "description": "Integration test resource pack",
+            "uuid": str(uuid.uuid4()),
+            "version": [1, 0, 0],
+            "min_engine_version": [1, 20, 0],
+        },
+        "modules": [
+            {"type": "resources", "uuid": str(uuid.uuid4()), "version": [1, 0, 0]}
+        ],
+    }
+    with zipfile.ZipFile(addon_path, "w") as archive:
+        archive.writestr("manifest.json", json.dumps(manifest))
     yield {"world_file": dummy_world_file, "addon_file": dummy_addon_file}
     if os.path.exists(world_path):
         os.remove(world_path)
     if os.path.exists(addon_path):
         os.remove(addon_path)
+
+
+async def wait_for_action(client, response):
+    """Require background content operations to finish before the next action."""
+    assert response.status in {"success", "pending"}, response
+    if not response.task_id:
+        return
+    for _ in range(90):
+        task = await client.async_get_task_status(response.task_id)
+        assert task["status"] not in {"error", "failed"}, task
+        if task["status"] == "success":
+            result = task.get("result")
+            if isinstance(result, dict):
+                assert result.get("status") not in {"error", "failed", "skipped"}, task
+            return
+        await asyncio.sleep(1)
+    pytest.fail(f"Content task {response.task_id} did not complete in time.")
 
 
 @pytest_asyncio.fixture
@@ -99,14 +132,11 @@ class TestContentManagement:
         restore_result = await client.async_restore_server_backup(
             server_name, restore_payload
         )
-        assert restore_result.status in ["success", "pending"]
-
-        # Wait a bit after the first restore to make sure the server status is idle for next actions.
-        await asyncio.sleep(5)
+        await wait_for_action(client, restore_result)
 
         # Restore Latest All
         latest_all = await client.async_restore_server_latest_all(server_name)
-        assert latest_all.status in ["success", "pending"]
+        await wait_for_action(client, latest_all)
 
     async def test_custom_zips(self, content_client):
         zips = await content_client.async_get_custom_zips()
@@ -130,7 +160,7 @@ class TestContentManagement:
         install_world_result = await client.async_install_server_world(
             server_name, install_world_payload
         )
-        assert install_world_result.status in ["success", "pending"]
+        await wait_for_action(client, install_world_result)
         addons_list = await client.async_get_content_addons()
         assert addons_list.status == "success"
         assert dummy_addon_file in addons_list.files
@@ -138,7 +168,7 @@ class TestContentManagement:
         install_addon_result = await client.async_install_server_addon(
             server_name, install_addon_payload
         )
-        assert install_addon_result.status in ["success", "pending"]
+        await wait_for_action(client, install_addon_result)
 
         # Note: The test previously failed here with "World directory for 'new-world-name' not found"
         # This occurs because `test_manager_and_server_info.py` changes the level-name property of the server to `new-world-name`!
@@ -166,16 +196,7 @@ class TestContentManagement:
         worlds_before = worlds_before_list.files or []
         export_result = await client.async_export_server_world(server_name)
         assert export_result.status in ["success", "pending"]
-        if export_result.task_id:
-            for _ in range(90):
-                task = await client.async_get_task_status(export_result.task_id)
-                assert task["status"] != "error", task
-                if task["status"] == "success":
-                    assert task.get("result", {}).get("status") == "success", task
-                    break
-                await asyncio.sleep(1)
-            else:
-                pytest.fail("World export task did not complete in time.")
+        await wait_for_action(client, export_result)
         for _ in range(90):  # Increased timeout
             worlds_after_list = await client.async_get_content_worlds()
             worlds_after = worlds_after_list.files or []
@@ -187,6 +208,6 @@ class TestContentManagement:
         await client.async_stop_server(server_name)
         await wait_for_server_status(client, server_name, is_running=False, timeout=90)
         prune_result = await client.async_prune_server_backups(server_name)
-        assert prune_result.status in ["success", "pending"]
+        await wait_for_action(client, prune_result)
         reset_result = await client.async_reset_server_world(server_name)
-        assert reset_result.status in ["success", "pending"]
+        await wait_for_action(client, reset_result)
