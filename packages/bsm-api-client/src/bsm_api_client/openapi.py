@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import copy
 import json
+import re
 from dataclasses import asdict, dataclass, field
 from importlib.resources import files
 from typing import Any, Mapping, cast
@@ -214,6 +215,15 @@ def plugin_owner(
         if any(tag.lower() == "plugin management" for tag in tags):
             return None
         return parts[1]
+    # Built-in backend routers use human-readable tags such as
+    # "Download Page Plugin", while plugin management uses module names.
+    owners = {
+        re.sub(r"[^a-z0-9]+", "_", tag.lower()).strip("_")
+        for tag in tags
+        if tag.lower().endswith(" plugin")
+    }
+    if len(owners) == 1:
+        return owners.pop()
     return None
 
 

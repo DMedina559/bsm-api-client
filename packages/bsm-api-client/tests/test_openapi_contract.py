@@ -131,3 +131,41 @@ def test_query_serialization_honors_form_explode():
     ) == {"enabled": True, "names": "a,b"}
     with pytest.raises(InvalidInputError, match="Conflicting"):
         serialize_query(parameters, {"filter": {"names": "a"}, "names": "b"})
+
+
+@pytest.mark.parametrize(
+    "tags,expected",
+    [
+        (["Download Page Plugin", "plugin-json-ui"], "download_page_plugin"),
+        (["Content Uploader Plugin"], "content_uploader_plugin"),
+        (["Plugin Management"], None),
+        (["plugin-json-ui"], None),
+        (["Download Page Plugin", "Another Plugin"], None),
+        (["Plugin:explicit", "Download Page Plugin"], "explicit"),
+    ],
+)
+def test_backend_plugin_tags(tags, expected):
+    schema = {
+        "paths": {
+            "/api/download_page/ui": {
+                "get": {"operationId": "download_ui", "tags": tags}
+            }
+        }
+    }
+    operation = index_operations(schema)["download_ui"]
+    assert operation.plugin == expected
+
+
+def test_plugin_metadata_overrides_display_tag():
+    schema = {
+        "paths": {
+            "/api/download_page/ui": {
+                "get": {
+                    "operationId": "download_ui",
+                    "tags": ["Download Page Plugin"],
+                    "x-bsm-plugin": "custom_owner",
+                }
+            }
+        }
+    }
+    assert index_operations(schema)["download_ui"].plugin == "custom_owner"
