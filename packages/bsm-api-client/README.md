@@ -110,7 +110,7 @@ if __name__ == "__main__":
 ## Generated and dynamic API
 
 BSM 4.x is the source of truth for the REST contract. Release builds export
-`/api/openapi.json` from the pinned BSM dev revision and generate
+`/api/openapi.json` from the pinned BSM typed-contract revision and generate
 `bsm_api_client.generated`. The existing `BedrockServerManagerApi` methods
 are compatibility adapters that invoke generated operations by stable ID.
 

@@ -47,7 +47,7 @@ Which will trigger the interactive menu allowing you to manage and configure you
 
 ## OpenAPI commands
 
-The CLI targets BSM dev's stable operation IDs. Curated commands remain available;
+The CLI targets BSM's typed-contract branch and stable operation IDs. Curated commands remain available;
 new server/plugin HTTP endpoints can be inspected and called immediately:
 
 ```bash
