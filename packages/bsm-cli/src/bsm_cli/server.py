@@ -4,7 +4,9 @@ import os
 import click
 import questionary
 from bsm_cli.allowlist import interactive_allowlist_workflow
+from bsm_cli.completion import complete_server
 from bsm_cli.decorators import monitor_task, pass_async_context
+from bsm_cli.output import fail, get_client
 from bsm_cli.permissions import interactive_permissions_workflow
 from bsm_cli.properties import interactive_properties_workflow
 
@@ -57,14 +59,28 @@ def server():
 @click.option(
     "--loop", is_flag=True, help="Continuously refresh server statuses every 5 seconds."
 )
-@click.option("--server-name", help="Display status for only a specific server.")
+@click.option(
+    "--server-name",
+    help="Display status for only a specific server.",
+    shell_complete=complete_server,
+)
 @pass_async_context
 async def list_servers(ctx, loop, server_name):  # noqa: C901
     """Lists all configured Bedrock servers and their current operational status."""
-    client = ctx.obj.get("client")
-    if not client:
-        click.secho("You are not logged in.", fg="red")
-        return
+    client = get_client(ctx)
+    if ctx.obj.get("json_output"):
+        if loop:
+            raise click.UsageError("Use server list without --loop for JSON output.")
+        response = await client.async_get_servers()
+        if server_name:
+            return {
+                "servers": [
+                    item.model_dump(mode="json")
+                    for item in response.servers or []
+                    if item.name == server_name
+                ]
+            }
+        return response
 
     async def _display_status():
         response = await client.async_get_servers()
@@ -167,7 +183,7 @@ async def list_servers(ctx, loop, server_name):  # noqa: C901
                 try:
                     await _display_status()
                 except Exception as e:
-                    click.secho(f"Error refreshing status: {e}", fg="red")
+                    fail(e)
                 await asyncio.sleep(5)
         else:
             if not server_name:
@@ -177,20 +193,22 @@ async def list_servers(ctx, loop, server_name):  # noqa: C901
     except (KeyboardInterrupt, click.Abort):
         click.secho("\nExiting status monitor.", fg="green")
     except Exception as e:
-        click.secho(f"An error occurred: {e}", fg="red")
+        fail(e)
 
 
 @server.command("start")
 @click.option(
-    "-s", "--server", "server_name", required=True, help="Name of the server to start."
+    "-s",
+    "--server",
+    "server_name",
+    required=True,
+    help="Name of the server to start.",
+    shell_complete=complete_server,
 )
 @pass_async_context
 async def start_server(ctx, server_name: str):
     """Starts a specific Bedrock server instance."""
-    client = ctx.obj.get("client")
-    if not client:
-        click.secho("You are not logged in.", fg="red")
-        return
+    client = get_client(ctx)
 
     click.echo(f"Attempting to start server '{server_name}'...")
     try:
@@ -207,20 +225,22 @@ async def start_server(ctx, server_name: str):
         else:
             click.secho(f"Failed to start server: {response.message}", fg="red")
     except Exception as e:
-        click.secho(f"Failed to start server: {e}", fg="red")
+        fail(e)
 
 
 @server.command("stop")
 @click.option(
-    "-s", "--server", "server_name", required=True, help="Name of the server to stop."
+    "-s",
+    "--server",
+    "server_name",
+    required=True,
+    help="Name of the server to stop.",
+    shell_complete=complete_server,
 )
 @pass_async_context
 async def stop_server(ctx, server_name: str):
     """Sends a graceful stop command to a running Bedrock server."""
-    client = ctx.obj.get("client")
-    if not client:
-        click.secho("You are not logged in.", fg="red")
-        return
+    client = get_client(ctx)
 
     click.echo(f"Attempting to stop server '{server_name}'...")
     try:
@@ -237,7 +257,7 @@ async def stop_server(ctx, server_name: str):
         else:
             click.secho(f"Failed to stop server: {response.message}", fg="red")
     except Exception as e:
-        click.secho(f"Failed to stop server: {e}", fg="red")
+        fail(e)
 
 
 @server.command("restart")
@@ -247,14 +267,12 @@ async def stop_server(ctx, server_name: str):
     "server_name",
     required=True,
     help="Name of the server to restart.",
+    shell_complete=complete_server,
 )
 @pass_async_context
 async def restart_server(ctx, server_name: str):
     """Gracefully restarts a specific Bedrock server."""
-    client = ctx.obj.get("client")
-    if not client:
-        click.secho("You are not logged in.", fg="red")
-        return
+    client = get_client(ctx)
 
     click.echo(f"Attempting to restart server '{server_name}'...")
     try:
@@ -271,17 +289,14 @@ async def restart_server(ctx, server_name: str):
         else:
             click.secho(f"Failed to restart server: {response.message}", fg="red")
     except Exception as e:
-        click.secho(f"Failed to restart server: {e}", fg="red")
+        fail(e)
 
 
 @server.command("install")
 @click.pass_context
 async def install(ctx):  # noqa: C901
     """Guides you through installing and configuring a new Bedrock server instance."""
-    client = ctx.obj.get("client")
-    if not client:
-        click.secho("You are not logged in.", fg="red")
-        return
+    client = get_client(ctx)
 
     try:
         click.secho("--- New Bedrock Server Installation ---", bold=True)
@@ -367,20 +382,22 @@ async def install(ctx):  # noqa: C901
             await ctx.invoke(start_server, server_name=server_name)
 
     except Exception as e:
-        click.secho(f"An application error occurred: {e}", fg="red")
+        fail(e)
 
 
 @server.command("update")
 @click.option(
-    "-s", "--server", "server_name", required=True, help="Name of the server to update."
+    "-s",
+    "--server",
+    "server_name",
+    required=True,
+    help="Name of the server to update.",
+    shell_complete=complete_server,
 )
 @pass_async_context
 async def update(ctx, server_name: str):
     """Checks for and applies updates to an existing Bedrock server."""
-    client = ctx.obj.get("client")
-    if not client:
-        click.secho("You are not logged in.", fg="red")
-        return
+    client = get_client(ctx)
 
     click.echo(f"Checking for updates for server '{server_name}'...")
     try:
@@ -397,21 +414,23 @@ async def update(ctx, server_name: str):
         else:
             click.secho(f"Failed to update server: {response.message}", fg="red")
     except Exception as e:
-        click.secho(f"A server update error occurred: {e}", fg="red")
+        fail(e)
 
 
 @server.command("delete")
 @click.option(
-    "-s", "--server", "server_name", required=True, help="Name of the server to delete."
+    "-s",
+    "--server",
+    "server_name",
+    required=True,
+    help="Name of the server to delete.",
+    shell_complete=complete_server,
 )
 @click.option("-y", "--yes", is_flag=True, help="Bypass the confirmation prompt.")
 @pass_async_context
 async def delete_server(ctx, server_name: str, yes: bool):
     """Deletes all data for a server, including world, configs, and backups."""
-    client = ctx.obj.get("client")
-    if not client:
-        click.secho("You are not logged in.", fg="red")
-        return
+    client = get_client(ctx)
 
     if not yes:
         click.secho(
@@ -442,21 +461,23 @@ async def delete_server(ctx, server_name: str, yes: bool):
         else:
             click.secho(f"Failed to delete server: {response.message}", fg="red")
     except Exception as e:
-        click.secho(f"Failed to delete server: {e}", fg="red")
+        fail(e)
 
 
 @server.command("send-command")
 @click.option(
-    "-s", "--server", "server_name", required=True, help="Name of the target server."
+    "-s",
+    "--server",
+    "server_name",
+    required=True,
+    help="Name of the target server.",
+    shell_complete=complete_server,
 )
 @click.argument("command_parts", nargs=-1, required=True)
 @click.pass_context
 async def send_command(ctx, server_name: str, command_parts: str):
     """Sends a command to a running Bedrock server's console."""
-    client = ctx.obj.get("client")
-    if not client:
-        click.secho("You are not logged in.", fg="red")
-        return
+    client = get_client(ctx)
 
     command_string = " ".join(command_parts)
     click.echo(f"Sending command to '{server_name}': {command_string}")
@@ -468,4 +489,4 @@ async def send_command(ctx, server_name: str, command_parts: str):
         else:
             click.secho(f"Failed to send command: {response.message}", fg="red")
     except Exception as e:
-        click.secho(f"Failed to send command: {e}", fg="red")
+        fail(e)

@@ -1,5 +1,7 @@
 import click
 import questionary
+from bsm_cli.completion import complete_server
+from bsm_cli.output import fail, get_client
 
 from bsm_api_client.models import PropertiesPayload
 
@@ -17,15 +19,13 @@ def properties():
     "server_name",
     required=True,
     help="The name of the target server.",
+    shell_complete=complete_server,
 )
 @click.option("-p", "--prop", "property_name", help="Display a single property value.")
 @click.pass_context
 async def get_props(ctx, server_name: str, property_name: str):
     """Displays server properties from a server's server.properties file."""
-    client = ctx.obj.get("client")
-    if not client:
-        click.secho("You are not logged in.", fg="red")
-        return
+    client = get_client(ctx)
 
     response = await client.async_get_server_properties(server_name)
 
@@ -53,6 +53,7 @@ async def get_props(ctx, server_name: str, property_name: str):
     "server_name",
     required=True,
     help="The name of the target server.",
+    shell_complete=complete_server,
 )
 @click.option(
     "-p",
@@ -64,10 +65,7 @@ async def get_props(ctx, server_name: str, property_name: str):
 @click.pass_context
 async def set_props(ctx, server_name: str, properties: tuple[str]):
     """Sets one or more properties in a server's server.properties file."""
-    client = ctx.obj.get("client")
-    if not client:
-        click.secho("You are not logged in.", fg="red")
-        return
+    client = get_client(ctx)
 
     try:
         if not properties:
@@ -99,7 +97,7 @@ async def set_props(ctx, server_name: str, properties: tuple[str]):
             click.secho(f"Failed to set properties: {response.message}", fg="red")
 
     except Exception as e:
-        click.secho(f"An error occurred: {e}", fg="red")
+        fail(e)
 
 
 async def interactive_properties_workflow(client, server_name: str):  # noqa: C901

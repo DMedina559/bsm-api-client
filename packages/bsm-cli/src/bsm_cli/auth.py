@@ -1,4 +1,5 @@
 import click
+from bsm_cli.output import emit, fail
 
 from bsm_api_client import AuthError, BedrockServerManagerApi
 
@@ -43,8 +44,7 @@ async def login(ctx, base_url, username, password, verify_ssl, token):
 
     if token:
         config.jwt_token = token
-        click.echo("Token set.")
-        return
+        return emit(ctx, {"status": "success", "message": "Token set."})
 
     if not username and not password and not token:
         await interactive_login(ctx)
@@ -62,9 +62,9 @@ async def login(ctx, base_url, username, password, verify_ssl, token):
     try:
         token_data = await client.authenticate()
         config.jwt_token = token_data.access_token
-        click.echo("Login successful.")
+        return emit(ctx, {"status": "success", "message": "Login successful."})
     except AuthError as e:
-        click.secho(f"Login failed: {e}", fg="red")
+        fail(e)
     finally:
         await client.close()
 
@@ -88,9 +88,9 @@ async def interactive_login(ctx):
     try:
         token_data = await client.authenticate()
         config.jwt_token = token_data.access_token
-        click.echo("Login successful.")
+        return emit(ctx, {"status": "success", "message": "Login successful."})
     except AuthError as e:
-        click.secho(f"Login failed: {e}", fg="red")
+        fail(e)
     finally:
         await client.close()
 
@@ -101,6 +101,7 @@ async def logout(ctx):
     """Logs out from the Bedrock Server Manager API."""
     config = ctx.obj["config"]
     config.jwt_token = None
-    click.echo("Logged out.")
+    result = {"status": "success", "message": "Logged out."}
     if "client" in ctx.obj and ctx.obj["client"]:
         await ctx.obj["client"].close()
+    return emit(ctx, result)

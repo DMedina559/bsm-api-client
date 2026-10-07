@@ -1,5 +1,6 @@
 import click
 import questionary
+from bsm_cli.menu_registry import command_menu, plugin_api_menu
 from bsm_cli.server import list_servers
 from questionary import Separator
 
@@ -121,8 +122,15 @@ async def main_menu(ctx: click.Context):  # noqa: C901
             if server_names:
                 menu_choices.append("Manage Existing Server")
 
-            menu_choices.append("Manage Plugins")
-            menu_choices.append("Manage Users")
+            registry = {
+                f"{name.title()} Commands": group
+                for name, group in cli.commands.items()
+                if isinstance(group, click.Group) and name not in {"auth", "server"}
+            }
+            menu_choices.extend(registry)
+            await client.async_discover_api()
+            if client.capabilities.plugins:
+                menu_choices.append("Plugin API")
             menu_choices.append(Separator("--- Application ---"))
             menu_choices.append("Exit")
 
@@ -148,14 +156,11 @@ async def main_menu(ctx: click.Context):  # noqa: C901
                 if server_name:
                     await manage_server_menu(ctx, server_name)
 
-            elif choice == "Manage Plugins":
-                plugin_group = cli.get_command(ctx, "plugin")
-                await ctx.invoke(plugin_group)
+            elif choice == "Plugin API":
+                await plugin_api_menu(ctx)
                 click.pause("Press any key to return to the main menu...")
-
-            elif choice == "Manage Users":
-                users_group = cli.get_command(ctx, "users")
-                await ctx.invoke(users_group)
+            elif choice in registry:
+                await command_menu(ctx, registry[choice])
                 click.pause("Press any key to return to the main menu...")
 
         except (click.Abort, KeyboardInterrupt):

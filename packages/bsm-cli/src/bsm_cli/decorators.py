@@ -3,7 +3,7 @@ import functools
 
 import click
 
-from bsm_api_client.exceptions import AuthError
+from bsm_api_client.exceptions import AuthError, OperationFailedError
 
 
 class AsyncGroup(click.Group):
@@ -18,19 +18,58 @@ class AsyncGroup(click.Group):
     def invoke(self, ctx):
         ctx.obj = ctx.obj or {}
         if self.async_context_settings.get("context"):
-
-            async def runner():
-                async with self.async_context_settings["context"](ctx):
-                    result = super(AsyncGroup, self).invoke(ctx)
-                    if asyncio.iscoroutine(result):
-                        await result
-
-            return asyncio.run(runner())
-
+            return asyncio.run(self._invoke_context(ctx))
         result = super().invoke(ctx)
-        if asyncio.iscoroutine(result):
-            return asyncio.run(result)
+        return asyncio.run(result) if asyncio.iscoroutine(result) else result
+
+    async def _invoke_context(self, ctx):
+        import contextlib
+        import io
+
+        from bsm_cli.output import RecordingClient, echo_json, fail, normalize_error
+
+        json_output = ctx.params.get("json_output", False)
+        transcript = io.StringIO()
+        output_context = (
+            contextlib.redirect_stdout(transcript)
+            if json_output
+            else contextlib.nullcontext()
+        )
+        try:
+            with output_context:
+                async with self.async_context_settings["context"](ctx):
+                    recorder = None
+                    if ctx.obj.get("client"):
+                        recorder = RecordingClient(
+                            ctx.obj["client"], record=json_output
+                        )
+                        ctx.obj["client"] = recorder
+                    result = super().invoke(ctx)
+                    if asyncio.iscoroutine(result):
+                        result = await result
+            if json_output:
+                echo_json(_structured_result(result, recorder))
+            return result
+        except click.exceptions.Exit as error:
+            if json_output and error.exit_code == 0:
+                click.echo(transcript.getvalue(), nl=False)
+            raise
+        except click.Abort:
+            raise
+        except Exception as error:
+            if json_output:
+                normalized = normalize_error(error)
+                echo_json(
+                    {"error": str(error), "exit_code": normalized.exit_code}, err=True
+                )
+                raise click.exceptions.Exit(normalized.exit_code) from error
+            fail(error)
+
+
+def _structured_result(result, recorder):
+    if result is not None or recorder is None:
         return result
+    return recorder.results[0] if len(recorder.results) == 1 else recorder.results
 
 
 def pass_async_context(f):
@@ -42,97 +81,67 @@ def pass_async_context(f):
     return wrapper
 
 
-async def monitor_task(  # noqa: C901
+async def monitor_task(
     client, task_id: str, success_message: str, failure_message: str
 ):
-    """Polls the status of a background task until it completes."""
+    """Watch task updates with WebSockets, then use the shared REST fallback."""
     click.echo("Task started in the background. Monitoring for completion...")
-
-    # Try WebSocket first
     try:
-        ws_client = await client.websocket_connect()
-        async with ws_client:
-            # No subscription needed for task updates as per documentation
-            async for msg in ws_client.listen():
-                # Expected format: {"type": "task_update", "topic": "task:{task_id}", "data": {...}}
-                if (
-                    msg.get("topic") == f"task:{task_id}"
-                    and msg.get("type") == "task_update"
-                ):
-                    data = msg.get("data", {})
-                    status = data.get("status")
-                    message = data.get("message", "No message provided.")
+        if await _watch_with_refresh(client, task_id, success_message, failure_message):
+            return
+    except OperationFailedError:
+        raise
+    except Exception as error:
+        click.secho(
+            f"WebSocket monitoring failed ({error}), falling back to polling...",
+            fg="yellow",
+        )
+    while True:
+        data = await client.async_get_task_status(task_id)
+        if _task_finished(data, success_message, failure_message):
+            return
+        await asyncio.sleep(2)
 
-                    if status == "success":
-                        click.secho(f"{success_message}: {message}", fg="green")
-                        return
-                    elif status == "error":
-                        click.secho(f"{failure_message}: {message}", fg="red")
-                        return
-                    elif status == "in_progress":
-                        # Maybe print progress if available, or just wait
-                        pass
+
+async def _watch_with_refresh(client, task_id, success_message, failure_message):
+    try:
+        return await _watch_task(client, task_id, success_message, failure_message)
     except AuthError:
         click.secho(
             "WebSocket authentication failed. Attempting to refresh token...",
             fg="yellow",
         )
-        try:
-            await client.authenticate()
-            # Retry WebSocket once
-            ws_client = await client.websocket_connect()
-            async with ws_client:
-                async for msg in ws_client.listen():
-                    if (
-                        msg.get("topic") == f"task:{task_id}"
-                        and msg.get("type") == "task_update"
-                    ):
-                        data = msg.get("data", {})
-                        status = data.get("status")
-                        message = data.get("message", "No message provided.")
+        await client.authenticate()
+        return await _watch_task(client, task_id, success_message, failure_message)
 
-                        if status == "success":
-                            click.secho(f"{success_message}: {message}", fg="green")
-                            return
-                        elif status == "error":
-                            click.secho(f"{failure_message}: {message}", fg="red")
-                            return
-                        elif status == "in_progress":
-                            pass
-        except Exception as e:
-            click.secho(
-                f"WebSocket retry failed ({e}), falling back to polling...", fg="yellow"
-            )
-    except Exception as e:
-        click.secho(
-            f"WebSocket monitoring failed ({e}), falling back to polling...",
-            fg="yellow",
-        )
 
-    # Fallback to polling
-    while True:
-        try:
-            status_response = await client.async_get_task_status(task_id)
-            status = status_response.get("status")
-            message = status_response.get("message", "No message provided.")
+async def _watch_task(client, task_id, success_message, failure_message):
+    ws_client = await client.websocket_connect()
+    async with ws_client:
+        async for message in ws_client.listen():
+            if (
+                message.get("topic") == f"task:{task_id}"
+                and message.get("type") == "task_update"
+            ):
+                if _task_finished(
+                    message.get("data", {}), success_message, failure_message
+                ):
+                    return True
+    return False
 
-            if status == "success":
-                click.secho(f"{success_message}: {message}", fg="green")
-                break
-            elif status == "error":
-                click.secho(
-                    f"{failure_message}: {message}",
-                    fg="red",
-                )
-                break
-            elif status == "pending" or status == "in_progress":
-                # Still waiting, continue loop
-                pass
-            else:
-                # Handle unexpected status
-                click.secho(f"Unknown task status received: {status}", fg="yellow")
 
-            await asyncio.sleep(2)
-        except Exception as e:
-            click.secho(f"An error occurred while monitoring task: {e}", fg="red")
-            await asyncio.sleep(2)  # Retry polling on error
+def _task_finished(data, success_message, failure_message):
+    status = data.get("status")
+    message = data.get("message", "No message provided.")
+    result = data.get("result")
+    failed_result = isinstance(result, dict) and result.get("status") in {
+        "error",
+        "failed",
+    }
+    if status in {"error", "failed"} or failed_result:
+        detail = result.get("message", message) if failed_result else message
+        raise OperationFailedError(f"{failure_message}: {detail}", response_data=data)
+    if status == "success":
+        click.secho(f"{success_message}: {message}", fg="green")
+        return True
+    return False

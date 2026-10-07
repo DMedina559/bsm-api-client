@@ -1,4 +1,5 @@
 import click
+from bsm_cli.output import fail, get_client
 
 
 @click.group()
@@ -11,10 +12,7 @@ def player():
 @click.pass_context
 async def scan_for_players(ctx):
     """Scans all server logs to discover player gamertags and XUIDs."""
-    client = ctx.obj.get("client")
-    if not client:
-        click.secho("You are not logged in.", fg="red")
-        return
+    client = get_client(ctx)
 
     try:
         click.echo("Scanning all server logs for player data...")
@@ -24,7 +22,7 @@ async def scan_for_players(ctx):
         else:
             click.secho(f"Failed to scan for players: {response.message}", fg="red")
     except Exception as e:
-        click.secho(f"An error occurred during scan: {e}", fg="red")
+        fail(e)
 
 
 @player.command("add")
@@ -39,10 +37,7 @@ async def scan_for_players(ctx):
 @click.pass_context
 async def add_players(ctx, players):
     """Manually adds or updates player entries in the central player database."""
-    client = ctx.obj.get("client")
-    if not client:
-        click.secho("You are not logged in.", fg="red")
-        return
+    client = get_client(ctx)
 
     try:
         from bsm_api_client.models import AddPlayersPayload
@@ -56,4 +51,4 @@ async def add_players(ctx, players):
         else:
             click.secho(f"Failed to add players: {response.message}", fg="red")
     except Exception as e:
-        click.secho(f"An error occurred while adding players: {e}", fg="red")
+        fail(e)

@@ -1,5 +1,7 @@
 import click
 import questionary
+from bsm_cli.completion import complete_server
+from bsm_cli.output import fail, get_client
 
 from bsm_api_client.models import PermissionsSetPayload, PlayerPermissionPayload
 
@@ -17,6 +19,7 @@ def permissions():
     "server_name",
     required=True,
     help="The name of the target server.",
+    shell_complete=complete_server,
 )
 @click.option(
     "-p",
@@ -33,10 +36,7 @@ def permissions():
 @click.pass_context
 async def set_perm(ctx, server_name: str, player_name: str, level: str):
     """Sets a permission level for a player on a specific server."""
-    client = ctx.obj.get("client")
-    if not client:
-        click.secho("You are not logged in.", fg="red")
-        return
+    client = get_client(ctx)
 
     try:
         if not player_name or not level:
@@ -85,20 +85,22 @@ async def set_perm(ctx, server_name: str, player_name: str, level: str):
             click.secho(f"Failed to set permission: {response.message}", fg="red")
 
     except Exception as e:
-        click.secho(f"An error occurred: {e}", fg="red")
+        fail(e)
 
 
 @permissions.command("list")
 @click.option(
-    "-s", "--server", "server_name", required=True, help="The name of the server."
+    "-s",
+    "--server",
+    "server_name",
+    required=True,
+    help="The name of the server.",
+    shell_complete=complete_server,
 )
 @click.pass_context
 async def list_perms(ctx, server_name: str):
     """Lists all configured player permissions for a specific server."""
-    client = ctx.obj.get("client")
-    if not client:
-        click.secho("You are not logged in.", fg="red")
-        return
+    client = get_client(ctx)
 
     response = await client.async_get_server_permissions_data(server_name)
 

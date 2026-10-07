@@ -1,5 +1,7 @@
 import click
 import questionary
+from bsm_cli.completion import complete_server
+from bsm_cli.output import get_client
 
 from bsm_api_client.models import BanAddRequest, BanRemoveRequest
 
@@ -17,14 +19,12 @@ def bans():
     "server_name",
     required=True,
     help="Name of the server.",
+    shell_complete=complete_server,
 )
 @click.pass_context
 async def list_bans(ctx, server_name: str):
     """Lists all players on the server's ban list."""
-    client = ctx.obj.get("client")
-    if not client:
-        click.secho("You are not logged in.", fg="red")
-        return
+    client = get_client(ctx)
 
     click.echo(f"Fetching ban list for server '{server_name}'...")
     response = await client.async_get_server_bans(server_name)
@@ -53,14 +53,12 @@ async def list_bans(ctx, server_name: str):
     "server_name",
     required=True,
     help="Name of the server.",
+    shell_complete=complete_server,
 )
 @click.pass_context
 async def add_ban(ctx, server_name: str):
     """Adds a player to the server ban list interactively."""
-    client = ctx.obj.get("client")
-    if not client:
-        click.secho("You are not logged in.", fg="red")
-        return
+    client = get_client(ctx)
 
     await interactive_ban_workflow(client, server_name)
 
@@ -72,14 +70,12 @@ async def add_ban(ctx, server_name: str):
     "server_name",
     required=True,
     help="Name of the server.",
+    shell_complete=complete_server,
 )
 @click.pass_context
 async def remove_ban(ctx, server_name: str):
     """Removes a player from the server ban list interactively."""
-    client = ctx.obj.get("client")
-    if not client:
-        click.secho("You are not logged in.", fg="red")
-        return
+    client = get_client(ctx)
 
     response = await client.async_get_server_bans(server_name)
     if response.get("status") != "success":

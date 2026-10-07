@@ -1,5 +1,7 @@
 import click
 import questionary
+from bsm_cli.completion import complete_server
+from bsm_cli.output import fail, get_client
 
 from bsm_api_client.models import AllowlistAddPayload, AllowlistRemovePayload
 
@@ -12,7 +14,12 @@ def allowlist():
 
 @allowlist.command("add")
 @click.option(
-    "-s", "--server", "server_name", required=True, help="The name of the server."
+    "-s",
+    "--server",
+    "server_name",
+    required=True,
+    help="The name of the server.",
+    shell_complete=complete_server,
 )
 @click.option(
     "-p",
@@ -29,10 +36,7 @@ def allowlist():
 @click.pass_context
 async def add(ctx, server_name: str, players: tuple[str], ignore_limit: bool):
     """Adds one or more players to a server's allowlist."""
-    client = ctx.obj.get("client")
-    if not client:
-        click.secho("You are not logged in.", fg="red")
-        return
+    client = get_client(ctx)
 
     try:
         if not players:
@@ -55,12 +59,17 @@ async def add(ctx, server_name: str, players: tuple[str], ignore_limit: bool):
         )
 
     except Exception as e:
-        click.secho(f"\nAn error occurred: {e}", fg="red")
+        fail(e)
 
 
 @allowlist.command("remove")
 @click.option(
-    "-s", "--server", "server_name", required=True, help="The name of the server."
+    "-s",
+    "--server",
+    "server_name",
+    required=True,
+    help="The name of the server.",
+    shell_complete=complete_server,
 )
 @click.option(
     "-p",
@@ -73,10 +82,7 @@ async def add(ctx, server_name: str, players: tuple[str], ignore_limit: bool):
 @click.pass_context
 async def remove(ctx, server_name: str, players: tuple[str]):
     """Removes one or more players from a server's allowlist."""
-    client = ctx.obj.get("client")
-    if not client:
-        click.secho("You are not logged in.", fg="red")
-        return
+    client = get_client(ctx)
 
     player_list = list(players)
     click.echo(
@@ -115,15 +121,17 @@ async def remove(ctx, server_name: str, players: tuple[str]):
 
 @allowlist.command("list")
 @click.option(
-    "-s", "--server", "server_name", required=True, help="The name of the server."
+    "-s",
+    "--server",
+    "server_name",
+    required=True,
+    help="The name of the server.",
+    shell_complete=complete_server,
 )
 @click.pass_context
 async def list_players(ctx, server_name: str):
     """Lists all players currently on a server's allowlist."""
-    client = ctx.obj.get("client")
-    if not client:
-        click.secho("You are not logged in.", fg="red")
-        return
+    client = get_client(ctx)
 
     response = await client.async_get_server_allowlist(server_name)
 

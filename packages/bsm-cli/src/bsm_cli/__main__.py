@@ -13,6 +13,7 @@ from contextlib import asynccontextmanager
 from bsm_cli.account import account
 from bsm_cli.addon import addon
 from bsm_cli.allowlist import allowlist
+from bsm_cli.api import api, register_plugin_commands
 from bsm_cli.auth import auth
 from bsm_cli.backup import backup
 from bsm_cli.bans import bans
@@ -33,17 +34,24 @@ from bsm_api_client import BedrockServerManagerApi
 
 
 @click.group(cls=AsyncGroup, invoke_without_command=True)
+@click.option(
+    "--json", "json_output", is_flag=True, help="Print deterministic JSON responses."
+)
 @click.pass_context
-def cli(ctx):
+def cli(ctx, json_output):
     """A CLI for managing Bedrock servers."""
     ctx.obj["cli"] = cli
+    ctx.obj["json_output"] = json_output
     if ctx.invoked_subcommand is None:
+        if json_output:
+            raise click.UsageError("Choose a command with --json.")
         return main_menu(ctx)
 
 
 @cli.context
 @asynccontextmanager
 async def cli_context(ctx):
+    ctx.obj["json_output"] = ctx.params.get("json_output", False)
     config = Config()
     ctx.obj["config"] = config
 
@@ -51,11 +59,13 @@ async def cli_context(ctx):
         client = BedrockServerManagerApi(
             base_url=config.base_url,
             jwt_token=config.jwt_token,
+            username=config.username,
+            password=config.password,
             verify_ssl=config.verify_ssl,
         )
     except ValueError as e:
         # Ignore AuthError when logging out or auth group is called
-        if ctx.invoked_subcommand == auth or ctx.invoked_subcommand is None:
+        if not config.jwt_token and not (config.username and config.password):
             client = None
         else:
             raise e
@@ -68,6 +78,8 @@ async def cli_context(ctx):
             await ctx.obj["client"].close()
 
 
+cli.add_command(api)
+register_plugin_commands(plugin)
 cli.add_command(auth)
 cli.add_command(server)
 cli.add_command(addon)

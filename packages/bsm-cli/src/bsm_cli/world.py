@@ -2,7 +2,9 @@ import os
 
 import click
 import questionary
+from bsm_cli.completion import complete_server
 from bsm_cli.decorators import monitor_task, pass_async_context
+from bsm_cli.output import fail, get_client
 
 from bsm_api_client.models import FileNamePayload
 
@@ -15,7 +17,12 @@ def world():
 
 @world.command("install")
 @click.option(
-    "-s", "--server", "server_name", required=True, help="Name of the target server."
+    "-s",
+    "--server",
+    "server_name",
+    required=True,
+    help="Name of the target server.",
+    shell_complete=complete_server,
 )
 @click.option(
     "-f",
@@ -27,10 +34,7 @@ def world():
 @pass_async_context
 async def install_world(ctx, server_name: str, world_file_path: str):
     """Installs a world from a .mcworld file, replacing the server's current world."""
-    client = ctx.obj.get("client")
-    if not client:
-        click.secho("You are not logged in.", fg="red")
-        return
+    client = get_client(ctx)
 
     try:
         selected_file = world_file_path
@@ -88,7 +92,7 @@ async def install_world(ctx, server_name: str, world_file_path: str):
             click.secho(f"Failed to install world: {response.message}", fg="red")
 
     except Exception as e:
-        click.secho(f"An error occurred: {e}", fg="red")
+        fail(e)
 
 
 @world.command("export")
@@ -98,14 +102,12 @@ async def install_world(ctx, server_name: str, world_file_path: str):
     "server_name",
     required=True,
     help="Name of the server whose world to export.",
+    shell_complete=complete_server,
 )
 @pass_async_context
 async def export_world(ctx, server_name: str):
     """Exports the server's current active world to a .mcworld file."""
-    client = ctx.obj.get("client")
-    if not client:
-        click.secho("You are not logged in.", fg="red")
-        return
+    client = get_client(ctx)
 
     click.echo(f"Attempting to export world for server '{server_name}'...")
     try:
@@ -122,7 +124,7 @@ async def export_world(ctx, server_name: str):
         else:
             click.secho(f"Failed to export world: {response.message}", fg="red")
     except Exception as e:
-        click.secho(f"An error occurred during export: {e}", fg="red")
+        fail(e)
 
 
 @world.command("reset")
@@ -132,15 +134,13 @@ async def export_world(ctx, server_name: str):
     "server_name",
     required=True,
     help="Name of the server whose world to reset.",
+    shell_complete=complete_server,
 )
 @click.option("-y", "--yes", is_flag=True, help="Bypass the confirmation prompt.")
 @pass_async_context
 async def reset_world(ctx, server_name: str, yes: bool):
     """Deletes the current active world data for a server."""
-    client = ctx.obj.get("client")
-    if not client:
-        click.secho("You are not logged in.", fg="red")
-        return
+    client = get_client(ctx)
 
     if not yes:
         click.secho(
@@ -168,4 +168,4 @@ async def reset_world(ctx, server_name: str, yes: bool):
         else:
             click.secho(f"Failed to reset world: {response.message}", fg="red")
     except Exception as e:
-        click.secho(f"An error occurred during reset: {e}", fg="red")
+        fail(e)
