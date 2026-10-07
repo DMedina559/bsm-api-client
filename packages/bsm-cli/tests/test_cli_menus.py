@@ -4,7 +4,6 @@ from unittest.mock import AsyncMock
 
 import click
 import pytest
-
 from bsm_cli.menu_registry import command_menu
 
 

@@ -5,7 +5,6 @@ import json
 
 import click
 import questionary
-
 from bsm_cli.api import invoke
 from bsm_cli.output import get_client
 

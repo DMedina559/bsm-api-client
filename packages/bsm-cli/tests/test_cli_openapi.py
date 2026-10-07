@@ -4,6 +4,12 @@ import json
 from unittest.mock import AsyncMock
 
 import pytest
+from bsm_cli.__main__ import cli
+from bsm_cli.completion import complete_operation, complete_parameter, complete_plugin
+from bsm_cli.config import Config
+from bsm_cli.output import normalize_error
+from click.testing import CliRunner
+
 from bsm_api_client.dynamic import DynamicOpenAPIMixin
 from bsm_api_client.exceptions import (
     AuthError,
@@ -11,12 +17,6 @@ from bsm_api_client.exceptions import (
     InvalidInputError,
     NotFoundError,
 )
-from click.testing import CliRunner
-
-from bsm_cli.__main__ import cli
-from bsm_cli.completion import complete_operation, complete_parameter, complete_plugin
-from bsm_cli.config import Config
-from bsm_cli.output import normalize_error
 
 SCHEMA = {
     "openapi": "3.1.0",
@@ -104,7 +104,6 @@ async def test_registry_menu_accepts_optional_body_and_missing_defaults(
     client, monkeypatch
 ):
     import click
-
     from bsm_cli.api import api
     from bsm_cli.menu_registry import command_menu
 
@@ -257,7 +256,6 @@ def test_completion_uses_cache_without_discovering(client):
 
 def test_server_completion_ignores_another_servers_cache(client):
     import click
-
     from bsm_cli.completion import complete_server
 
     config = FakeConfig()
@@ -306,7 +304,6 @@ def test_refresh_after_login_clears_cache(client, monkeypatch, cache):
 @pytest.mark.parametrize("cache", [None, [], "invalid", {"names": None}])
 def test_completion_handles_cleared_caches(client, cache):
     import click
-
     from bsm_cli.completion import complete_server
 
     config = FakeConfig()

@@ -2,7 +2,6 @@
 """CLI commands for account management."""
 
 import click
-
 from bsm_cli.decorators import pass_async_context
 from bsm_cli.output import get_client
 

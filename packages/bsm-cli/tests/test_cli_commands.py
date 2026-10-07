@@ -6,11 +6,11 @@ from unittest.mock import AsyncMock
 import click
 import httpx
 import pytest
-from bsm_api_client import BedrockServerManagerApi
-from click.testing import CliRunner
-
 from bsm_cli.__main__ import cli
 from bsm_cli.config import Config
+from click.testing import CliRunner
+
+from bsm_api_client import BedrockServerManagerApi
 
 SUCCESS = {
     "status": "success",

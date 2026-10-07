@@ -6,6 +6,7 @@ import json
 from typing import Any
 
 import click
+
 from bsm_api_client.exceptions import (
     AuthError,
     CannotConnectError,

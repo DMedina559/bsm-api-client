@@ -2,9 +2,9 @@ import json
 
 import click
 import questionary
-from bsm_api_client.models import PluginStatusSetPayload, TriggerEventPayload
-
 from bsm_cli.output import fail, get_client
+
+from bsm_api_client.models import PluginStatusSetPayload, TriggerEventPayload
 
 
 def _print_plugin_table(plugins):

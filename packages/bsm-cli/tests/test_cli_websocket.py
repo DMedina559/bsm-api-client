@@ -2,10 +2,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import click
 import pytest
-from bsm_api_client.websocket_client import WebSocketClient
-
 from bsm_cli.decorators import monitor_task
 from bsm_cli.server import list_servers
+
+from bsm_api_client.websocket_client import WebSocketClient
 
 
 @pytest.mark.parametrize("status", ["completed", "success"])
@@ -17,9 +17,9 @@ def test_typed_task_completion(status):
 
 @pytest.mark.parametrize("status", ["failed", "cancelled"])
 def test_typed_task_failure(status):
-    from bsm_api_client.exceptions import OperationFailedError
-
     from bsm_cli.decorators import _task_finished
+
+    from bsm_api_client.exceptions import OperationFailedError
 
     with pytest.raises(OperationFailedError, match="Server failed") as error:
         _task_finished(
