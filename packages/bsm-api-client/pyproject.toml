@@ -39,7 +39,7 @@ dev = [
     "flake8 >=7.3.0,<7.4",
     "isort >=5.13.0,<8.1",
     "mypy >=1.10.0,<2.2",
-    "bedrock-server-manager >=4.0.0b4,<4.1.0",
+    "bedrock-server-manager @ git+https://github.com/DMedina559/bedrock-server-manager.git@c9eea1c14cc4ef2ff0d01ead801ec691edb7552d",
     "openapi-python-client >=0.29.1,<0.30",
     "pre-commit >=4.6.0,<4.7",
 ]
@@ -53,11 +53,15 @@ dev = [
 where = ["src"]
 include = ["bsm_api_client*"]
 
+[tool.setuptools.package-data]
+bsm_api_client = ["generated/*.json"]
+
 [tool.setuptools_scm]
 root = "../.."
 local_scheme = "no-local-version"
 
 [tool.black]
+target-version = ["py311"]
 
 [tool.isort]
 profile = "black"

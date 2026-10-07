@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import ast
 import json
 import subprocess
 import sys
@@ -71,6 +72,53 @@ def generate(schema: dict[str, Any], output: Path) -> None:
         if output.exists():
             shutil.rmtree(output)
         shutil.copytree(package, output)
+        shutil.copyfile(schema_path, output / "openapi.json")
+        registry = {}
+        for module in output.glob("api/*/*.py"):
+            if module.name == "__init__.py":
+                continue
+            tree = ast.parse(module.read_text(encoding="utf-8"))
+            builder = next(
+                node
+                for node in tree.body
+                if isinstance(node, ast.FunctionDef) and node.name == "_get_kwargs"
+            )
+            for node in ast.walk(builder):
+                if not isinstance(node, ast.Dict):
+                    continue
+                entries = {
+                    key.value: value
+                    for key, value in zip(node.keys, node.values)
+                    if isinstance(key, ast.Constant)
+                }
+                if "method" not in entries or "url" not in entries:
+                    continue
+                method = ast.literal_eval(entries["method"])
+                url = entries["url"]
+                path = ast.literal_eval(
+                    url.func.value
+                    if isinstance(url, ast.Call) and isinstance(url.func, ast.Attribute)
+                    else url
+                )
+                operation_id = schema["paths"][path][method]["operationId"]
+                registry[operation_id] = ".".join(
+                    module.relative_to(output).with_suffix("").parts
+                )
+        expected = {
+            details["operationId"]
+            for item in schema["paths"].values()
+            for method, details in item.items()
+            if method
+            in {"get", "post", "put", "delete", "patch", "head", "options", "trace"}
+            and "operationId" in details
+        }
+        if expected != registry.keys():
+            raise RuntimeError(
+                f"Generator omitted operations: {sorted(expected - registry.keys())}"
+            )
+        (output / "operations.json").write_text(
+            json.dumps(registry, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+        )
 
 
 def main() -> None:
