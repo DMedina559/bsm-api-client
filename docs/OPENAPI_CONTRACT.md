@@ -2,7 +2,7 @@
 
 The server owns operation IDs, tags, URLs, security declarations, and schemas.
 Clients preserve them rather than renaming the contract during generation.
-The BSM dev revision targeted by this client already sets explicit operation IDs.
+The BSM typed-contract revision targeted by this client already sets explicit operation IDs.
 
 ## Server and plugin conventions
 

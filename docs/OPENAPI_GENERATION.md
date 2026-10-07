@@ -1,7 +1,7 @@
 # Generated REST client
 
 BSM's installed FastAPI application is the source of truth. This branch targets
-BSM `dev` at `c9eea1c14cc4ef2ff0d01ead801ec691edb7552d`, which supplies explicit
+BSM `refactor!/move-api-to-pydantic` at `6dd7cb83f5e3b8d7fc4a1a1a73237464b2c1bcbf`, which supplies explicit
 operation IDs such as `start_server`, `list_servers`, and `create_backup`.
 Both development extras and the release workflow pin that revision. Update the
 pins together when adopting another BSM revision.
@@ -74,3 +74,19 @@ BSM dev currently has no content-upload route. `async_upload_content()` requires
 an advertised `upload_content` operation; otherwise it raises `NotFoundError`.
 Use `async_call_operation(..., files={"file": ("name.txt", data, "text/plain")})`
 for any advertised multipart operation. WebSockets remain separately managed.
+
+## Typed backend contract
+
+This build targets `refactor!/move-api-to-pydantic` at the revision above.
+Lifecycle methods return `StartServerResponse`, `StopServerResponse`, and
+`RestartServerResponse`, preserving `server_name` and idempotent `outcome`.
+Background submissions use `accepted`; snapshots use `queued`, `running`,
+`completed`, `failed`, or `cancelled`. CLI monitoring recognizes these states
+and reads structured task errors. Legacy task state names remain accepted by
+monitoring for compatibility.
+
+`async_get_task_status()` retains its dictionary interface. Use
+`async_get_task_snapshot()` and `async_list_tasks()` for typed `TaskSnapshot`
+models. HTTP failures preserve the complete error envelope and expose
+`api_code`, `api_message`, and `api_details` on exceptions. The client does not
+import or require the backend package at runtime.
