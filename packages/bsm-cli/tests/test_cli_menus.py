@@ -1,5 +1,6 @@
 """Registry prompts preserve values, conceal passwords, and support cancellation."""
 
+from copy import copy
 from unittest.mock import AsyncMock
 
 import click
@@ -77,3 +78,47 @@ async def test_registry_password_confirmation(monkeypatch, confirmation):
         called.assert_awaited_once_with("secret")
     else:
         called.assert_not_awaited()
+
+
+def optional_commands():
+    from bsm_cli.__main__ import cli
+
+    def walk(group, path=()):
+        for name, command in group.commands.items():
+            if isinstance(command, click.Group):
+                yield from walk(command, (*path, name))
+            elif any(not param.required for param in command.params):
+                yield (*path, name), command
+
+    return list(walk(cli))
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "path,original", optional_commands(), ids=lambda value: str(value)
+)
+async def test_blank_menu_options_match_command_line_defaults(
+    monkeypatch, path, original
+):
+    """Cover optional parameters from every registered CLI command."""
+    params = [copy(param) for param in original.params if not param.required]
+    for param in params:
+        if isinstance(param, click.Option):
+            param.prompt = None
+    received = []
+    command = click.Command(
+        "command", params=params, callback=lambda **kw: received.append(kw)
+    )
+    group = click.Group("group", commands={"command": command})
+    with command.make_context("command", []) as parsed:
+        expected = dict(parsed.params)
+    monkeypatch.setattr(
+        "bsm_cli.menu_registry.questionary.select", lambda *a, **k: Answer("command")
+    )
+    for prompt in ("text", "password"):
+        monkeypatch.setattr(
+            f"bsm_cli.menu_registry.questionary.{prompt}", lambda *a, **k: Answer("")
+        )
+    with click.Context(group) as ctx:
+        await command_menu(ctx, group)
+    assert received == [expected], path

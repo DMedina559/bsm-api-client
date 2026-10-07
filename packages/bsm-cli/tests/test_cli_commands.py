@@ -321,3 +321,34 @@ def test_cancelled_allowlist_confirmation_does_not_add(command_client, monkeypat
     result = CliRunner().invoke(cli, ["allowlist", "add", "-s", "test"])
     assert result.exit_code == 0, result.output
     assert command_client[0]._dynamic_request.await_count == 1
+
+
+@pytest.mark.asyncio
+async def test_registry_blank_property_name(command_client, monkeypatch, capsys):
+    from bsm_cli.menu_registry import command_menu
+
+    class Answer:
+        def __init__(self, value):
+            self.value = value
+
+        async def ask_async(self):
+            return self.value
+
+    # Initialize the real facade used by the command smoke tests.
+    client = BedrockServerManagerApi(
+        base_url="http://localhost", jwt_token="test-token"
+    )
+    client._dynamic_request = AsyncMock(return_value=httpx.Response(200, json=SUCCESS))
+    answers = iter(["test", ""])
+    monkeypatch.setattr(
+        "bsm_cli.menu_registry.questionary.select", lambda *a, **k: Answer("get")
+    )
+    monkeypatch.setattr(
+        "bsm_cli.menu_registry.questionary.text", lambda *a, **k: Answer(next(answers))
+    )
+    try:
+        with click.Context(cli, obj={"client": client}) as ctx:
+            await command_menu(ctx, cli.commands["properties"])
+        assert "server-name = Test Server" in capsys.readouterr().out
+    finally:
+        await client.close()
