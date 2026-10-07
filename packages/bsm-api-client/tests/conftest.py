@@ -153,14 +153,14 @@ async def bedrock_server(server):
                 status_response = await client.async_get_task_status(
                     install_result.task_id
                 )
-                if status_response["status"] == "success":
+                if status_response["status"] in {"success", "completed"}:
                     result = status_response.get("result") or {}
                     if isinstance(result, dict) and result.get("status") == "error":
                         pytest.fail(
                             f"Installation task failed: {result.get('message')}"
                         )
                     break
-                elif status_response["status"] == "error":
+                elif status_response["status"] in {"error", "failed", "cancelled"}:
                     pytest.fail(
                         f"Installation task failed: {status_response['message']}"
                     )
@@ -194,7 +194,7 @@ async def bedrock_server(server):
                         )
 
                 delete_result = await client.async_delete_server(server_name)
-                assert delete_result.status in ["pending", "success"]
+                assert delete_result.status in ["pending", "success", "accepted"]
 
                 for _ in range(10):
                     await asyncio.sleep(1)

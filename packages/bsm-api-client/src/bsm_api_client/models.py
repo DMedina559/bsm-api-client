@@ -4,7 +4,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import (
     AwareDatetime,
@@ -22,6 +22,38 @@ class ActionResponse(BaseModel):
     task_id: str | None = Field(None, title="Task Id")
     registration_url: str | None = Field(None, title="Registration Url")
     backups: Any = Field(None, title="Backups")
+
+
+class StartServerResponse(ActionResponse):
+    status: Literal["success"] = "success"
+    server_name: str
+    outcome: Literal["started", "already_running"]
+
+
+class StopServerResponse(ActionResponse):
+    status: Literal["success"] = "success"
+    server_name: str
+    outcome: Literal["stopped", "already_stopped"]
+
+
+class RestartServerResponse(ActionResponse):
+    status: Literal["success"] = "success"
+    server_name: str
+    outcome: Literal["restarted", "started"]
+
+
+class APIErrorResponse(BaseModel):
+    code: str
+    message: str
+    details: dict[str, Any] = Field(default_factory=dict)
+
+
+class TaskSnapshot(BaseModel):
+    id: str
+    status: Literal["queued", "running", "completed", "failed", "cancelled"]
+    message: str
+    result: Any = None
+    error: APIErrorResponse | None = None
 
 
 class AddPlayersPayload(BaseModel):
@@ -294,6 +326,7 @@ class ProfileUpdatePayload(BaseModel):
 
 
 class PropertiesGetResponse(BaseModel):
+    raw_content: str | None = None
     status: str = Field(..., title="Status")
     message: str | None = Field(None, title="Message")
     properties: dict[str, Any] = Field(..., title="Properties")

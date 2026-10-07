@@ -23,6 +23,7 @@ from ..models import (
     PruneDownloadsResponse,
     SettingItemResponse,
     SettingsResponse,
+    TaskSnapshot,
     ThemeListResponse,
 )
 
@@ -216,3 +217,12 @@ class ManagerMethodsMixin(GeneratedOperationMethods):
             "get_task_status", parameters={"task_id": task_id}, authenticated=True
         )
         return dict(result)
+
+    async def async_get_task_snapshot(self, task_id: str) -> TaskSnapshot:
+        """Return the typed task snapshot from the version-2 backend contract."""
+        return TaskSnapshot.model_validate(await self.async_get_task_status(task_id))
+
+    async def async_list_tasks(self) -> list[TaskSnapshot]:
+        """List typed task snapshots visible to the authenticated user."""
+        result = await self.async_call_generated("list_tasks", authenticated=True)
+        return [TaskSnapshot.model_validate(item) for item in result]

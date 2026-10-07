@@ -222,6 +222,10 @@ def serialize_query(
 ) -> dict[str, Any]:
     """Serialize OpenAPI form query arrays/objects, including explode defaults."""
     result = dict(values)
+
+    def scalar(value):
+        return str(value).lower() if isinstance(value, bool) else str(value)
+
     for parameter in parameters:
         name = parameter["name"]
         if parameter["in"] != "query" or name not in result:
@@ -244,8 +248,35 @@ def serialize_query(
                     result[str(key)] = item
             else:
                 result[name] = ",".join(
-                    str(item) for pair in value.items() for item in pair
+                    scalar(item) for pair in value.items() for item in pair
                 )
         elif isinstance(value, (list, tuple)) and not explode:
-            result[name] = ",".join(str(item) for item in value)
+            result[name] = ",".join(scalar(item) for item in value)
+    return result
+
+
+def serialize_headers(
+    parameters: tuple[dict[str, Any], ...], values: Mapping[str, Any]
+) -> dict[str, str]:
+    """Serialize OpenAPI simple header values before handing them to HTTP."""
+
+    def scalar(value):
+        return str(value).lower() if isinstance(value, bool) else str(value)
+
+    result = {key: scalar(value) for key, value in values.items()}
+    for parameter in parameters:
+        name = parameter["name"]
+        if parameter["in"] != "header" or name not in values:
+            continue
+        if parameter.get("style", "simple") != "simple":
+            raise InvalidInputError(f"Unsupported header style for {name}.")
+        value = values[name]
+        if isinstance(value, Mapping):
+            result[name] = (
+                ",".join(f"{key}={scalar(item)}" for key, item in value.items())
+                if parameter.get("explode", False)
+                else ",".join(scalar(item) for pair in value.items() for item in pair)
+            )
+        elif isinstance(value, (list, tuple)):
+            result[name] = ",".join(scalar(item) for item in value)
     return result

@@ -21,6 +21,9 @@ from ..models import (
     PermissionsSetPayload,
     PermissionsUpdateResponse,
     PropertiesPayload,
+    RestartServerResponse,
+    StartServerResponse,
+    StopServerResponse,
 )
 
 _LOGGER = logging.getLogger(__name__.split(".")[0] + ".client.server_actions")
@@ -49,12 +52,12 @@ ALLOWED_SERVER_PROPERTIES_TO_UPDATE = [
 class ServerActionMethodsMixin(GeneratedOperationMethods):
     """Mixin for server action endpoints."""
 
-    async def async_start_server(self, server_name: str) -> ActionResponse:
+    async def async_start_server(self, server_name: str) -> StartServerResponse:
         """Starts the specified Bedrock server instance.
 
         :param server_name: The unique name of the server instance to start.
 
-        :returns: An `ActionResponse` object confirming the action.
+        :returns: An `StartServerResponse` object confirming the action.
 
 
         .. rubric:: Example:
@@ -66,14 +69,14 @@ class ServerActionMethodsMixin(GeneratedOperationMethods):
         response = await self.async_call_generated(
             "start_server", parameters={"server_name": server_name}, authenticated=True
         )
-        return cast(ActionResponse, ActionResponse.model_validate(response))
+        return cast(StartServerResponse, StartServerResponse.model_validate(response))
 
-    async def async_stop_server(self, server_name: str) -> ActionResponse:
+    async def async_stop_server(self, server_name: str) -> StopServerResponse:
         """Stops the specified running Bedrock server instance.
 
         :param server_name: The unique name of the server instance to stop.
 
-        :returns: An `ActionResponse` object confirming the action.
+        :returns: An `StopServerResponse` object confirming the action.
 
 
         .. rubric:: Example:
@@ -85,14 +88,14 @@ class ServerActionMethodsMixin(GeneratedOperationMethods):
         response = await self.async_call_generated(
             "stop_server", parameters={"server_name": server_name}, authenticated=True
         )
-        return cast(ActionResponse, ActionResponse.model_validate(response))
+        return cast(StopServerResponse, StopServerResponse.model_validate(response))
 
-    async def async_restart_server(self, server_name: str) -> ActionResponse:
+    async def async_restart_server(self, server_name: str) -> RestartServerResponse:
         """Restarts the specified Bedrock server instance.
 
         :param server_name: The unique name of the server instance to restart.
 
-        :returns: An `ActionResponse` object confirming the action.
+        :returns: An `RestartServerResponse` object confirming the action.
 
 
         .. rubric:: Example:
@@ -106,7 +109,9 @@ class ServerActionMethodsMixin(GeneratedOperationMethods):
             parameters={"server_name": server_name},
             authenticated=True,
         )
-        return cast(ActionResponse, ActionResponse.model_validate(response))
+        return cast(
+            RestartServerResponse, RestartServerResponse.model_validate(response)
+        )
 
     async def async_send_server_command(
         self, server_name: str, command: CommandPayload

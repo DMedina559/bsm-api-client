@@ -25,6 +25,7 @@ from .openapi import (
     diff_schemas,
     generated_schema,
     index_operations,
+    serialize_headers,
     serialize_query,
 )
 
@@ -170,7 +171,11 @@ class DynamicOpenAPIMixin(GeneratedOperationMethods):
         if json_data is not None and (form_data is not None or files):
             raise InvalidInputError("Choose either JSON or form data.")
         path = self._render_path(operation.path, path_params or {})
+        if path.startswith("/api/"):
+            path = self._api_base_segment + path[4:]
         query = serialize_query(operation.parameters, query or {})
+        if headers is not None:
+            headers = serialize_headers(operation.parameters, headers)
         if files:
             request = httpx.Request(
                 operation.method,
@@ -252,7 +257,12 @@ class DynamicOpenAPIMixin(GeneratedOperationMethods):
             request_headers.update(raw_request.headers)
             request_headers.pop("host", None)
         if headers:
-            request_headers.update(headers)
+            request_headers.update(
+                {
+                    key: str(value).lower() if isinstance(value, bool) else str(value)
+                    for key, value in headers.items()
+                }
+            )
         if authenticated and not self._jwt_token:
             await self._ensure_authenticated()
         token_used = self._jwt_token
@@ -315,7 +325,9 @@ class DynamicOpenAPIMixin(GeneratedOperationMethods):
             try:
                 return await response.json(content_type=None)
             except (ValueError, TypeError):
-                return await response.text()
+                if response.content_type.startswith("text/"):
+                    return await response.text()
+                return await response.read()
         finally:
             await response_context.__aexit__(None, None, None)
 

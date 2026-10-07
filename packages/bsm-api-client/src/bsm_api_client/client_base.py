@@ -221,6 +221,10 @@ class ClientBase:
                 or "Unknown error reading response."
             }
 
+        envelope = error_data.get("error")
+        if isinstance(envelope, dict) and isinstance(envelope.get("message"), str):
+            return envelope["message"], error_data
+
         # Prioritize "detail" for FastAPI standard errors (often a string),
         # then "message" (custom in this app), then "error" (generic).
         message = error_data.get("detail", "")

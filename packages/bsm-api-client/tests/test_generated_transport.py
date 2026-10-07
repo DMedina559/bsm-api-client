@@ -25,7 +25,14 @@ async def local_api():
             return web.json_response({"detail": "expired"}, status=401)
         body = await request.json() if request.can_read_body else None
         seen.append((request.method, request.match_info["server_name"], body))
-        return web.json_response({"status": "success", "message": "done"})
+        return web.json_response(
+            {
+                "status": "success",
+                "message": "done",
+                "server_name": request.match_info["server_name"],
+                "outcome": "started",
+            }
+        )
 
     async def invalid(request):
         return web.json_response(
