@@ -166,6 +166,16 @@ class TestContentManagement:
         worlds_before = worlds_before_list.files or []
         export_result = await client.async_export_server_world(server_name)
         assert export_result.status in ["success", "pending"]
+        if export_result.task_id:
+            for _ in range(90):
+                task = await client.async_get_task_status(export_result.task_id)
+                assert task["status"] != "error", task
+                if task["status"] == "success":
+                    assert task.get("result", {}).get("status") == "success", task
+                    break
+                await asyncio.sleep(1)
+            else:
+                pytest.fail("World export task did not complete in time.")
         for _ in range(90):  # Increased timeout
             worlds_after_list = await client.async_get_content_worlds()
             worlds_after = worlds_after_list.files or []

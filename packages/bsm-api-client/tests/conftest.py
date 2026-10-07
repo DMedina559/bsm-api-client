@@ -210,7 +210,7 @@ async def bedrock_server(server):
 
 
 @pytest_asyncio.fixture(scope="session")
-async def wait_for_server_status():
+async def wait_for_server_status(server_data_dir):
     """Provides a helper function to wait for server status."""
 
     async def _wait_for_server_status(client, server_name, is_running, timeout=60):
@@ -218,7 +218,12 @@ async def wait_for_server_status():
         for _ in range(timeout):
             status_res = await client.async_get_server_running_status(server_name)
             if status_res.running == is_running:
-                return
+                if not is_running:
+                    return
+                # A spawned process is running before Bedrock accepts commands.
+                log = server_data_dir / "servers" / server_name / "server_output.txt"
+                if log.exists() and "Server started" in log.read_text(errors="replace"):
+                    return
             await asyncio.sleep(1)
         status_str = "running" if is_running else "stopped"
         pytest.fail(
