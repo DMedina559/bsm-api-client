@@ -114,3 +114,29 @@ eval "$(_BSM_CLI_COMPLETE=bash_source bsm-cli)"
 
 See [generation](../../docs/OPENAPI_GENERATION.md) and
 [the API contract](../../docs/OPENAPI_CONTRACT.md).
+
+
+## Content and task behavior
+
+`world install --file`, `addon install --file`, and `backup restore --file` select
+files already present on the backend. They do not upload a local file. Examples:
+
+```bash
+bsm-cli world install --server survival --file MyWorld.mcworld --yes
+bsm-cli addon install --server survival --file Example.mcaddon
+bsm-cli backup restore --server survival --file MyWorld_backup_20261007_120000.mcworld
+bsm-cli backup restore --server survival --file custom-backup.zip --type world
+```
+
+`content upload LOCAL_FILE` works only when the server advertises an
+`upload_content` operation. The currently pinned backend does not advertise one.
+Place content files in the backend's content directories, then select them by name.
+
+Background commands subscribe to the task's WebSocket topic and check its REST
+snapshot after subscribing, covering tasks that finish before monitoring starts.
+A silent or disconnected WebSocket falls back to REST polling. Failed and
+cancelled tasks exit with a nonzero status.
+
+Registry menus accept a single value or a JSON array for repeated options and
+variadic arguments, preserving spaces in player names and paths. Password inputs
+are hidden and password confirmations are checked.

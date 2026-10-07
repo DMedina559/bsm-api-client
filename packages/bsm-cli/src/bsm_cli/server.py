@@ -3,15 +3,15 @@ import os
 
 import click
 import questionary
+from bsm_api_client.exceptions import AuthError
+from bsm_api_client.models import CommandPayload, InstallServerPayload
+
 from bsm_cli.allowlist import interactive_allowlist_workflow
 from bsm_cli.completion import complete_server
 from bsm_cli.decorators import monitor_task, pass_async_context
 from bsm_cli.output import fail, get_client
 from bsm_cli.permissions import interactive_permissions_workflow
 from bsm_cli.properties import interactive_properties_workflow
-
-from bsm_api_client.exceptions import AuthError
-from bsm_api_client.models import CommandPayload, InstallServerPayload
 
 
 def _print_server_table(servers):
@@ -338,6 +338,9 @@ async def install(ctx):  # noqa: C901
         overwrite = await questionary.confirm(
             "Overwrite existing server if it exists?", default=False
         ).ask_async()
+
+        if overwrite is None:
+            raise click.Abort()
 
         click.echo(f"\nInstalling server '{server_name}' version '{target_version}'...")
 

@@ -4,12 +4,12 @@ import json
 from unittest.mock import AsyncMock
 
 import pytest
-from bsm_cli.__main__ import cli
-from bsm_cli.config import Config
-from click.testing import CliRunner
-
 from bsm_api_client import AuthError
 from bsm_api_client.models import TokenResponse
+from click.testing import CliRunner
+
+from bsm_cli.__main__ import cli
+from bsm_cli.config import Config
 
 
 @pytest.fixture

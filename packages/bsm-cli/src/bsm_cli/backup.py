@@ -2,11 +2,11 @@ import os
 
 import click
 import questionary
+from bsm_api_client.models import BackupActionPayload, RestoreActionPayload
+
 from bsm_cli.completion import complete_server
 from bsm_cli.decorators import monitor_task, pass_async_context
 from bsm_cli.output import fail, get_client
-
-from bsm_api_client.models import BackupActionPayload, RestoreActionPayload
 
 
 @click.group()
@@ -102,11 +102,18 @@ async def create_backup(ctx, server_name: str, backup_type: str, file_to_backup:
     "-f",
     "--file",
     "backup_file_path",
-    type=click.Path(exists=True, dir_okay=False, resolve_path=True),
-    help="Path to the backup file to restore; skips interactive menu.",
+    help="Filename in the backend backup directory; skips interactive menu.",
+)
+@click.option(
+    "--type",
+    "restore_type",
+    type=click.Choice(["world", "allowlist", "permissions", "properties"]),
+    help="Data type to restore; inferred from standard backup filenames if omitted.",
 )
 @pass_async_context
-async def restore_backup(ctx, server_name: str, backup_file_path: str):  # noqa: C901
+async def restore_backup(
+    ctx, server_name: str, backup_file_path: str, restore_type: str
+):  # noqa: C901
     """Restores server data from a specified backup file."""
     client = get_client(ctx)
 
@@ -115,20 +122,8 @@ async def restore_backup(ctx, server_name: str, backup_file_path: str):  # noqa:
             restore_type, backup_file_path, _ = await _interactive_restore_menu(
                 client, server_name
             )
-        else:
-            filename = os.path.basename(backup_file_path).lower()
-            if "world" in filename:
-                restore_type = "world"
-            elif "allowlist" in filename:
-                restore_type = "allowlist"
-            elif "permissions" in filename:
-                restore_type = "permissions"
-            elif "properties" in filename:
-                restore_type = "properties"
-            else:
-                raise click.UsageError(
-                    f"Could not determine restore type from filename '{filename}'."
-                )
+        elif not restore_type:
+            restore_type = _infer_restore_type(backup_file_path)
 
         click.echo(
             f"Starting '{restore_type}' restore for server '{server_name}' from '{os.path.basename(backup_file_path)}'..."
@@ -185,6 +180,18 @@ async def prune_backups(ctx, server_name: str):
             click.secho(f"Failed to prune backups: {response.message}", fg="red")
     except Exception as e:
         fail(e)
+
+
+def _infer_restore_type(path):
+    filename = os.path.basename(path).lower()
+    if filename.endswith(".mcworld"):
+        return "world"
+    for kind in ("allowlist", "permissions", "properties", "world"):
+        if kind in filename:
+            return kind
+    raise click.UsageError(
+        f"Could not determine restore type from filename '{filename}'. Supply --type."
+    )
 
 
 async def _interactive_backup_menu(server_name: str):

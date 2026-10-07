@@ -1,7 +1,7 @@
 import click
-from bsm_cli.output import emit
-
 from bsm_api_client import BedrockServerManagerApi
+
+from bsm_cli.output import emit
 
 
 def _validate_and_get_url(url: str) -> str:

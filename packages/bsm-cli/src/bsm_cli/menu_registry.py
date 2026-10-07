@@ -5,6 +5,7 @@ import json
 
 import click
 import questionary
+
 from bsm_cli.api import invoke
 from bsm_cli.output import get_client
 
@@ -21,39 +22,55 @@ async def command_menu(ctx, group):
         return await command_menu(ctx, command)
     kwargs = {}
     for param in command.params:
-        # process_value applies Click's missing/default handling, including UNSET.
-        default = (
-            param.process_value(ctx, param.get_default(ctx))
-            if not param.required
-            else None
-        )
-        if (
-            param.required
-            or getattr(param, "prompt", None)
-            or isinstance(param, click.Option)
-        ):
-            value = await questionary.text(
-                param.name.replace("_", " ")
-                + (" (blank for default):" if not param.required else ":")
-            ).ask_async()
-            if value is None:
-                return
-            if not value and not param.required:
-                kwargs[param.name] = default
-                continue
-            kwargs[param.name] = param.type_cast_value(
-                ctx,
-                (
-                    value.split()
-                    if param.nargs == -1 or getattr(param, "multiple", False)
-                    else value
-                ),
-            )
-        else:
-            kwargs[param.name] = default
+        value = await _prompt_parameter(ctx, param)
+        if value is _CANCEL:
+            return
+        kwargs[param.name] = value
     result = ctx.invoke(command, **kwargs)
     if inspect.isawaitable(result):
         await result
+
+
+_CANCEL = object()
+
+
+def _multiple_values(param, value):
+    try:
+        values = json.loads(value) if value.lstrip().startswith("[") else [value]
+    except ValueError as exc:
+        raise click.BadParameter("Expected a JSON array.", param=param) from exc
+    if not isinstance(values, list):
+        raise click.BadParameter("Expected a JSON array.", param=param)
+    return values
+
+
+async def _prompt_parameter(ctx, param):
+    prompt = param.name.replace("_", " ")
+    multiple = getattr(param, "multiple", False) or param.nargs == -1
+    if multiple:
+        prompt += " (one value or a JSON array)"
+    prompt += " (blank for default):" if not param.required else ":"
+    ask = (
+        questionary.password
+        if getattr(param, "hide_input", False)
+        else questionary.text
+    )
+    value = await ask(prompt).ask_async()
+    if value is None:
+        return _CANCEL
+    if not value and not param.required:
+        return param.process_value(ctx, param.get_default(ctx))
+    if getattr(param, "confirmation_prompt", False):
+        confirmation = await ask(
+            "Confirm " + param.name.replace("_", " ") + ":"
+        ).ask_async()
+        if confirmation is None:
+            return _CANCEL
+        if confirmation != value:
+            raise click.BadParameter("Confirmation does not match.", param=param)
+    return param.process_value(
+        ctx, _multiple_values(param, value) if multiple else value
+    )
 
 
 async def plugin_api_menu(ctx):

@@ -3,10 +3,10 @@ import time
 
 import click
 import questionary
+from bsm_api_client.models import ServerSettingItemPayload
+
 from bsm_cli.completion import complete_server
 from bsm_cli.output import get_client
-
-from bsm_api_client.models import ServerSettingItemPayload
 
 
 @click.group()
@@ -54,7 +54,9 @@ async def server_settings(ctx, server_name: str):
         "Enable check for updates when the server starts?", default=current_autoupdate
     ).ask_async()
 
-    if autoupdate_choice is not None and autoupdate_choice != current_autoupdate:
+    if autoupdate_choice is None:
+        return
+    if autoupdate_choice != current_autoupdate:
         payload = ServerSettingItemPayload(
             key="settings.autoupdate", value=autoupdate_choice
         )
@@ -71,7 +73,9 @@ async def server_settings(ctx, server_name: str):
         default=current_autostart,
     ).ask_async()
 
-    if autostart_choice is not None and autostart_choice != current_autostart:
+    if autostart_choice is None:
+        return
+    if autostart_choice != current_autostart:
         payload = ServerSettingItemPayload(
             key="settings.autostart", value=autostart_choice
         )

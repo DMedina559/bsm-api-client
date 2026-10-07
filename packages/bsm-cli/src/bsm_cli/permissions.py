@@ -1,9 +1,10 @@
 import click
 import questionary
+from bsm_api_client.exceptions import NotFoundError
+from bsm_api_client.models import PermissionsSetPayload, PlayerPermissionPayload
+
 from bsm_cli.completion import complete_server
 from bsm_cli.output import fail, get_client
-
-from bsm_api_client.models import PermissionsSetPayload, PlayerPermissionPayload
 
 
 @click.group()
@@ -59,11 +60,9 @@ async def set_perm(ctx, server_name: str, player_name: str, level: str):
         )
 
         if not player_data or not player_data.get("xuid"):
-            click.secho(
-                f"Error: Player '{player_name}' not found in the global player database.",
-                fg="red",
+            raise NotFoundError(
+                f"Player '{player_name}' not found in the global player database."
             )
-            return
 
         xuid = player_data["xuid"]
         click.echo(

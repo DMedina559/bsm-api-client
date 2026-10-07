@@ -1,9 +1,9 @@
 import click
 import questionary
+from bsm_api_client.models import AllowlistAddPayload, AllowlistRemovePayload
+
 from bsm_cli.completion import complete_server
 from bsm_cli.output import fail, get_client
-
-from bsm_api_client.models import AllowlistAddPayload, AllowlistRemovePayload
 
 
 @click.group()
@@ -93,9 +93,9 @@ async def remove(ctx, server_name: str, players: tuple[str]):
     response = await client.async_remove_server_allowlist_players(server_name, payload)
 
     if response.status == "success":
-        details = response.details or {}
-        removed_players = details["removed"] or []
-        not_found_players = details["not_found"] or []
+        details = getattr(response, "details", None) or {}
+        removed_players = details.get("removed") or []
+        not_found_players = details.get("not_found") or []
 
         message = response.message
         click.secho(message, fg="cyan" if not removed_players else "green")
@@ -194,6 +194,8 @@ async def interactive_allowlist_workflow(client, server_name: str):  # noqa: C90
         ignore_limit = await questionary.confirm(
             f"Should '{player_name}' ignore the player limit?", default=False
         ).ask_async()
+        if ignore_limit is None:
+            return
         new_players_to_add.append(
             {"name": player_name.strip(), "ignoresPlayerLimit": ignore_limit}
         )

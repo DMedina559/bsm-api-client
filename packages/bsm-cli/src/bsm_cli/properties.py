@@ -1,9 +1,10 @@
 import click
 import questionary
+from bsm_api_client.exceptions import NotFoundError
+from bsm_api_client.models import PropertiesPayload
+
 from bsm_cli.completion import complete_server
 from bsm_cli.output import fail, get_client
-
-from bsm_api_client.models import PropertiesPayload
 
 
 @click.group()
@@ -30,13 +31,13 @@ async def get_props(ctx, server_name: str, property_name: str):
     response = await client.async_get_server_properties(server_name)
 
     if response.status == "success":
-        properties = response.properties
+        properties = response.properties or {}
         if property_name:
             value = properties.get(property_name)
             if value is not None:
                 click.echo(value)
             else:
-                click.secho(f"Error: Property '{property_name}' not found.", fg="red")
+                raise NotFoundError(f"Property '{property_name}' not found.")
         else:
             click.secho(f"\nProperties for '{server_name}':", bold=True)
             max_key_len = max(len(k) for k in properties.keys()) if properties else 0
@@ -79,10 +80,12 @@ async def set_props(ctx, server_name: str, properties: tuple[str]):
         props_to_update = {}
         for p in properties:
             if "=" not in p:
-                click.secho(f"Error: Invalid format '{p}'. Use 'key=value'.", fg="red")
-                raise click.Abort()
+                raise click.BadParameter(f"Invalid format '{p}'. Use 'key=value'.")
             key, value = p.split("=", 1)
-            props_to_update[key.strip()] = value.strip()
+            key = key.strip()
+            if not key or key in props_to_update:
+                raise click.BadParameter("Property names must be nonempty and unique.")
+            props_to_update[key] = value.strip()
 
         click.echo(
             f"Updating {len(props_to_update)} propert(y/ies) for '{server_name}'..."
@@ -125,15 +128,19 @@ async def interactive_properties_workflow(client, server_name: str):  # noqa: C9
                 message, default=default_bool, **kwargs
             ).ask_async()
             if new_val is None:
-                return
+                raise click.Abort()
             if new_val != default_bool:
                 changes[prop] = str(new_val).lower()
         else:
+            default_value = str(original_value) if original_value is not None else ""
+            choices = kwargs.get("choices")
+            if choices and default_value not in choices:
+                default_value = choices[0]
             new_val = await prompter(
-                message, default=str(original_value), **kwargs
+                message, default=default_value, **kwargs
             ).ask_async()
             if new_val is None:
-                return
+                raise click.Abort()
             if new_val != original_value:
                 changes[prop] = new_val
 

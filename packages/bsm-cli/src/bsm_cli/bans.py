@@ -1,9 +1,9 @@
 import click
 import questionary
+from bsm_api_client.models import BanAddRequest, BanRemoveRequest
+
 from bsm_cli.completion import complete_server
 from bsm_cli.output import get_client
-
-from bsm_api_client.models import BanAddRequest, BanRemoveRequest
 
 
 @click.group()
@@ -155,6 +155,8 @@ async def interactive_ban_workflow(client, server_name: str):
             continue
 
         reason = await questionary.text("Reason (optional):").ask_async()
+        if reason is None:
+            return
 
         if any(b.get("xuid") == xuid.strip() for b in existing_bans):
             click.secho(
