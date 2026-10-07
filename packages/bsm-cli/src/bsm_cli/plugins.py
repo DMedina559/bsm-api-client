@@ -2,6 +2,7 @@ import json
 
 import click
 import questionary
+from bsm_cli.output import fail, get_client
 
 from bsm_api_client.models import PluginStatusSetPayload, TriggerEventPayload
 
@@ -113,7 +114,7 @@ async def interactive_plugin_workflow(client):  # noqa: C901
                             fg="red",
                         )
                 except Exception as e_reload:
-                    click.secho(f"Error reloading plugins: {e_reload}", fg="red")
+                    fail(e_reload)
                 click.pause()
                 continue
 
@@ -168,29 +169,24 @@ async def interactive_plugin_workflow(client):  # noqa: C901
             click.pause()
 
     except Exception as e:
-        click.secho(f"An error occurred during plugin configuration: {e}", fg="red")
+        fail(e)
 
 
 @click.group(invoke_without_command=True)
 @click.pass_context
-async def plugin(ctx):
+def plugin(ctx):
     """Manages plugins."""
     if ctx.invoked_subcommand is None:
-        client = ctx.obj.get("client")
-        if not client:
-            click.secho("You are not logged in.", fg="red")
-            return
-        await interactive_plugin_workflow(client)
+        if ctx.obj.get("json_output"):
+            raise click.UsageError("Choose a subcommand with --json.")
+        return interactive_plugin_workflow(get_client(ctx))
 
 
 @plugin.command("list")
 @click.pass_context
 async def list_plugins(ctx):
     """Lists all discoverable plugins."""
-    client = ctx.obj.get("client")
-    if not client:
-        click.secho("You are not logged in.", fg="red")
-        return
+    client = get_client(ctx)
 
     try:
         response = await client.async_get_plugin_statuses()
@@ -204,7 +200,7 @@ async def list_plugins(ctx):
         else:
             click.secho(f"Failed to list plugins: {response.message}", fg="red")
     except Exception as e:
-        click.secho(f"An error occurred: {e}", fg="red")
+        fail(e)
 
 
 @plugin.command("enable")
@@ -212,10 +208,7 @@ async def list_plugins(ctx):
 @click.pass_context
 async def enable_plugin(ctx, plugin_name: str):
     """Enables a plugin."""
-    client = ctx.obj.get("client")
-    if not client:
-        click.secho("You are not logged in.", fg="red")
-        return
+    client = get_client(ctx)
 
     try:
         payload = PluginStatusSetPayload(enabled=True)
@@ -225,7 +218,7 @@ async def enable_plugin(ctx, plugin_name: str):
         else:
             click.secho(f"Failed to enable plugin: {response.message}", fg="red")
     except Exception as e:
-        click.secho(f"An error occurred: {e}", fg="red")
+        fail(e)
 
 
 @plugin.command("disable")
@@ -233,10 +226,7 @@ async def enable_plugin(ctx, plugin_name: str):
 @click.pass_context
 async def disable_plugin(ctx, plugin_name: str):
     """Disables a plugin."""
-    client = ctx.obj.get("client")
-    if not client:
-        click.secho("You are not logged in.", fg="red")
-        return
+    client = get_client(ctx)
 
     try:
         payload = PluginStatusSetPayload(enabled=False)
@@ -246,17 +236,14 @@ async def disable_plugin(ctx, plugin_name: str):
         else:
             click.secho(f"Failed to disable plugin: {response.message}", fg="red")
     except Exception as e:
-        click.secho(f"An error occurred: {e}", fg="red")
+        fail(e)
 
 
 @plugin.command("reload")
 @click.pass_context
 async def reload_plugins(ctx):
     """Reloads all plugins."""
-    client = ctx.obj.get("client")
-    if not client:
-        click.secho("You are not logged in.", fg="red")
-        return
+    client = get_client(ctx)
 
     try:
         response = await client.async_reload_plugins()
@@ -265,7 +252,7 @@ async def reload_plugins(ctx):
         else:
             click.secho(f"Failed to reload plugins: {response.message}", fg="red")
     except Exception as e:
-        click.secho(f"An error occurred: {e}", fg="red")
+        fail(e)
 
 
 @plugin.command("trigger-event")
@@ -276,10 +263,7 @@ async def reload_plugins(ctx):
 @click.pass_context
 async def trigger_event(ctx, event_name: str, payload_json: str):
     """Triggers a custom plugin event."""
-    client = ctx.obj.get("client")
-    if not client:
-        click.secho("You are not logged in.", fg="red")
-        return
+    client = get_client(ctx)
 
     try:
         payload = None
@@ -293,4 +277,4 @@ async def trigger_event(ctx, event_name: str, payload_json: str):
         else:
             click.secho(f"Failed to trigger event: {response.message}", fg="red")
     except Exception as e:
-        click.secho(f"An error occurred: {e}", fg="red")
+        fail(e)

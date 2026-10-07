@@ -145,3 +145,17 @@ async def test_monitor_task_fallback(mock_client):
         fg="yellow",
     )
     mock_secho.assert_any_call("Success: Done via poll", fg="green")
+
+
+@pytest.mark.asyncio
+async def test_monitor_task_propagates_failed_background_result(mock_client):
+    from bsm_api_client.exceptions import OperationFailedError
+
+    mock_client.websocket_connect.side_effect = Exception("WS Failed")
+    mock_client.async_get_task_status.return_value = {
+        "status": "success",
+        "message": "Task completed",
+        "result": {"status": "error", "message": "Install failed"},
+    }
+    with pytest.raises(OperationFailedError, match="Install failed"):
+        await monitor_task(mock_client, "123", "Success", "Failure")

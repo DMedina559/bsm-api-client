@@ -1,7 +1,10 @@
+import asyncio
 import time
 
 import click
 import questionary
+from bsm_cli.completion import complete_server
+from bsm_cli.output import get_client
 
 from bsm_api_client.models import ServerSettingItemPayload
 
@@ -19,14 +22,12 @@ def system():
     "server_name",
     required=True,
     help="Name of the server to configure.",
+    shell_complete=complete_server,
 )
 @click.pass_context
 async def server_settings(ctx, server_name: str):
     """Configures autostart and autoupdate settings for a Bedrock server."""
-    client = ctx.obj.get("client")
-    if not client:
-        click.secho("You are not logged in.", fg="red")
-        return
+    client = get_client(ctx)
 
     click.secho(
         f"Starting interactive settings configuration for '{server_name}'...",
@@ -92,20 +93,21 @@ async def server_settings(ctx, server_name: str):
     "server_name",
     required=True,
     help="Name of the server to monitor.",
+    shell_complete=complete_server,
 )
 @click.pass_context
 async def monitor_usage(ctx, server_name: str):
     """Continuously monitors CPU and memory usage of a specific server process."""
-    client = ctx.obj.get("client")
-    if not client:
-        click.secho("You are not logged in.", fg="red")
-        return
+    client = get_client(ctx)
+
+    if ctx.obj.get("json_output"):
+        return await client.async_get_server_process_info(server_name)
 
     click.secho(
         f"Starting resource monitoring for server '{server_name}'. Press CTRL+C to exit.",
         fg="cyan",
     )
-    time.sleep(1)
+    await asyncio.sleep(1)
 
     try:
         while True:
@@ -137,6 +139,6 @@ async def monitor_usage(ctx, server_name: str):
                 )
                 click.echo(f"  {'Uptime':<15}: {click.style(uptime_str, fg='white')}")
 
-            time.sleep(2)
+            await asyncio.sleep(2)
     except (KeyboardInterrupt, click.Abort):
         click.secho("\nMonitoring stopped.", fg="green")

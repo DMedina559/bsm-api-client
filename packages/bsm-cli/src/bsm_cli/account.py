@@ -3,6 +3,7 @@
 
 import click
 from bsm_cli.decorators import pass_async_context
+from bsm_cli.output import get_client
 
 
 @click.group()
@@ -15,7 +16,7 @@ def account():
 @pass_async_context
 async def details(ctx):
     """Get your account details."""
-    client = ctx.obj["client"]
+    client = get_client(ctx)
     details = await client.async_get_account_details()
     click.echo(details.model_dump_json(indent=2))
 
@@ -27,7 +28,7 @@ async def update_theme(ctx, theme):
     """Update your theme."""
     from bsm_api_client.models import ThemeUpdatePayload
 
-    client = ctx.obj["client"]
+    client = get_client(ctx)
     payload = ThemeUpdatePayload(theme=theme)
     response = await client.async_update_theme(payload)
     click.echo(response.model_dump_json(indent=2))
@@ -41,7 +42,7 @@ async def update_profile(ctx, full_name, email):
     """Update your profile."""
     from bsm_api_client.models import ProfileUpdatePayload
 
-    client = ctx.obj["client"]
+    client = get_client(ctx)
     payload = ProfileUpdatePayload(full_name=full_name, email=email)
     response = await client.async_update_profile(payload)
     click.echo(response.model_dump_json(indent=2))
@@ -67,7 +68,7 @@ async def change_password(ctx, current_password, new_password):
     """Change your password."""
     from bsm_api_client.models import ChangePasswordPayload
 
-    client = ctx.obj["client"]
+    client = get_client(ctx)
     payload = ChangePasswordPayload(
         current_password=current_password, new_password=new_password
     )

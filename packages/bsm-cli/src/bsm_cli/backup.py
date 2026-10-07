@@ -2,7 +2,9 @@ import os
 
 import click
 import questionary
+from bsm_cli.completion import complete_server
 from bsm_cli.decorators import monitor_task, pass_async_context
+from bsm_cli.output import fail, get_client
 
 from bsm_api_client.models import BackupActionPayload, RestoreActionPayload
 
@@ -15,7 +17,12 @@ def backup():
 
 @backup.command("create")
 @click.option(
-    "-s", "--server", "server_name", required=True, help="Name of the target server."
+    "-s",
+    "--server",
+    "server_name",
+    required=True,
+    help="Name of the target server.",
+    shell_complete=complete_server,
 )
 @click.option(
     "-t",
@@ -33,10 +40,7 @@ def backup():
 @pass_async_context
 async def create_backup(ctx, server_name: str, backup_type: str, file_to_backup: str):
     """Creates a backup of specified server data."""
-    client = ctx.obj.get("client")
-    if not client:
-        click.secho("You are not logged in.", fg="red")
-        return
+    client = get_client(ctx)
 
     try:
         if not backup_type:
@@ -82,12 +86,17 @@ async def create_backup(ctx, server_name: str, backup_type: str, file_to_backup:
             click.secho(f"Failed to create backup: {response.message}", fg="red")
 
     except Exception as e:
-        click.secho(f"An error occurred: {e}", fg="red")
+        fail(e)
 
 
 @backup.command("restore")
 @click.option(
-    "-s", "--server", "server_name", required=True, help="Name of the target server."
+    "-s",
+    "--server",
+    "server_name",
+    required=True,
+    help="Name of the target server.",
+    shell_complete=complete_server,
 )
 @click.option(
     "-f",
@@ -99,10 +108,7 @@ async def create_backup(ctx, server_name: str, backup_type: str, file_to_backup:
 @pass_async_context
 async def restore_backup(ctx, server_name: str, backup_file_path: str):  # noqa: C901
     """Restores server data from a specified backup file."""
-    client = ctx.obj.get("client")
-    if not client:
-        click.secho("You are not logged in.", fg="red")
-        return
+    client = get_client(ctx)
 
     try:
         if not backup_file_path:
@@ -146,7 +152,7 @@ async def restore_backup(ctx, server_name: str, backup_file_path: str):  # noqa:
             click.secho(f"Failed to restore backup: {response.message}", fg="red")
 
     except Exception as e:
-        click.secho(f"An error occurred: {e}", fg="red")
+        fail(e)
 
 
 @backup.command("prune")
@@ -156,14 +162,12 @@ async def restore_backup(ctx, server_name: str, backup_file_path: str):  # noqa:
     "server_name",
     required=True,
     help="Name of the server whose backups to prune.",
+    shell_complete=complete_server,
 )
 @pass_async_context
 async def prune_backups(ctx, server_name: str):
     """Deletes old backups for a server."""
-    client = ctx.obj.get("client")
-    if not client:
-        click.secho("You are not logged in.", fg="red")
-        return
+    client = get_client(ctx)
 
     try:
         click.echo(f"Pruning old backups for server '{server_name}'...")
@@ -180,7 +184,7 @@ async def prune_backups(ctx, server_name: str):
         else:
             click.secho(f"Failed to prune backups: {response.message}", fg="red")
     except Exception as e:
-        click.secho(f"An error occurred during pruning: {e}", fg="red")
+        fail(e)
 
 
 async def _interactive_backup_menu(server_name: str):

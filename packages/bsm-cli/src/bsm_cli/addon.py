@@ -2,7 +2,9 @@ import os
 
 import click
 import questionary
+from bsm_cli.completion import complete_server
 from bsm_cli.decorators import monitor_task, pass_async_context
+from bsm_cli.output import fail, get_client
 from questionary import Separator
 
 from bsm_api_client.models import (
@@ -21,7 +23,12 @@ def addon():
 
 @addon.command("install")
 @click.option(
-    "-s", "--server", "server_name", required=True, help="Name of the target server."
+    "-s",
+    "--server",
+    "server_name",
+    required=True,
+    help="Name of the target server.",
+    shell_complete=complete_server,
 )
 @click.option(
     "-f",
@@ -33,10 +40,7 @@ def addon():
 @pass_async_context
 async def install_addon(ctx, server_name: str, addon_file_path: str):
     """Installs a behavior or resource pack addon to a specified server."""
-    client = ctx.obj.get("client")
-    if not client:
-        click.secho("You are not logged in.", fg="red")
-        return
+    client = get_client(ctx)
 
     try:
         selected_addon_path = addon_file_path
@@ -84,20 +88,22 @@ async def install_addon(ctx, server_name: str, addon_file_path: str):
             click.secho(f"Failed to install addon: {response.message}", fg="red")
 
     except Exception as e:
-        click.secho(f"An error occurred: {e}", fg="red")
+        fail(e)
 
 
 @addon.command("manage")
 @click.option(
-    "-s", "--server", "server_name", required=True, help="Name of the target server."
+    "-s",
+    "--server",
+    "server_name",
+    required=True,
+    help="Name of the target server.",
+    shell_complete=complete_server,
 )
 @pass_async_context
 async def manage_addons(ctx, server_name: str):  # noqa: C901
     """Interactively manages installed addons on a specified server."""
-    client = ctx.obj.get("client")
-    if not client:
-        click.secho("You are not logged in.", fg="red")
-        return
+    client = get_client(ctx)
 
     while True:
         try:
