@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 
 import pytest
+
 from bsm_api_client.generated_adapter import operation_module
 from bsm_api_client.openapi import generated_schema, index_operations
 
