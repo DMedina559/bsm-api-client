@@ -10,8 +10,6 @@ except ImportError:
 
 from contextlib import asynccontextmanager
 
-from bsm_api_client import BedrockServerManagerApi
-
 from bsm_cli.account import account
 from bsm_cli.addon import addon
 from bsm_cli.allowlist import allowlist
@@ -31,6 +29,8 @@ from bsm_cli.server import server
 from bsm_cli.system import system
 from bsm_cli.users import users
 from bsm_cli.world import world
+
+from bsm_api_client import BedrockServerManagerApi
 
 
 @click.group(cls=AsyncGroup, invoke_without_command=True)

@@ -1,9 +1,9 @@
 import click
 import questionary
-from bsm_api_client.models import BanAddRequest, BanRemoveRequest
-
 from bsm_cli.completion import complete_server
 from bsm_cli.output import get_client
+
+from bsm_api_client.models import BanAddRequest, BanRemoveRequest
 
 
 @click.group()

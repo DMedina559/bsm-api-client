@@ -2,7 +2,6 @@
 """CLI commands for content management."""
 
 import click
-
 from bsm_cli.decorators import pass_async_context
 from bsm_cli.output import emit, get_client
 

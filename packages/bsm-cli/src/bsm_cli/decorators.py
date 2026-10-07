@@ -2,6 +2,7 @@ import asyncio
 import functools
 
 import click
+
 from bsm_api_client.exceptions import AuthError, OperationFailedError
 
 

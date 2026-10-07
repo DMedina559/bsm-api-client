@@ -1,5 +1,4 @@
 import click
-
 from bsm_cli.output import fail, get_client
 
 

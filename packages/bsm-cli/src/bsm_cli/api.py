@@ -7,9 +7,6 @@ from pathlib import Path
 from typing import Any
 
 import click
-from bsm_api_client.exceptions import InvalidInputError, NotFoundError
-from bsm_api_client.openapi import resolve
-
 from bsm_cli.completion import (
     cached_schema,
     complete_operation,
@@ -18,6 +15,9 @@ from bsm_cli.completion import (
 )
 from bsm_cli.decorators import pass_async_context
 from bsm_cli.output import emit, get_client
+
+from bsm_api_client.exceptions import InvalidInputError, NotFoundError
+from bsm_api_client.openapi import resolve
 
 
 async def discover(ctx, *, force=False):

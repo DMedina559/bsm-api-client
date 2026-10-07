@@ -2,11 +2,11 @@ import os
 
 import click
 import questionary
-from bsm_api_client.models import FileNamePayload
-
 from bsm_cli.completion import complete_server
 from bsm_cli.decorators import monitor_task, pass_async_context
 from bsm_cli.output import fail, get_client
+
+from bsm_api_client.models import FileNamePayload
 
 
 @click.group()
