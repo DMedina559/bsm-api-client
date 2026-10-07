@@ -13,7 +13,12 @@ from bsm_api_client.models import InstallServerPayload
 
 
 @pytest.fixture(scope="session")
-def server():  # noqa: C901
+def server_data_dir(tmp_path_factory):
+    return tmp_path_factory.mktemp("bsm-data")
+
+
+@pytest.fixture(scope="session")
+def server(server_data_dir):  # noqa: C901
     """
     A pytest fixture that starts the bedrock-server-manager web server
     and sets it up for testing in an isolated temporary directory.
@@ -31,9 +36,8 @@ def server():  # noqa: C901
 
         root = Path(temp_dir)
         config_dir = root / "config"
-        data_dir = root / "data"
+        data_dir = server_data_dir
         config_dir.mkdir()
-        data_dir.mkdir()
         with socket.socket() as listener:
             listener.bind(("127.0.0.1", 0))
             port = listener.getsockname()[1]
