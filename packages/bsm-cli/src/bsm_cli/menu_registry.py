@@ -74,7 +74,10 @@ async def _prompt_parameter(ctx, param):
         choices = await _resource_choices(ctx, param.name)
         if choices:
             if not param.required:
-                choices = [questionary.Choice(title="Use default", value=_DEFAULT), *choices]
+                choices = [
+                    questionary.Choice(title="Use default", value=_DEFAULT),
+                    *choices,
+                ]
             selection = await questionary.select(prompt, choices=choices).ask_async()
             if selection is None:
                 return _CANCEL
