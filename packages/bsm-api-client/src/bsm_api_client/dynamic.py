@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING, Any, Dict, Mapping, Optional
 from urllib.parse import quote
 
 import httpx
+import aiohttp
 
 from .exceptions import (
     APIError,
@@ -201,18 +202,15 @@ class DynamicOpenAPIMixin(GeneratedOperationMethods):
         if headers is not None:
             headers = serialize_headers(operation.parameters, headers)
         if files:
-            request = httpx.Request(
+            return await self._dynamic_request(
                 operation.method,
-                self._server_root_url + path,
-                params=_query_values(query or {}),
-                data=dict(form_data or {}),
-                files=files,
+                path,
+                query=query,
+                form_data=form_data,
                 headers=headers,
+                authenticated=authenticated,
+                files=files,
             )
-            response = await self._dynamic_request(
-                operation.method, path, authenticated=authenticated, raw_request=request
-            )
-            return _response_value(response)
         return await self._dynamic_request(
             operation.method,
             path,
@@ -274,6 +272,7 @@ class DynamicOpenAPIMixin(GeneratedOperationMethods):
         headers: Optional[Mapping[str, str]] = None,
         is_retry: bool = False,
         raw_request: Optional[httpx.Request] = None,
+        files: Optional[Mapping[str, Any]] = None,
     ) -> Any:
         url = f"{self._server_root_url}{path if path.startswith('/') else '/' + path}"
         request_headers = dict(self._default_headers)
@@ -294,6 +293,18 @@ class DynamicOpenAPIMixin(GeneratedOperationMethods):
             request_headers["Authorization"] = f"Bearer {self._jwt_token}"
         if json_data is not None:
             request_headers.setdefault("Content-Type", "application/json")
+        upload_data = None
+        if files:
+            upload_data = aiohttp.FormData()
+            for key, value in (form_data or {}).items():
+                upload_data.add_field(key, str(value))
+            for key, value in files.items():
+                filename, content, content_type = value
+                if hasattr(content, 'seek'):
+                    content.seek(0)
+                upload_data.add_field(
+                    key, content, filename=filename, content_type=content_type
+                )
         try:
             response_context = self._session.request(
                 method.upper(),
@@ -307,7 +318,7 @@ class DynamicOpenAPIMixin(GeneratedOperationMethods):
                 data=(
                     await raw_request.aread()
                     if raw_request is not None
-                    else (dict(form_data) if form_data is not None else None)
+                    else (upload_data if upload_data is not None else (dict(form_data) if form_data is not None else None))
                 ),
                 headers=request_headers,
                 timeout=self._request_timeout,
@@ -335,6 +346,7 @@ class DynamicOpenAPIMixin(GeneratedOperationMethods):
                     authenticated=authenticated,
                     is_retry=True,
                     raw_request=raw_request,
+                    files=files,
                 )
             if not response.ok:
                 await self._handle_api_error(response, path)
