@@ -233,6 +233,24 @@ class DynamicOpenAPIMixin(GeneratedOperationMethods):
                 raise InvalidInputError(
                     f"Missing required {location} parameter: {name}"
                 )
+        content = operation.request_body.get("content", {})
+        if json_data is not None and content and not any(
+            kind == "application/json" or kind.endswith("+json")
+            for kind in content
+        ):
+            raise InvalidInputError(
+                f"Operation {operation_id} does not advertise a JSON request body."
+            )
+        if (form_data is not None or files) and content:
+            expected = (
+                "multipart/form-data" if files else "application/x-www-form-urlencoded"
+            )
+            if expected not in content and not (
+                form_data is not None and "multipart/form-data" in content
+            ):
+                raise InvalidInputError(
+                    f"Operation {operation_id} does not advertise {expected}."
+                )
         if (
             operation.request_body.get("required")
             and json_data is None
