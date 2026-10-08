@@ -103,9 +103,10 @@ async def _prompt_parameter(ctx, param):
             return _CANCEL
         if confirmation != value:
             raise click.BadParameter("Confirmation does not match.", param=param)
-    return param.process_value(
-        ctx, _multiple_values(param, value) if multiple else value
-    )
+    converted = _multiple_values(param, value) if multiple else value
+    if multiple:
+        converted = tuple(converted)
+    return param.process_value(ctx, converted)
 
 
 async def plugin_api_menu(ctx):
@@ -126,9 +127,17 @@ async def plugin_api_menu(ctx):
     op = client.operations[identifier]
     values = []
     for parameter in op.parameters:
-        value = await questionary.text(
-            f"{parameter['name']} ({parameter['in']}, {'required' if parameter.get('required') else 'optional'}):"
-        ).ask_async()
+        name = parameter["name"]
+        choices = await _resource_choices(ctx, name)
+        if choices:
+            choices = [*choices, questionary.Choice("Enter manually", value="__manual__")]
+            value = await questionary.select(f"{name}:", choices=choices).ask_async()
+            if value == "__manual__":
+                value = await questionary.text(f"{name}:").ask_async()
+        else:
+            value = await questionary.text(
+                f"{name} ({parameter['in']}, {'required' if parameter.get('required') else 'optional'}):"
+            ).ask_async()
         if value is None:
             return
         if value:
