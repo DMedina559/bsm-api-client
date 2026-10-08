@@ -9,8 +9,8 @@ import re
 from typing import TYPE_CHECKING, Any, Dict, Mapping, Optional
 from urllib.parse import quote
 
-import httpx
 import aiohttp
+import httpx
 
 from .exceptions import (
     APIError,
@@ -300,7 +300,7 @@ class DynamicOpenAPIMixin(GeneratedOperationMethods):
                 upload_data.add_field(key, str(value))
             for key, value in files.items():
                 filename, content, content_type = value
-                if hasattr(content, 'seek'):
+                if hasattr(content, "seek"):
                     content.seek(0)
                 upload_data.add_field(
                     key, content, filename=filename, content_type=content_type
@@ -318,7 +318,11 @@ class DynamicOpenAPIMixin(GeneratedOperationMethods):
                 data=(
                     await raw_request.aread()
                     if raw_request is not None
-                    else (upload_data if upload_data is not None else (dict(form_data) if form_data is not None else None))
+                    else (
+                        upload_data
+                        if upload_data is not None
+                        else (dict(form_data) if form_data is not None else None)
+                    )
                 ),
                 headers=request_headers,
                 timeout=self._request_timeout,
@@ -329,7 +333,7 @@ class DynamicOpenAPIMixin(GeneratedOperationMethods):
                 f"Unable to connect to {url}", original_exception=exc
             ) from exc
         try:
-            if response.status == 401 and authenticated and not is_retry:
+            if response.status == 401 and authenticated and not is_retry and not files:
                 # Release the failed response before refreshing the token or
                 # retrying. Keeping it open can starve a constrained pool.
                 response.release()
