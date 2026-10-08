@@ -54,6 +54,7 @@ class ClientBase:
         body: Any = None,
         authenticated: bool = True,
         detailed: bool = False,
+        typed: bool = False,
     ) -> Any:
         """Implemented by DynamicOpenAPIMixin."""
         raise NotImplementedError
