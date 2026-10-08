@@ -9,7 +9,7 @@ from bsm_cli.api import invoke
 from bsm_cli.output import get_client
 
 
-async def command_menu(ctx, group):
+async def command_menu(ctx, group):  # noqa: C901
     """Browse commands as a persistent interactive management menu."""
     while True:
         name = await questionary.select(
@@ -77,7 +77,7 @@ async def _resource_choices(ctx, name):
     return []
 
 
-async def _prompt_parameter(ctx, param):
+async def _prompt_parameter(ctx, param):  # noqa: C901
     prompt = param.name.replace("_", " ")
     multiple = getattr(param, "multiple", False) or param.nargs == -1
     if multiple:
@@ -131,7 +131,7 @@ async def _prompt_parameter(ctx, param):
     return param.process_value(ctx, converted)
 
 
-async def plugin_api_menu(ctx):
+async def plugin_api_menu(ctx):  # noqa: C901
     """Show only plugin operations actually advertised by this server."""
     client = get_client(ctx)
     await client.async_discover_api()
