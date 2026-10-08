@@ -225,3 +225,22 @@ def test_null_required_path_parameter_is_rejected():
 
     with pytest.raises(InvalidInputError, match="server_name"):
         DummyClient._render_path("/server/{server_name}/start", {"server_name": None})
+
+
+@pytest.mark.asyncio
+async def test_direct_path_uses_configured_api_prefix():
+    client = DummyClient()
+    client._api_base_segment = "/custom-api"
+    client._dynamic_request = AsyncMock(return_value={"status": "success"})
+
+    await client.async_call_path("get", "/api/plugins/demo/{name}", path_params={"name": "hello world"})
+
+    client._dynamic_request.assert_awaited_once_with(
+        "GET",
+        "/custom-api/plugins/demo/hello%20world",
+        query=None,
+        json_data=None,
+        form_data=None,
+        headers=None,
+        authenticated=True,
+    )
