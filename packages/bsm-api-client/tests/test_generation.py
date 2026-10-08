@@ -97,3 +97,33 @@ def test_export_normalizes_python_http_status_descriptions(phrase):
         normalized["paths"]["/test"]["post"]["responses"]["422"]["description"]
         == "Custom validation message"
     )
+
+
+@pytest.mark.asyncio
+async def test_generated_adapter_typed_mode_preserves_parsed_model(monkeypatch):
+    from types import SimpleNamespace
+    from unittest.mock import AsyncMock
+
+    from bsm_api_client import generated_adapter
+
+    parsed = object()
+    response = SimpleNamespace(parsed=parsed, content=b'{"status":"ok"}')
+    module = SimpleNamespace(asyncio_detailed=AsyncMock(return_value=response))
+    monkeypatch.setattr(generated_adapter, "operation_module", lambda _: module)
+    import bsm_api_client.generated as generated
+
+    class FakeClient:
+        def __init__(self, **kwargs):
+            pass
+
+        def set_async_httpx_client(self, transport):
+            return self
+
+    monkeypatch.setattr(generated, "Client", FakeClient)
+    owner = SimpleNamespace(_server_root_url="http://localhost")
+    assert await generated_adapter.call_generated(owner, "test", typed=True) is parsed
+    assert await generated_adapter.call_generated(owner, "test") == {"status": "ok"}
+    with pytest.raises(generated_adapter.InvalidInputError):
+        await generated_adapter.call_generated(
+            owner, "test", typed=True, detailed=True
+        )
