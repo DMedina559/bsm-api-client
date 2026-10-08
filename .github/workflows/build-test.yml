@@ -3,6 +3,7 @@
 name: Build Lint Test
 
 on:
+  pull_request:
   push:
     branches-ignore:
       - 'main'
@@ -17,8 +18,7 @@ jobs:
   build-and-test:
     runs-on: ubuntu-latest
     permissions:
-      contents: write
-      packages: write
+      contents: read
 
     strategy:
       fail-fast: false
