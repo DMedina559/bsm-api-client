@@ -170,31 +170,10 @@ class DynamicOpenAPIMixin(GeneratedOperationMethods):
             ) from exc
         if json_data is not None and (form_data is not None or files):
             raise InvalidInputError("Choose either JSON or form data.")
-        supplied = {
-            "path": path_params or {},
-            "query": query or {},
-            "header": headers or {},
-        }
-        for parameter in operation.parameters:
-            location = parameter.get("in")
-            name = parameter.get("name")
-            if (
-                parameter.get("required")
-                and location in supplied
-                and name not in supplied[location]
-            ):
-                raise InvalidInputError(
-                    f"Missing required {location} parameter: {name}"
-                )
-        if (
-            operation.request_body.get("required")
-            and json_data is None
-            and form_data is None
-            and not files
-        ):
-            raise InvalidInputError(
-                f"Operation {operation_id} requires a request body."
-            )
+        self._validate_operation_inputs(
+            operation, operation_id, path_params, query, headers,
+            json_data, form_data, files,
+        )
         path = self._render_path(operation.path, path_params or {})
         if path.startswith("/api/"):
             path = self._api_base_segment + path[4:]
@@ -220,6 +199,43 @@ class DynamicOpenAPIMixin(GeneratedOperationMethods):
             headers=headers,
             authenticated=authenticated,
         )
+
+    @staticmethod
+    def _validate_operation_inputs(
+        operation: DiscoveredOperation,
+        operation_id: str,
+        path_params: Optional[Mapping[str, Any]],
+        query: Optional[Mapping[str, Any]],
+        headers: Optional[Mapping[str, str]],
+        json_data: Any,
+        form_data: Optional[Mapping[str, Any]],
+        files: Optional[Mapping[str, Any]],
+    ) -> None:
+        supplied = {
+            "path": path_params or {},
+            "query": query or {},
+            "header": headers or {},
+        }
+        for parameter in operation.parameters:
+            location = parameter.get("in")
+            name = parameter.get("name")
+            if (
+                parameter.get("required")
+                and location in supplied
+                and name not in supplied[location]
+            ):
+                raise InvalidInputError(
+                    f"Missing required {location} parameter: {name}"
+                )
+        if (
+            operation.request_body.get("required")
+            and json_data is None
+            and form_data is None
+            and not files
+        ):
+            raise InvalidInputError(
+                f"Operation {operation_id} requires a request body."
+            )
 
     async def async_call_path(
         self,
