@@ -355,7 +355,13 @@ class DynamicOpenAPIMixin(GeneratedOperationMethods):
                 f"Unable to connect to {url}", original_exception=exc
             ) from exc
         try:
-            if response.status == 401 and authenticated and not is_retry and not files:
+            if (
+                response.status == 401
+                and authenticated
+                and not is_retry
+                and not files
+                and (raw_request is None or not raw_request.stream.is_consumed)
+            ):
                 # Release the failed response before refreshing the token or
                 # retrying. Keeping it open can starve a constrained pool.
                 response.release()
