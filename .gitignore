@@ -180,7 +180,12 @@ data
 
 *Zone.Identifier
 
-# Ignore scratch exports; the generated package is shipped in Git.
+# Generated Python client is built from the tracked OpenAPI schema.
+/packages/bsm-api-client/src/bsm_api_client/generated/**
+!/packages/bsm-api-client/src/bsm_api_client/generated/__init__.py
+!/packages/bsm-api-client/src/bsm_api_client/generated/openapi.json
+
+# Ignore scratch OpenAPI exports.
 /openapi.json
 
 .mypy_cache*/
