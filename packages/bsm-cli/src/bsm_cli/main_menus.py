@@ -1,3 +1,5 @@
+import inspect
+
 import click
 import questionary
 from bsm_cli.menu_registry import command_menu, plugin_api_menu
@@ -268,7 +270,8 @@ async def manage_server_menu(ctx: click.Context, server_name: str):  # noqa: C90
             if callable(action) and not hasattr(action, "commands"):
                 await action(ctx, server_name)
             elif isinstance(action, tuple):
-                command_obj, kwargs = action
+                command_obj, defaults = action
+                kwargs = dict(defaults)
                 if not command_obj:
                     continue
                 if hasattr(command_obj, "name") and command_obj.name == "send-command":
@@ -280,19 +283,20 @@ async def manage_server_menu(ctx: click.Context, server_name: str):  # noqa: C90
                     else:
                         continue
                 kwargs["server_name"] = server_name
-                await ctx.invoke(command_obj, **kwargs)
+                result = ctx.invoke(command_obj, **kwargs)
+                if inspect.isawaitable(result):
+                    await result
                 if hasattr(command_obj, "name") and command_obj.name == "delete":
                     click.echo("\nServer has been deleted. Returning to main menu.")
                     click.pause()
                     return
             elif hasattr(action, "commands"):
-                ctx.invoke(action, server_name=server_name)  # type: ignore
+                result = ctx.invoke(action, server_name=server_name)  # type: ignore
+                if inspect.isawaitable(result):
+                    await result
 
             click.pause("\nPress any key to return to the server menu...")
 
         except Exception as e:
-            import traceback
-
             click.secho(f"An error occurred while executing '{choice}': {e}", fg="red")
-            click.secho(traceback.format_exc(), fg="red", dim=True)
             click.pause()
