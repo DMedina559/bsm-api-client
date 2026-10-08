@@ -130,7 +130,10 @@ async def plugin_api_menu(ctx):
         name = parameter["name"]
         choices = await _resource_choices(ctx, name)
         if choices:
-            choices = [*choices, questionary.Choice("Enter manually", value="__manual__")]
+            choices = [
+                *choices,
+                questionary.Choice("Enter manually", value="__manual__"),
+            ]
             value = await questionary.select(f"{name}:", choices=choices).ask_async()
             if value == "__manual__":
                 value = await questionary.text(f"{name}:").ask_async()
