@@ -181,8 +181,7 @@ class DynamicOpenAPIMixin(GeneratedOperationMethods):
             files,
         )
         path = self._render_path(operation.path, path_params or {})
-        if path.startswith("/api/"):
-            path = self._api_base_segment + path[4:]
+        path = self._normalize_api_path(path)
         query = serialize_query(operation.parameters, query or {})
         if headers is not None:
             headers = serialize_headers(operation.parameters, headers)
@@ -285,7 +284,7 @@ class DynamicOpenAPIMixin(GeneratedOperationMethods):
         """Invoke a path directly, including endpoints without operationId."""
         return await self._dynamic_request(
             method.upper(),
-            self._render_path(path, path_params or {}),
+            self._normalize_api_path(self._render_path(path, path_params or {})),
             query=query,
             json_data=json_data,
             form_data=form_data,
@@ -441,6 +440,11 @@ class DynamicOpenAPIMixin(GeneratedOperationMethods):
         finally:
             if response_context is not None:
                 await response_context.__aexit__(None, None, None)
+
+    def _normalize_api_path(self, path: str) -> str:
+        if path == "/api" or path.startswith("/api/"):
+            return self._api_base_segment + path[4:]
+        return path
 
     @staticmethod
     def _index_operations(schema: Mapping[str, Any]) -> Dict[str, DiscoveredOperation]:
