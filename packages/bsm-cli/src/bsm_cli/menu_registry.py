@@ -10,25 +10,38 @@ from bsm_cli.output import get_client
 
 
 async def command_menu(ctx, group):
-    """Browse a registered command group without maintaining a feature list."""
-    name = await questionary.select(
-        group.help or group.name, choices=[*sorted(group.commands), "Back"]
-    ).ask_async()
-    if not name or name == "Back":
-        return
-    command = group.commands[name]
-    if isinstance(command, click.Group):
-        return await command_menu(ctx, command)
-    kwargs = {}
-    for param in command.params:
-        value = await _prompt_parameter(ctx, param)
-        if value is _CANCEL:
+    """Browse commands as a persistent interactive management menu."""
+    while True:
+        name = await questionary.select(
+            group.help or group.name,
+            choices=[*sorted(group.commands), "Back"],
+        ).ask_async()
+        if not name or name == "Back":
             return
-        if value is not _DEFAULT:
-            kwargs[param.name] = value
-    result = ctx.invoke(command, **kwargs)
-    if inspect.isawaitable(result):
-        await result
+        command = group.commands[name]
+        if isinstance(command, click.Group):
+            await command_menu(ctx, command)
+            continue
+        kwargs = {}
+        cancelled = False
+        for param in command.params:
+            value = await _prompt_parameter(ctx, param)
+            if value is _CANCEL:
+                cancelled = True
+                break
+            if value is not _DEFAULT:
+                kwargs[param.name] = value
+        if cancelled:
+            continue
+        try:
+            result = ctx.invoke(command, **kwargs)
+            if inspect.isawaitable(result):
+                await result
+        except (click.Abort, KeyboardInterrupt):
+            click.secho("Action cancelled.", fg="yellow")
+        except Exception as exc:
+            click.secho(f"Action failed: {exc}", fg="red")
+        click.pause("Press any key to return to the menu...")
 
 
 _CANCEL = object()
