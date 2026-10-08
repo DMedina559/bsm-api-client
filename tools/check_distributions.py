@@ -39,6 +39,17 @@ def check(path: Path) -> None:
         if not any(name.endswith("/generate_client.py") for name in contents):
             raise RuntimeError(f"{path}: missing build-time generator")
         if root + "operations.json" not in contents:
+            unexpected = [
+                name
+                for name in contents
+                if name.startswith(root)
+                and name.endswith(".py")
+                and name != root + "__init__.py"
+            ]
+            if unexpected:
+                raise RuntimeError(
+                    f"{path}: generated Python modules leaked into source archive"
+                )
             print(f"{path.name}: source schema and build generator packaged")
             return
     registry = json.loads(contents[root + "operations.json"])
