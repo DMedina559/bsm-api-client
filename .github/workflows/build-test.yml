@@ -60,6 +60,7 @@ jobs:
         python -m venv --system-site-packages "$RUNNER_TEMP/bsm-wheel-smoke"
         "$RUNNER_TEMP/bsm-wheel-smoke/bin/python" -m pip install --ignore-installed --no-deps packages/bsm-api-client/dist/*.whl packages/bsm-cli/dist/*.whl
         cd "$RUNNER_TEMP"
+        "$RUNNER_TEMP/bsm-wheel-smoke/bin/python" -c "from bsm_api_client.generated.client import Client; from bsm_api_client.generated.api.account_management import get_account; assert Client and get_account"
         "$RUNNER_TEMP/bsm-wheel-smoke/bin/python" -m pytest -c /dev/null --import-mode=importlib "$GITHUB_WORKSPACE/packages/bsm-cli/tests/test_cli_commands.py"
 
     - name: Validate OpenAPI generation
