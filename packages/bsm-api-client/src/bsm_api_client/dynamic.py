@@ -225,10 +225,14 @@ class DynamicOpenAPIMixin(GeneratedOperationMethods):
         for parameter in operation.parameters:
             location = parameter.get("in")
             name = parameter.get("name")
+            if location == "cookie":
+                raise InvalidInputError(
+                    f"Cookie parameter {name} is not supported by this client."
+                )
             if (
                 parameter.get("required")
                 and location in supplied
-                and name not in supplied[location]
+                and (name not in supplied[location] or supplied[location][name] is None)
             ):
                 raise InvalidInputError(
                     f"Missing required {location} parameter: {name}"
