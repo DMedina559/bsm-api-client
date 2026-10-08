@@ -33,9 +33,14 @@ async def _world_management_menu(ctx: click.Context, server_name: str):
             return
         command = menu_map.get(choice)
         if command:
-            result = ctx.invoke(command, server_name=server_name)
-            if inspect.isawaitable(result):
-                await result
+            try:
+                result = ctx.invoke(command, server_name=server_name)
+                if inspect.isawaitable(result):
+                    await result
+            except (click.Abort, KeyboardInterrupt):
+                click.secho("Action cancelled.", fg="yellow")
+            except Exception as exc:
+                click.secho(f"Action failed: {exc}", fg="red")
             click.pause("Press any key to return to this menu...")
 
 
@@ -64,9 +69,14 @@ async def _backup_restore_menu(ctx: click.Context, server_name: str):
             return
         command = menu_map.get(choice)
         if command:
-            result = ctx.invoke(command, server_name=server_name)
-            if inspect.isawaitable(result):
-                await result
+            try:
+                result = ctx.invoke(command, server_name=server_name)
+                if inspect.isawaitable(result):
+                    await result
+            except (click.Abort, KeyboardInterrupt):
+                click.secho("Action cancelled.", fg="yellow")
+            except Exception as exc:
+                click.secho(f"Action failed: {exc}", fg="red")
             click.pause("Press any key to return to this menu...")
 
 
@@ -95,9 +105,14 @@ async def _bans_menu(ctx: click.Context, server_name: str):
             return
         command = menu_map.get(choice)
         if command:
-            result = ctx.invoke(command, server_name=server_name)
-            if inspect.isawaitable(result):
-                await result
+            try:
+                result = ctx.invoke(command, server_name=server_name)
+                if inspect.isawaitable(result):
+                    await result
+            except (click.Abort, KeyboardInterrupt):
+                click.secho("Action cancelled.", fg="yellow")
+            except Exception as exc:
+                click.secho(f"Action failed: {exc}", fg="red")
             click.pause("Press any key to return to this menu...")
 
 
