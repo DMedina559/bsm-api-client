@@ -1,9 +1,9 @@
 """Generate the typed client when building a wheel or source distribution."""
 
-from pathlib import Path
 import shutil
 import subprocess
 import sys
+from pathlib import Path
 
 from setuptools import setup
 from setuptools.command.build_py import build_py
