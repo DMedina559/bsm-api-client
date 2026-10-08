@@ -3,6 +3,7 @@ import inspect
 import click
 import questionary
 from bsm_cli.menu_registry import command_menu, plugin_api_menu
+from bsm_cli.plugins import interactive_plugin_workflow
 from bsm_cli.server import list_servers
 from questionary import Separator
 
@@ -130,6 +131,7 @@ async def main_menu(ctx: click.Context):  # noqa: C901
                 if isinstance(group, click.Group) and name not in {"auth", "server"}
             }
             menu_choices.extend(registry)
+            menu_choices.append("Manage Plugins")
             await client.async_discover_api()
             if client.capabilities.plugins:
                 menu_choices.append("Plugin API")
@@ -158,6 +160,8 @@ async def main_menu(ctx: click.Context):  # noqa: C901
                 if server_name:
                     await manage_server_menu(ctx, server_name)
 
+            elif choice == "Manage Plugins":
+                await interactive_plugin_workflow(client)
             elif choice == "Plugin API":
                 await plugin_api_menu(ctx)
                 click.pause("Press any key to return to the main menu...")
