@@ -29,13 +29,18 @@ def check(path: Path) -> None:
                     with handle:
                         contents[member.name] = handle.read()
         roots = {
-            name.removesuffix("operations.json")
+            name.removesuffix("openapi.json")
             for name in contents
-            if name.endswith("/bsm_api_client/generated/operations.json")
+            if name.endswith("/bsm_api_client/generated/openapi.json")
         }
         if len(roots) != 1:
-            raise RuntimeError(f"{path}: missing generated operation registry")
+            raise RuntimeError(f"{path}: missing bundled OpenAPI schema")
         root = roots.pop()
+        if not any(name.endswith("/generate_client.py") for name in contents):
+            raise RuntimeError(f"{path}: missing build-time generator")
+        if root + "operations.json" not in contents:
+            print(f"{path.name}: source schema and build generator packaged")
+            return
     registry = json.loads(contents[root + "operations.json"])
     schema = json.loads(contents[root + "openapi.json"])
     expected = {
