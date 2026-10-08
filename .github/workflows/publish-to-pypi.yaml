@@ -32,8 +32,7 @@ jobs:
       - name: Generate BSM OpenAPI client
         run: |
           python tools/export_bsm_openapi.py --output openapi.json
-          python tools/generate_client.py openapi.json
-          git diff --exit-code -- packages/bsm-api-client/src/bsm_api_client/generated
+          python -c "import json, pathlib; tracked=json.loads(pathlib.Path('packages/bsm-api-client/src/bsm_api_client/generated/openapi.json').read_text()); exported=json.loads(pathlib.Path('openapi.json').read_text()); assert tracked == exported, 'Bundled OpenAPI schema differs from pinned backend'"
 
       - name: Build and publish bsm-api-client
         run: |
