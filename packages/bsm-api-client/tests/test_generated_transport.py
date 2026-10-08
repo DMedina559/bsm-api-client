@@ -172,7 +172,6 @@ async def test_expired_token_retry_releases_first_response(local_api):
     unauthorized_response = None
 
     def tracked_request(*args, **kwargs):
-        nonlocal unauthorized_response
         context = original_request(*args, **kwargs)
 
         class TrackedContext:
