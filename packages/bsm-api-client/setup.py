@@ -31,7 +31,11 @@ def generator_path():
 class GeneratedBuildPy(build_py):
     def run(self):
         super().run()
-        output = Path(self.build_lib) / "bsm_api_client" / "generated"
+        output = (
+            SCHEMA.parent
+            if getattr(self, "editable_mode", False)
+            else Path(self.build_lib) / "bsm_api_client" / "generated"
+        )
         subprocess.run(
             [
                 sys.executable,
