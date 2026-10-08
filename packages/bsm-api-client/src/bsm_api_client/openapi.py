@@ -68,8 +68,6 @@ DiscoveredOperation = ApiOperation
 def index_operations(
     schema: Mapping[str, Any], generated_ids: set[str] | None = None
 ) -> dict[str, ApiOperation]:
-    import re
-
     result = {}
     for path, raw_item in schema.get("paths", {}).items():
         item = resolve(schema, raw_item)
