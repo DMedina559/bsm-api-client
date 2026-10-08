@@ -161,3 +161,39 @@ async def test_concurrent_expired_requests_share_one_refresh(local_api):
     )
     assert all(response.status == "success" for response in responses)
     assert len([entry for entry in seen if entry[0] == "login"]) == 1
+
+
+@pytest.mark.asyncio
+async def test_expired_token_retry_releases_first_response(local_api):
+    """The 401 response must be closed before authentication is attempted."""
+    client, _ = local_api
+    original_authenticate = client.authenticate
+    original_request = client._session.request
+    unauthorized_response = None
+
+    def tracked_request(*args, **kwargs):
+        nonlocal unauthorized_response
+        context = original_request(*args, **kwargs)
+
+        class TrackedContext:
+            async def __aenter__(self):
+                nonlocal unauthorized_response
+                response = await context.__aenter__()
+                if response.status == 401:
+                    unauthorized_response = response
+                return response
+
+            async def __aexit__(self, *exc):
+                return await context.__aexit__(*exc)
+
+        return TrackedContext()
+
+    async def assert_released_before_auth():
+        assert unauthorized_response is not None
+        assert unauthorized_response.closed
+        return await original_authenticate()
+
+    client._session.request = tracked_request
+    client.authenticate = assert_released_before_auth
+    result = await client.async_start_server("example")
+    assert result.status == "success"
