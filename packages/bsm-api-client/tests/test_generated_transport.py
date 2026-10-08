@@ -197,3 +197,21 @@ async def test_expired_token_retry_releases_first_response(local_api):
     client.authenticate = assert_released_before_auth
     result = await client.async_start_server("example")
     assert result.status == "success"
+
+
+@pytest.mark.asyncio
+async def test_dynamic_multipart_accepts_file_stream(local_api, tmp_path):
+    client, seen = local_api
+    client._jwt_token = "fresh"
+    client._discovered_operations = client._index_operations(
+        {"paths": {"/extension/upload": {"post": {"operationId": "upload"}}}}
+    )
+    upload_path = tmp_path / "payload.bin"
+    upload_path.write_bytes(b"streamed upload")
+    with upload_path.open("rb") as stream:
+        result = await client.async_call_operation(
+            "upload",
+            files={"file": ("payload.bin", stream, "application/octet-stream")},
+        )
+    assert result == {"uploaded": True}
+    assert seen == [("file", "payload.bin", b"streamed upload")]
