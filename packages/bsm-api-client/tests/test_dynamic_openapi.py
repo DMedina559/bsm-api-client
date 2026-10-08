@@ -203,7 +203,9 @@ async def test_discovered_operation_rejects_missing_required_body():
                         "operationId": "demo_body",
                         "requestBody": {
                             "required": True,
-                            "content": {"application/json": {"schema": {"type": "object"}}},
+                            "content": {
+                                "application/json": {"schema": {"type": "object"}}
+                            },
                         },
                     }
                 }

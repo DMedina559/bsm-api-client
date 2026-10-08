@@ -171,8 +171,14 @@ class DynamicOpenAPIMixin(GeneratedOperationMethods):
         if json_data is not None and (form_data is not None or files):
             raise InvalidInputError("Choose either JSON or form data.")
         self._validate_operation_inputs(
-            operation, operation_id, path_params, query, headers,
-            json_data, form_data, files,
+            operation,
+            operation_id,
+            path_params,
+            query,
+            headers,
+            json_data,
+            form_data,
+            files,
         )
         path = self._render_path(operation.path, path_params or {})
         if path.startswith("/api/"):
