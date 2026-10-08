@@ -229,9 +229,10 @@ class DynamicOpenAPIMixin(GeneratedOperationMethods):
                 raise InvalidInputError(
                     f"Cookie parameter {name} is not supported by this client."
                 )
+            if not isinstance(name, str):
+                raise InvalidInputError("OpenAPI parameter is missing a name.")
             if (
-                isinstance(name, str)
-                and parameter.get("required")
+                parameter.get("required")
                 and location in supplied
                 and (name not in supplied[location] or supplied[location][name] is None)
             ):
