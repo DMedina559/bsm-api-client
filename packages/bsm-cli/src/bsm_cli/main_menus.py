@@ -138,9 +138,13 @@ async def main_menu(ctx: click.Context):  # noqa: C901
             }
             menu_choices.extend(registry)
             menu_choices.append("Manage Plugins")
-            await client.async_discover_api()
-            if client.capabilities.plugins:
-                menu_choices.append("Plugin API")
+            try:
+                await client.async_discover_api()
+            except Exception as exc:
+                click.secho(f"Plugin API discovery unavailable: {exc}", fg="yellow")
+            else:
+                if client.capabilities.plugins:
+                    menu_choices.append("Plugin API")
             menu_choices.append(Separator("--- Application ---"))
             menu_choices.append("Exit")
 
