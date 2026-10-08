@@ -346,6 +346,7 @@ class DynamicOpenAPIMixin(GeneratedOperationMethods):
             request_headers.setdefault("Content-Type", "application/json")
         upload_data = None
         if raw_request is not None:
+
             async def request_chunks():
                 async for chunk in raw_request.stream:
                     yield chunk
