@@ -238,9 +238,12 @@ class DynamicOpenAPIMixin(GeneratedOperationMethods):
                     f"Missing required {location} parameter: {name}"
                 )
         content = operation.request_body.get("content", {})
-        if json_data is not None and content and not any(
-            kind == "application/json" or kind.endswith("+json")
-            for kind in content
+        if (
+            json_data is not None
+            and content
+            and not any(
+                kind == "application/json" or kind.endswith("+json") for kind in content
+            )
         ):
             raise InvalidInputError(
                 f"Operation {operation_id} does not advertise a JSON request body."
