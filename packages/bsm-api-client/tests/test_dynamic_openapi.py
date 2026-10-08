@@ -160,3 +160,59 @@ async def test_compat_request_uses_openapi_transport():
         )
     finally:
         await client.close()
+
+
+@pytest.mark.asyncio
+async def test_discovered_operation_rejects_missing_required_query():
+    client = DummyClient()
+    client._discovered_operations = client._index_operations(
+        {
+            "paths": {
+                "/plugins/demo": {
+                    "get": {
+                        "operationId": "demo_required",
+                        "parameters": [
+                            {
+                                "name": "page",
+                                "in": "query",
+                                "required": True,
+                                "schema": {"type": "integer"},
+                            }
+                        ],
+                    }
+                }
+            }
+        }
+    )
+    client._dynamic_request = AsyncMock()
+    from bsm_api_client.exceptions import InvalidInputError
+
+    with pytest.raises(InvalidInputError, match="required query parameter: page"):
+        await client.async_call_operation("demo_required")
+    client._dynamic_request.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_discovered_operation_rejects_missing_required_body():
+    client = DummyClient()
+    client._discovered_operations = client._index_operations(
+        {
+            "paths": {
+                "/plugins/demo": {
+                    "post": {
+                        "operationId": "demo_body",
+                        "requestBody": {
+                            "required": True,
+                            "content": {"application/json": {"schema": {"type": "object"}}},
+                        },
+                    }
+                }
+            }
+        }
+    )
+    client._dynamic_request = AsyncMock()
+    from bsm_api_client.exceptions import InvalidInputError
+
+    with pytest.raises(InvalidInputError, match="requires a request body"):
+        await client.async_call_operation("demo_body")
+    client._dynamic_request.assert_not_awaited()
