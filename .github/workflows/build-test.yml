@@ -51,6 +51,8 @@ jobs:
         python -m build packages/bsm-api-client
         python -m build packages/bsm-cli
         python tools/check_distributions.py packages/bsm-api-client/dist/*
+        python -m pip wheel --no-deps --wheel-dir "$RUNNER_TEMP/bsm-sdist-wheels" packages/bsm-api-client/dist/*.tar.gz
+        python tools/check_distributions.py "$RUNNER_TEMP"/bsm-sdist-wheels/*.whl
 
     - name: Test installed wheels
       run: |
