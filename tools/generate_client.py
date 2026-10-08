@@ -76,10 +76,15 @@ def generate(schema: dict[str, Any], output: Path) -> None:
                 continue
             tree = ast.parse(module.read_text(encoding="utf-8"))
             builder = next(
-                node
-                for node in tree.body
-                if isinstance(node, ast.FunctionDef) and node.name == "_get_kwargs"
+                (
+                    node
+                    for node in tree.body
+                    if isinstance(node, ast.FunctionDef) and node.name == "_get_kwargs"
+                ),
+                None,
             )
+            if builder is None:
+                raise RuntimeError(f"Generated module lacks _get_kwargs: {module}")
             for node in ast.walk(builder):
                 if not isinstance(node, ast.Dict):
                     continue
@@ -98,6 +103,10 @@ def generate(schema: dict[str, Any], output: Path) -> None:
                     else url
                 )
                 operation_id = schema["paths"][path][method]["operationId"]
+                if operation_id in registry:
+                    raise RuntimeError(
+                        f"Duplicate generated operationId {operation_id!r}: {module}"
+                    )
                 registry[operation_id] = ".".join(
                     module.relative_to(package).with_suffix("").parts
                 )
@@ -111,7 +120,9 @@ def generate(schema: dict[str, Any], output: Path) -> None:
         }
         if expected != registry.keys():
             raise RuntimeError(
-                f"Generator omitted operations: {sorted(expected - registry.keys())}"
+                "Generator operation mismatch: "
+                f"missing={sorted(expected - registry.keys())}, "
+                f"unexpected={sorted(registry.keys() - expected)}"
             )
         (package / "operations.json").write_text(
             json.dumps(registry, indent=2, sort_keys=True) + "\n", encoding="utf-8"
