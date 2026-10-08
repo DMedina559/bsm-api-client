@@ -83,6 +83,11 @@ async def _prompt_parameter(ctx, param):
     if multiple:
         prompt += " (one value or a JSON array)"
     prompt += " (blank for default):" if not param.required else ":"
+    if isinstance(param, click.Option) and param.is_flag:
+        answer = await questionary.confirm(
+            prompt, default=bool(param.default)
+        ).ask_async()
+        return _CANCEL if answer is None else answer
     if not multiple and not getattr(param, "hide_input", False):
         choices = await _resource_choices(ctx, param.name)
         if choices:
