@@ -46,6 +46,13 @@ class GeneratedBuildPy(build_py):
 class GeneratedSdist(sdist):
     def make_release_tree(self, base_dir, files):
         super().make_release_tree(base_dir, files)
+        generated = Path(base_dir) / "src" / "bsm_api_client" / "generated"
+        for item in generated.iterdir():
+            if item.name not in {"__init__.py", "openapi.json"}:
+                if item.is_dir():
+                    shutil.rmtree(item)
+                else:
+                    item.unlink()
         shutil.copyfile(generator_path(), Path(base_dir) / "generate_client.py")
 
 
