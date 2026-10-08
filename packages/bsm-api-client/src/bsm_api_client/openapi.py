@@ -54,6 +54,11 @@ class ApiOperation:
     generated: bool = False
 
     @property
+    def requires_authentication(self) -> bool:
+        """OpenAPI security is optional when any alternative is empty."""
+        return bool(self.security) and {} not in self.security
+
+    @property
     def namespace(self) -> str:
         return self.tags[0] if self.tags else "default"
 
