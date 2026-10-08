@@ -103,7 +103,7 @@ async def invoke(ctx, operation_id, param, json_body, form, plugin_name=None, fi
             headers=locations["header"],
             json_data=body,
             form_data=assignments(form) if form else None,
-            authenticated=bool(operation.security),
+            authenticated=not (operation.security == ({},)),
             **({"files": files} if files else {}),
         )
     return emit(ctx, result)
