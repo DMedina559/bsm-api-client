@@ -449,7 +449,7 @@ class DynamicOpenAPIMixin(GeneratedOperationMethods):
     @staticmethod
     def _render_path(path: str, values: Mapping[str, Any]) -> str:
         required = set(_PATH_PARAMETER_RE.findall(path))
-        missing = required.difference(values)
+        missing = {name for name in required if name not in values or values[name] is None}
         if missing:
             raise InvalidInputError(
                 f"Missing path parameters: {', '.join(sorted(missing))}"
