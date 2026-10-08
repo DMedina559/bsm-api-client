@@ -230,7 +230,8 @@ class DynamicOpenAPIMixin(GeneratedOperationMethods):
                     f"Cookie parameter {name} is not supported by this client."
                 )
             if (
-                parameter.get("required")
+                isinstance(name, str)
+                and parameter.get("required")
                 and location in supplied
                 and (name not in supplied[location] or supplied[location][name] is None)
             ):
