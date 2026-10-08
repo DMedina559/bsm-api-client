@@ -77,7 +77,11 @@ async def call_generated(
         raise APIError(
             f"Unable to parse response for generated operation {operation_id}: {exc}"
         ) from exc
-    return response if detailed else (response.parsed if typed else response_value(response))
+    return (
+        response
+        if detailed
+        else (response.parsed if typed else response_value(response))
+    )
 
 
 def response_value(response: Any) -> Any:

@@ -124,6 +124,4 @@ async def test_generated_adapter_typed_mode_preserves_parsed_model(monkeypatch):
     assert await generated_adapter.call_generated(owner, "test", typed=True) is parsed
     assert await generated_adapter.call_generated(owner, "test") == {"status": "ok"}
     with pytest.raises(generated_adapter.InvalidInputError):
-        await generated_adapter.call_generated(
-            owner, "test", typed=True, detailed=True
-        )
+        await generated_adapter.call_generated(owner, "test", typed=True, detailed=True)
