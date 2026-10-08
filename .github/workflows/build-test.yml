@@ -40,6 +40,7 @@ jobs:
         python -m pip install --upgrade pip
         pip install build
         pip install -e ./packages/bsm-api-client[dev] -e ./packages/bsm-cli[dev]
+        python -c "from bsm_api_client.generated import client; from bsm_api_client.generated.api import account_management; assert client.Client and account_management"
 
     - name: Run pre-commit
       run: |
