@@ -74,3 +74,15 @@ def test_logout_clears_credentials_that_would_automatically_login_again(
     assert result.exit_code == 0, result.output
     saved = json.loads(path.read_text())
     assert all(saved[key] is None for key in ("jwt_token", "username", "password"))
+
+
+def test_config_file_is_owner_only_and_replaced_atomically(auth_config):
+    import os
+    import stat
+
+    config, path = auth_config
+    config.update(jwt_token="new-token")
+    assert json.loads(path.read_text())["jwt_token"] == "new-token"
+    if os.name == "posix":
+        assert stat.S_IMODE(path.stat().st_mode) == 0o600
+    assert list(path.parent.glob(f".{path.name}.*")) == []
