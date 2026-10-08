@@ -325,9 +325,11 @@ class DynamicOpenAPIMixin(GeneratedOperationMethods):
         request_headers = dict(self._default_headers)
         if raw_request is not None:
             request_headers.update(raw_request.headers)
-            request_headers.pop("host", None)
-            request_headers.pop("content-length", None)
-            request_headers.pop("transfer-encoding", None)
+            request_headers = {
+                key: value
+                for key, value in request_headers.items()
+                if key.lower() not in {"host", "content-length", "transfer-encoding"}
+            }
         if headers:
             request_headers.update(
                 {
