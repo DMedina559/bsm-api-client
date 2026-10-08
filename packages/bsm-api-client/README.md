@@ -25,7 +25,9 @@
 *   Fully asynchronous with a generated OpenAPI client plus an `aiohttp` compatibility/WebSocket transport.
 *   Context manager support for session management.
 *   Handles authentication (JWT) automatically, including token refresh attempts.
-*   Generates the typed REST surface from BSM 4.x FastAPI OpenAPI at release time.\n*   Discovers new core and plugin FastAPI endpoints at runtime without waiting for a client release.\n*   Provides compatibility methods for the established BSM client API:
+*   Generates the typed REST surface from BSM 4.x FastAPI OpenAPI at release time.
+*   Discovers new core and plugin FastAPI endpoints at runtime without waiting for a client release.
+*   Provides compatibility methods for the established BSM client API:
     *   Manager Information & Global Actions
     *   Server Listing, Status & Configuration
     *   Server Actions (Start, Stop, Command, Update, etc.)
