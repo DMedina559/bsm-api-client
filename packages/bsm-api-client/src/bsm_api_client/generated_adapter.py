@@ -43,8 +43,11 @@ async def call_generated(
     body: Any = None,
     authenticated: bool = True,
     detailed: bool = False,
+    typed: bool = False,
 ) -> Any:
     """Use generated serialization and response parsing with shared transport."""
+    if detailed and typed:
+        raise InvalidInputError("Choose either detailed or typed response mode.")
     module = operation_module(operation_id)
     from .generated import Client
 
@@ -74,7 +77,7 @@ async def call_generated(
         raise APIError(
             f"Unable to parse response for generated operation {operation_id}: {exc}"
         ) from exc
-    return response if detailed else response_value(response)
+    return response if detailed else (response.parsed if typed else response_value(response))
 
 
 def response_value(response: Any) -> Any:
@@ -120,6 +123,7 @@ class GeneratedOperationMethods:
         body: Any = None,
         authenticated: bool = True,
         detailed: bool = False,
+        typed: bool = False,
     ) -> Any:
         return await call_generated(
             self,
@@ -128,4 +132,5 @@ class GeneratedOperationMethods:
             body=body,
             authenticated=authenticated,
             detailed=detailed,
+            typed=typed,
         )
