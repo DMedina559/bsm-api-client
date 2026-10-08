@@ -4,7 +4,11 @@ BSM's installed FastAPI application is the source of truth. This branch targets
 BSM `refactor!/move-api-to-pydantic` at `833eb28fde7b5a43140933405aa5fb0f4700eddd`, which supplies explicit
 operation IDs such as `start_server`, `list_servers`, and `create_backup`.
 Both development extras and the release workflow pin that revision. Update the
-pins together when adopting another BSM revision.
+pins together when adopting another BSM revision. The upstream reference branch
+`refactor!/move-api-to-pydantic` was inspected at `29e830f4a282bc12660241b60ea4b513442316b4`.
+That newer branch head is a **reference**, not the currently generated client
+contract: upgrading the generation pin requires exporting and committing the
+corresponding generated schema and endpoint modules, then passing drift checks.
 
 ## Regeneration
 
@@ -43,8 +47,10 @@ step using the patched generator.
   authentication, retries, timeouts, SSL/session ownership, and API exceptions.
 - `ApiOperation`: parameters, bodies, responses, security, tags, plugin ownership,
   deprecation, and generated/runtime status shared by Python and the CLI.
-- `async_call_generated(operation_id, parameters=..., body=..., detailed=True)`:
-  generated serialization and typed parsed responses through the shared transport.
+- `async_call_generated(operation_id, parameters=..., body=..., typed=True)`:
+  return the generated parsed response model; the default remains a dictionary
+  or bytes for compatibility. `detailed=True` returns the complete response,
+  including its `parsed` field. Do not combine `typed` and `detailed`.
 - `async_discover_api()` / `async_call_operation()`: added core and plugin routes.
 
 Every facade REST adapter calls a generated operation by ID, including login,
@@ -66,6 +72,10 @@ async with BedrockServerManagerApi(url, username="admin", password="...") as cli
         "start_server", parameters={"server_name": "survival"}, detailed=True
     )
     print(detailed.parsed)
+    typed = await client.async_call_generated(
+        "start_server", parameters={"server_name": "survival"}, typed=True
+    )
+    print(typed)
 ```
 
 Diffs report added, removed, changed, and generated operations. Changes include
