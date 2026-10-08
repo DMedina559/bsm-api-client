@@ -49,6 +49,42 @@ jobs:
     - name: Check fresh-checkout client and distributions
       run: |
         python -m pytest --ignore=packages/bsm-api-client/tests/integration
+        if git ls-files packages/bsm-api-client/src/bsm_api_client/generated | grep -vE '/(openapi.json|__init__.py) packages/bsm-api-client
+        python -m build packages/bsm-cli
+        python tools/check_distributions.py packages/bsm-api-client/dist/*
+        python -m pip wheel --no-deps --wheel-dir "$RUNNER_TEMP/bsm-sdist-wheels" packages/bsm-api-client/dist/*.tar.gz
+        python tools/check_distributions.py "$RUNNER_TEMP"/bsm-sdist-wheels/*.whl
+
+    - name: Test installed wheels
+      run: |
+        python -m venv --system-site-packages "$RUNNER_TEMP/bsm-wheel-smoke"
+        "$RUNNER_TEMP/bsm-wheel-smoke/bin/python" -m pip install --ignore-installed --no-deps packages/bsm-api-client/dist/*.whl packages/bsm-cli/dist/*.whl
+        cd "$RUNNER_TEMP"
+        "$RUNNER_TEMP/bsm-wheel-smoke/bin/python" -c "from bsm_api_client.generated.client import Client; from bsm_api_client.generated.api.account_management import get_account; assert Client and get_account"
+        "$RUNNER_TEMP/bsm-wheel-smoke/bin/python" -m pytest -c /dev/null --import-mode=importlib "$GITHUB_WORKSPACE/packages/bsm-cli/tests/test_cli_commands.py"
+
+    - name: Validate OpenAPI generation
+      run: |
+        python tools/export_bsm_openapi.py --output openapi.json
+        python -c "import json, pathlib; tracked=json.loads(pathlib.Path('packages/bsm-api-client/src/bsm_api_client/generated/openapi.json').read_text()); exported=json.loads(pathlib.Path('openapi.json').read_text()); assert tracked == exported, 'Bundled OpenAPI schema differs from pinned backend'"
+        python tools/generate_client.py openapi.json
+        PYTHONPATH=packages/bsm-api-client/src python -c "import bsm_api_client.generated; import bsm_api_client.generated.client"
+        git diff --exit-code -- packages/bsm-api-client/src/bsm_api_client/generated/openapi.json
+
+    - name: Run Pytest
+      run: |
+        python -m pytest
+
+    - name: Show integration diagnostics
+      if: failure()
+      run: |
+        if [ -f bedrock_server_manager_test.log ]; then
+          tail -n 160 bedrock_server_manager_test.log
+        fi
+; then
+          echo "Generated Python modules must not be tracked" >&2
+          exit 1
+        fi
         python -m build packages/bsm-api-client
         python -m build packages/bsm-cli
         python tools/check_distributions.py packages/bsm-api-client/dist/*
