@@ -89,7 +89,11 @@ async def _prompt_parameter(ctx, param):
         ).ask_async()
         return _CANCEL if answer is None else answer
     if not multiple and not getattr(param, "hide_input", False):
-        choices = await _resource_choices(ctx, param.name)
+        try:
+            choices = await _resource_choices(ctx, param.name)
+        except Exception as exc:
+            click.secho(f"Resource lookup unavailable: {exc}", fg="yellow")
+            choices = []
         if choices:
             if not param.required:
                 choices = [
@@ -146,7 +150,10 @@ async def plugin_api_menu(ctx):
     values = []
     for parameter in op.parameters:
         name = parameter["name"]
-        choices = await _resource_choices(ctx, name)
+        try:
+            choices = await _resource_choices(ctx, name)
+        except Exception:
+            choices = []
         if choices:
             choices = [
                 *choices,
