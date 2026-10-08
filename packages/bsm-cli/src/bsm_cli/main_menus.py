@@ -33,8 +33,10 @@ async def _world_management_menu(ctx: click.Context, server_name: str):
             return
         command = menu_map.get(choice)
         if command:
-            await ctx.invoke(command, server_name=server_name)
-            break
+            result = ctx.invoke(command, server_name=server_name)
+            if inspect.isawaitable(result):
+                await result
+            click.pause("Press any key to return to this menu...")
 
 
 async def _backup_restore_menu(ctx: click.Context, server_name: str):
@@ -62,8 +64,10 @@ async def _backup_restore_menu(ctx: click.Context, server_name: str):
             return
         command = menu_map.get(choice)
         if command:
-            await ctx.invoke(command, server_name=server_name)
-            break
+            result = ctx.invoke(command, server_name=server_name)
+            if inspect.isawaitable(result):
+                await result
+            click.pause("Press any key to return to this menu...")
 
 
 async def _bans_menu(ctx: click.Context, server_name: str):
@@ -91,8 +95,10 @@ async def _bans_menu(ctx: click.Context, server_name: str):
             return
         command = menu_map.get(choice)
         if command:
-            await ctx.invoke(command, server_name=server_name)
-            break
+            result = ctx.invoke(command, server_name=server_name)
+            if inspect.isawaitable(result):
+                await result
+            click.pause("Press any key to return to this menu...")
 
 
 async def main_menu(ctx: click.Context):  # noqa: C901
