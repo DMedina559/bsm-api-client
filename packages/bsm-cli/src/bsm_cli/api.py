@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from contextlib import ExitStack
 from pathlib import Path
 from typing import Any
 
@@ -81,28 +82,30 @@ async def invoke(ctx, operation_id, param, json_body, form, plugin_name=None, fi
     if file and json_body is not None:
         raise click.BadParameter("Choose --json or --file/--form.")
     body = request_body(operation, json_body, form or file)
-    files = {}
-    for name, path in assignments(file).items():
-        try:
-            files[name] = (
-                Path(path).name,
-                Path(path).read_bytes(),
-                "application/octet-stream",
-            )
-        except OSError as exc:
-            raise click.BadParameter(
-                f"Cannot read file '{path}': {exc}", param_hint="--file"
-            ) from exc
-    result = await client.async_call_operation(
-        operation_id,
-        path_params=locations["path"],
-        query=locations["query"],
-        headers=locations["header"],
-        json_data=body,
-        form_data=assignments(form) if form else None,
-        authenticated=bool(operation.security),
-        **({"files": files} if files else {}),
-    )
+    with ExitStack() as stack:
+        files = {}
+        for name, path in assignments(file).items():
+            try:
+                stream = stack.enter_context(Path(path).open("rb"))
+                files[name] = (
+                    Path(path).name,
+                    stream,
+                    "application/octet-stream",
+                )
+            except OSError as exc:
+                raise click.BadParameter(
+                    f"Cannot read file '{path}': {exc}", param_hint="--file"
+                ) from exc
+        result = await client.async_call_operation(
+            operation_id,
+            path_params=locations["path"],
+            query=locations["query"],
+            headers=locations["header"],
+            json_data=body,
+            form_data=assignments(form) if form else None,
+            authenticated=bool(operation.security),
+            **({"files": files} if files else {}),
+        )
     return emit(ctx, result)
 
 
