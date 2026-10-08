@@ -341,6 +341,11 @@ class DynamicOpenAPIMixin(GeneratedOperationMethods):
         if json_data is not None:
             request_headers.setdefault("Content-Type", "application/json")
         upload_data = None
+        if raw_request is not None:
+            async def request_chunks():
+                async for chunk in raw_request.stream:
+                    yield chunk
+
         if files:
             upload_data = aiohttp.FormData()
             for key, value in (form_data or {}).items():
@@ -363,7 +368,7 @@ class DynamicOpenAPIMixin(GeneratedOperationMethods):
                 ),
                 json=json_data,
                 data=(
-                    await raw_request.aread()
+                    request_chunks()
                     if raw_request is not None
                     else (
                         upload_data
