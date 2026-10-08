@@ -326,6 +326,8 @@ class DynamicOpenAPIMixin(GeneratedOperationMethods):
         if raw_request is not None:
             request_headers.update(raw_request.headers)
             request_headers.pop("host", None)
+            request_headers.pop("content-length", None)
+            request_headers.pop("transfer-encoding", None)
         if headers:
             request_headers.update(
                 {
