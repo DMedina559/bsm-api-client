@@ -45,12 +45,42 @@ def _multiple_values(param, value):
     return values
 
 
+async def _resource_choices(ctx, name):
+    """Fetch selectable resources for the interactive UI."""
+    client = get_client(ctx)
+    if name in {"server", "server_name"}:
+        response = await client.async_get_servers()
+        return sorted(server.name for server in (response.servers or []))
+    if name in {"plugin_name", "plugin"}:
+        response = await client.async_get_plugin_statuses()
+        plugins = response.plugins or {}
+        return [
+            questionary.Choice(
+                title=f"{'Enabled' if data.get('enabled') else 'Disabled'} · {plugin}",
+                value=plugin,
+            )
+            for plugin, data in sorted(plugins.items())
+        ]
+    return []
+
+
 async def _prompt_parameter(ctx, param):
     prompt = param.name.replace("_", " ")
     multiple = getattr(param, "multiple", False) or param.nargs == -1
     if multiple:
         prompt += " (one value or a JSON array)"
     prompt += " (blank for default):" if not param.required else ":"
+    if not multiple and not getattr(param, "hide_input", False):
+        choices = await _resource_choices(ctx, param.name)
+        if choices:
+            if not param.required:
+                choices = [questionary.Choice(title="Use default", value=_DEFAULT), *choices]
+            selection = await questionary.select(prompt, choices=choices).ask_async()
+            if selection is None:
+                return _CANCEL
+            if selection is _DEFAULT:
+                return _DEFAULT
+            return param.process_value(ctx, selection)
     ask = (
         questionary.password
         if getattr(param, "hide_input", False)
