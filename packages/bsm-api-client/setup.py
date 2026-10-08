@@ -30,6 +30,7 @@ def generator_path():
 
 class GeneratedBuildPy(build_py):
     def run(self):
+        super().run()
         output = Path(self.build_lib) / "bsm_api_client" / "generated"
         subprocess.run(
             [
@@ -41,7 +42,6 @@ class GeneratedBuildPy(build_py):
             ],
             check=True,
         )
-        super().run()
 
 
 class GeneratedSdist(sdist):
