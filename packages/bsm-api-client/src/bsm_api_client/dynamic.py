@@ -360,7 +360,7 @@ class DynamicOpenAPIMixin(GeneratedOperationMethods):
                 and authenticated
                 and not is_retry
                 and not files
-                and (raw_request is None or not raw_request.stream.is_consumed)
+                and raw_request is None
             ):
                 # Release the failed response before refreshing the token or
                 # retrying. Keeping it open can starve a constrained pool.
