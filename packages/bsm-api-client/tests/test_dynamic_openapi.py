@@ -218,3 +218,10 @@ async def test_discovered_operation_rejects_missing_required_body():
     with pytest.raises(InvalidInputError, match="requires a request body"):
         await client.async_call_operation("demo_body")
     client._dynamic_request.assert_not_awaited()
+
+
+def test_null_required_path_parameter_is_rejected():
+    from bsm_api_client.exceptions import InvalidInputError
+
+    with pytest.raises(InvalidInputError, match="server_name"):
+        DummyClient._render_path("/server/{server_name}/start", {"server_name": None})
