@@ -112,8 +112,8 @@ Enable Click shell completion, for example in Bash:
 eval "$(_BSM_CLI_COMPLETE=bash_source bsm-cli)"
 ```
 
-See [generation](../../docs/OPENAPI_GENERATION.md) and
-[the API contract](../../docs/OPENAPI_CONTRACT.md).
+For Python client examples and OpenAPI discovery, see the
+[API usage guide](../../docs/API_DOCS.md).
 
 
 ## Content and task behavior
