@@ -294,6 +294,11 @@ class DynamicOpenAPIMixin(GeneratedOperationMethods):
             ) from exc
         try:
             if response.status == 401 and authenticated and not is_retry:
+                # Release the failed response before refreshing the token or
+                # retrying. Keeping it open can starve a constrained pool.
+                response.release()
+                await response_context.__aexit__(None, None, None)
+                response_context = None
                 await self._ensure_authenticated(stale_token=token_used)
                 return await self._dynamic_request(
                     method,
@@ -328,7 +333,8 @@ class DynamicOpenAPIMixin(GeneratedOperationMethods):
                     return await response.text()
                 return await response.read()
         finally:
-            await response_context.__aexit__(None, None, None)
+            if response_context is not None:
+                await response_context.__aexit__(None, None, None)
 
     @staticmethod
     def _index_operations(schema: Mapping[str, Any]) -> Dict[str, DiscoveredOperation]:
