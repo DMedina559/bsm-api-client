@@ -233,7 +233,9 @@ async def test_direct_path_uses_configured_api_prefix():
     client._api_base_segment = "/custom-api"
     client._dynamic_request = AsyncMock(return_value={"status": "success"})
 
-    await client.async_call_path("get", "/api/plugins/demo/{name}", path_params={"name": "hello world"})
+    await client.async_call_path(
+        "get", "/api/plugins/demo/{name}", path_params={"name": "hello world"}
+    )
 
     client._dynamic_request.assert_awaited_once_with(
         "GET",
