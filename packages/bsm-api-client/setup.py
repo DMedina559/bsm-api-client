@@ -49,6 +49,7 @@ class GeneratedSdist(sdist):
         super().make_release_tree(base_dir, files)
         destination = Path(base_dir) / "generate_client.py"
         shutil.copyfile(generator_path(), destination)
+        # Keep the source archive self-contained for offline rebuilds.
 
 
 setup(cmdclass={"build_py": GeneratedBuildPy, "sdist": GeneratedSdist})
