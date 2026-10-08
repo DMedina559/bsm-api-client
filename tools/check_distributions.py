@@ -74,7 +74,10 @@ def check_wheel(path: Path, contents: dict[str, bytes]) -> None:
             raise RuntimeError(f"{path}: missing generated endpoint {name}")
     if root + "client.py" not in contents:
         raise RuntimeError(f"{path}: missing generated HTTP client")
-    if not any(name.startswith(root + "models/") and name.endswith(".py") for name in contents):
+    if not any(
+        name.startswith(root + "models/") and name.endswith(".py")
+        for name in contents
+    ):
         raise RuntimeError(f"{path}: missing generated models")
     print(f"{path.name}: {len(registry)} generated operations packaged")
 
