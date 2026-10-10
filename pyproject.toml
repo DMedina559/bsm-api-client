@@ -14,6 +14,7 @@ target-version = ["py311"]
 
 [tool.isort]
 profile = "black"
+known_first_party = ["bsm_api_client", "bsm_cli"]
 line_length = 88
 
 [tool.mypy]

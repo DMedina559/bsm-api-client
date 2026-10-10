@@ -37,7 +37,7 @@ dev = [
     "flake8 >=7.3.0,<7.4",
     "isort >=5.13.0,<8.1",
     "mypy >=1.10.0,<2.2",
-    "bedrock-server-manager @ git+https://github.com/DMedina559/bedrock-server-manager.git@833eb28fde7b5a43140933405aa5fb0f4700eddd",
+    "bedrock-server-manager @ git+https://github.com/DMedina559/bedrock-server-manager.git@0b04fefafb4452f54ba48cc6659d4fbf8ba4e5ad",
     "pre-commit >=4.6.0,<4.7",
 ]
 
@@ -54,12 +54,14 @@ include = ["bsm_cli*"]
 [tool.setuptools_scm]
 root = "../.."
 local_scheme = "no-local-version"
+fallback_version = "1.6.1.dev0"
 
 [tool.black]
 target-version = ["py311"]
 
 [tool.isort]
 profile = "black"
+known_first_party = ["bsm_api_client", "bsm_cli"]
 line_length = 88
 
 [tool.mypy]

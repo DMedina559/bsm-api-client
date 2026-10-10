@@ -7,10 +7,8 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
     environment:
       name: pypi
-
     permissions:
       id-token: write
 
@@ -27,33 +25,33 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install build setuptools-scm
-          pip install 'bedrock-server-manager @ git+https://github.com/DMedina559/bedrock-server-manager.git@833eb28fde7b5a43140933405aa5fb0f4700eddd' 'openapi-python-client>=0.29.1,<0.30'
+          pip install 'bedrock-server-manager @ git+https://github.com/DMedina559/bedrock-server-manager.git@0b04fefafb4452f54ba48cc6659d4fbf8ba4e5ad' 'openapi-python-client>=0.29.1,<0.30'
 
-      - name: Generate BSM OpenAPI client
+      - name: Validate pinned BSM OpenAPI contract
         run: |
           python tools/export_bsm_openapi.py --output openapi.json
           python -c "import json, pathlib; tracked=json.loads(pathlib.Path('packages/bsm-api-client/src/bsm_api_client/generated/openapi.json').read_text()); exported=json.loads(pathlib.Path('openapi.json').read_text()); assert tracked == exported, 'Bundled OpenAPI schema differs from pinned backend'"
 
-      - name: Build and publish bsm-api-client
+      - name: Build both packages before publishing
         run: |
-          cd packages/bsm-api-client
-          python -m build
-          cd ../..
+          python -m build packages/bsm-api-client
+          python -m build packages/bsm-cli
           python tools/check_distributions.py packages/bsm-api-client/dist/*
         env:
           SETUPTOOLS_SCM_PRETEND_VERSION: ${{ github.ref_name }}
+
+      - name: Smoke test installed release wheels
+        run: |
+          python -m venv "$RUNNER_TEMP/bsm-release-smoke"
+          "$RUNNER_TEMP/bsm-release-smoke/bin/python" -m pip install packages/bsm-api-client/dist/*.whl packages/bsm-cli/dist/*.whl
+          cd "$RUNNER_TEMP"
+          "$RUNNER_TEMP/bsm-release-smoke/bin/python" -c "from bsm_api_client.generated import Client; from bsm_api_client.generated.api.account_management import get_account; assert Client and get_account"
+          "$RUNNER_TEMP/bsm-release-smoke/bin/python" -m bsm_cli --help
 
       - name: Publish bsm-api-client to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           packages-dir: packages/bsm-api-client/dist/
-
-      - name: Build and publish bsm-cli
-        run: |
-          cd packages/bsm-cli
-          python -m build
-        env:
-          SETUPTOOLS_SCM_PRETEND_VERSION: ${{ github.ref_name }}
 
       - name: Publish bsm-cli to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
