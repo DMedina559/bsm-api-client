@@ -104,7 +104,7 @@ class DynamicOpenAPIMixin(GeneratedOperationMethods):
         if not self._jwt_token:
             await self._ensure_authenticated()
         try:
-            from .generated import AuthenticatedClient
+            from .generated.client import AuthenticatedClient
         except ImportError as exc:
             raise RuntimeError(
                 "The generated OpenAPI client is not present. Run the OpenAPI generation tools."
