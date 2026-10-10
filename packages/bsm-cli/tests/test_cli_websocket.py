@@ -221,3 +221,31 @@ async def test_idle_task_socket_falls_back_to_rest(
     await monitor_task(mock_client, "123", "Success", "Failure")
     assert mock_client.async_get_task_status.await_count == 2
     mock_ws_client.__aexit__.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_task_poll_recovers_after_connection_loss(mock_client, monkeypatch):
+    from bsm_api_client.exceptions import CannotConnectError
+
+    mock_client.websocket_connect.side_effect = CannotConnectError("disconnected")
+    mock_client.async_get_task_status.side_effect = [
+        CannotConnectError("disconnected"),
+        {"status": "completed", "message": "Installed"},
+    ]
+    monkeypatch.setattr("bsm_cli.decorators.asyncio.sleep", AsyncMock())
+    await monitor_task(mock_client, "task-123", "Installed", "Failed")
+    assert mock_client.async_get_task_status.await_count == 2
+
+
+@pytest.mark.asyncio
+async def test_task_poll_reports_unknown_outcome_on_disconnect(
+    mock_client, monkeypatch
+):
+    from bsm_api_client.exceptions import CannotConnectError
+
+    mock_client.websocket_connect.side_effect = CannotConnectError("disconnected")
+    mock_client.async_get_task_status.side_effect = CannotConnectError("disconnected")
+    monkeypatch.setattr("bsm_cli.decorators.asyncio.sleep", AsyncMock())
+    with pytest.raises(CannotConnectError, match="Task task-123 was submitted"):
+        await monitor_task(mock_client, "task-123", "Installed", "Failed")
+    assert mock_client.async_get_task_status.await_count == 3

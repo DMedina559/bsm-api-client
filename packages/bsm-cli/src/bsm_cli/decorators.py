@@ -3,7 +3,11 @@ import functools
 
 import click
 
-from bsm_api_client.exceptions import AuthError, OperationFailedError
+from bsm_api_client.exceptions import (
+    AuthError,
+    CannotConnectError,
+    OperationFailedError,
+)
 
 
 class AsyncGroup(click.Group):
@@ -114,8 +118,25 @@ async def monitor_task(
             f"WebSocket monitoring failed ({error}), falling back to polling...",
             fg="yellow",
         )
+    connection_failures = 0
     while True:
-        data = await client.async_get_task_status(task_id)
+        try:
+            data = await client.async_get_task_status(task_id)
+        except CannotConnectError as error:
+            connection_failures += 1
+            if connection_failures >= 3:
+                raise CannotConnectError(
+                    f"Task {task_id} was submitted, but its final status could not be read. "
+                    "The operation may have completed. Check its status before submitting it again.",
+                    original_exception=error.original_exception,
+                ) from error
+            click.secho(
+                f"Task {task_id}: connection interrupted; retrying status check...",
+                fg="yellow",
+            )
+            await asyncio.sleep(2)
+            continue
+        connection_failures = 0
         if _task_finished(data, success_message, failure_message):
             return
         await asyncio.sleep(2)
