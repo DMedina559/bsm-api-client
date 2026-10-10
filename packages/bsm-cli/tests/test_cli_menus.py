@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock
 
 import click
 import pytest
+
 from bsm_cli.menu_registry import command_menu
 
 
@@ -30,8 +31,17 @@ async def test_registry_preserves_spaces_and_multiple_values(monkeypatch):
     async def command(values, enabled):
         received.append((values, enabled))
 
+    selections = iter(["command", "Back"])
+    monkeypatch.setattr("click.pause", lambda *a, **k: None)
     monkeypatch.setattr(
-        "bsm_cli.menu_registry.questionary.select", lambda *a, **k: Answer("command")
+        "bsm_cli.menu_registry._resource_choices", AsyncMock(return_value=[])
+    )
+    monkeypatch.setattr(
+        "bsm_cli.menu_registry.questionary.select",
+        lambda *a, **k: Answer(next(selections)),
+    )
+    monkeypatch.setattr(
+        "bsm_cli.menu_registry.questionary.confirm", lambda *a, **k: Answer(False)
     )
     answers = iter(['["player=Test Player", "server=My Server"]', "false"])
     monkeypatch.setattr(
@@ -56,8 +66,14 @@ async def test_registry_password_confirmation(monkeypatch, confirmation):
     async def command(password):
         await called(password)
 
+    selections = iter(["command", "Back"])
+    monkeypatch.setattr("click.pause", lambda *a, **k: None)
     monkeypatch.setattr(
-        "bsm_cli.menu_registry.questionary.select", lambda *a, **k: Answer("command")
+        "bsm_cli.menu_registry._resource_choices", AsyncMock(return_value=[])
+    )
+    monkeypatch.setattr(
+        "bsm_cli.menu_registry.questionary.select",
+        lambda *a, **k: Answer(next(selections)),
     )
     answers = iter(["secret", confirmation])
     monkeypatch.setattr(
@@ -112,8 +128,18 @@ async def test_blank_menu_options_match_command_line_defaults(
     group = click.Group("group", commands={"command": command})
     with command.make_context("command", []) as parsed:
         expected = dict(parsed.params)
+    selections = iter(["command", "Back"])
+    monkeypatch.setattr("click.pause", lambda *a, **k: None)
     monkeypatch.setattr(
-        "bsm_cli.menu_registry.questionary.select", lambda *a, **k: Answer("command")
+        "bsm_cli.menu_registry._resource_choices", AsyncMock(return_value=[])
+    )
+    monkeypatch.setattr(
+        "bsm_cli.menu_registry.questionary.select",
+        lambda *a, **k: Answer(next(selections)),
+    )
+    monkeypatch.setattr(
+        "bsm_cli.menu_registry.questionary.confirm",
+        lambda *a, **k: Answer(k.get("default", False)),
     )
     for prompt in ("text", "password"):
         monkeypatch.setattr(

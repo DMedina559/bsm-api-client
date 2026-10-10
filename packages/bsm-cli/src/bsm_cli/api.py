@@ -3,11 +3,17 @@
 from __future__ import annotations
 
 import json
+import mimetypes
+import os
+import tempfile
 from contextlib import ExitStack
 from pathlib import Path
 from typing import Any
 
 import click
+
+from bsm_api_client.exceptions import InvalidInputError, NotFoundError
+from bsm_api_client.openapi import resolve
 from bsm_cli.completion import (
     cached_schema,
     complete_operation,
@@ -16,9 +22,6 @@ from bsm_cli.completion import (
 )
 from bsm_cli.decorators import pass_async_context
 from bsm_cli.output import emit, get_client
-
-from bsm_api_client.exceptions import InvalidInputError, NotFoundError
-from bsm_api_client.openapi import resolve
 
 
 async def discover(ctx, *, force=False):
@@ -90,7 +93,7 @@ async def invoke(ctx, operation_id, param, json_body, form, plugin_name=None, fi
                 files[name] = (
                     Path(path).name,
                     stream,
-                    "application/octet-stream",
+                    mimetypes.guess_type(path)[0] or "application/octet-stream",
                 )
             except OSError as exc:
                 raise click.BadParameter(
@@ -186,14 +189,24 @@ async def schema(ctx):
 
 @api.command("operations")
 @click.option("--tag", help="Filter by exact OpenAPI tag.")
+@click.option(
+    "--method",
+    type=click.Choice(
+        ["GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS", "TRACE"],
+        case_sensitive=False,
+    ),
+)
+@click.option("--plugin", "plugin_name", shell_complete=complete_plugin)
 @pass_async_context
-async def operations(ctx, tag):
+async def operations(ctx, tag, method=None, plugin_name=None):
     """List HTTP operations advertised by the server."""
     client = await discover(ctx)
     rows = [
         op.to_dict()
         for op in sorted(client.operations.values(), key=lambda op: op.operation_id)
-        if not tag or tag in op.tags
+        if (not tag or tag in op.tags)
+        and (not method or op.method == method.upper())
+        and (not plugin_name or op.plugin == plugin_name)
     ]
     return emit(ctx, rows, columns=("method", "operation_id", "path"))
 
@@ -228,13 +241,34 @@ async def call(ctx, operation_id, param, json_body, form, file):
     is_flag=True,
     help="Compare against this client build (default).",
 )
+@click.option(
+    "--details",
+    is_flag=True,
+    help="Include conservative compatibility classifications.",
+)
 @pass_async_context
-async def diff(ctx, against, against_generated):
+async def diff(ctx, against, against_generated, details=False):
     """Compare live operations against a saved or generated schema."""
     if against and against_generated:
         raise click.BadParameter("Choose --against or --against-generated.")
-    baseline = json.loads(against.read_text(encoding="utf-8")) if against else None
-    return emit(ctx, (await discover(ctx)).api_diff(baseline))
+    try:
+        baseline = json.loads(against.read_text(encoding="utf-8")) if against else None
+    except (OSError, ValueError) as exc:
+        raise click.BadParameter(
+            "Cannot read a valid JSON schema.", param_hint="--against"
+        ) from exc
+    client = await discover(ctx)
+    result = client.api_diff(baseline)
+    if details:
+        from bsm_api_client.openapi import compatibility_report, generated_schema
+
+        result = {
+            **result,
+            "compatibility": compatibility_report(
+                baseline if baseline is not None else generated_schema(), client.schema
+            ),
+        }
+    return emit(ctx, result)
 
 
 @api.command("refresh")
@@ -247,7 +281,13 @@ async def refresh(ctx):
     await discover(ctx, force=True)
     if config:
         config.set(
-            "openapi_cache", {"base_url": config.base_url, "schema": client.schema}
+            "openapi_cache",
+            {
+                "base_url": config.base_url,
+                "schema": client.schema,
+                "fingerprint": client.schema_fingerprint,
+                "username": config.username,
+            },
         )
         if client.capabilities.has("list_servers"):
             names = await client.async_get_server_names()
@@ -283,6 +323,45 @@ async def export(ctx, output):
         json.dumps(client.schema, sort_keys=True, indent=2) + "\n", encoding="utf-8"
     )
     return emit(ctx, {"output": str(output), "fingerprint": client.schema_fingerprint})
+
+
+@api.command("download")
+@click.argument("operation_id", shell_complete=complete_operation)
+@click.argument("output", type=click.Path(dir_okay=False, path_type=Path))
+@click.option("--param", multiple=True, shell_complete=complete_parameter)
+@pass_async_context
+async def download(ctx, operation_id, output, param):
+    """Stream a GET operation to a local file, publishing only complete downloads."""
+    client = await discover(ctx)
+    operation = client.operations.get(operation_id)
+    if operation is None:
+        raise NotFoundError(f"Unknown operation: {operation_id}")
+    locations = operation_arguments(client.schema, operation, param)
+    temporary = None
+    size = 0
+    try:
+        async with client.async_stream_operation(
+            operation_id,
+            path_params=locations["path"],
+            query=locations["query"],
+            headers=locations["header"],
+        ) as response:
+            with tempfile.NamedTemporaryFile(
+                dir=output.parent, prefix=".bsm-download-", delete=False
+            ) as handle:
+                temporary = Path(handle.name)
+                async for chunk in response.content.iter_chunked(65536):
+                    handle.write(chunk)
+                    size += len(chunk)
+            os.replace(temporary, output)
+    except OSError as exc:
+        raise click.BadParameter(
+            "Cannot write the download destination.", param_hint="output"
+        ) from exc
+    finally:
+        if temporary is not None:
+            temporary.unlink(missing_ok=True)
+    return emit(ctx, {"output": str(output), "bytes": size})
 
 
 def register_plugin_commands(plugin):

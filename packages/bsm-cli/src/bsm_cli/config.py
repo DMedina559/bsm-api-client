@@ -17,11 +17,12 @@ def load_config() -> Dict[str, Any]:
     config_path = get_config_path()
     if not config_path.exists():
         return {}
-    with open(config_path, "r") as f:
-        data = json.load(f)
-        if isinstance(data, dict):
-            return data
+    try:
+        with config_path.open(encoding="utf-8") as handle:
+            data = json.load(handle)
+    except (OSError, ValueError):
         return {}
+    return data if isinstance(data, dict) else {}
 
 
 def save_config(config: Dict[str, Any]):

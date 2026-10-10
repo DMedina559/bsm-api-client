@@ -130,7 +130,11 @@ class RecordingClient:
 
     def __getattr__(self, name: str) -> Any:
         target = getattr(self.client, name)
-        if not name.startswith("async_") or not callable(target):
+        if (
+            name == "async_stream_operation"
+            or not name.startswith("async_")
+            or not callable(target)
+        ):
             return target
 
         @functools.wraps(target)
