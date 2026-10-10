@@ -57,7 +57,7 @@ async def call_generated(
     ):
         raise NotFoundError(f"Operation is unavailable on this server: {operation_id}")
     module = operation_module(operation_id)
-    from .generated import Client
+    from .generated.client import Client
 
     kwargs = dict(parameters or {})
     try:
