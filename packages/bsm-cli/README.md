@@ -66,8 +66,7 @@ bsm-cli plugin call discord discord_status
 
 `--param NAME=VALUE` uses declared path/query/header parameter types. Boolean values
 use `true`/`false`; arrays and objects use JSON. Missing, duplicate, and unknown
-parameters fail before invoking an endpoint. Cookie parameters and non-form query serialization styles are not currently
-supported by the generic CLI. Query arrays and objects honor the form `explode` setting.
+parameters fail before invoking an endpoint. Cookie parameters are not currently supported by the generic CLI. Query arrays and objects honor form `explode`, deepObject, spaceDelimited and pipeDelimited serialization.
 
 Request-body options:
 
@@ -140,3 +139,21 @@ cancelled tasks exit with a nonzero status.
 Registry menus accept a single value or a JSON array for repeated options and
 variadic arguments, preserving spaces in player names and paths. Password inputs
 are hidden and password confirmations are checked.
+
+## Contract review and streaming downloads
+
+```bash
+bsm-cli api operations --method GET --plugin example
+bsm-cli --json api diff --against saved-openapi.json --details
+bsm-cli api download example_download ./archive.zip --param name=example
+```
+
+`api download` streams a discovered GET operation and replaces the destination
+only after a complete download. JSON mode returns the output path and byte count.
+`api diff --details` includes conservative compatibility classifications alongside
+the usual added/removed/changed lists. Invalid saved schemas produce input errors.
+
+Completion validates cached contracts and fingerprints and rejects metadata for a
+different backend URL or recorded user. Malformed caches yield no suggestions.
+Boolean and enum parameter values have completion suggestions. Interactive command
+menus can select live operation IDs and return to the menu after each action.

@@ -151,3 +151,36 @@ print(response.parsed)  # Generated typed response
 
 See [generation](../../docs/OPENAPI_GENERATION.md) and
 [contract conventions](../../docs/OPENAPI_CONTRACT.md) for development and plugins.
+
+## File operations and compatibility
+
+Multipart operations support repeated files and fields. File tuples contain the
+filename, bytes or readable stream, and content type. Streams start at their
+current position; use your own file context manager.
+
+```python
+await client.async_call_operation(
+    "plugin_upload", form_data={"enabled": True},
+    files={"files": [("first.mcpack", first_stream, "application/zip"),
+                     ("second.mcpack", second_stream, "application/zip")]},
+)
+
+async with client.async_stream_operation("plugin_download") as response:
+    with open("download.zip", "wb") as output:
+        async for chunk in response.content.iter_chunked(65536):
+            output.write(chunk)
+```
+
+Streaming supports discovered GET operations and releases the connection on exit,
+including partial reads and cancellation. Regular operation calls buffer responses.
+JSON, text and binary content are interpreted by the advertised response media type;
+malformed JSON raises `APIError`. Set `authenticated=False` for public operations.
+Streaming defaults to the operation's advertised security requirements.
+
+```python
+from bsm_api_client import compatibility_report
+report = compatibility_report(previous_schema, client.schema)
+```
+
+See [contract conventions](../../docs/OPENAPI_CONTRACT.md) for retry policy,
+validation, supported serialization and compatibility-report limitations.
