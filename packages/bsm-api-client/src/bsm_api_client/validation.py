@@ -1,6 +1,6 @@
 """Validate runtime inputs against the advertised local JSON Schema contract."""
 
-from typing import Any, Mapping, TypeVar
+from typing import Any, Mapping, TypeVar, cast
 
 from jsonschema import Draft202012Validator
 from jsonschema.exceptions import SchemaError
@@ -16,7 +16,7 @@ Model = TypeVar("Model", bound=BaseModel)
 def parse_response(model: type[Model], value: Any) -> Model:
     """Keep response contract failures in the API exception hierarchy."""
     try:
-        return model.model_validate(value)
+        return cast(Model, model.model_validate(value))
     except ValidationError as exc:
         raise APIError(
             f"API response did not match {model.__name__}.",
