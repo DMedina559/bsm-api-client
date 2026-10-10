@@ -9,8 +9,11 @@ from importlib.resources import files
 from typing import Any, cast, get_args, get_type_hints
 
 import httpx
+from pydantic import BaseModel
 
 from .exceptions import APIError, InvalidInputError, NotFoundError
+from .openapi import generated_schema, index_operations
+from .validation import validate_input
 
 
 class SharedTransport(httpx.AsyncBaseTransport):
@@ -48,12 +51,18 @@ async def call_generated(
     """Use generated serialization and response parsing with shared transport."""
     if detailed and typed:
         raise InvalidInputError("Choose either detailed or typed response mode.")
+    if (
+        getattr(owner, "schema", None) is not None
+        and operation_id not in owner.operations
+    ):
+        raise NotFoundError(f"Operation is unavailable on this server: {operation_id}")
     module = operation_module(operation_id)
     from .generated import Client
 
     kwargs = dict(parameters or {})
     try:
         if body is not None:
+            body = validate_generated_body(operation_id, body)
             kwargs["body"] = generated_body(module, body)
         import inspect
 
@@ -84,13 +93,34 @@ async def call_generated(
     )
 
 
+def validate_generated_body(operation_id: str, body: Any) -> Any:
+    if isinstance(body, BaseModel):
+        body = body.model_dump(mode="json", exclude_unset=True)
+    document = generated_schema()
+    operation = index_operations(document)[operation_id]
+    for media_type, media in operation.request_body.get("content", {}).items():
+        if media_type == "application/json" or media_type.endswith("+json"):
+            validate_input(document, media.get("schema", {}), body, "request body")
+            break
+    return body
+
+
 def response_value(response: Any) -> Any:
     if not response.content:
         return None
+    content_type = response.headers.get("content-type", "").split(";", 1)[0].lower()
+    if content_type.startswith("text/"):
+        return httpx.Response(
+            200, headers=response.headers, content=response.content
+        ).text
+    if content_type != "application/json" and not content_type.endswith("+json"):
+        return response.content
     try:
         return json.loads(response.content)
-    except (ValueError, UnicodeDecodeError):
-        return response.content
+    except (ValueError, UnicodeDecodeError) as exc:
+        raise APIError(
+            "API returned malformed JSON.", status_code=response.status_code
+        ) from exc
 
 
 @lru_cache(maxsize=128)
@@ -110,6 +140,8 @@ def operation_module(operation_id: str) -> Any:
 
 
 def generated_body(module: Any, body: Any) -> Any:
+    if isinstance(body, BaseModel):
+        body = body.model_dump(mode="json", exclude_unset=True)
     annotation = get_type_hints(module.asyncio_detailed).get("body")
     candidates = get_args(annotation) or (annotation,)
     model = next((t for t in candidates if hasattr(t, "from_dict")), None)

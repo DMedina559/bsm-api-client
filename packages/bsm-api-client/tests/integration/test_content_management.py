@@ -1,8 +1,4 @@
 import asyncio
-import json
-import os
-import uuid
-import zipfile
 
 import pytest
 import pytest_asyncio
@@ -20,37 +16,17 @@ async def content_files(server, server_data_dir):
     """
     Fixture to create dummy content files for testing world/addon installation.
     """
-    bsm_dir = str(server_data_dir)
-    worlds_dir = os.path.join(bsm_dir, "content", "worlds")
-    addons_dir = os.path.join(bsm_dir, "content", "addons")
-    os.makedirs(worlds_dir, exist_ok=True)
-    os.makedirs(addons_dir, exist_ok=True)
-    dummy_world_file = "test_world.mcworld"
-    dummy_addon_file = "test_addon.mcpack"
-    world_path = os.path.join(worlds_dir, dummy_world_file)
-    addon_path = os.path.join(addons_dir, dummy_addon_file)
-    with zipfile.ZipFile(world_path, "w") as archive:
-        archive.writestr("levelname.txt", "Test World")
-    manifest = {
-        "format_version": 2,
-        "header": {
-            "name": "Test Addon",
-            "description": "Integration test resource pack",
-            "uuid": str(uuid.uuid4()),
-            "version": [1, 0, 0],
-            "min_engine_version": [1, 20, 0],
-        },
-        "modules": [
-            {"type": "resources", "uuid": str(uuid.uuid4()), "version": [1, 0, 0]}
-        ],
-    }
-    with zipfile.ZipFile(addon_path, "w") as archive:
-        archive.writestr("manifest.json", json.dumps(manifest))
-    yield {"world_file": dummy_world_file, "addon_file": dummy_addon_file}
-    if os.path.exists(world_path):
-        os.remove(world_path)
-    if os.path.exists(addon_path):
-        os.remove(addon_path)
+    from bsm_test_utils.addons import create_mcworld, create_resource_pack
+
+    world = create_mcworld(server_data_dir / "content" / "worlds", name="Test World")
+    addon = create_resource_pack(
+        server_data_dir / "content" / "addons", name="Test Addon", as_zip=True
+    )
+    try:
+        yield {"world_file": world.name, "addon_file": addon.name}
+    finally:
+        world.unlink(missing_ok=True)
+        addon.unlink(missing_ok=True)
 
 
 async def wait_for_action(client, response):
@@ -110,8 +86,8 @@ class TestContentManagement:
         """
         client = content_client
         server_name = bedrock_server
-        await client.async_start_server(server_name)
-        await wait_for_server_status(client, server_name, is_running=True, timeout=90)
+        # Dummy server does not implement the live save-query protocol.
+        # Stopped-server backups still exercise the full API/storage/archive path.
         backup_payload = BackupActionPayload(backup_type="world")
         backup_result = await client.async_trigger_server_backup(
             server_name, backup_payload
@@ -171,10 +147,6 @@ class TestContentManagement:
         )
         await wait_for_action(client, install_addon_result)
 
-        # Note: The test previously failed here with "World directory for 'new-world-name' not found"
-        # This occurs because `test_manager_and_server_info.py` changes the level-name property of the server to `new-world-name`!
-        # Thus `get_server_addons` will error out because the level-name is mismatched in bedrock-server-manager unless the server is started and generates the world.
-        # We start and stop the server before calling get_addons to ensure the world folder is generated
         await client.async_start_server(server_name)
         await wait_for_server_status(client, server_name, is_running=True, timeout=90)
         await client.async_stop_server(server_name)
@@ -191,8 +163,6 @@ class TestContentManagement:
         """
         client = content_client
         server_name = bedrock_server
-        await client.async_start_server(server_name)
-        await wait_for_server_status(client, server_name, is_running=True, timeout=90)
         worlds_before_list = await client.async_get_content_worlds()
         worlds_before = worlds_before_list.files or []
         export_result = await client.async_export_server_world(server_name)

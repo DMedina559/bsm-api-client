@@ -97,6 +97,8 @@ class ClientBase:
         """
         if not base_url:
             raise ValueError("base_url must be provided.")
+        if request_timeout <= 0:
+            raise ValueError("request_timeout must be positive.")
 
         if not jwt_token and not (username and password):
             raise ValueError(
@@ -109,6 +111,15 @@ class ClientBase:
             raise ValueError(
                 f"Invalid base_url provided: '{base_url}'. Must include scheme (http/https) and hostname."
             )
+        if (
+            parsed_uri.username
+            or parsed_uri.password
+            or parsed_uri.query
+            or parsed_uri.fragment
+        ):
+            raise ValueError(
+                "base_url must not contain credentials, a query, or a fragment."
+            )
 
         self._host = parsed_uri.hostname
         self._port = parsed_uri.port
@@ -119,7 +130,9 @@ class ClientBase:
         )
 
         # _server_root_url is the base part of the server's address (e.g., http://localhost:8000)
-        self._server_root_url = f"{parsed_uri.scheme}://{parsed_uri.netloc}"
+        self._server_root_url = (
+            f"{parsed_uri.scheme}://{parsed_uri.netloc}{parsed_uri.path.rstrip('/')}"
+        )
         # _base_url includes the _api_base_segment (e.g., /api) and is used for most standard API calls.
         self._base_url = f"{self._server_root_url}{self._api_base_segment}"
 
@@ -142,17 +155,13 @@ class ClientBase:
         else:
             self._session = session
             self._close_session = False
-            if self._use_ssl and not self._verify_ssl:
-                _LOGGER.info(
-                    "An external ClientSession is provided, and verify_ssl=False was requested by user. "
-                    "The provided session's SSL verification behavior will take precedence."
-                )
 
         self._jwt_token: Optional[str] = jwt_token
         self._default_headers: Mapping[str, str] = {
             "Accept": "application/json",
         }
         self._auth_lock = asyncio.Lock()
+        self._auth_generation = 0
         self._generated_http_clients: list[Any] = []
 
         _LOGGER.debug("ClientBase initialized for base URL: %s", self._base_url)
@@ -165,14 +174,19 @@ class ClientBase:
 
             response = await client.close()
         """
-        for generated_http_client in getattr(self, "_generated_http_clients", []):
-            await generated_http_client.aclose()
+        results = await asyncio.gather(
+            *(client.aclose() for client in self._generated_http_clients),
+            return_exceptions=True,
+        )
         self._generated_http_clients = []
         if self._session and self._close_session and not self._session.closed:
             await self._session.close()
             _LOGGER.debug(
                 "Closed internally managed ClientSession for %s", self._base_url
             )
+        for result in results:
+            if isinstance(result, BaseException):
+                raise result
 
     async def __aenter__(self) -> "ClientBase":
         return self
@@ -213,9 +227,7 @@ class ClientBase:
                 error_data = {"raw_error": response_text}
 
         except (aiohttp.ClientResponseError, ValueError, asyncio.TimeoutError) as e:
-            _LOGGER.warning(
-                f"Could not parse error response JSON or read text: {e}. Raw text (if available): {response_text[:200]}"
-            )
+            _LOGGER.debug("Could not parse API error response (%s)", type(e).__name__)
             error_data = {
                 "raw_error": response_text
                 or response.reason
@@ -421,6 +433,7 @@ class ClientBase:
             self._jwt_token = None
             raise AuthError("Authentication response was invalid.") from exc
         self._jwt_token = token.access_token
+        self._auth_generation += 1
         return cast(TokenResponse, token)
 
     async def async_logout(self) -> Dict[str, Any]:

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import copy
+import hashlib
 import json
 import re
 from dataclasses import asdict, dataclass, field
@@ -14,6 +15,29 @@ from .exceptions import InvalidInputError
 HTTP_METHODS = frozenset(
     ("get", "put", "post", "delete", "options", "head", "patch", "trace")
 )
+
+
+def validate_schema(schema: Mapping[str, Any]) -> None:
+    """Validate the metadata needed for indexing, including offline caches."""
+    if not isinstance(schema, Mapping) or not isinstance(schema.get("paths"), Mapping):
+        raise InvalidInputError("OpenAPI document must contain a paths object.")
+    for path, item in schema["paths"].items():
+        if (
+            not isinstance(path, str)
+            or not path.startswith("/")
+            or not isinstance(item, Mapping)
+        ):
+            raise InvalidInputError("Invalid OpenAPI path item.")
+
+
+def schema_fingerprint(schema: Mapping[str, Any]) -> str:
+    """Stable fingerprint independent of JSON object insertion order."""
+    validate_schema(schema)
+    return hashlib.sha256(
+        json.dumps(
+            schema, sort_keys=True, separators=(",", ":"), allow_nan=False
+        ).encode()
+    ).hexdigest()
 
 
 def resolve(
@@ -73,6 +97,7 @@ DiscoveredOperation = ApiOperation
 def index_operations(
     schema: Mapping[str, Any], generated_ids: set[str] | None = None
 ) -> dict[str, ApiOperation]:
+    validate_schema(schema)
     result = {}
     for path, raw_item in schema.get("paths", {}).items():
         item = resolve(schema, raw_item)
@@ -86,6 +111,8 @@ def index_operations(
                 details.get("operationId")
                 or f"{method.lower()}_{re.sub(r'[^a-zA-Z0-9]+', '_', path).strip('_')}"
             )
+            if not isinstance(identifier, str):
+                raise InvalidInputError("OpenAPI operationId must be a string.")
             if identifier in result:
                 raise InvalidInputError(f"Duplicate OpenAPI operationId: {identifier}")
             parameters = {}
@@ -94,7 +121,15 @@ def index_operations(
                 *details.get("parameters", []),
             ):
                 parameter = resolve(schema, parameter)
-                parameters[(parameter["in"], parameter["name"])] = parameter
+                if (
+                    not isinstance(parameter, Mapping)
+                    or parameter.get("in") not in {"path", "query", "header", "cookie"}
+                    or not isinstance(parameter.get("name"), str)
+                ):
+                    raise InvalidInputError(
+                        f"Invalid OpenAPI parameter for {identifier}."
+                    )
+                parameters[(parameter["in"], parameter["name"])] = dict(parameter)
             tags = tuple(details.get("tags", ()))
             plugin = plugin_owner(path, item, details, tags)
             result[identifier] = ApiOperation(
@@ -164,7 +199,7 @@ def diff_schemas(
     *,
     generated_ids: set[str] | None = None,
 ) -> dict[str, list[str]]:
-    old, new = index_operations(before), index_operations(after)
+    old, new = index_operations(before or {"paths": {}}), index_operations(after)
     return {
         "added": sorted(new.keys() - old.keys()),
         "removed": sorted(old.keys() - new.keys()),
@@ -174,6 +209,94 @@ def diff_schemas(
             if _contract(before, old[k]) != _contract(after, new[k])
         ),
         "generated": sorted(new.keys() & (generated_ids or set())),
+    }
+
+
+def compatibility_report(
+    before: Mapping[str, Any], after: Mapping[str, Any]
+) -> dict[str, Any]:
+    """Conservative compatibility report with machine-readable change reasons.
+
+    Changed wire contracts are treated as potentially breaking. Description-only
+    changes are informational; new operations are additive. This deliberately
+    avoids promising compatibility for arbitrary plugin JSON Schema dialects.
+    """
+    old = index_operations(before or {"paths": {}})
+    new = index_operations(after)
+    changes = []
+    for identifier in sorted(old.keys() | new.keys()):
+        if identifier not in old:
+            changes.append(
+                {
+                    "operation_id": identifier,
+                    "severity": "additive",
+                    "reason": "operation_added",
+                }
+            )
+        elif identifier not in new:
+            changes.append(
+                {
+                    "operation_id": identifier,
+                    "severity": "breaking",
+                    "reason": "operation_removed",
+                }
+            )
+        else:
+            left, right = _contract(before, old[identifier]), _contract(
+                after, new[identifier]
+            )
+            if left == right:
+                continue
+
+            def wire(value, preserve_keys=False):
+                if isinstance(value, Mapping):
+                    return {
+                        k: wire(
+                            v,
+                            k
+                            in {
+                                "properties",
+                                "patternProperties",
+                                "$defs",
+                                "schemas",
+                                "securitySchemes",
+                                "components",
+                            },
+                        )
+                        for k, v in value.items()
+                        if preserve_keys
+                        or k
+                        not in {
+                            "description",
+                            "summary",
+                            "title",
+                            "examples",
+                            "example",
+                            "tags",
+                            "deprecated",
+                            "plugin",
+                        }
+                    }
+                if isinstance(value, (tuple, list)):
+                    return [wire(v) for v in value]
+                return value
+
+            changes.append(
+                {
+                    "operation_id": identifier,
+                    "severity": (
+                        "informational" if wire(left) == wire(right) else "breaking"
+                    ),
+                    "reason": (
+                        "metadata_changed"
+                        if wire(left) == wire(right)
+                        else "contract_changed"
+                    ),
+                }
+            )
+    return {
+        "compatible": not any(change["severity"] == "breaking" for change in changes),
+        "changes": changes,
     }
 
 
@@ -245,10 +368,8 @@ def serialize_query(
             continue
         value = result[name]
         style = parameter.get("style", "form")
-        if style != "form":
-            raise InvalidInputError(
-                f"Unsupported query serialization style {style!r} for {name}."
-            )
+        if _serialize_query_style(result, name, value, style, scalar):
+            continue
         explode = parameter.get("explode", True)
         if isinstance(value, Mapping):
             if explode:
@@ -268,6 +389,25 @@ def serialize_query(
     return result
 
 
+def _serialize_query_style(result, name, value, style, scalar):
+    if style == "deepObject" and isinstance(value, Mapping):
+        del result[name]
+        result.update({f"{name}[{key}]": item for key, item in value.items()})
+        return True
+    if style in {"spaceDelimited", "pipeDelimited"} and isinstance(
+        value, (list, tuple)
+    ):
+        result[name] = (" " if style == "spaceDelimited" else "|").join(
+            scalar(item) for item in value
+        )
+        return True
+    if style != "form":
+        raise InvalidInputError(
+            f"Unsupported query serialization style {style!r} for {name}."
+        )
+    return False
+
+
 def serialize_headers(
     parameters: tuple[dict[str, Any], ...], values: Mapping[str, Any]
 ) -> dict[str, str]:
@@ -279,7 +419,10 @@ def serialize_headers(
     result = {key: scalar(value) for key, value in values.items()}
     for parameter in parameters:
         name = parameter["name"]
-        if parameter["in"] != "header" or name not in values:
+        if parameter["in"] != "header":
+            continue
+        name = next((key for key in values if key.lower() == name.lower()), name)
+        if name not in values:
             continue
         if parameter.get("style", "simple") != "simple":
             raise InvalidInputError(f"Unsupported header style for {name}.")

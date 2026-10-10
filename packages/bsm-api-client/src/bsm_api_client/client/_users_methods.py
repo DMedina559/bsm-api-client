@@ -5,6 +5,7 @@ from typing import List, cast
 
 from ..generated_adapter import GeneratedOperationMethods
 from ..models import ActionResponse, BaseApiResponse, UserResponse
+from ..validation import parse_response
 
 _LOGGER = logging.getLogger(__name__.split(".")[0] + ".client.users")
 
@@ -25,7 +26,7 @@ class UsersMethodsMixin(GeneratedOperationMethods):
         """
         _LOGGER.debug("Fetching users from /users/list")
         response = await self.async_call_generated("list_users", authenticated=True)
-        return [UserResponse.model_validate(user) for user in response]
+        return [parse_response(UserResponse, user) for user in response]
 
     async def async_delete_user(self, user_id: int) -> BaseApiResponse:
         """Deletes a user.
@@ -44,7 +45,7 @@ class UsersMethodsMixin(GeneratedOperationMethods):
         response = await self.async_call_generated(
             "delete_user", parameters={"user_id": user_id}, authenticated=True
         )
-        return cast(BaseApiResponse, BaseApiResponse.model_validate(response))
+        return cast(BaseApiResponse, parse_response(BaseApiResponse, response))
 
     async def async_update_user_role(self, user_id: int, role: str) -> BaseApiResponse:
         """Updates a user's role.
@@ -67,7 +68,7 @@ class UsersMethodsMixin(GeneratedOperationMethods):
             body={"role": role},
             authenticated=True,
         )
-        return cast(BaseApiResponse, BaseApiResponse.model_validate(response))
+        return cast(BaseApiResponse, parse_response(BaseApiResponse, response))
 
     async def async_disable_user(self, user_id: int) -> BaseApiResponse:
         """Disables a user.
@@ -86,7 +87,7 @@ class UsersMethodsMixin(GeneratedOperationMethods):
         response = await self.async_call_generated(
             "disable_user", parameters={"user_id": user_id}, authenticated=True
         )
-        return cast(BaseApiResponse, BaseApiResponse.model_validate(response))
+        return cast(BaseApiResponse, parse_response(BaseApiResponse, response))
 
     async def async_enable_user(self, user_id: int) -> BaseApiResponse:
         """Enables a user.
@@ -105,7 +106,7 @@ class UsersMethodsMixin(GeneratedOperationMethods):
         response = await self.async_call_generated(
             "enable_user", parameters={"user_id": user_id}, authenticated=True
         )
-        return cast(BaseApiResponse, BaseApiResponse.model_validate(response))
+        return cast(BaseApiResponse, parse_response(BaseApiResponse, response))
 
     async def async_generate_invite_token(self, role: str) -> ActionResponse:
         """Generates an invite token.
@@ -124,4 +125,4 @@ class UsersMethodsMixin(GeneratedOperationMethods):
         response = await self.async_call_generated(
             "generate_registration_token", body={"role": role}, authenticated=True
         )
-        return cast(ActionResponse, ActionResponse.model_validate(response))
+        return cast(ActionResponse, parse_response(ActionResponse, response))

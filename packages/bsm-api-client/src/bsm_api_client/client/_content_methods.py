@@ -20,6 +20,7 @@ from ..models import (
     FileNamePayload,
     RestoreActionPayload,
 )
+from ..validation import parse_response
 
 if TYPE_CHECKING:
     from ..dynamic import DynamicOpenAPIMixin
@@ -70,7 +71,7 @@ class ContentMethodsMixin(GeneratedOperationMethods):
             parameters={"server_name": server_name, "backup_type": bt_lower},
             authenticated=True,
         )
-        return cast(ActionResponse, ActionResponse.model_validate(response))
+        return cast(ActionResponse, parse_response(ActionResponse, response))
 
     async def async_get_server_addons(self, server_name: str) -> AddonListResponse:
         """Retrieves a list of addons installed on a server's active world.
@@ -86,7 +87,7 @@ class ContentMethodsMixin(GeneratedOperationMethods):
             parameters={"server_name": server_name},
             authenticated=True,
         )
-        return cast(AddonListResponse, AddonListResponse.model_validate(response))
+        return cast(AddonListResponse, parse_response(AddonListResponse, response))
 
     async def async_enable_server_addon(
         self, server_name: str, payload: AddonActionPayload
@@ -108,7 +109,7 @@ class ContentMethodsMixin(GeneratedOperationMethods):
             body=payload.model_dump(),
             authenticated=True,
         )
-        return cast(ActionResponse, ActionResponse.model_validate(response))
+        return cast(ActionResponse, parse_response(ActionResponse, response))
 
     async def async_disable_server_addon(
         self, server_name: str, payload: AddonActionPayload
@@ -130,7 +131,7 @@ class ContentMethodsMixin(GeneratedOperationMethods):
             body=payload.model_dump(),
             authenticated=True,
         )
-        return cast(ActionResponse, ActionResponse.model_validate(response))
+        return cast(ActionResponse, parse_response(ActionResponse, response))
 
     async def async_update_server_addon_subpack(
         self, server_name: str, payload: AddonSubpackPayload
@@ -154,7 +155,7 @@ class ContentMethodsMixin(GeneratedOperationMethods):
             body=payload.model_dump(),
             authenticated=True,
         )
-        return cast(ActionResponse, ActionResponse.model_validate(response))
+        return cast(ActionResponse, parse_response(ActionResponse, response))
 
     async def async_uninstall_server_addon(
         self, server_name: str, payload: AddonActionPayload
@@ -176,7 +177,7 @@ class ContentMethodsMixin(GeneratedOperationMethods):
             body=payload.model_dump(),
             authenticated=True,
         )
-        return cast(ActionResponse, ActionResponse.model_validate(response))
+        return cast(ActionResponse, parse_response(ActionResponse, response))
 
     async def async_reorder_server_addon(
         self, server_name: str, payload: AddonReorderPayload
@@ -198,7 +199,7 @@ class ContentMethodsMixin(GeneratedOperationMethods):
             body=payload.model_dump(),
             authenticated=True,
         )
-        return cast(ActionResponse, ActionResponse.model_validate(response))
+        return cast(ActionResponse, parse_response(ActionResponse, response))
 
     async def async_get_content_worlds(self) -> ContentListResponse:
         """Lists available world template files (.mcworld).
@@ -215,7 +216,7 @@ class ContentMethodsMixin(GeneratedOperationMethods):
         response = await self.async_call_generated(
             "list_available_worlds", authenticated=True
         )
-        return cast(ContentListResponse, ContentListResponse.model_validate(response))
+        return cast(ContentListResponse, parse_response(ContentListResponse, response))
 
     async def async_get_content_addons(self) -> ContentListResponse:
         """Lists available addon files (.mcpack, .mcaddon).
@@ -232,7 +233,7 @@ class ContentMethodsMixin(GeneratedOperationMethods):
         response = await self.async_call_generated(
             "list_available_addons", authenticated=True
         )
-        return cast(ContentListResponse, ContentListResponse.model_validate(response))
+        return cast(ContentListResponse, parse_response(ContentListResponse, response))
 
     async def async_trigger_server_backup(
         self, server_name: str, payload: BackupActionPayload
@@ -264,7 +265,7 @@ class ContentMethodsMixin(GeneratedOperationMethods):
             body=payload.model_dump(),
             authenticated=True,
         )
-        return cast(ActionResponse, ActionResponse.model_validate(response))
+        return cast(ActionResponse, parse_response(ActionResponse, response))
 
     async def async_export_server_world(self, server_name: str) -> ActionResponse:
         """Exports the current world of a server to a .mcworld file.
@@ -286,7 +287,7 @@ class ContentMethodsMixin(GeneratedOperationMethods):
             body=None,
             authenticated=True,
         )
-        return cast(ActionResponse, ActionResponse.model_validate(response))
+        return cast(ActionResponse, parse_response(ActionResponse, response))
 
     async def async_upload_content(self, file_path: str) -> Dict[str, Any]:
         """Uploads a content file (e.g., .mcworld, .mcaddon) to the server.
@@ -339,7 +340,7 @@ class ContentMethodsMixin(GeneratedOperationMethods):
             body=None,
             authenticated=True,
         )
-        return cast(ActionResponse, ActionResponse.model_validate(response))
+        return cast(ActionResponse, parse_response(ActionResponse, response))
 
     async def async_prune_server_backups(self, server_name: str) -> ActionResponse:
         """Prunes old backups for a server based on its retention policies.
@@ -364,7 +365,7 @@ class ContentMethodsMixin(GeneratedOperationMethods):
             body=None,
             authenticated=True,
         )
-        return cast(ActionResponse, ActionResponse.model_validate(response))
+        return cast(ActionResponse, parse_response(ActionResponse, response))
 
     async def async_restore_server_backup(
         self, server_name: str, payload: RestoreActionPayload
@@ -396,7 +397,7 @@ class ContentMethodsMixin(GeneratedOperationMethods):
             body=payload.model_dump(),
             authenticated=True,
         )
-        return cast(ActionResponse, ActionResponse.model_validate(response))
+        return cast(ActionResponse, parse_response(ActionResponse, response))
 
     async def async_restore_server_latest_all(self, server_name: str) -> ActionResponse:
         """Restores a server from the latest 'all' backup.
@@ -424,7 +425,7 @@ class ContentMethodsMixin(GeneratedOperationMethods):
             body=payload,
             authenticated=True,
         )
-        return cast(ActionResponse, ActionResponse.model_validate(response))
+        return cast(ActionResponse, parse_response(ActionResponse, response))
 
     async def async_install_server_world(
         self, server_name: str, payload: FileNamePayload
@@ -455,7 +456,7 @@ class ContentMethodsMixin(GeneratedOperationMethods):
             body=payload.model_dump(),
             authenticated=True,
         )
-        return cast(ActionResponse, ActionResponse.model_validate(response))
+        return cast(ActionResponse, parse_response(ActionResponse, response))
 
     async def async_install_server_addon(
         self, server_name: str, payload: FileNamePayload
@@ -486,4 +487,4 @@ class ContentMethodsMixin(GeneratedOperationMethods):
             body=payload.model_dump(),
             authenticated=True,
         )
-        return cast(ActionResponse, ActionResponse.model_validate(response))
+        return cast(ActionResponse, parse_response(ActionResponse, response))

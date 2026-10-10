@@ -135,3 +135,44 @@ async def test_reload_plugins(client):
         result = await client.async_reload_plugins()
         mock_request.assert_called_once_with("reload_plugins", authenticated=True)
         assert result.status == "success"
+
+
+@pytest.mark.asyncio
+async def test_facade_response_validation_uses_safe_api_errors(client):
+    from bsm_api_client.exceptions import APIError
+
+    with patch.object(
+        client, "async_call_generated", new_callable=AsyncMock
+    ) as operation:
+        operation.return_value = {"servers": "private-response-value"}
+        with pytest.raises(APIError) as error:
+            await client.async_get_servers()
+    assert "ServersListResponse" in str(error.value)
+    assert error.value.response_data["validation_errors"]
+    assert "private-response-value" not in str(error.value.response_data)
+
+
+@pytest.mark.asyncio
+async def test_setting_and_plugin_diagnostics_exclude_payload_secrets(client, caplog):
+    import logging
+
+    from bsm_api_client.models import ServerSettingItemPayload, TriggerEventPayload
+
+    caplog.set_level(logging.DEBUG, logger="bsm_api_client")
+    with patch.object(
+        client, "async_call_generated", new_callable=AsyncMock
+    ) as operation:
+        operation.return_value = {"status": "success"}
+        await client.async_set_server_setting(
+            "test",
+            ServerSettingItemPayload(
+                key="custom.secret", value="private-setting-value"
+            ),
+        )
+        await client.async_trigger_plugin_event(
+            TriggerEventPayload(
+                event_name="demo:update", payload={"token": "private-plugin-token"}
+            )
+        )
+    assert "private-setting-value" not in caplog.text
+    assert "private-plugin-token" not in caplog.text

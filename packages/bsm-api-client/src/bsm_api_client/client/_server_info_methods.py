@@ -22,6 +22,7 @@ from ..models import (
     ServerSettingsResponse,
     ServersListResponse,
 )
+from ..validation import parse_response
 
 _LOGGER = logging.getLogger(__name__.split(".")[0] + ".client.server_info")
 
@@ -45,7 +46,7 @@ class ServerInfoMethodsMixin(GeneratedOperationMethods):
             "list_servers", authenticated=True
         )
         return cast(
-            ServersListResponse, ServersListResponse.model_validate(response_data)
+            ServersListResponse, parse_response(ServersListResponse, response_data)
         )
 
     async def async_get_server_names(self) -> List[str]:
@@ -124,7 +125,9 @@ class ServerInfoMethodsMixin(GeneratedOperationMethods):
             parameters={"server_name": server_name},
             authenticated=True,
         )
-        return cast(ServerSchemaResponse, ServerSchemaResponse.model_validate(response))
+        return cast(
+            ServerSchemaResponse, parse_response(ServerSchemaResponse, response)
+        )
 
     async def async_get_server_process_info(
         self, server_name: str
@@ -149,7 +152,7 @@ class ServerInfoMethodsMixin(GeneratedOperationMethods):
         )
         return cast(
             ServerProcessInfoResponse,
-            ServerProcessInfoResponse.model_validate(response),
+            parse_response(ServerProcessInfoResponse, response),
         )
 
     async def async_get_world_icon_image(self, server_name: str) -> bytes:  # noqa: C901
@@ -197,7 +200,7 @@ class ServerInfoMethodsMixin(GeneratedOperationMethods):
         )
         return cast(
             ServerRunningStatusResponse,
-            ServerRunningStatusResponse.model_validate(response),
+            parse_response(ServerRunningStatusResponse, response),
         )
 
     async def async_get_server_properties(
@@ -222,7 +225,7 @@ class ServerInfoMethodsMixin(GeneratedOperationMethods):
             authenticated=True,
         )
         return cast(
-            PropertiesGetResponse, PropertiesGetResponse.model_validate(response)
+            PropertiesGetResponse, parse_response(PropertiesGetResponse, response)
         )
 
     async def async_get_server_permissions_data(
@@ -247,7 +250,7 @@ class ServerInfoMethodsMixin(GeneratedOperationMethods):
             authenticated=True,
         )
         return cast(
-            PermissionsGetResponse, PermissionsGetResponse.model_validate(response)
+            PermissionsGetResponse, parse_response(PermissionsGetResponse, response)
         )
 
     async def async_get_server_allowlist(
@@ -269,7 +272,9 @@ class ServerInfoMethodsMixin(GeneratedOperationMethods):
         response = await self.async_call_generated(
             "get_allowlist", parameters={"server_name": server_name}, authenticated=True
         )
-        return cast(AllowlistGetResponse, AllowlistGetResponse.model_validate(response))
+        return cast(
+            AllowlistGetResponse, parse_response(AllowlistGetResponse, response)
+        )
 
     async def async_get_server_settings(
         self, server_name: str
@@ -286,7 +291,7 @@ class ServerInfoMethodsMixin(GeneratedOperationMethods):
             authenticated=True,
         )
         return cast(
-            ServerSettingsResponse, ServerSettingsResponse.model_validate(response)
+            ServerSettingsResponse, parse_response(ServerSettingsResponse, response)
         )
 
     async def async_set_server_setting(
@@ -298,9 +303,7 @@ class ServerInfoMethodsMixin(GeneratedOperationMethods):
         :param payload: The ServerSettingItemPayload payload.
         :returns: A ServerSettingsResponse.
         """
-        _LOGGER.debug(
-            "Setting setting for server '%s': %s", server_name, payload.model_dump()
-        )
+        _LOGGER.debug("Updating setting '%s' for server '%s'", payload.key, server_name)
         response = await self.async_call_generated(
             "set_server_setting",
             parameters={"server_name": server_name},
@@ -308,5 +311,5 @@ class ServerInfoMethodsMixin(GeneratedOperationMethods):
             authenticated=True,
         )
         return cast(
-            ServerSettingsResponse, ServerSettingsResponse.model_validate(response)
+            ServerSettingsResponse, parse_response(ServerSettingsResponse, response)
         )
