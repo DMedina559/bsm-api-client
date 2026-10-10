@@ -2,10 +2,11 @@ import inspect
 
 import click
 import questionary
+from questionary import Separator
+
 from bsm_cli.menu_registry import command_menu, plugin_api_menu
 from bsm_cli.plugins import interactive_plugin_workflow
 from bsm_cli.server import list_servers
-from questionary import Separator
 
 
 async def _world_management_menu(ctx: click.Context, server_name: str):

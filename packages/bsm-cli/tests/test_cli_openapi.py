@@ -4,10 +4,6 @@ import json
 from unittest.mock import AsyncMock
 
 import pytest
-from bsm_cli.__main__ import cli
-from bsm_cli.completion import complete_operation, complete_parameter, complete_plugin
-from bsm_cli.config import Config
-from bsm_cli.output import normalize_error
 from click.testing import CliRunner
 
 from bsm_api_client.dynamic import DynamicOpenAPIMixin
@@ -17,6 +13,10 @@ from bsm_api_client.exceptions import (
     InvalidInputError,
     NotFoundError,
 )
+from bsm_cli.__main__ import cli
+from bsm_cli.completion import complete_operation, complete_parameter, complete_plugin
+from bsm_cli.config import Config
+from bsm_cli.output import normalize_error
 
 SCHEMA = {
     "openapi": "3.1.0",
@@ -104,6 +104,7 @@ async def test_registry_menu_accepts_optional_body_and_missing_defaults(
     client, monkeypatch
 ):
     import click
+
     from bsm_cli.api import api
     from bsm_cli.menu_registry import command_menu
 
@@ -115,7 +116,17 @@ async def test_registry_menu_accepts_optional_body_and_missing_defaults(
             return self.value
 
     monkeypatch.setattr(
-        "bsm_cli.menu_registry.questionary.select", lambda *a, **k: Answer("call")
+        "bsm_cli.menu_registry.questionary.confirm",
+        lambda *a, **k: Answer(k.get("default", False)),
+    )
+    selections = iter(["call", "Back"])
+    monkeypatch.setattr("click.pause", lambda *a, **k: None)
+    monkeypatch.setattr(
+        "bsm_cli.menu_registry._resource_choices", AsyncMock(return_value=[])
+    )
+    monkeypatch.setattr(
+        "bsm_cli.menu_registry.questionary.select",
+        lambda *a, **k: Answer(next(selections)),
     )
     values = iter(["demo_action", "name=test", "{}", "", ""])
     monkeypatch.setattr(
@@ -256,6 +267,7 @@ def test_completion_uses_cache_without_discovering(client):
 
 def test_server_completion_ignores_another_servers_cache(client):
     import click
+
     from bsm_cli.completion import complete_server
 
     config = FakeConfig()
@@ -304,6 +316,7 @@ def test_refresh_after_login_clears_cache(client, monkeypatch, cache):
 @pytest.mark.parametrize("cache", [None, [], "invalid", {"names": None}])
 def test_completion_handles_cleared_caches(client, cache):
     import click
+
     from bsm_cli.completion import complete_server
 
     config = FakeConfig()
@@ -353,6 +366,7 @@ def test_missing_upload_file_is_input_error(client):
 @pytest.mark.parametrize("name", ["diff", "operations"])
 async def test_registry_blank_api_options(client, monkeypatch, capsys, name):
     import click
+
     from bsm_cli.api import api
     from bsm_cli.menu_registry import command_menu
 
@@ -364,7 +378,17 @@ async def test_registry_blank_api_options(client, monkeypatch, capsys, name):
             return self.value
 
     monkeypatch.setattr(
-        "bsm_cli.menu_registry.questionary.select", lambda *a, **k: Answer(name)
+        "bsm_cli.menu_registry.questionary.confirm",
+        lambda *a, **k: Answer(k.get("default", False)),
+    )
+    selections = iter([name, "Back"])
+    monkeypatch.setattr("click.pause", lambda *a, **k: None)
+    monkeypatch.setattr(
+        "bsm_cli.menu_registry._resource_choices", AsyncMock(return_value=[])
+    )
+    monkeypatch.setattr(
+        "bsm_cli.menu_registry.questionary.select",
+        lambda *a, **k: Answer(next(selections)),
     )
     monkeypatch.setattr(
         "bsm_cli.menu_registry.questionary.text", lambda *a, **k: Answer("")
@@ -376,3 +400,60 @@ async def test_registry_blank_api_options(client, monkeypatch, capsys, name):
     if name == "operations":
         assert "demo_action" in output
         assert "/api/info" in output
+
+
+@pytest.mark.parametrize(
+    "schema",
+    [
+        {"paths": []},
+        {"paths": {"/bad": None}},
+        {"paths": {"/bad": {"get": {"parameters": [None]}}}},
+    ],
+)
+def test_malformed_cached_contract_is_ignored(client, schema):
+    import click
+
+    config = FakeConfig()
+    config.set("openapi_cache", {"base_url": config.base_url, "schema": schema})
+    ctx = click.Context(cli, obj={"config": config})
+    assert complete_operation(ctx, None, "") == []
+    assert complete_plugin(ctx, None, "") == []
+    assert complete_parameter(ctx, None, "") == []
+    client._fetch_openapi_schema.assert_not_awaited()
+
+
+def test_completion_checks_fingerprint_identity_and_suggests_boolean_values(client):
+    import click
+
+    config = FakeConfig()
+    ctx = click.Context(cli, obj={"config": config})
+    ctx.params["operation_id"] = "demo_action"
+    assert complete_parameter(ctx, None, "enabled=f") == ["enabled=false"]
+    config.set(
+        "openapi_cache",
+        {"base_url": config.base_url, "schema": SCHEMA, "fingerprint": "invalid"},
+    )
+    assert complete_operation(ctx, None, "") == []
+    config.set(
+        "openapi_cache",
+        {"base_url": config.base_url, "schema": SCHEMA, "username": "another-user"},
+    )
+    assert complete_operation(ctx, None, "") == []
+
+
+def test_operation_filters_and_detailed_compatibility(client, tmp_path):
+    result = run("--json", "api", "operations", "--method", "post", "--plugin", "demo")
+    assert result.exit_code == 0, result.output
+    assert [op["operation_id"] for op in json.loads(result.stdout)] == ["demo_action"]
+    output = tmp_path / "before.json"
+    output.write_text(json.dumps(SCHEMA))
+    result = run("--json", "api", "diff", "--against", str(output), "--details")
+    assert result.exit_code == 0, result.output
+    assert json.loads(result.stdout)["compatibility"] == {
+        "compatible": True,
+        "changes": [],
+    }
+    output.write_text("invalid JSON")
+    result = run("--json", "api", "diff", "--against", str(output))
+    assert result.exit_code == 2
+    assert json.loads(result.stderr)["exit_code"] == 2

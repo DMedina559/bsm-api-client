@@ -6,11 +6,11 @@ from unittest.mock import AsyncMock
 import click
 import httpx
 import pytest
-from bsm_cli.__main__ import cli
-from bsm_cli.config import Config
 from click.testing import CliRunner
 
 from bsm_api_client import BedrockServerManagerApi
+from bsm_cli.__main__ import cli
+from bsm_cli.config import Config
 
 SUCCESS = {
     "status": "success",
@@ -340,8 +340,14 @@ async def test_registry_blank_property_name(command_client, monkeypatch, capsys)
     )
     client._dynamic_request = AsyncMock(return_value=httpx.Response(200, json=SUCCESS))
     answers = iter(["test", ""])
+    selections = iter(["get", "Back"])
+    monkeypatch.setattr("click.pause", lambda *a, **k: None)
     monkeypatch.setattr(
-        "bsm_cli.menu_registry.questionary.select", lambda *a, **k: Answer("get")
+        "bsm_cli.menu_registry._resource_choices", AsyncMock(return_value=[])
+    )
+    monkeypatch.setattr(
+        "bsm_cli.menu_registry.questionary.select",
+        lambda *a, **k: Answer(next(selections)),
     )
     monkeypatch.setattr(
         "bsm_cli.menu_registry.questionary.text", lambda *a, **k: Answer(next(answers))

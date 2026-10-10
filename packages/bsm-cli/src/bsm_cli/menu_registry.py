@@ -5,6 +5,7 @@ import json
 
 import click
 import questionary
+
 from bsm_cli.api import invoke
 from bsm_cli.output import get_client
 
@@ -61,6 +62,15 @@ def _multiple_values(param, value):
 async def _resource_choices(ctx, name):
     """Fetch selectable resources for the interactive UI."""
     client = get_client(ctx)
+    if name == "operation_id":
+        await client.async_discover_api()
+        return [
+            questionary.Choice(
+                title=f"{op.method} {op.operation_id} · {op.summary or op.path}",
+                value=op.operation_id,
+            )
+            for op in sorted(client.operations.values(), key=lambda op: op.operation_id)
+        ]
     if name in {"server", "server_name"}:
         response = await client.async_get_servers()
         return sorted(server.name for server in (response.servers or []))
