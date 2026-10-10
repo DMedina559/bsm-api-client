@@ -114,7 +114,7 @@ async def test_generated_adapter_typed_mode_preserves_parsed_model(monkeypatch):
     )
     module = SimpleNamespace(asyncio_detailed=AsyncMock(return_value=response))
     monkeypatch.setattr(generated_adapter, "operation_module", lambda _: module)
-    import bsm_api_client.generated as generated
+    import bsm_api_client.generated.client as generated
 
     class FakeClient:
         def __init__(self, **kwargs):
