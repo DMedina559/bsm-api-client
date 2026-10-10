@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import asyncio
-import hashlib
-import json
+import logging
 import re
-from typing import TYPE_CHECKING, Any, Dict, Mapping, Optional
+from contextlib import asynccontextmanager
+from typing import TYPE_CHECKING, Any, AsyncIterator, Dict, Mapping, Optional
 from urllib.parse import quote
 
 import aiohttp
@@ -26,11 +26,14 @@ from .openapi import (
     diff_schemas,
     generated_schema,
     index_operations,
+    schema_fingerprint,
     serialize_headers,
     serialize_query,
 )
+from .validation import validate_input
 
 _PATH_PARAMETER_RE = re.compile(r"{([^}]+)}")
+_LOGGER = logging.getLogger(__name__)
 
 
 class DynamicOpenAPIMixin(GeneratedOperationMethods):
@@ -128,17 +131,34 @@ class DynamicOpenAPIMixin(GeneratedOperationMethods):
         """Fetch /openapi.json and index every HTTP operation exposed by BSM."""
         if self._openapi_schema is not None and not force:
             return self.operations
-        schema = await self._fetch_openapi_schema()
-        canonical = json.dumps(schema, sort_keys=True, separators=(",", ":")).encode()
-        try:
-            generated_ids = set(index_operations(generated_schema()))
-        except InvalidInputError:
-            generated_ids = set()
-        operations = index_operations(schema, generated_ids)
-        self._openapi_schema = schema
-        self._openapi_fingerprint = hashlib.sha256(canonical).hexdigest()
-        self._discovered_operations = operations
-        return self.operations
+        if not hasattr(self, "_discovery_lock"):
+            self._discovery_lock = asyncio.Lock()
+        previous = self._openapi_schema
+        async with self._discovery_lock:
+            # Coalesce refreshes that were waiting for the same snapshot.
+            if self._openapi_schema is not None and (
+                not force or self._openapi_schema is not previous
+            ):
+                return self.operations
+            schema = await self._fetch_openapi_schema()
+            try:
+                generated_ids = set(index_operations(generated_schema()))
+            except InvalidInputError:
+                generated_ids = set()
+            operations = index_operations(schema, generated_ids)
+            fingerprint = schema_fingerprint(schema)
+            # Publish only after the entire document has been validated.
+            self._openapi_schema = schema
+            self._openapi_fingerprint = fingerprint
+            self._discovered_operations = operations
+            _LOGGER.debug(
+                "OpenAPI discovery completed",
+                extra={
+                    "operation_count": len(operations),
+                    "schema_fingerprint": fingerprint,
+                },
+            )
+            return self.operations
 
     async def async_refresh_api(self) -> bool:
         """Refresh discovery and return True when the server schema changed."""
@@ -185,6 +205,22 @@ class DynamicOpenAPIMixin(GeneratedOperationMethods):
         query = serialize_query(operation.parameters, query or {})
         if headers is not None:
             headers = serialize_headers(operation.parameters, headers)
+        content = operation.request_body.get("content", {})
+        if (
+            form_data is not None
+            and "multipart/form-data" in content
+            and "application/x-www-form-urlencoded" not in content
+        ):
+            return await self._dynamic_request(
+                operation.method,
+                path,
+                query=query,
+                form_data=form_data,
+                files=files,
+                headers=headers,
+                authenticated=authenticated,
+                multipart=True,
+            )
         if files:
             return await self._dynamic_request(
                 operation.method,
@@ -205,8 +241,8 @@ class DynamicOpenAPIMixin(GeneratedOperationMethods):
             authenticated=authenticated,
         )
 
-    @staticmethod
     def _validate_operation_inputs(
+        self,
         operation: DiscoveredOperation,
         operation_id: str,
         path_params: Optional[Mapping[str, Any]],
@@ -216,28 +252,7 @@ class DynamicOpenAPIMixin(GeneratedOperationMethods):
         form_data: Optional[Mapping[str, Any]],
         files: Optional[Mapping[str, Any]],
     ) -> None:
-        supplied = {
-            "path": path_params or {},
-            "query": query or {},
-            "header": headers or {},
-        }
-        for parameter in operation.parameters:
-            location = parameter.get("in")
-            name = parameter.get("name")
-            if location == "cookie":
-                raise InvalidInputError(
-                    f"Cookie parameter {name} is not supported by this client."
-                )
-            if not isinstance(name, str):
-                raise InvalidInputError("OpenAPI parameter is missing a name.")
-            if (
-                parameter.get("required")
-                and location in supplied
-                and (name not in supplied[location] or supplied[location][name] is None)
-            ):
-                raise InvalidInputError(
-                    f"Missing required {location} parameter: {name}"
-                )
+        self._validate_parameters(operation, path_params, query, headers)
         content = operation.request_body.get("content", {})
         if (
             json_data is not None
@@ -268,6 +283,54 @@ class DynamicOpenAPIMixin(GeneratedOperationMethods):
             raise InvalidInputError(
                 f"Operation {operation_id} requires a request body."
             )
+        if json_data is not None:
+            media: Mapping[str, Any] = next(
+                (
+                    value
+                    for kind, value in content.items()
+                    if kind == "application/json" or kind.endswith("+json")
+                ),
+                {},
+            )
+            validate_input(
+                self.schema or {}, media.get("schema", {}), json_data, "request body"
+            )
+
+    def _validate_parameters(self, operation, path_params, query, headers):
+        supplied = {
+            "path": path_params or {},
+            "query": query or {},
+            "header": headers or {},
+        }
+        for parameter in operation.parameters:
+            location = parameter.get("in")
+            name = parameter.get("name")
+            if location == "header" and isinstance(name, str):
+                name = next(
+                    (key for key in supplied["header"] if key.lower() == name.lower()),
+                    name,
+                )
+            if location == "cookie":
+                raise InvalidInputError(
+                    f"Cookie parameter {name} is not supported by this client."
+                )
+            if not isinstance(name, str):
+                raise InvalidInputError("OpenAPI parameter is missing a name.")
+            if (
+                parameter.get("required")
+                and location in supplied
+                and (name not in supplied[location] or supplied[location][name] is None)
+            ):
+                raise InvalidInputError(
+                    f"Missing required {location} parameter: {name}"
+                )
+            if location in supplied and name in supplied[location]:
+                validate_input(
+                    self.schema or {},
+                    parameter.get("schema", {}),
+                    supplied[location][name],
+                    f"{location} parameter {name}",
+                )
 
     async def async_call_path(
         self,
@@ -292,9 +355,17 @@ class DynamicOpenAPIMixin(GeneratedOperationMethods):
             authenticated=authenticated,
         )
 
-    async def _ensure_authenticated(self, stale_token: Optional[str] = None) -> None:
+    async def _ensure_authenticated(
+        self, stale_token: Optional[str] = None, stale_generation: Optional[int] = None
+    ) -> None:
         async with self._auth_lock:
-            if self._jwt_token is None or self._jwt_token == stale_token:
+            if self._jwt_token is None or (
+                self._jwt_token == stale_token
+                and (
+                    stale_generation is None
+                    or getattr(self, "_auth_generation", 0) == stale_generation
+                )
+            ):
                 self._jwt_token = None
                 await self.authenticate()
                 if not self._jwt_token:
@@ -308,7 +379,127 @@ class DynamicOpenAPIMixin(GeneratedOperationMethods):
             raise APIError("Server returned an invalid OpenAPI document.")
         return data
 
-    async def _dynamic_request(  # noqa: C901
+    def _request_headers(self, headers, raw_request, authenticated):
+        result = dict(self._default_headers)
+        if raw_request is not None:
+            result.update(raw_request.headers)
+        result.update(headers or {})
+        result = {
+            key: _form_value(value)
+            for key, value in result.items()
+            if key.lower()
+            not in {"host", "content-length", "transfer-encoding", "authorization"}
+        }
+        if authenticated and self._jwt_token:
+            result["Authorization"] = f"Bearer {self._jwt_token}"
+        return result
+
+    @staticmethod
+    def _request_body(form_data, files, raw_request, multipart=False):
+        if raw_request is not None:
+            return raw_request.stream
+        if not files and not multipart:
+            return _query_values(form_data) if form_data is not None else None
+        upload = aiohttp.FormData(default_to_multipart=True)
+        for key, value in (form_data or {}).items():
+            for item in value if isinstance(value, (list, tuple)) else [value]:
+                upload.add_field(key, _form_value(item))
+        for key, value in (files or {}).items():
+            entries = value if isinstance(value, list) else [value]
+            for filename, content, content_type in entries:
+                upload.add_field(
+                    key, content, filename=filename, content_type=content_type
+                )
+        return upload
+
+    @asynccontextmanager
+    async def _open_response(
+        self,
+        method,
+        path,
+        *,
+        query=None,
+        json_data=None,
+        form_data=None,
+        headers=None,
+        authenticated=True,
+        is_retry=False,
+        raw_request=None,
+        files=None,
+        multipart=False,
+    ) -> AsyncIterator[aiohttp.ClientResponse]:
+        """Own connections, authentication, and bounded replay for every transport."""
+        if authenticated and not self._jwt_token:
+            await self._ensure_authenticated()
+        url = f"{self._server_root_url}{path if path.startswith('/') else '/' + path}"
+        replayable = (
+            not files
+            and not multipart
+            and (
+                raw_request is None or isinstance(raw_request.stream, httpx.ByteStream)
+            )
+        )
+        for attempt in range(1 if is_retry or not replayable else 2):
+            token_used = self._jwt_token
+            generation_used = getattr(self, "_auth_generation", 0)
+            request_headers = self._request_headers(headers, raw_request, authenticated)
+            try:
+                context = self._session.request(
+                    method.upper(),
+                    url,
+                    params=(
+                        raw_request.url.params.multi_items()
+                        if raw_request is not None
+                        else _query_values(query or {})
+                    ),
+                    json=json_data,
+                    data=self._request_body(form_data, files, raw_request, multipart),
+                    headers=request_headers,
+                    timeout=self._request_timeout,
+                    ssl=None if self._verify_ssl else False,
+                    allow_redirects=False,
+                )
+                response = await context.__aenter__()
+            except (aiohttp.ClientError, asyncio.TimeoutError, OSError) as exc:
+                raise CannotConnectError(
+                    "Unable to connect to the API.", original_exception=exc
+                ) from exc
+            _LOGGER.debug(
+                "API response received",
+                extra={
+                    "http_method": method.upper(),
+                    "http_status": response.status,
+                    "auth_retry": bool(attempt),
+                },
+            )
+            refresh = (
+                response.status == 401
+                and authenticated
+                and replayable
+                and attempt == 0
+                and not is_retry
+            )
+            try:
+                if not refresh:
+                    await self._check_response(response, path)
+                    yield response
+                    return
+                response.release()
+            finally:
+                await context.__aexit__(None, None, None)
+            await self._ensure_authenticated(
+                stale_token=token_used, stale_generation=generation_used
+            )
+
+    async def _check_response(self, response, path):
+        if response.status >= 400:
+            await self._handle_api_error(response, path)
+        if 300 <= response.status < 400:
+            raise APIError(
+                "API redirects are not followed.", status_code=response.status
+            )
+
+    async def _dynamic_request(
         self,
         method: str,
         path: str,
@@ -321,103 +512,21 @@ class DynamicOpenAPIMixin(GeneratedOperationMethods):
         is_retry: bool = False,
         raw_request: Optional[httpx.Request] = None,
         files: Optional[Mapping[str, Any]] = None,
+        multipart: bool = False,
     ) -> Any:
-        url = f"{self._server_root_url}{path if path.startswith('/') else '/' + path}"
-        request_headers = dict(self._default_headers)
-        if raw_request is not None:
-            request_headers.update(raw_request.headers)
-            request_headers = {
-                key: value
-                for key, value in request_headers.items()
-                if key.lower() not in {"host", "content-length", "transfer-encoding"}
-            }
-        if headers:
-            request_headers.update(
-                {
-                    key: str(value).lower() if isinstance(value, bool) else str(value)
-                    for key, value in headers.items()
-                }
-            )
-        if authenticated and not self._jwt_token:
-            await self._ensure_authenticated()
-        token_used = self._jwt_token
-        if authenticated and self._jwt_token:
-            request_headers["Authorization"] = f"Bearer {self._jwt_token}"
-        if json_data is not None:
-            request_headers.setdefault("Content-Type", "application/json")
-        upload_data = None
-        if raw_request is not None:
-
-            async def request_chunks():
-                async for chunk in raw_request.stream:
-                    yield chunk
-
-        if files:
-            upload_data = aiohttp.FormData()
-            for key, value in (form_data or {}).items():
-                upload_data.add_field(key, str(value))
-            for key, value in files.items():
-                filename, content, content_type = value
-                if hasattr(content, "seek"):
-                    content.seek(0)
-                upload_data.add_field(
-                    key, content, filename=filename, content_type=content_type
-                )
-        try:
-            response_context = self._session.request(
-                method.upper(),
-                url,
-                params=(
-                    raw_request.url.params.multi_items()
-                    if raw_request is not None
-                    else _query_values(query or {})
-                ),
-                json=json_data,
-                data=(
-                    request_chunks()
-                    if raw_request is not None
-                    else (
-                        upload_data
-                        if upload_data is not None
-                        else (dict(form_data) if form_data is not None else None)
-                    )
-                ),
-                headers=request_headers,
-                timeout=self._request_timeout,
-            )
-            response = await response_context.__aenter__()
-        except Exception as exc:
-            raise CannotConnectError(
-                f"Unable to connect to {url}", original_exception=exc
-            ) from exc
-        try:
-            if (
-                response.status == 401
-                and authenticated
-                and not is_retry
-                and not files
-                and raw_request is None
-            ):
-                # Release the failed response before refreshing the token or
-                # retrying. Keeping it open can starve a constrained pool.
-                response.release()
-                await response_context.__aexit__(None, None, None)
-                response_context = None
-                await self._ensure_authenticated(stale_token=token_used)
-                return await self._dynamic_request(
-                    method,
-                    path,
-                    query=query,
-                    json_data=json_data,
-                    form_data=form_data,
-                    headers=headers,
-                    authenticated=authenticated,
-                    is_retry=True,
-                    raw_request=raw_request,
-                    files=files,
-                )
-            if not response.ok:
-                await self._handle_api_error(response, path)
+        async with self._open_response(
+            method,
+            path,
+            query=query,
+            json_data=json_data,
+            authenticated=authenticated,
+            form_data=form_data,
+            headers=headers,
+            is_retry=is_retry,
+            raw_request=raw_request,
+            files=files,
+            multipart=multipart,
+        ) as response:
             if raw_request is not None:
                 return httpx.Response(
                     response.status,
@@ -431,15 +540,48 @@ class DynamicOpenAPIMixin(GeneratedOperationMethods):
                 )
             if response.status == 204 or response.content_length == 0:
                 return None
-            try:
-                return await response.json(content_type=None)
-            except (ValueError, TypeError):
-                if response.content_type.startswith("text/"):
-                    return await response.text()
-                return await response.read()
-        finally:
-            if response_context is not None:
-                await response_context.__aexit__(None, None, None)
+            return await _read_response(response)
+
+    @asynccontextmanager
+    async def async_stream_operation(
+        self,
+        operation_id: str,
+        *,
+        path_params: Optional[Mapping[str, Any]] = None,
+        query: Optional[Mapping[str, Any]] = None,
+        headers: Optional[Mapping[str, str]] = None,
+        authenticated: Optional[bool] = None,
+    ) -> AsyncIterator[aiohttp.ClientResponse]:
+        """Stream a discovered GET response without buffering the entire file.
+
+        Use ``async with client.async_stream_operation(id) as response`` and
+        iterate ``response.content.iter_chunked(65536)``. Exiting the context
+        releases the connection, including on cancellation or partial reads.
+        """
+        if not self.operations:
+            await self.async_discover_api()
+        operation = self.operations.get(operation_id)
+        if operation is None:
+            raise NotFoundError(f"Unknown OpenAPI operationId {operation_id!r}.")
+        if operation.method != "GET":
+            raise InvalidInputError("Streaming downloads require a GET operation.")
+        self._validate_operation_inputs(
+            operation, operation_id, path_params, query, headers, None, None, None
+        )
+        async with self._open_response(
+            "GET",
+            self._normalize_api_path(
+                self._render_path(operation.path, path_params or {})
+            ),
+            query=serialize_query(operation.parameters, query or {}),
+            headers=serialize_headers(operation.parameters, headers or {}),
+            authenticated=(
+                operation.requires_authentication
+                if authenticated is None
+                else authenticated
+            ),
+        ) as response:
+            yield response
 
     def _normalize_api_path(self, path: str) -> str:
         if path == "/api" or path.startswith("/api/"):
@@ -479,10 +621,19 @@ def _query_values(query: Mapping[str, Any]) -> Dict[str, Any]:
     return {key: value(item) for key, item in query.items() if item is not None}
 
 
-def _response_value(response: httpx.Response) -> Any:
-    if not response.content:
-        return None
-    try:
-        return response.json()
-    except ValueError:
-        return response.content
+def _form_value(value: Any) -> str:
+    return str(value).lower() if isinstance(value, bool) else str(value)
+
+
+async def _read_response(response: aiohttp.ClientResponse) -> Any:
+    content_type = response.content_type
+    if content_type == "application/json" or content_type.endswith("+json"):
+        try:
+            return await response.json(content_type=None)
+        except (ValueError, UnicodeDecodeError) as exc:
+            raise APIError(
+                "API returned malformed JSON.", status_code=response.status
+            ) from exc
+    if content_type.startswith("text/"):
+        return await response.text()
+    return await response.read()

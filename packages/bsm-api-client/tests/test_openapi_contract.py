@@ -116,7 +116,7 @@ def test_pinned_dev_schema_has_explicit_operation_ids():
         "create_backup",
         "login",
     } <= operations.keys()
-    assert len(operations) == 77
+    assert len(operations) == 78
 
 
 def test_query_serialization_honors_form_explode():

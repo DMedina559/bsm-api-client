@@ -35,7 +35,7 @@ def test_omitted_operations_preserve_existing_package(tmp_path, monkeypatch):
 
     monkeypatch.setattr(generator.subprocess, "run", incomplete_generation)
     schema = {"paths": {"/missing": {"get": {"operationId": "missing"}}}}
-    with pytest.raises(RuntimeError, match="omitted operations"):
+    with pytest.raises(RuntimeError, match="operation mismatch"):
         generator.generate(schema, output)
     assert sentinel.read_text() == "working client"
     assert not (output / "operations.json").exists()
@@ -107,7 +107,11 @@ async def test_generated_adapter_typed_mode_preserves_parsed_model(monkeypatch):
     from bsm_api_client import generated_adapter
 
     parsed = object()
-    response = SimpleNamespace(parsed=parsed, content=b'{"status":"ok"}')
+    response = SimpleNamespace(
+        parsed=parsed,
+        content=b'{"status":"ok"}',
+        headers={"content-type": "application/json"},
+    )
     module = SimpleNamespace(asyncio_detailed=AsyncMock(return_value=response))
     monkeypatch.setattr(generated_adapter, "operation_module", lambda _: module)
     import bsm_api_client.generated as generated

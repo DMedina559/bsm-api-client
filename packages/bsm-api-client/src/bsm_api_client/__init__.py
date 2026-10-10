@@ -15,7 +15,14 @@ from .exceptions import (
     ServerNotFoundError,
     ServerNotRunningError,
 )
-from .openapi import ApiCapabilities, ApiOperation, DiscoveredOperation, diff_schemas
+from .openapi import (
+    ApiCapabilities,
+    ApiOperation,
+    DiscoveredOperation,
+    compatibility_report,
+    diff_schemas,
+    schema_fingerprint,
+)
 from .websocket_client import WebSocketClient
 
 __all__ = [
@@ -24,6 +31,8 @@ __all__ = [
     "ApiOperation",
     "ApiCapabilities",
     "diff_schemas",
+    "compatibility_report",
+    "schema_fingerprint",
     "APIError",
     "AuthError",
     "ServerNotFoundError",

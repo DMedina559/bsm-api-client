@@ -9,7 +9,7 @@ import pytest
 import pytest_asyncio
 
 from bsm_api_client.api_client import BedrockServerManagerApi
-from bsm_api_client.models import InstallServerPayload
+from bsm_api_client.models import InstallServerPayload, ServerSettingItemPayload
 
 
 @pytest.fixture(scope="session")
@@ -123,7 +123,11 @@ def server(server_data_dir):  # noqa: C901
         finally:
             if process is not None:
                 process.terminate()
-                process.wait()
+                try:
+                    process.wait(timeout=20)
+                except subprocess.TimeoutExpired:
+                    process.kill()
+                    process.wait(timeout=10)
                 if process.returncode not in (0, 15, -15):
                     print(
                         f"Server exited with an error (code {process.returncode}). Check bedrock_server_manager_test.log for details."
@@ -132,18 +136,33 @@ def server(server_data_dir):  # noqa: C901
                 server_log.close()
 
 
-@pytest_asyncio.fixture(scope="session")
-async def bedrock_server(server):
+@pytest_asyncio.fixture
+async def bedrock_server(server, server_data_dir):
     """
-    A pytest fixture that creates a single bedrock server instance for all tests to use.
+    Create an isolated dummy Bedrock instance for each integration test.
     The server is deleted at the end of the test session.
     """
     server_name = "test-server"
     client = BedrockServerManagerApi(server, "admin", "password")
     installed = False
     try:
+        from bsm_test_utils import create_server_zip
+
+        # Exercise real extraction and lifecycle without downloading Minecraft.
+        version = "1.26.45.1"
+        archive = create_server_zip(
+            server_data_dir / ".downloads" / "custom", version=version
+        )
+        import zipfile
+
+        with zipfile.ZipFile(archive, "a") as package:
+            package.writestr("worlds/Bedrock level/db/", "")
+            package.writestr("worlds/Bedrock level/level.dat", b"test world")
         payload = InstallServerPayload(
-            server_name=server_name, server_version="LATEST", overwrite=True
+            server_name=server_name,
+            server_version="CUSTOM",
+            server_zip_path=archive.name,
+            overwrite=True,
         )
         install_result = await client.async_install_new_server(payload)
 
@@ -171,6 +190,10 @@ async def bedrock_server(server):
 
         assert await client.async_get_server_validate(server_name)
         installed = True
+        await client.async_set_server_setting(
+            server_name,
+            ServerSettingItemPayload(key="settings.target_version", value=version),
+        )
         yield server_name
 
     finally:

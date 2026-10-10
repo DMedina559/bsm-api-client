@@ -25,6 +25,7 @@ from ..models import (
     StartServerResponse,
     StopServerResponse,
 )
+from ..validation import parse_response
 
 _LOGGER = logging.getLogger(__name__.split(".")[0] + ".client.server_actions")
 
@@ -69,7 +70,7 @@ class ServerActionMethodsMixin(GeneratedOperationMethods):
         response = await self.async_call_generated(
             "start_server", parameters={"server_name": server_name}, authenticated=True
         )
-        return cast(StartServerResponse, StartServerResponse.model_validate(response))
+        return cast(StartServerResponse, parse_response(StartServerResponse, response))
 
     async def async_stop_server(self, server_name: str) -> StopServerResponse:
         """Stops the specified running Bedrock server instance.
@@ -88,7 +89,7 @@ class ServerActionMethodsMixin(GeneratedOperationMethods):
         response = await self.async_call_generated(
             "stop_server", parameters={"server_name": server_name}, authenticated=True
         )
-        return cast(StopServerResponse, StopServerResponse.model_validate(response))
+        return cast(StopServerResponse, parse_response(StopServerResponse, response))
 
     async def async_restart_server(self, server_name: str) -> RestartServerResponse:
         """Restarts the specified Bedrock server instance.
@@ -110,7 +111,7 @@ class ServerActionMethodsMixin(GeneratedOperationMethods):
             authenticated=True,
         )
         return cast(
-            RestartServerResponse, RestartServerResponse.model_validate(response)
+            RestartServerResponse, parse_response(RestartServerResponse, response)
         )
 
     async def async_send_server_command(
@@ -129,9 +130,7 @@ class ServerActionMethodsMixin(GeneratedOperationMethods):
 
             response = await client.async_send_server_command('MyServer')
         """
-        _LOGGER.info(
-            "Sending command to server '%s': '%s'", server_name, command.command
-        )
+        _LOGGER.debug("Sending a console command to server '%s'", server_name)
 
         response = await self.async_call_generated(
             "send_command",
@@ -139,7 +138,7 @@ class ServerActionMethodsMixin(GeneratedOperationMethods):
             body=command.model_dump(),
             authenticated=True,
         )
-        return cast(ActionResponse, ActionResponse.model_validate(response))
+        return cast(ActionResponse, parse_response(ActionResponse, response))
 
     async def async_update_server(self, server_name: str) -> ActionResponse:
         """Checks for and applies updates to the specified server instance.
@@ -158,7 +157,7 @@ class ServerActionMethodsMixin(GeneratedOperationMethods):
         response = await self.async_call_generated(
             "update_server", parameters={"server_name": server_name}, authenticated=True
         )
-        return cast(ActionResponse, ActionResponse.model_validate(response))
+        return cast(ActionResponse, parse_response(ActionResponse, response))
 
     async def async_add_server_allowlist(
         self, server_name: str, payload: AllowlistAddPayload
@@ -190,7 +189,7 @@ class ServerActionMethodsMixin(GeneratedOperationMethods):
             body=payload.model_dump(),
             authenticated=True,
         )
-        return cast(BaseApiResponse, BaseApiResponse.model_validate(response))
+        return cast(BaseApiResponse, parse_response(BaseApiResponse, response))
 
     async def async_remove_server_allowlist_players(
         self, server_name: str, payload: AllowlistRemovePayload
@@ -222,7 +221,7 @@ class ServerActionMethodsMixin(GeneratedOperationMethods):
             body=payload.model_dump(),
             authenticated=True,
         )
-        return cast(BaseApiResponse, BaseApiResponse.model_validate(response))
+        return cast(BaseApiResponse, parse_response(BaseApiResponse, response))
 
     async def async_set_server_permissions(
         self, server_name: str, payload: PermissionsSetPayload
@@ -255,7 +254,7 @@ class ServerActionMethodsMixin(GeneratedOperationMethods):
         )
         return cast(
             PermissionsUpdateResponse,
-            PermissionsUpdateResponse.model_validate(response),
+            parse_response(PermissionsUpdateResponse, response),
         )
 
     async def async_update_server_properties(
@@ -285,7 +284,7 @@ class ServerActionMethodsMixin(GeneratedOperationMethods):
             body=payload.model_dump(),
             authenticated=True,
         )
-        return cast(BaseApiResponse, BaseApiResponse.model_validate(response))
+        return cast(BaseApiResponse, parse_response(BaseApiResponse, response))
 
     async def async_delete_server(self, server_name: str) -> ActionResponse:
         """Permanently deletes a server instance.
@@ -309,7 +308,7 @@ class ServerActionMethodsMixin(GeneratedOperationMethods):
         response = await self.async_call_generated(
             "delete_server", parameters={"server_name": server_name}, authenticated=True
         )
-        return cast(ActionResponse, ActionResponse.model_validate(response))
+        return cast(ActionResponse, parse_response(ActionResponse, response))
 
     async def async_get_server_bans(self, server_name: str) -> dict[str, Any]:
         """Get all bans for a specific server.

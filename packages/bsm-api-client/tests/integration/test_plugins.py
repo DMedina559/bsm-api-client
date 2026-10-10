@@ -108,10 +108,11 @@ def test_builtin_plugin_operation_discovery(
     import json
     from unittest.mock import AsyncMock
 
-    from bsm_cli.__main__ import cli
-    from bsm_cli.config import Config
     from click.testing import CliRunner
     from fastapi import APIRouter, FastAPI
+
+    from bsm_cli.__main__ import cli
+    from bsm_cli.config import Config
 
     plugin_class = getattr(
         importlib.import_module(f"bedrock_server_manager.plugins.default.{module}"),

@@ -26,6 +26,7 @@ from ..models import (
     TaskSnapshot,
     ThemeListResponse,
 )
+from ..validation import parse_response
 
 _LOGGER = logging.getLogger(__name__.split(".")[0] + ".client.manager")
 
@@ -43,7 +44,7 @@ class ManagerMethodsMixin(GeneratedOperationMethods):
         response = await self.async_call_generated(
             "get_system_info", authenticated=False
         )
-        return cast(AppInfoResponse, AppInfoResponse.model_validate(response))
+        return cast(AppInfoResponse, parse_response(AppInfoResponse, response))
 
     async def async_scan_players(self) -> AddPlayersResponse:
         """Triggers a scan of player logs across all servers.
@@ -53,7 +54,7 @@ class ManagerMethodsMixin(GeneratedOperationMethods):
         """
         _LOGGER.info("Triggering player log scan")
         response = await self.async_call_generated("scan_players", authenticated=True)
-        return cast(AddPlayersResponse, AddPlayersResponse.model_validate(response))
+        return cast(AddPlayersResponse, parse_response(AddPlayersResponse, response))
 
     async def async_get_players(self) -> PlayerListResponse:
         """Gets the global list of known players.
@@ -63,7 +64,7 @@ class ManagerMethodsMixin(GeneratedOperationMethods):
         """
         _LOGGER.debug("Fetching global player list from /players/get")
         response = await self.async_call_generated("list_players", authenticated=True)
-        return cast(PlayerListResponse, PlayerListResponse.model_validate(response))
+        return cast(PlayerListResponse, parse_response(PlayerListResponse, response))
 
     async def async_add_players(self, payload: AddPlayersPayload) -> AddPlayersResponse:
         """Adds or updates players in the global list.
@@ -78,7 +79,7 @@ class ManagerMethodsMixin(GeneratedOperationMethods):
         response = await self.async_call_generated(
             "add_players", body=payload.model_dump(), authenticated=True
         )
-        return cast(AddPlayersResponse, AddPlayersResponse.model_validate(response))
+        return cast(AddPlayersResponse, parse_response(AddPlayersResponse, response))
 
     async def async_get_custom_zips(self) -> CustomZipsResponse:
         """Retrieves a list of available custom server ZIP files.
@@ -88,7 +89,7 @@ class ManagerMethodsMixin(GeneratedOperationMethods):
         """
         _LOGGER.info("Fetching list of custom zips.")
         response = await self.async_call_generated("list_downloads", authenticated=True)
-        return cast(CustomZipsResponse, CustomZipsResponse.model_validate(response))
+        return cast(CustomZipsResponse, parse_response(CustomZipsResponse, response))
 
     async def async_get_themes(self) -> ThemeListResponse:
         """Retrieves a list of available themes.
@@ -98,7 +99,7 @@ class ManagerMethodsMixin(GeneratedOperationMethods):
         """
         _LOGGER.info("Fetching list of available themes.")
         result = await self.async_call_generated("list_themes", authenticated=True)
-        return cast(ThemeListResponse, ThemeListResponse.model_validate(result))
+        return cast(ThemeListResponse, parse_response(ThemeListResponse, result))
 
     async def async_get_all_settings(self) -> SettingsResponse:
         """Retrieve all global application settings.
@@ -108,7 +109,7 @@ class ManagerMethodsMixin(GeneratedOperationMethods):
         """
         _LOGGER.info("Fetching all global application settings.")
         response = await self.async_call_generated("get_settings", authenticated=True)
-        return cast(SettingsResponse, SettingsResponse.model_validate(response))
+        return cast(SettingsResponse, parse_response(SettingsResponse, response))
 
     async def async_set_setting(self, payload: SettingItemResponse) -> SettingsResponse:
         """Sets a specific global application setting.
@@ -119,13 +120,11 @@ class ManagerMethodsMixin(GeneratedOperationMethods):
         Returns:
             A `SettingsResponse` object containing the result of the set operation.
         """
-        _LOGGER.info(
-            "Setting global application setting '%s' to: %s", payload.key, payload.value
-        )
+        _LOGGER.debug("Updating global application setting '%s'", payload.key)
         response = await self.async_call_generated(
             "set_setting", body=payload.model_dump(), authenticated=True
         )
-        return cast(SettingsResponse, SettingsResponse.model_validate(response))
+        return cast(SettingsResponse, parse_response(SettingsResponse, response))
 
     async def async_reload_settings(self) -> SettingsResponse:
         """Forces a reload of global application settings and logging configuration.
@@ -137,7 +136,7 @@ class ManagerMethodsMixin(GeneratedOperationMethods):
         response = await self.async_call_generated(
             "reload_settings", authenticated=True
         )
-        return cast(SettingsResponse, SettingsResponse.model_validate(response))
+        return cast(SettingsResponse, parse_response(SettingsResponse, response))
 
     async def async_get_panorama_image(self) -> bytes:
         """Retrieves the panorama background image.
@@ -175,7 +174,7 @@ class ManagerMethodsMixin(GeneratedOperationMethods):
             "prune_downloads", body=payload.model_dump(), authenticated=True
         )
         return cast(
-            PruneDownloadsResponse, PruneDownloadsResponse.model_validate(response)
+            PruneDownloadsResponse, parse_response(PruneDownloadsResponse, response)
         )
 
     async def async_install_new_server(
@@ -200,7 +199,7 @@ class ManagerMethodsMixin(GeneratedOperationMethods):
             "install_server", body=payload.model_dump(), authenticated=True
         )
         return cast(
-            InstallServerResponse, InstallServerResponse.model_validate(response)
+            InstallServerResponse, parse_response(InstallServerResponse, response)
         )
 
     async def async_get_task_status(self, task_id: str) -> Dict[str, Any]:
@@ -222,12 +221,12 @@ class ManagerMethodsMixin(GeneratedOperationMethods):
         """Return the typed task snapshot from the version-2 backend contract."""
         return cast(
             TaskSnapshot,
-            TaskSnapshot.model_validate(await self.async_get_task_status(task_id)),
+            parse_response(TaskSnapshot, await self.async_get_task_status(task_id)),
         )
 
     async def async_list_tasks(self) -> list[TaskSnapshot]:
         """List typed task snapshots visible to the authenticated user."""
         result = await self.async_call_generated("list_tasks", authenticated=True)
         return [
-            cast(TaskSnapshot, TaskSnapshot.model_validate(item)) for item in result
+            cast(TaskSnapshot, parse_response(TaskSnapshot, item)) for item in result
         ]

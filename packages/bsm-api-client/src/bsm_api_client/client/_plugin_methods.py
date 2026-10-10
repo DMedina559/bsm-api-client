@@ -16,6 +16,7 @@ from ..models import (
     TriggerEventPayload,
     TriggerEventResponse,
 )
+from ..validation import parse_response
 
 _LOGGER = logging.getLogger(__name__.split(".")[0] + ".client.plugins")
 
@@ -39,7 +40,7 @@ class PluginMethodsMixin(GeneratedOperationMethods):
         _LOGGER.info("Requesting status of all plugins.")
         response = await self.async_call_generated("list_plugins", authenticated=True)
         return cast(
-            PluginStatusesResponse, PluginStatusesResponse.model_validate(response)
+            PluginStatusesResponse, parse_response(PluginStatusesResponse, response)
         )
 
     async def async_set_plugin_status(
@@ -75,7 +76,7 @@ class PluginMethodsMixin(GeneratedOperationMethods):
             body=payload.model_dump(),
             authenticated=True,
         )
-        return cast(ActionResponse, ActionResponse.model_validate(response))
+        return cast(ActionResponse, parse_response(ActionResponse, response))
 
     async def async_reload_plugins(self) -> ActionResponse:
         """Triggers a full reload of all plugins.
@@ -92,7 +93,7 @@ class PluginMethodsMixin(GeneratedOperationMethods):
         """
         _LOGGER.info("Requesting reload of all plugins.")
         response = await self.async_call_generated("reload_plugins", authenticated=True)
-        return cast(ActionResponse, ActionResponse.model_validate(response))
+        return cast(ActionResponse, parse_response(ActionResponse, response))
 
     async def async_trigger_plugin_event(
         self, payload: TriggerEventPayload
@@ -112,12 +113,10 @@ class PluginMethodsMixin(GeneratedOperationMethods):
             payload = ...
             response = await client.async_trigger_plugin_event(payload)
         """
-        _LOGGER.info(
-            "Triggering custom plugin event '%s' with payload: %s",
-            payload.event_name,
-            payload.payload,
-        )
+        _LOGGER.debug("Triggering custom plugin event '%s'", payload.event_name)
         response = await self.async_call_generated(
             "trigger_plugin_event", body=payload.model_dump(), authenticated=True
         )
-        return cast(TriggerEventResponse, TriggerEventResponse.model_validate(response))
+        return cast(
+            TriggerEventResponse, parse_response(TriggerEventResponse, response)
+        )

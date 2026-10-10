@@ -2,8 +2,9 @@
 
 import json
 
-from bsm_cli.__main__ import cli
 from click.testing import CliRunner
+
+from bsm_cli.__main__ import cli
 
 
 def test_interactive_cli_login(server, tmp_path, monkeypatch):

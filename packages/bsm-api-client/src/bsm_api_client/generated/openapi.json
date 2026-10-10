@@ -67,6 +67,7 @@
         "type": "object"
       },
       "AddPlayersPayload": {
+        "additionalProperties": false,
         "description": "Request model for manually adding players to the database.\n\nEach string in the 'players' list should be in the format \"gamertag:xuid\".",
         "properties": {
           "players": {
@@ -159,15 +160,22 @@
         "type": "object"
       },
       "AddonActionPayload": {
+        "additionalProperties": false,
         "description": "Request model for modifying a specific addon (e.g. enable, disable, uninstall).",
         "properties": {
           "pack_type": {
             "description": "The type of the pack: 'behavior' or 'resource'.",
+            "enum": [
+              "behavior",
+              "resource"
+            ],
             "title": "Pack Type",
             "type": "string"
           },
           "pack_uuid": {
             "description": "The UUID of the pack.",
+            "minLength": 1,
+            "pattern": ".*\\S.*",
             "title": "Pack Uuid",
             "type": "string"
           }
@@ -220,16 +228,23 @@
         "type": "object"
       },
       "AddonReorderPayload": {
+        "additionalProperties": false,
         "description": "Request model for reordering active addons.",
         "properties": {
           "pack_type": {
             "description": "The type of the pack: 'behavior' or 'resource'.",
+            "enum": [
+              "behavior",
+              "resource"
+            ],
             "title": "Pack Type",
             "type": "string"
           },
           "uuids": {
             "description": "The exact list of currently active UUIDs in the new desired order.",
             "items": {
+              "minLength": 1,
+              "pattern": ".*\\S.*",
               "type": "string"
             },
             "title": "Uuids",
@@ -244,40 +259,43 @@
         "type": "object"
       },
       "AddonSubpackPayload": {
-        "additionalProperties": true,
+        "additionalProperties": false,
         "description": "Request model for changing the active subpack of an addon.",
         "properties": {
           "pack_type": {
             "description": "The type of the pack: 'behavior' or 'resource'.",
+            "enum": [
+              "behavior",
+              "resource"
+            ],
             "title": "Pack Type",
             "type": "string"
           },
           "pack_uuid": {
             "description": "The UUID of the pack.",
+            "minLength": 1,
+            "pattern": ".*\\S.*",
             "title": "Pack Uuid",
             "type": "string"
           },
           "subpack_name": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
             "description": "The folder name of the subpack to activate.",
-            "title": "Subpack Name"
+            "minLength": 1,
+            "pattern": ".*\\S.*",
+            "title": "Subpack Name",
+            "type": "string"
           }
         },
         "required": [
           "pack_uuid",
-          "pack_type"
+          "pack_type",
+          "subpack_name"
         ],
         "title": "AddonSubpackPayload",
         "type": "object"
       },
       "AllowlistAddPayload": {
+        "additionalProperties": false,
         "description": "Request model for adding players to the allowlist.",
         "properties": {
           "ignoresPlayerLimit": {
@@ -334,6 +352,7 @@
         "type": "object"
       },
       "AllowlistRemovePayload": {
+        "additionalProperties": false,
         "description": "Request model for removing players from the allowlist.",
         "properties": {
           "players": {
@@ -435,6 +454,7 @@
         "type": "object"
       },
       "BackupActionPayload": {
+        "additionalProperties": false,
         "description": "Request model for triggering a backup action.",
         "properties": {
           "backup_type": {
@@ -509,6 +529,7 @@
         "type": "object"
       },
       "BanAddRequest": {
+        "additionalProperties": false,
         "properties": {
           "player_name": {
             "title": "Player Name",
@@ -579,6 +600,7 @@
         "type": "object"
       },
       "BanRemoveRequest": {
+        "additionalProperties": false,
         "properties": {
           "xuid": {
             "title": "Xuid",
@@ -685,6 +707,7 @@
         "type": "object"
       },
       "ChangePasswordPayload": {
+        "additionalProperties": false,
         "description": "Request payload for changing the user's password.\n\nAttributes:\n    current_password (str): The current password for verification.\n    new_password (str): The new password.",
         "properties": {
           "current_password": {
@@ -704,6 +727,7 @@
         "type": "object"
       },
       "CommandPayload": {
+        "additionalProperties": false,
         "description": "Request model for sending a command to a server.",
         "properties": {
           "command": {
@@ -815,6 +839,7 @@
         "type": "object"
       },
       "FileNamePayload": {
+        "additionalProperties": false,
         "description": "Payload for file-based operations.\n\nAttributes:\n    filename (str): The name of the file to operate on.",
         "properties": {
           "filename": {
@@ -829,9 +854,15 @@
         "type": "object"
       },
       "GenerateTokenPayload": {
+        "additionalProperties": false,
         "description": "Request payload for generating a registration token.\n\nAttributes:\n    role (str): The role to assign to the user registering with this token.",
         "properties": {
           "role": {
+            "enum": [
+              "admin",
+              "moderator",
+              "user"
+            ],
             "title": "Role",
             "type": "string"
           }
@@ -1009,6 +1040,7 @@
         "type": "object"
       },
       "InstallServerPayload": {
+        "additionalProperties": false,
         "description": "Request model for installing a new server.",
         "properties": {
           "overwrite": {
@@ -1026,8 +1058,12 @@
           },
           "server_name": {
             "description": "Name for the new server.",
+            "examples": [
+              "example"
+            ],
             "maxLength": 50,
             "minLength": 1,
+            "pattern": "^[a-zA-Z0-9_-]+$",
             "title": "Server Name",
             "type": "string"
           },
@@ -1185,7 +1221,75 @@
         "type": "object"
       },
       "JsonValue": {},
+      "ListAvailableAddonsResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "files": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Files",
+            "type": "array"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          },
+          "status": {
+            "const": "success",
+            "default": "success",
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "files"
+        ],
+        "title": "ListAvailableAddonsResponse",
+        "type": "object"
+      },
+      "LogHistoryPage": {
+        "properties": {
+          "data": {
+            "title": "Data",
+            "type": "string"
+          },
+          "end": {
+            "title": "End",
+            "type": "integer"
+          },
+          "file_id": {
+            "title": "File Id",
+            "type": "string"
+          },
+          "has_more": {
+            "title": "Has More",
+            "type": "boolean"
+          },
+          "start": {
+            "title": "Start",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "data",
+          "start",
+          "end",
+          "file_id",
+          "has_more"
+        ],
+        "title": "LogHistoryPage",
+        "type": "object"
+      },
       "PermissionsSetPayload": {
+        "additionalProperties": false,
         "description": "Request model for setting multiple player permissions.",
         "properties": {
           "permissions": {
@@ -1335,6 +1439,7 @@
         "type": "object"
       },
       "PlayerPermissionPayload": {
+        "additionalProperties": false,
         "description": "Represents a single player's permission data sent from the client.",
         "properties": {
           "name": {
@@ -1342,6 +1447,11 @@
             "type": "string"
           },
           "permission_level": {
+            "enum": [
+              "visitor",
+              "member",
+              "operator"
+            ],
             "title": "Permission Level",
             "type": "string"
           },
@@ -1492,6 +1602,7 @@
         "type": "object"
       },
       "PluginStatusSetPayload": {
+        "additionalProperties": false,
         "description": "Request model for setting a plugin's enabled status.",
         "properties": {
           "enabled": {
@@ -1580,6 +1691,7 @@
         "type": "object"
       },
       "ProfileUpdatePayload": {
+        "additionalProperties": false,
         "description": "Request payload for updating user profile details.\n\nAttributes:\n    full_name (str): The user's full name.\n    email (str): The user's email address.",
         "properties": {
           "email": {
@@ -1599,10 +1711,13 @@
         "type": "object"
       },
       "PropertiesPayload": {
+        "additionalProperties": false,
         "description": "Request model for updating server.properties.",
         "properties": {
           "properties": {
-            "additionalProperties": true,
+            "additionalProperties": {
+              "type": "string"
+            },
             "description": "Dictionary of properties to set.",
             "title": "Properties",
             "type": "object"
@@ -1615,6 +1730,7 @@
         "type": "object"
       },
       "PruneDownloadsPayload": {
+        "additionalProperties": false,
         "description": "Request model for pruning the download cache.",
         "properties": {
           "directory": {
@@ -1789,6 +1905,7 @@
         "type": "object"
       },
       "RestoreActionPayload": {
+        "additionalProperties": false,
         "description": "Request model for triggering a restore action.",
         "properties": {
           "backup_file": {
@@ -1897,6 +2014,7 @@
         "type": "object"
       },
       "ServerSettingItemPayload": {
+        "additionalProperties": false,
         "description": "Request model for a single server setting key-value pair.",
         "properties": {
           "key": {
@@ -1905,8 +2023,8 @@
             "type": "string"
           },
           "value": {
-            "description": "The new value for the setting.",
-            "title": "Value"
+            "$ref": "#/components/schemas/JsonValue",
+            "description": "The new value for the setting."
           }
         },
         "required": [
@@ -2050,6 +2168,7 @@
         "type": "object"
       },
       "SettingItemResponse": {
+        "additionalProperties": false,
         "description": "Request model for a single setting key-value pair.",
         "properties": {
           "key": {
@@ -2058,8 +2177,8 @@
             "type": "string"
           },
           "value": {
-            "description": "The new value for the setting.",
-            "title": "Value"
+            "$ref": "#/components/schemas/JsonValue",
+            "description": "The new value for the setting."
           }
         },
         "required": [
@@ -2290,6 +2409,7 @@
               "running",
               "completed",
               "failed",
+              "cancelling",
               "cancelled"
             ],
             "title": "Status",
@@ -2349,6 +2469,7 @@
         "type": "object"
       },
       "ThemeUpdatePayload": {
+        "additionalProperties": false,
         "description": "Request payload for updating the user's theme.\n\nAttributes:\n    theme (str): The new theme name.",
         "properties": {
           "theme": {
@@ -2393,6 +2514,7 @@
         "type": "object"
       },
       "TriggerEventPayload": {
+        "additionalProperties": false,
         "description": "Request model for triggering a custom plugin event.",
         "properties": {
           "event_name": {
@@ -2404,7 +2526,9 @@
           "payload": {
             "anyOf": [
               {
-                "additionalProperties": true,
+                "additionalProperties": {
+                  "$ref": "#/components/schemas/JsonValue"
+                },
                 "type": "object"
               },
               {
@@ -2464,9 +2588,15 @@
         "type": "object"
       },
       "UpdateUserRolePayload": {
+        "additionalProperties": false,
         "description": "Request payload for updating a user's role.\n\nAttributes:\n    role (str): The new role.",
         "properties": {
           "role": {
+            "enum": [
+              "admin",
+              "moderator",
+              "user"
+            ],
             "title": "Role",
             "type": "string"
           }
@@ -2478,6 +2608,7 @@
         "type": "object"
       },
       "UserLoginPayload": {
+        "additionalProperties": false,
         "description": "Request model for user login credentials.",
         "properties": {
           "password": {
@@ -2527,6 +2658,11 @@
             "type": "boolean"
           },
           "role": {
+            "enum": [
+              "admin",
+              "moderator",
+              "user"
+            ],
             "title": "Role",
             "type": "string"
           },
@@ -2569,7 +2705,7 @@
   },
   "info": {
     "title": "Bedrock Server Manager",
-    "version": "4.0.0b5.dev11"
+    "version": "0.1.dev1"
   },
   "openapi": "3.1.0",
   "paths": {
@@ -3015,9 +3151,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response List Available Addons",
-                  "type": "object"
+                  "$ref": "#/components/schemas/ListAvailableAddonsResponse"
                 }
               }
             },
@@ -3602,6 +3736,152 @@
         "summary": "Get Themes",
         "tags": [
           "Themes"
+        ]
+      }
+    },
+    "/api/logs/history": {
+      "get": {
+        "operationId": "get_log_history",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "topic",
+            "required": true,
+            "schema": {
+              "maxLength": 256,
+              "minLength": 1,
+              "title": "Topic",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "before",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Before"
+            }
+          },
+          {
+            "in": "query",
+            "name": "file_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 64,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "File Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LogHistoryPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          },
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "summary": "Get Log History",
+        "tags": [
+          "Logs"
         ]
       }
     },
@@ -10399,7 +10679,6 @@
     },
     "/api/users/{user_id}/disable": {
       "post": {
-        "description": "Disables a user.",
         "operationId": "disable_user",
         "parameters": [
           {
@@ -10510,7 +10789,6 @@
     },
     "/api/users/{user_id}/enable": {
       "post": {
-        "description": "Enables a user.",
         "operationId": "enable_user",
         "parameters": [
           {
@@ -10621,7 +10899,6 @@
     },
     "/api/users/{user_id}/role": {
       "post": {
-        "description": "Updates a user's role.",
         "operationId": "update_user_role",
         "parameters": [
           {

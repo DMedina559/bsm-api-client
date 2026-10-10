@@ -61,7 +61,7 @@ class CannotConnectError(
         # Call the parent's __str__ to get its formatting (without status_code part)
         base_str = Exception.__str__(self)  # Get the original message part directly
         if self.original_exception:
-            base_str += f" (Original error: {type(self.original_exception).__name__}: {str(self.original_exception)})"
+            base_str += f" (Original error: {type(self.original_exception).__name__})"
         return base_str
 
 
