@@ -52,7 +52,7 @@ async def test_discovery_groups_plugin_routes():
     )
     await client.async_discover_api()
     assert client.schema_fingerprint
-    assert client.plugins["demo"][0].operation_id == "demo_status"
+    assert client.plugin_operations["demo"][0].operation_id == "demo_status"
 
 
 @pytest.mark.asyncio
@@ -122,6 +122,7 @@ async def test_generated_client_bridge_reuses_token(monkeypatch):
 
     generated = ModuleType("bsm_api_client.generated.client")
     generated.AuthenticatedClient = GeneratedClient
+    generated.Client = GeneratedClient
     monkeypatch.setitem(sys.modules, "bsm_api_client.generated.client", generated)
 
     result = await client.async_get_generated_client()

@@ -17,7 +17,7 @@ async def scan_for_players(ctx):
 
     try:
         click.echo("Scanning all server logs for player data...")
-        response = await client.async_scan_players()
+        response = await client.players.async_scan_players()
         if response.status == "success":
             click.secho("Player database updated successfully.", fg="green")
         else:
@@ -46,7 +46,7 @@ async def add_players(ctx, players):
         player_list = list(players)
         click.echo(f"Adding/updating {len(player_list)} player(s) in the database...")
         payload = AddPlayersPayload(players=player_list)
-        response = await client.async_add_players(payload)
+        response = await client.players.async_add_players(payload)
         if response.status == "success":
             click.secho("Players added/updated successfully.", fg="green")
         else:

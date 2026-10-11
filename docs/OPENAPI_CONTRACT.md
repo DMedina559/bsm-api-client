@@ -1,7 +1,9 @@
 # OpenAPI contract and plugin operations
 
 BSM 4.0 is the source of truth. Curated Python methods return Pydantic models;
-`async_call_generated` uses the bundled endpoint serializers and can return raw,
+`client.rest` exposes typed methods named after operation IDs and `_detailed`
+variants containing HTTP status and headers. `async_call_generated` uses the
+bundled endpoint serializers and can return raw,
 generated typed (`typed=True`), or detailed (`detailed=True`) responses.
 `async_call_operation` uses the discovered server contract and returns JSON values,
 text, bytes, or `None` for empty responses. The generated and discovered paths use
@@ -49,6 +51,7 @@ transport diagnostics; debug records expose method, status, retry and discovery
 counts only. Structured exceptions retain server-provided error metadata.
 
 Use `async with BedrockServerManagerApi(...) as client` to close owned sessions
-and generated HTTP clients. Borrowed aiohttp sessions remain open. `verify_ssl`
-and `request_timeout` apply to the shared transport. A URL path represents the
+and generated HTTP clients. Borrowed HTTPX clients and aiohttp WebSocket sessions
+remain open. `verify_ssl` and `request_timeout` configure the internally owned
+HTTPX client; a supplied `http_client` retains its connection and timeout settings. A URL path represents the
 server's reverse-proxy mount; `base_path` selects the API prefix within it.

@@ -51,7 +51,7 @@ async def install_addon(ctx, server_name: str, addon_file_path: str):
                 f"Entering interactive addon installation for server: {server_name}",
                 fg="yellow",
             )
-            response = await client.async_get_content_addons()
+            response = await client.content.async_get_content_addons()
             available_files = response.files
 
             if not available_files:
@@ -75,7 +75,7 @@ async def install_addon(ctx, server_name: str, addon_file_path: str):
         click.echo(f"Installing addon '{addon_filename}' to server '{server_name}'...")
 
         payload = FileNamePayload(filename=addon_filename)
-        response = await client.async_install_server_addon(server_name, payload)
+        response = await client.content.async_install_server_addon(server_name, payload)
         if getattr(response, "task_id", None):
             await monitor_task(
                 client,
@@ -108,7 +108,7 @@ async def manage_addons(ctx, server_name: str):  # noqa: C901
 
     while True:
         try:
-            response = await client.async_get_server_addons(server_name)
+            response = await client.content.async_get_server_addons(server_name)
             addons = response.addons
             if not addons:
                 click.secho(
@@ -194,7 +194,9 @@ async def manage_addons(ctx, server_name: str):  # noqa: C901
                     payload = AddonReorderPayload(
                         pack_type="behavior", uuids=ordered_uuids
                     )
-                    res = await client.async_reorder_server_addon(server_name, payload)
+                    res = await client.content.async_reorder_server_addon(
+                        server_name, payload
+                    )
                     if res.task_id:
                         await monitor_task(
                             client,
@@ -237,7 +239,9 @@ async def manage_addons(ctx, server_name: str):  # noqa: C901
                     payload = AddonReorderPayload(
                         pack_type="resource", uuids=ordered_uuids
                     )
-                    res = await client.async_reorder_server_addon(server_name, payload)
+                    res = await client.content.async_reorder_server_addon(
+                        server_name, payload
+                    )
                     if res.task_id:
                         await monitor_task(
                             client,
@@ -283,7 +287,7 @@ async def manage_addons(ctx, server_name: str):  # noqa: C901
                 continue
 
             if action_choice == "Enable":
-                res = await client.async_enable_server_addon(
+                res = await client.content.async_enable_server_addon(
                     server_name,
                     AddonActionPayload(pack_uuid=pack.uuid, pack_type=pack_type),
                 )
@@ -292,7 +296,7 @@ async def manage_addons(ctx, server_name: str):  # noqa: C901
                         client, res.task_id, "Enabled successfully", "Failed to enable"
                     )
             elif action_choice == "Disable":
-                res = await client.async_disable_server_addon(
+                res = await client.content.async_disable_server_addon(
                     server_name,
                     AddonActionPayload(pack_uuid=pack.uuid, pack_type=pack_type),
                 )
@@ -307,7 +311,7 @@ async def manage_addons(ctx, server_name: str):  # noqa: C901
                 if await questionary.confirm(
                     f"Are you sure you want to uninstall {pack.name}?"
                 ).ask_async():
-                    res = await client.async_uninstall_server_addon(
+                    res = await client.content.async_uninstall_server_addon(
                         server_name,
                         AddonActionPayload(pack_uuid=pack.uuid, pack_type=pack_type),
                     )
@@ -350,7 +354,7 @@ async def manage_addons(ctx, server_name: str):  # noqa: C901
                             subpack_name=selected_sp.get("folder_name"),
                         )
 
-                        res = await client.async_update_server_addon_subpack(
+                        res = await client.content.async_update_server_addon_subpack(
                             server_name, subpack_payload
                         )
                         if res.task_id:

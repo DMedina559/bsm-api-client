@@ -44,7 +44,7 @@ async def install_world(ctx, server_name: str, world_file_path: str, yes: bool):
                 f"Entering interactive world installation for server: {server_name}",
                 fg="yellow",
             )
-            response = await client.async_get_content_worlds()
+            response = await client.content.async_get_content_worlds()
             available_files = response.files
 
             if not available_files:
@@ -80,7 +80,7 @@ async def install_world(ctx, server_name: str, world_file_path: str, yes: bool):
 
         click.echo(f"Installing world '{filename}'...")
         payload = FileNamePayload(filename=filename)
-        response = await client.async_install_server_world(server_name, payload)
+        response = await client.content.async_install_server_world(server_name, payload)
 
         if getattr(response, "task_id", None):
             await monitor_task(
@@ -114,7 +114,7 @@ async def export_world(ctx, server_name: str):
 
     click.echo(f"Attempting to export world for server '{server_name}'...")
     try:
-        response = await client.async_export_server_world(server_name)
+        response = await client.content.async_export_server_world(server_name)
         if getattr(response, "task_id", None):
             await monitor_task(
                 client,
@@ -158,7 +158,7 @@ async def reset_world(ctx, server_name: str, yes: bool):
 
     click.echo(f"Resetting world for server '{server_name}'...")
     try:
-        response = await client.async_reset_server_world(server_name)
+        response = await client.content.async_reset_server_world(server_name)
         if getattr(response, "task_id", None):
             await monitor_task(
                 client,

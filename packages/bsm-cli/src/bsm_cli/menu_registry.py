@@ -139,10 +139,10 @@ async def _resource_choices(ctx, name):
             for op in sorted(client.operations.values(), key=lambda op: op.operation_id)
         ]
     if name in {"server", "server_name"}:
-        response = await client.async_get_servers()
+        response = await client.servers.async_get_servers()
         return sorted(server.name for server in (response.servers or []))
     if name in {"plugin_name", "plugin"}:
-        response = await client.async_get_plugin_statuses()
+        response = await client.plugins.async_get_plugin_statuses()
         plugins = response.plugins or {}
         return [
             questionary.Choice(
@@ -214,13 +214,13 @@ async def plugin_api_menu(ctx):  # noqa: C901
     client = get_client(ctx)
     await client.async_discover_api()
     plugin = await questionary.select(
-        "Plugin API:", choices=[*sorted(client.plugins), "Back"]
+        "Plugin API:", choices=[*sorted(client.plugin_operations), "Back"]
     ).ask_async()
     if not plugin or plugin == "Back":
         return
     identifier = await questionary.select(
         "Operation:",
-        choices=[op.operation_id for op in client.plugins[plugin]] + ["Back"],
+        choices=[op.operation_id for op in client.plugin_operations[plugin]] + ["Back"],
     ).ask_async()
     if not identifier or identifier == "Back":
         return

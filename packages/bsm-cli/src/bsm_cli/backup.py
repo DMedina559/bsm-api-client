@@ -56,7 +56,9 @@ async def create_backup(ctx, server_name: str, backup_type: str, file_to_backup:
         payload = BackupActionPayload(
             backup_type=backup_type, file_to_backup=file_to_backup
         )
-        response = await client.async_trigger_server_backup(server_name, payload)
+        response = await client.content.async_trigger_server_backup(
+            server_name, payload
+        )
 
         if getattr(response, "task_id", None):
             await monitor_task(
@@ -66,7 +68,9 @@ async def create_backup(ctx, server_name: str, backup_type: str, file_to_backup:
                 "Failed to create backup",
             )
             click.echo("Pruning old backups...")
-            prune_response = await client.async_prune_server_backups(server_name)
+            prune_response = await client.content.async_prune_server_backups(
+                server_name
+            )
             if getattr(prune_response, "task_id", None):
                 await monitor_task(
                     client,
@@ -132,7 +136,9 @@ async def restore_backup(
         payload = RestoreActionPayload(
             restore_type=restore_type, backup_file=os.path.basename(backup_file_path)
         )
-        response = await client.async_restore_server_backup(server_name, payload)
+        response = await client.content.async_restore_server_backup(
+            server_name, payload
+        )
 
         if getattr(response, "task_id", None):
             await monitor_task(
@@ -166,7 +172,7 @@ async def prune_backups(ctx, server_name: str):
 
     try:
         click.echo(f"Pruning old backups for server '{server_name}'...")
-        response = await client.async_prune_server_backups(server_name)
+        response = await client.content.async_prune_server_backups(server_name)
         if getattr(response, "task_id", None):
             await monitor_task(
                 client,
@@ -250,7 +256,7 @@ async def _interactive_restore_menu(client, server_name: str):
         raise click.Abort()
     restore_type = restore_type_map[choice]
 
-    response = await client.async_list_server_backups(server_name, restore_type)
+    response = await client.content.async_list_server_backups(server_name, restore_type)
     backup_files = response.backups
     if not backup_files:
         click.secho(

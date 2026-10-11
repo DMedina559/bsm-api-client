@@ -10,7 +10,7 @@ async def interactive_user_workflow(ctx, client):  # noqa: C901
     """Interactive menu for managing users."""
     while True:
         try:
-            users_list = await client.async_get_users()
+            users_list = await client.users.async_get_users()
             screen_header("Users")
             click.secho("--- Manage Users ---", fg="magenta", bold=True)
             for user in users_list:
@@ -65,7 +65,7 @@ async def interactive_user_workflow(ctx, client):  # noqa: C901
                         f"Are you sure you want to delete user {user_id}?"
                     ).ask_async()
                     if confirm:
-                        response = await client.async_delete_user(user_id)
+                        response = await client.users.async_delete_user(user_id)
                         click.echo(response.model_dump_json(indent=2))
                         await questionary.press_any_key_to_continue().ask_async()
 
@@ -91,7 +91,9 @@ async def interactive_user_workflow(ctx, client):  # noqa: C901
                         choices=["user", "moderator", "admin"],
                     ).ask_async()
                     if role:
-                        response = await client.async_update_user_role(user_id, role)
+                        response = await client.users.async_update_user_role(
+                            user_id, role
+                        )
                         click.echo(response.model_dump_json(indent=2))
                         await questionary.press_any_key_to_continue().ask_async()
 
@@ -118,7 +120,7 @@ async def interactive_user_workflow(ctx, client):  # noqa: C901
                 ).ask_async()
 
                 if user_id and user_id != "Cancel":
-                    response = await client.async_enable_user(user_id)
+                    response = await client.users.async_enable_user(user_id)
                     click.echo(response.model_dump_json(indent=2))
                     await questionary.press_any_key_to_continue().ask_async()
 
@@ -145,7 +147,7 @@ async def interactive_user_workflow(ctx, client):  # noqa: C901
                 ).ask_async()
 
                 if user_id and user_id != "Cancel":
-                    response = await client.async_disable_user(user_id)
+                    response = await client.users.async_disable_user(user_id)
                     click.echo(response.model_dump_json(indent=2))
                     await questionary.press_any_key_to_continue().ask_async()
 
@@ -155,7 +157,7 @@ async def interactive_user_workflow(ctx, client):  # noqa: C901
                     choices=["user", "moderator", "admin"],
                 ).ask_async()
                 if role:
-                    response = await client.async_generate_invite_token(role)
+                    response = await client.users.async_generate_invite_token(role)
                     click.echo(f"Invite Link: {response.registration_url}")
                     await questionary.press_any_key_to_continue().ask_async()
 
@@ -179,7 +181,7 @@ def users(ctx):
 async def list(ctx):
     """List all users."""
     client = get_client(ctx)
-    users = await client.async_get_users()
+    users = await client.users.async_get_users()
     for user in users:
         click.echo(
             f"ID: {user.id} | Username: {user.username} | Role: {user.role} | Active: {user.is_active} | Type: {user.identity_type}"
@@ -201,7 +203,7 @@ async def delete(ctx, user_id: int, yes: bool):
             click.echo("Aborted.")
             return
 
-    response = await client.async_delete_user(user_id)
+    response = await client.users.async_delete_user(user_id)
     click.echo(response.model_dump_json(indent=2))
 
 
@@ -212,7 +214,7 @@ async def delete(ctx, user_id: int, yes: bool):
 async def set_role(ctx, user_id: int, role: str):
     """Set a user's role."""
     client = get_client(ctx)
-    response = await client.async_update_user_role(user_id, role)
+    response = await client.users.async_update_user_role(user_id, role)
     click.echo(response.model_dump_json(indent=2))
 
 
@@ -222,7 +224,7 @@ async def set_role(ctx, user_id: int, role: str):
 async def enable(ctx, user_id: int):
     """Enable a user account."""
     client = get_client(ctx)
-    response = await client.async_enable_user(user_id)
+    response = await client.users.async_enable_user(user_id)
     click.echo(response.model_dump_json(indent=2))
 
 
@@ -232,7 +234,7 @@ async def enable(ctx, user_id: int):
 async def disable(ctx, user_id: int):
     """Disable a user account."""
     client = get_client(ctx)
-    response = await client.async_disable_user(user_id)
+    response = await client.users.async_disable_user(user_id)
     click.echo(response.model_dump_json(indent=2))
 
 
@@ -242,5 +244,5 @@ async def disable(ctx, user_id: int):
 async def invite(ctx, role: str):
     """Generate an invite link for a new user."""
     client = get_client(ctx)
-    response = await client.async_generate_invite_token(role)
+    response = await client.users.async_generate_invite_token(role)
     click.echo(f"Invite Link: {response.registration_url}")

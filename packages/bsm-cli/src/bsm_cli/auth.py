@@ -105,9 +105,9 @@ async def setup(ctx, base_url, verify_ssl, username, password):
     async with BedrockServerManagerApi(
         url, username=username, password=password, verify_ssl=verify_ssl
     ) as client:
-        if not (await client.async_get_setup_status()).needs_setup:
+        if not (await client.application.async_get_setup_status()).needs_setup:
             raise click.ClickException("Setup is already complete. Use auth login.")
-        response = await client.async_create_first_user(
+        response = await client.application.async_create_first_user(
             UserLoginPayload(username=username, password=password)
         )
     ctx.obj["config"].update(

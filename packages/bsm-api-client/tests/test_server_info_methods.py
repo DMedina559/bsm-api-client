@@ -49,7 +49,7 @@ async def test_get_servers(client):
 async def test_get_server_names(client):
     """Test async_get_server_names method."""
     with patch.object(
-        client, "async_get_servers", new_callable=AsyncMock
+        client.servers, "async_get_servers", new_callable=AsyncMock
     ) as mock_details:
         from collections import namedtuple
 

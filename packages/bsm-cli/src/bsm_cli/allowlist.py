@@ -50,7 +50,7 @@ async def add(ctx, server_name: str, players: tuple[str], ignore_limit: bool):
         payload = AllowlistAddPayload(
             players=list(players), ignoresPlayerLimit=ignore_limit
         )
-        response = await client.async_add_server_allowlist(server_name, payload)
+        response = await client.servers.async_add_server_allowlist(server_name, payload)
 
         message = response.message
         click.secho(
@@ -90,7 +90,9 @@ async def remove(ctx, server_name: str, players: tuple[str]):
     )
 
     payload = AllowlistRemovePayload(players=player_list)
-    response = await client.async_remove_server_allowlist_players(server_name, payload)
+    response = await client.servers.async_remove_server_allowlist_players(
+        server_name, payload
+    )
 
     if response.status == "success":
         details = getattr(response, "details", None) or {}
@@ -133,7 +135,7 @@ async def list_players(ctx, server_name: str):
     """Lists all players currently on a server's allowlist."""
     client = get_client(ctx)
 
-    response = await client.async_get_server_allowlist(server_name)
+    response = await client.servers.async_get_server_allowlist(server_name)
 
     if response.status == "success":
         players = response.players
@@ -157,7 +159,7 @@ async def list_players(ctx, server_name: str):
 
 async def interactive_allowlist_workflow(client, server_name: str):  # noqa: C901
     """Guides the user through an interactive session to view and add players to the allowlist."""
-    response = await client.async_get_server_allowlist(server_name)
+    response = await client.servers.async_get_server_allowlist(server_name)
     existing_players = response.players or []
 
     click.secho("\n--- Interactive Allowlist Configuration ---", bold=True)
@@ -215,7 +217,9 @@ async def interactive_allowlist_workflow(client, server_name: str):  # noqa: C90
             payload = AllowlistAddPayload(
                 players=players_ignore_limit, ignoresPlayerLimit=True
             )
-            response = await client.async_add_server_allowlist(server_name, payload)
+            response = await client.servers.async_add_server_allowlist(
+                server_name, payload
+            )
             if response.status != "success":
                 click.secho(
                     f"Failed to add players with ignore limit: {response.message}",
@@ -227,7 +231,9 @@ async def interactive_allowlist_workflow(client, server_name: str):  # noqa: C90
             payload = AllowlistAddPayload(
                 players=players_no_ignore_limit, ignoresPlayerLimit=False
             )
-            response = await client.async_add_server_allowlist(server_name, payload)
+            response = await client.servers.async_add_server_allowlist(
+                server_name, payload
+            )
             if response.status != "success":
                 click.secho(
                     f"Failed to add players without ignore limit: {response.message}",

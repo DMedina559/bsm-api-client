@@ -48,10 +48,7 @@ jobs:
       - name: Check fresh-checkout client and distributions
         run: |
           python -m pytest --ignore=packages/bsm-api-client/tests/integration
-          if git ls-files packages/bsm-api-client/src/bsm_api_client/generated | grep -vE '/(openapi.json|__init__.py)$'; then
-            echo "Generated Python modules must not be tracked" >&2
-            exit 1
-          fi
+          python tools/generate_client.py packages/bsm-api-client/src/bsm_api_client/generated/openapi.json --check
           python -m build packages/bsm-api-client
           python -m build packages/bsm-cli
           python tools/check_distributions.py packages/bsm-api-client/dist/*

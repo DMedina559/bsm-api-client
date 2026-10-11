@@ -43,7 +43,7 @@ async def load_header(ctx, client):
     if "app_info" in ctx.obj:
         return
     try:
-        response = await client.async_get_info()
+        response = await client.application.async_get_info()
         info = response.info
         if isinstance(info, dict):
             ctx.obj["app_info"] = info

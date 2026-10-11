@@ -162,7 +162,7 @@ async def test_discovery_coalesces_refreshes_and_keeps_last_valid_snapshot(servi
     with pytest.raises(APIError):
         await client.async_refresh_api()
     assert client.schema == snapshot
-    assert "extension" in client.plugins["custom"][0].operation_id
+    assert "extension" in client.plugin_operations["custom"][0].operation_id
 
 
 @pytest.mark.asyncio
@@ -199,8 +199,8 @@ async def test_streaming_release_and_shared_authentication(service):
     await client.async_discover_api()
     client._jwt_token = "expired"
     async with client.async_stream_operation("binary") as response:
-        assert await response.content.readexactly(10) == b"0123456789"
-    assert response.closed
+        assert (await anext(response.aiter_bytes()))[:10] == b"0123456789"
+    assert response.is_closed
     assert state["logins"] == 1
     assert await client.async_call_operation("text") == "123"
     with pytest.raises(InvalidInputError, match="GET"):

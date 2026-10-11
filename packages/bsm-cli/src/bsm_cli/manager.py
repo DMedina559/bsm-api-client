@@ -33,9 +33,9 @@ def manager():
 
 
 async def overview(client, unit):
-    health = await client.async_get_application_health()
-    metrics = (await client.async_get_application_metrics()).latest
-    fleet = await client.async_get_servers()
+    health = await client.application.async_get_application_health()
+    metrics = (await client.application.async_get_application_metrics()).latest
+    fleet = await client.servers.async_get_servers()
     click.secho("Bedrock Server Manager", bold=True)
     click.echo(
         f"Connection: Connected | Health: {health.health} | Lifecycle: {health.lifecycle}"
@@ -82,7 +82,7 @@ async def show_overview(ctx, unit):
 @click.pass_context
 async def health(ctx):
     """Show component health checks and their current details."""
-    response = await get_client(ctx).async_get_application_health()
+    response = await get_client(ctx).application.async_get_application_health()
     click.echo(f"{response.health} ({response.lifecycle})")
     for name, check in response.checks.items():
         outcome(check.model_dump(exclude_none=True), name)
@@ -122,12 +122,12 @@ async def monitor(ctx, interval, unit, once):
         )
 
     if once:
-        response = await client.async_get_application_metrics()
+        response = await client.application.async_get_application_metrics()
         render_metrics(response, unit)
         return
     async for response, live in watch_resource(
         client,
-        client.async_get_application_metrics,
+        client.application.async_get_application_metrics,
         ("application-metrics",),
         interval=interval,
         transform=update,
@@ -210,7 +210,7 @@ def tasks():
 @tasks.command("list")
 @click.pass_context
 async def list_tasks(ctx):
-    operations = await get_client(ctx).async_list_tasks()
+    operations = await get_client(ctx).tasks.async_list_tasks()
     table(
         "Operations",
         ("ID", "Status", "Message"),
@@ -222,7 +222,7 @@ async def list_tasks(ctx):
 @click.argument("task_id")
 @click.pass_context
 async def show_task(ctx, task_id):
-    task = await get_client(ctx).async_get_task_snapshot(task_id)
+    task = await get_client(ctx).tasks.async_get_task_snapshot(task_id)
     click.echo(f"{task.id}: {task.status} — {task.message}")
     outcome(task.result)
     if task.error:
@@ -237,13 +237,13 @@ async def settings(ctx):
     from bsm_cli.settings_editor import edit_settings, fields, infer_schema
 
     if ctx.obj.get("json_output"):
-        return await get_client(ctx).async_get_all_settings()
+        return await get_client(ctx).application.async_get_all_settings()
     client = get_client(ctx)
-    original = (await client.async_get_all_settings()).settings or {}
+    original = (await client.application.async_get_all_settings()).settings or {}
     draft = await edit_settings(original, title="Application settings")
     if draft is None:
         return
-    if (await client.async_get_all_settings()).settings != original:
+    if (await client.application.async_get_all_settings()).settings != original:
         raise click.ClickException(
             "Settings changed in another session. Reopen the editor."
         )
@@ -253,7 +253,7 @@ async def settings(ctx):
         for key in path:
             previous = previous.get(key) if isinstance(previous, dict) else None
         if previous != value:
-            await client.async_set_setting(
+            await client.application.async_set_setting(
                 SettingItemResponse(key=".".join(path), value=value)
             )
             click.echo(f"Saved {'.'.join(path)}")

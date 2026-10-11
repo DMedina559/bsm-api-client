@@ -28,7 +28,7 @@ async def get_props(ctx, server_name: str, property_name: str):
     """Displays server properties from a server's server.properties file."""
     client = get_client(ctx)
 
-    response = await client.async_get_server_properties(server_name)
+    response = await client.servers.async_get_server_properties(server_name)
 
     if response.status == "success":
         properties = response.properties or {}
@@ -92,7 +92,9 @@ async def set_props(ctx, server_name: str, properties: tuple[str]):
         )
 
         payload = PropertiesPayload(properties=props_to_update)
-        response = await client.async_update_server_properties(server_name, payload)
+        response = await client.servers.async_update_server_properties(
+            server_name, payload
+        )
 
         if response.status == "success":
             click.secho("Properties updated successfully.", fg="green")
@@ -108,7 +110,7 @@ async def interactive_properties_workflow(client, server_name: str):  # noqa: C9
     click.secho("\n--- Interactive Server Properties Configuration ---", bold=True)
     click.echo("Loading current server properties...")
 
-    properties_response = await client.async_get_server_properties(server_name)
+    properties_response = await client.servers.async_get_server_properties(server_name)
     if properties_response.status == "error":
         click.secho(f"Error: {properties_response.message}", fg="red")
         raise click.Abort()
@@ -194,7 +196,9 @@ async def interactive_properties_workflow(client, server_name: str):  # noqa: C9
         raise click.Abort()
 
     payload = PropertiesPayload(properties=changes)
-    update_response = await client.async_update_server_properties(server_name, payload)
+    update_response = await client.servers.async_update_server_properties(
+        server_name, payload
+    )
 
     if update_response.status == "success":
         click.secho("Server properties updated successfully.", fg="green")

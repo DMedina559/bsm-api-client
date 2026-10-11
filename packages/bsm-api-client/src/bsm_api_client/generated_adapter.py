@@ -1,4 +1,4 @@
-"""Stable adapter around the disposable generated endpoint modules."""
+"""Shared authentication and error policy for standard generated endpoints."""
 
 from __future__ import annotations
 
@@ -11,13 +11,14 @@ from typing import Any, cast, get_args, get_type_hints
 import httpx
 from pydantic import BaseModel
 
+from .contract_base import ContractModel
 from .exceptions import APIError, InvalidInputError, NotFoundError
 from .openapi import generated_schema, index_operations
 from .validation import validate_input
 
 
 class SharedTransport(httpx.AsyncBaseTransport):
-    """Run generated HTTP requests through the facade's auth/error transport."""
+    """Apply SDK authentication and error policy using its HTTPX pool."""
 
     def __init__(self, owner: Any, authenticated: bool):
         self.owner = owner
@@ -25,6 +26,11 @@ class SharedTransport(httpx.AsyncBaseTransport):
 
     async def handle_async_request(self, request: httpx.Request) -> httpx.Response:
         path = request.url.raw_path.decode("ascii").split("?", 1)[0]
+        prefix = (
+            httpx.URL(self.owner._server_root_url).raw_path.decode("ascii").rstrip("/")
+        )
+        if prefix and path.startswith(prefix + "/"):
+            path = path.removeprefix(prefix)
         if path.startswith("/api/"):
             path = self.owner._api_base_segment + path[4:]
         return cast(
@@ -57,8 +63,6 @@ async def call_generated(
     ):
         raise NotFoundError(f"Operation is unavailable on this server: {operation_id}")
     module = operation_module(operation_id)
-    from .generated.client import Client
-
     kwargs = dict(parameters or {})
     try:
         if body is not None:
@@ -72,14 +76,8 @@ async def call_generated(
             f"Invalid generated operation {operation_id}: {exc}"
         ) from exc
     try:
-        async with httpx.AsyncClient(
-            base_url=owner._server_root_url,
-            transport=SharedTransport(owner, authenticated),
-        ) as transport:
-            client = Client(base_url=owner._server_root_url).set_async_httpx_client(
-                transport
-            )
-            response = await module.asyncio_detailed(client=client, **kwargs)
+        client = owner._generated_client(authenticated)
+        response = await module.asyncio_detailed(client=client, **kwargs)
     except APIError:
         raise
     except (TypeError, ValueError, KeyError) as exc:
@@ -94,7 +92,9 @@ async def call_generated(
 
 
 def validate_generated_body(operation_id: str, body: Any) -> Any:
-    if isinstance(body, BaseModel):
+    if isinstance(body, ContractModel):
+        body = body.to_dict()
+    elif isinstance(body, BaseModel):
         body = body.model_dump(mode="json", exclude_unset=True)
     document = generated_schema()
     operation = index_operations(document)[operation_id]
@@ -140,7 +140,9 @@ def operation_module(operation_id: str) -> Any:
 
 
 def generated_body(module: Any, body: Any) -> Any:
-    if isinstance(body, BaseModel):
+    if isinstance(body, ContractModel):
+        body = body.to_dict()
+    elif isinstance(body, BaseModel):
         body = body.model_dump(mode="json", exclude_unset=True)
     annotation = get_type_hints(module.asyncio_detailed).get("body")
     candidates = get_args(annotation) or (annotation,)
@@ -149,7 +151,7 @@ def generated_body(module: Any, body: Any) -> Any:
 
 
 class GeneratedOperationMethods:
-    """Shared operation invocation used by every compatibility mixin."""
+    """Generated operation invocation shared by SDK services."""
 
     async def async_call_generated(
         self,

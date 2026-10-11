@@ -31,12 +31,12 @@ async def server_settings(ctx, server_name: str):
 
     from bsm_cli.settings_editor import edit_settings, fields, infer_schema
 
-    response = await client.async_get_server_settings(server_name)
+    response = await client.servers.async_get_server_settings(server_name)
     original = response.settings or {}
     draft = await edit_settings(original, title=f"Settings: {server_name}")
     if draft is None:
         return
-    latest = await client.async_get_server_settings(server_name)
+    latest = await client.servers.async_get_server_settings(server_name)
     if latest.settings != original:
         raise click.ClickException(
             "Settings changed in another session. Reopen the editor."
@@ -46,7 +46,7 @@ async def server_settings(ctx, server_name: str):
         for key in path:
             previous = previous.get(key) if isinstance(previous, dict) else None
         if previous != value:
-            await client.async_set_server_setting(
+            await client.servers.async_set_server_setting(
                 server_name, ServerSettingItemPayload(key=".".join(path), value=value)
             )
             click.echo(f"Saved {'.'.join(path)}")
@@ -67,7 +67,7 @@ async def monitor_usage(ctx, server_name: str):
     client = get_client(ctx)
 
     if ctx.obj.get("json_output"):
-        return await client.async_get_server_process_info(server_name)
+        return await client.servers.async_get_server_process_info(server_name)
 
     click.secho(
         f"Starting resource monitoring for server '{server_name}'. Press CTRL+C to exit.",
@@ -77,7 +77,7 @@ async def monitor_usage(ctx, server_name: str):
 
     try:
         while True:
-            response = await client.async_get_server_process_info(server_name)
+            response = await client.servers.async_get_server_process_info(server_name)
 
             screen_header("Server monitor")
             click.secho(

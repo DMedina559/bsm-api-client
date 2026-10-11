@@ -70,7 +70,7 @@ async def list_servers(ctx, loop, server_name):  # noqa: C901
     if ctx.obj.get("json_output"):
         if loop:
             raise click.UsageError("Use server list without --loop for JSON output.")
-        response = await client.async_get_servers()
+        response = await client.servers.async_get_servers()
         if server_name:
             return {
                 "servers": [
@@ -82,7 +82,7 @@ async def list_servers(ctx, loop, server_name):  # noqa: C901
         return response
 
     async def _display_status():
-        response = await client.async_get_servers()
+        response = await client.servers.async_get_servers()
         all_servers = response.servers or []
 
         if server_name:
@@ -107,7 +107,7 @@ async def list_servers(ctx, loop, server_name):  # noqa: C901
                 "event:after_server_installed",
             )
             async for response, live in watch_resource(
-                client, client.async_get_servers, topics
+                client, client.servers.async_get_servers, topics
             ):
                 screen_header("Servers")
                 click.secho(
@@ -149,7 +149,7 @@ async def start_server(ctx, server_name: str):
 
     click.echo(f"Attempting to start server '{server_name}'...")
     try:
-        response = await client.async_start_server(server_name)
+        response = await client.servers.async_start_server(server_name)
         if getattr(response, "task_id", None):
             await monitor_task(
                 client,
@@ -181,7 +181,7 @@ async def stop_server(ctx, server_name: str):
 
     click.echo(f"Attempting to stop server '{server_name}'...")
     try:
-        response = await client.async_stop_server(server_name)
+        response = await client.servers.async_stop_server(server_name)
         if getattr(response, "task_id", None):
             await monitor_task(
                 client,
@@ -213,7 +213,7 @@ async def restart_server(ctx, server_name: str):
 
     click.echo(f"Attempting to restart server '{server_name}'...")
     try:
-        response = await client.async_restart_server(server_name)
+        response = await client.servers.async_restart_server(server_name)
         if getattr(response, "task_id", None):
             await monitor_task(
                 client,
@@ -252,7 +252,7 @@ async def install(ctx):  # noqa: C901
 
         server_zip_path = None
         if target_version.upper() == "CUSTOM":
-            response = await client.async_get_custom_zips()
+            response = await client.application.async_get_custom_zips()
             available_files = response.custom_zips
 
             if not available_files:
@@ -287,7 +287,7 @@ async def install(ctx):  # noqa: C901
             overwrite=overwrite,
             server_zip_path=server_zip_path,
         )
-        install_result = await client.async_install_new_server(payload)
+        install_result = await client.servers.async_install_new_server(payload)
 
         if install_result.task_id:
             await monitor_task(
@@ -341,7 +341,7 @@ async def update(ctx, server_name: str):
 
     click.echo(f"Checking for updates for server '{server_name}'...")
     try:
-        response = await client.async_update_server(server_name)
+        response = await client.servers.async_update_server(server_name)
         if getattr(response, "task_id", None):
             await monitor_task(
                 client,
@@ -385,7 +385,7 @@ async def delete_server(ctx, server_name: str, yes: bool):
 
     click.echo(f"Proceeding with deletion of server '{server_name}'...")
     try:
-        response = await client.async_delete_server(server_name)
+        response = await client.servers.async_delete_server(server_name)
         if getattr(response, "task_id", None):
             await monitor_task(
                 client,
@@ -423,7 +423,7 @@ async def send_command(ctx, server_name: str, command_parts: str):
     click.echo(f"Sending command to '{server_name}': {command_string}")
     try:
         payload = CommandPayload(command=command_string)
-        response = await client.async_send_server_command(server_name, payload)
+        response = await client.servers.async_send_server_command(server_name, payload)
         if response.status == "success":
             click.secho("Command sent successfully.", fg="green")
         else:

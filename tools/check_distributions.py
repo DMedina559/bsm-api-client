@@ -40,20 +40,10 @@ def check_sdist(path: Path, contents: dict[str, bytes]) -> None:
     if len(roots) != 1:
         raise RuntimeError(f"{path}: missing bundled OpenAPI schema")
     root = roots.pop()
-    if not any(name.endswith("/generate_client.py") for name in contents):
-        raise RuntimeError(f"{path}: missing build-time generator")
-    unexpected = [
-        name
-        for name in contents
-        if name.startswith(root)
-        and name != root + "__init__.py"
-        and name != root + "openapi.json"
-    ]
-    if unexpected:
-        raise RuntimeError(
-            f"{path}: generated artifacts leaked into source archive: {unexpected}"
-        )
-    print(f"{path.name}: source schema and build generator packaged")
+    for file in ("rest.py", "client.py", "operations.json"):
+        if root + file not in contents:
+            raise RuntimeError(f"{path}: source archive missing generated {file}")
+    print(f"{path.name}: reviewed generated client packaged")
 
 
 def check_wheel(path: Path, contents: dict[str, bytes]) -> None:
