@@ -43,7 +43,7 @@ dev = [
     "flake8 >=7.3.0,<7.5",
     "isort >=5.13.0,<9.1",
     "mypy >=1.10.0,<2.5",
-    "bedrock-server-manager >4.0.0b5,<4.1",
+    "bedrock-server-manager >=4.0.0b5,<4.1",
     "openapi-python-client ==0.29.1",
     "pre-commit >=4.6.0,<4.7",
 ]
