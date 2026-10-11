@@ -184,3 +184,7 @@ data
 /openapi.json
 
 .mypy_cache*/
+
+# Keep generated API source even when its tag matches an artifact directory.
+!packages/bsm-api-client/src/bsm_api_client/generated/api/downloads/
+!packages/bsm-api-client/src/bsm_api_client/generated/api/downloads/*.py
