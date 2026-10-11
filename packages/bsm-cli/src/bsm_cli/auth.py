@@ -87,3 +87,38 @@ async def logout(ctx):
     if "client" in ctx.obj and ctx.obj["client"]:
         await ctx.obj["client"].close()
     return emit(ctx, result)
+
+
+@auth.command("setup")
+@click.option(
+    "--base-url", prompt=True, help="The base URL of a new manager installation."
+)
+@click.option("--verify-ssl/--no-verify-ssl", default=True)
+@click.option("--username", prompt=True)
+@click.option("--password", prompt=True, hide_input=True, confirmation_prompt=True)
+@click.pass_context
+async def setup(ctx, base_url, verify_ssl, username, password):
+    """Create the first administrator and securely save the session token."""
+    from bsm_api_client.models import UserLoginPayload
+
+    url = _validate_and_get_url(base_url)
+    async with BedrockServerManagerApi(
+        url, username=username, password=password, verify_ssl=verify_ssl
+    ) as client:
+        if not (await client.async_get_setup_status()).needs_setup:
+            raise click.ClickException("Setup is already complete. Use auth login.")
+        response = await client.async_create_first_user(
+            UserLoginPayload(username=username, password=password)
+        )
+    ctx.obj["config"].update(
+        base_url=url,
+        verify_ssl=verify_ssl,
+        jwt_token=response.access_token,
+        username=None,
+        password=None,
+        openapi_cache=None,
+        server_cache=None,
+    )
+    return emit(
+        ctx, {"status": "success", "message": "Administrator created. Logged in."}
+    )

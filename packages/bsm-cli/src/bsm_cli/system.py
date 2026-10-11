@@ -2,7 +2,6 @@ import asyncio
 import time
 
 import click
-import questionary
 
 from bsm_api_client.models import ServerSettingItemPayload
 from bsm_cli.completion import complete_server
@@ -26,68 +25,30 @@ def system():
 )
 @click.pass_context
 async def server_settings(ctx, server_name: str):
-    """Configures autostart and autoupdate settings for a Bedrock server."""
+    """Review and edit all available Bedrock server settings."""
     client = get_client(ctx)
 
-    click.secho(
-        f"Starting interactive settings configuration for '{server_name}'...",
-        fg="yellow",
-    )
+    from bsm_cli.settings_editor import edit_settings, fields, infer_schema
 
-    settings_response = await client.async_get_server_settings(server_name)
-    if settings_response.status != "success" or not settings_response.settings:
-        click.secho(
-            f"Failed to fetch server settings: {settings_response.message}", fg="red"
-        )
+    response = await client.async_get_server_settings(server_name)
+    original = response.settings or {}
+    draft = await edit_settings(original, title=f"Settings: {server_name}")
+    if draft is None:
         return
-
-    settings = settings_response.settings
-
-    current_autoupdate = settings.get("settings", {}).get("autoupdate", False)
-    current_autostart = settings.get("settings", {}).get("autostart", False)
-
-    click.secho(
-        f"\n--- Interactive Settings Configuration for '{server_name}' ---", bold=True
-    )
-
-    autoupdate_choice = await questionary.confirm(
-        "Enable check for updates when the server starts?", default=current_autoupdate
-    ).ask_async()
-
-    if autoupdate_choice is None:
-        return
-    if autoupdate_choice != current_autoupdate:
-        payload = ServerSettingItemPayload(
-            key="settings.autoupdate", value=autoupdate_choice
+    latest = await client.async_get_server_settings(server_name)
+    if latest.settings != original:
+        raise click.ClickException(
+            "Settings changed in another session. Reopen the editor."
         )
-        response = await client.async_set_server_setting(server_name, payload)
-        if response.status == "success":
-            click.secho(
-                f"Autoupdate setting configured to '{autoupdate_choice}'.", fg="green"
+    for path, spec, value in fields(infer_schema(draft), infer_schema(draft), draft):
+        previous = original
+        for key in path:
+            previous = previous.get(key) if isinstance(previous, dict) else None
+        if previous != value:
+            await client.async_set_server_setting(
+                server_name, ServerSettingItemPayload(key=".".join(path), value=value)
             )
-        else:
-            click.secho(f"Failed to set autoupdate: {response.message}", fg="red")
-
-    autostart_choice = await questionary.confirm(
-        "Enable the server to start automatically when the manager starts?",
-        default=current_autostart,
-    ).ask_async()
-
-    if autostart_choice is None:
-        return
-    if autostart_choice != current_autostart:
-        payload = ServerSettingItemPayload(
-            key="settings.autostart", value=autostart_choice
-        )
-        response = await client.async_set_server_setting(server_name, payload)
-        if response.status == "success":
-            click.secho(
-                f"Autostart setting configured to '{autostart_choice}'.", fg="green"
-            )
-        else:
-            click.secho(f"Failed to set autostart: {response.message}", fg="red")
-
-    click.secho("\nSettings configuration complete.", fg="green", bold=True)
+            click.echo(f"Saved {'.'.join(path)}")
 
 
 @system.command("monitor")
@@ -133,7 +94,10 @@ async def monitor_usage(ctx, server_name: str):
                 info = response.process_info
                 pid_str = info.get("pid", "N/A")
                 cpu_str = f"{info.get('cpu_percent', 0.0):.1f}%"
-                mem_str = f"{info.get('memory_mb', 0.0):.1f} MB"
+                from bsm_cli.appearance import preferred_unit
+                from bsm_cli.manager import memory
+
+                mem_str = memory(info.memory_mb, preferred_unit(ctx, None))
                 uptime_str = info.get("uptime", "N/A")
 
                 click.echo(f"  {'PID':<15}: {click.style(str(pid_str), fg='cyan')}")

@@ -1,4 +1,3 @@
-# src/bsm_api_client/client/_manager_methods.py
 """Mixin class for manager-level API methods.
 
 This module provides the `ManagerMethodsMixin` class, which includes methods
@@ -16,6 +15,8 @@ from ..models import (
     AddPlayersResponse,
     AppInfoResponse,
     CustomZipsResponse,
+    GetApplicationHealthResponse,
+    GetApplicationMetricsResponse,
     InstallServerPayload,
     InstallServerResponse,
     PlayerListResponse,
@@ -23,8 +24,11 @@ from ..models import (
     PruneDownloadsResponse,
     SettingItemResponse,
     SettingsResponse,
+    SetupAccountResponse,
+    SetupStatusResponse,
     TaskSnapshot,
     ThemeListResponse,
+    UserLoginPayload,
 )
 from ..validation import parse_response
 
@@ -169,7 +173,6 @@ class ManagerMethodsMixin(GeneratedOperationMethods):
             payload.directory,
             payload.keep if payload.keep is not None else "server default",
         )
-
         response = await self.async_call_generated(
             "prune_downloads", body=payload.model_dump(), authenticated=True
         )
@@ -194,7 +197,6 @@ class ManagerMethodsMixin(GeneratedOperationMethods):
             payload.server_version,
             payload.overwrite,
         )
-
         response = await self.async_call_generated(
             "install_server", body=payload.model_dump(), authenticated=True
         )
@@ -230,3 +232,41 @@ class ManagerMethodsMixin(GeneratedOperationMethods):
         return [
             cast(TaskSnapshot, parse_response(TaskSnapshot, item)) for item in result
         ]
+
+    async def async_get_application_health(self) -> GetApplicationHealthResponse:
+        """Return manager lifecycle and component health checks."""
+        return parse_response(
+            GetApplicationHealthResponse,
+            await self.async_call_generated(
+                "get_application_health", authenticated=True
+            ),
+        )
+
+    async def async_get_application_metrics(self) -> GetApplicationMetricsResponse:
+        """Return application and system samples with their bounded history."""
+        return parse_response(
+            GetApplicationMetricsResponse,
+            await self.async_call_generated(
+                "get_application_metrics", authenticated=True
+            ),
+        )
+
+    async def async_get_setup_status(self) -> SetupStatusResponse:
+        """Check whether the backend needs its first administrator."""
+        return parse_response(
+            SetupStatusResponse,
+            await self.async_call_generated("get_setup_status", authenticated=False),
+        )
+
+    async def async_create_first_user(
+        self, payload: UserLoginPayload
+    ) -> SetupAccountResponse:
+        """Create the initial administrator on an unconfigured backend."""
+        return parse_response(
+            SetupAccountResponse,
+            await self.async_call_generated(
+                "create_first_user",
+                body=payload.model_dump(mode="json"),
+                authenticated=False,
+            ),
+        )

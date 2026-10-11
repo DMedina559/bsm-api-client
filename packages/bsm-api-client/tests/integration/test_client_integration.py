@@ -116,7 +116,9 @@ async def test_server_operations(server, bedrock_server):
         permission = PlayerPermissionPayload(
             name="TestPlayer", xuid="123456789", permission_level="operator"
         )
-        initial_models = [PlayerPermissionPayload(**p) for p in initial_permissions]
+        initial_models = [
+            PlayerPermissionPayload(**p.model_dump()) for p in initial_permissions
+        ]
 
         # Permissions are upserted by XUID; an earlier test may already have it.
         expected_permissions = {p.xuid: p for p in initial_models}

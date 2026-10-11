@@ -128,7 +128,7 @@ bsm-cli backup restore --server survival --file custom-backup.zip --type world
 ```
 
 `content upload LOCAL_FILE` works only when the server advertises an
-`upload_content` operation. The currently pinned backend does not advertise one.
+`upload_content` operation. The current backend does not advertise one.
 Place content files in the backend's content directories, then select them by name.
 
 Background commands subscribe to the task's WebSocket topic and check its REST
@@ -157,3 +157,48 @@ Completion validates cached contracts and fingerprints and rejects metadata for 
 different backend URL or recorded user. Malformed caches yield no suggestions.
 Boolean and enum parameter values have completion suggestions. Interactive command
 menus can select live operation IDs and return to the menu after each action.
+
+
+## Manager dashboard and settings
+
+The interactive main menu provides Overview, Application Monitor, and Active
+Operations shortcuts alongside server management. These views are also available
+without entering the menu:
+
+```bash
+bsm-cli auth setup --base-url http://localhost:11325
+bsm-cli manager overview
+bsm-cli manager health
+bsm-cli manager monitor
+bsm-cli manager monitor --once --unit GB
+bsm-cli manager tasks list
+bsm-cli manager tasks show TASK_ID
+bsm-cli manager audit
+bsm-cli manager logs --topic app_logs
+```
+
+Live views reconnect automatically and reconcile WebSocket updates with HTTP
+snapshots. Revision checks prevent older snapshots from replacing newer state.
+Application monitoring separates app and system metrics and shows recent CPU
+history. Log history returns a cursor for requesting older pages.
+
+```bash
+bsm-cli manager settings
+bsm-cli system settings --server survival
+bsm-cli plugin settings edit backup_on_start
+bsm-cli plugin settings show backup_on_start
+bsm-cli plugin settings set backup_on_start settings.json
+bsm-cli appearance set --memory-unit GB --density compact
+```
+
+The shared settings editor reviews changes before saving. Plugin schemas provide
+field descriptions, bounds, enums, and server checklists; plugins without settings
+have no Settings action. Credential fields are masked. Application and server
+settings infer field types from their current values because those endpoints do
+not advertise an editable settings schema. Backend validation remains authoritative.
+
+An editor refuses to save if its settings changed in another session. Global and
+server settings are saved one key at a time; the CLI prints each successfully saved
+key so partial updates remain visible if a later request fails. Plugins use one
+request to replace their settings. `--json` continues to return structured API data
+for noninteractive commands; use `plugin settings set` for scripted updates.

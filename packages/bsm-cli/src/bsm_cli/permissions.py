@@ -1,3 +1,5 @@
+from typing import Literal
+
 import click
 import questionary
 
@@ -35,7 +37,12 @@ def permissions():
     help="The permission level to grant. Skips interactive mode.",
 )
 @click.pass_context
-async def set_perm(ctx, server_name: str, player_name: str, level: str):
+async def set_perm(
+    ctx,
+    server_name: str,
+    player_name: str,
+    level: Literal["visitor", "member", "operator"],
+):
     """Sets a permission level for a player on a specific server."""
     client = get_client(ctx)
 

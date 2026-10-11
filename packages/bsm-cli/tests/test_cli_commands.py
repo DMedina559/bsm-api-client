@@ -1,6 +1,7 @@
 """Command smoke tests through the real facade and generated HTTP serializers."""
 
 import json
+import re
 from unittest.mock import AsyncMock
 
 import click
@@ -9,8 +10,65 @@ import pytest
 from click.testing import CliRunner
 
 from bsm_api_client import BedrockServerManagerApi
+from bsm_api_client.openapi import generated_schema, resolve
 from bsm_cli.__main__ import cli
 from bsm_cli.config import Config
+
+
+def response_for(method, path, values):
+    document = generated_schema()
+    for template, routes in document["paths"].items():
+        pattern = re.sub(r"\{[^}]+\}", "[^/]+", template)
+        if re.fullmatch(pattern, path) and method.lower() in routes:
+            operation = routes[method.lower()]
+            response = next(
+                value
+                for code, value in operation["responses"].items()
+                if str(code).startswith("2")
+            )
+            spec = (
+                response.get("content", {})
+                .get("application/json", {})
+                .get("schema", {})
+            )
+            return shape(document, spec, values)
+    return values
+
+
+def shape(document, spec, values):
+    spec = resolve(document, spec)
+    if "anyOf" in spec:
+        spec = next(
+            (
+                resolve(document, option)
+                for option in spec["anyOf"]
+                if "task_id" in resolve(document, option).get("properties", {})
+            ),
+            resolve(document, spec["anyOf"][0]),
+        )
+    if spec.get("type") == "array":
+        return [shape(document, spec["items"], values)]
+    if spec.get("type") != "object":
+        return values
+    result = {
+        key: value for key, value in values.items() if key in spec.get("properties", {})
+    }
+    for key, field in spec.get("properties", {}).items():
+        field = resolve(document, field)
+        if key == "status" and (
+            field.get("enum") == ["accepted"] or field.get("const") == "accepted"
+        ):
+            result[key] = "accepted"
+        if key == "task_id":
+            result[key] = "test-task"
+    if "task_id" in result:
+        result["status"] = "accepted"
+    if "details" in result:
+        result["details"] = None
+    if "players" in result:
+        result["players"] = [{"name": "Test Player", "xuid": "123"}]
+    return result
+
 
 SUCCESS = {
     "status": "success",
@@ -124,8 +182,16 @@ def command_client(monkeypatch, tmp_path):
                 body["outcome"] = "restarted"
             elif "stop" in path:
                 body["outcome"] = "stopped"
-            if path == "/api/users/list":
-                body = [body]
+            if path.startswith("/api/tasks/"):
+                body = {
+                    "id": "test-task",
+                    "status": "completed",
+                    "message": "Done",
+                    "result": None,
+                    "error": None,
+                }
+            else:
+                body = response_for(method, path, body)
             return httpx.Response(200, json=body)
 
         client._dynamic_request = AsyncMock(side_effect=request)
@@ -216,7 +282,7 @@ def test_curated_api_failures(monkeypatch, tmp_path, args, machine):
             [False],
         ),
         (("addon", "manage", "-s", "test"), [], ["Back"], []),
-        (("system", "settings", "-s", "test"), [], [], [True, True]),
+        (("system", "settings", "-s", "test"), [], ["cancel"], []),
         (("users",), [], ["Back"], []),
     ],
 )
@@ -338,7 +404,16 @@ async def test_registry_blank_property_name(command_client, monkeypatch, capsys)
     client = BedrockServerManagerApi(
         base_url="http://localhost", jwt_token="test-token"
     )
-    client._dynamic_request = AsyncMock(return_value=httpx.Response(200, json=SUCCESS))
+    client._dynamic_request = AsyncMock(
+        return_value=httpx.Response(
+            200,
+            json={
+                "status": "success",
+                "properties": {"server-name": "Test Server"},
+                "raw_content": "server-name=Test Server",
+            },
+        )
+    )
     answers = iter(["test", ""])
     selections = iter(["get", "Back"])
     monkeypatch.setattr("click.pause", lambda *a, **k: None)

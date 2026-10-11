@@ -58,19 +58,19 @@ async def create_backup(ctx, server_name: str, backup_type: str, file_to_backup:
         )
         response = await client.async_trigger_server_backup(server_name, payload)
 
-        if response.task_id:
+        if getattr(response, "task_id", None):
             await monitor_task(
                 client,
-                response.task_id,
+                str(getattr(response, "task_id", "")),
                 "Backup completed successfully",
                 "Failed to create backup",
             )
             click.echo("Pruning old backups...")
             prune_response = await client.async_prune_server_backups(server_name)
-            if prune_response.task_id:
+            if getattr(prune_response, "task_id", None):
                 await monitor_task(
                     client,
-                    prune_response.task_id,
+                    str(getattr(prune_response, "task_id", "")),
                     "Pruning complete",
                     "Failed to prune backups",
                 )
@@ -134,10 +134,10 @@ async def restore_backup(
         )
         response = await client.async_restore_server_backup(server_name, payload)
 
-        if response.task_id:
+        if getattr(response, "task_id", None):
             await monitor_task(
                 client,
-                response.task_id,
+                str(getattr(response, "task_id", "")),
                 "Restore completed successfully",
                 "Failed to restore backup",
             )
@@ -167,10 +167,10 @@ async def prune_backups(ctx, server_name: str):
     try:
         click.echo(f"Pruning old backups for server '{server_name}'...")
         response = await client.async_prune_server_backups(server_name)
-        if response.task_id:
+        if getattr(response, "task_id", None):
             await monitor_task(
                 client,
-                response.task_id,
+                str(getattr(response, "task_id", "")),
                 "Pruning complete",
                 "Failed to prune backups",
             )

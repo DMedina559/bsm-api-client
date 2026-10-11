@@ -1,0 +1,40 @@
+name: Backend OpenAPI contract
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '23 8 * * *'
+  push:
+    paths:
+      - 'packages/bsm-api-client/src/bsm_api_client/generated/openapi.json'
+      - 'tools/export_bsm_openapi.py'
+      - '.github/workflows/openapi-contract.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  compare-dev:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.14'
+      - name: Install backend dev
+        run: python -m pip install 'bedrock-server-manager @ git+https://github.com/DMedina559/bedrock-server-manager.git@dev'
+      - name: Export current backend contract
+        run: python tools/export_bsm_openapi.py --output /tmp/backend-openapi.json
+      - name: Compare bundled contract with dev
+        run: |
+          python - <<'PYTHON'
+          import json
+          from pathlib import Path
+          bundled = json.loads(Path('packages/bsm-api-client/src/bsm_api_client/generated/openapi.json').read_text())
+          backend = json.loads(Path('/tmp/backend-openapi.json').read_text())
+          def operations(schema):
+              return {operation['operationId'] for path in schema['paths'].values() for operation in path.values() if isinstance(operation, dict) and 'operationId' in operation}
+          print('Added operations:', sorted(operations(backend) - operations(bundled)))
+          print('Removed operations:', sorted(operations(bundled) - operations(backend)))
+          assert bundled == backend, 'Backend contract drift. Regenerate and review the bundled schema and client.'
+          PYTHON

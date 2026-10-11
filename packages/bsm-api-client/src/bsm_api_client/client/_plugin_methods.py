@@ -1,4 +1,3 @@
-# src/bsm_api_client/client/_plugin_methods.py
 """Mixin class for plugin management methods.
 
 This module provides the `PluginMethodsMixin` class, which includes methods
@@ -11,8 +10,11 @@ from typing import cast
 from ..generated_adapter import GeneratedOperationMethods
 from ..models import (
     ActionResponse,
+    GetPluginSettingsResponse,
+    PluginSettingsPayload,
     PluginStatusesResponse,
     PluginStatusSetPayload,
+    SetPluginSettingResponse,
     TriggerEventPayload,
     TriggerEventResponse,
 )
@@ -66,7 +68,6 @@ class PluginMethodsMixin(GeneratedOperationMethods):
         if not plugin_name:
             _LOGGER.error("Plugin name cannot be empty for set_plugin_enabled.")
             raise ValueError("Plugin name cannot be empty.")
-
         _LOGGER.info(
             "Setting plugin '%s' to enabled state: %s.", plugin_name, payload.enabled
         )
@@ -120,3 +121,26 @@ class PluginMethodsMixin(GeneratedOperationMethods):
         return cast(
             TriggerEventResponse, parse_response(TriggerEventResponse, response)
         )
+
+    async def async_get_plugin_settings(
+        self, plugin_name: str
+    ) -> GetPluginSettingsResponse:
+        """Read settings and the plugin's current validation schema."""
+        response = await self.async_call_generated(
+            "get_plugin_settings",
+            parameters={"plugin_name": plugin_name},
+            authenticated=True,
+        )
+        return parse_response(GetPluginSettingsResponse, response)
+
+    async def async_update_plugin_settings(
+        self, plugin_name: str, payload: PluginSettingsPayload
+    ) -> SetPluginSettingResponse:
+        """Validate and persist a plugin's settings."""
+        response = await self.async_call_generated(
+            "update_plugin_settings",
+            parameters={"plugin_name": plugin_name},
+            body=payload.model_dump(mode="json"),
+            authenticated=True,
+        )
+        return parse_response(SetPluginSettingResponse, response)

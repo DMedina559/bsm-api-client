@@ -1,10 +1,8 @@
-import asyncio
 import os
 
 import click
 import questionary
 
-from bsm_api_client.exceptions import AuthError
 from bsm_api_client.models import CommandPayload, InstallServerPayload
 from bsm_cli.allowlist import interactive_allowlist_workflow
 from bsm_cli.completion import complete_server
@@ -97,94 +95,32 @@ async def list_servers(ctx, loop, server_name):  # noqa: C901
 
     try:
         if loop:
-            # Initial display
-            click.clear()
-            click.secho(
-                "--- Bedrock Servers Status (Press CTRL+C to exit) ---",
-                fg="magenta",
-                bold=True,
+            from bsm_cli.live import watch_resource
+
+            topics = (
+                "event:after_server_statuses_updated",
+                "event:after_server_start",
+                "event:after_server_stop",
+                "event:after_server_updated",
+                "event:after_delete_server_data",
+                "event:after_server_installed",
             )
-            await _display_status()
-
-            # Try to use WebSocket for updates
-            try:
-                ws_client = await client.websocket_connect()
-
-                async with ws_client:
-                    # Subscribe to multiple topics for comprehensive status updates
-                    await ws_client.subscribe("event:after_server_statuses_updated")
-                    await ws_client.subscribe("event:after_server_start")
-                    await ws_client.subscribe("event:after_server_stop")
-                    await ws_client.subscribe("event:after_server_updated")
-                    await ws_client.subscribe("event:after_delete_server_data")
-
-                    # Listen for updates
-                    async for _ in ws_client.listen():
-                        click.clear()
-                        click.secho(
-                            "--- Bedrock Servers Status (Press CTRL+C to exit) ---",
-                            fg="magenta",
-                            bold=True,
-                        )
-                        await _display_status()
-
-            except (KeyboardInterrupt, click.Abort):
-                raise
-            except AuthError:
-                click.secho(
-                    "WebSocket authentication failed. Attempting to refresh token...",
-                    fg="yellow",
-                )
-                try:
-                    await client.authenticate()
-                    # Retry WebSocket once
-                    ws_client = await client.websocket_connect()
-                    async with ws_client:
-                        await ws_client.subscribe("event:after_server_statuses_updated")
-                        async for _ in ws_client.listen():
-                            click.clear()
-                            click.secho(
-                                "--- Bedrock Servers Status (Press CTRL+C to exit) ---",
-                                fg="magenta",
-                                bold=True,
-                            )
-                            await _display_status()
-                except Exception as e:
-                    click.secho(
-                        f"WebSocket retry failed ({e}), falling back to polling...",
-                        fg="yellow",
-                    )
-                    await asyncio.sleep(2)
-                    while True:
-                        click.clear()
-                        click.secho(
-                            "--- Bedrock Servers Status (Press CTRL+C to exit) ---",
-                            fg="magenta",
-                            bold=True,
-                        )
-                        await _display_status()
-                        await asyncio.sleep(5)
-            except Exception as e:
-                # Fallback to polling if WebSocket fails
-                click.secho(
-                    f"WebSocket connection failed ({e}), falling back to polling...",
-                    fg="yellow",
-                )
-
-            # If we are here, WebSocket failed or closed. Fallback to polling.
-            await asyncio.sleep(2)
-            while True:
+            async for response, live in watch_resource(
+                client, client.async_get_servers, topics
+            ):
                 click.clear()
                 click.secho(
-                    "--- Bedrock Servers Status (Press CTRL+C to exit) ---",
-                    fg="magenta",
+                    f"Bedrock servers | {'Live' if live else 'Offline'} (Ctrl+C to exit)",
                     bold=True,
                 )
-                try:
-                    await _display_status()
-                except Exception as e:
-                    fail(e)
-                await asyncio.sleep(5)
+                servers = response.servers or []
+                _print_server_table(
+                    [
+                        item
+                        for item in servers
+                        if not server_name or item.name == server_name
+                    ]
+                )
         else:
             if not server_name:
                 click.secho("--- Bedrock Servers Status ---", fg="magenta", bold=True)
@@ -213,10 +149,10 @@ async def start_server(ctx, server_name: str):
     click.echo(f"Attempting to start server '{server_name}'...")
     try:
         response = await client.async_start_server(server_name)
-        if response.task_id:
+        if getattr(response, "task_id", None):
             await monitor_task(
                 client,
-                response.task_id,
+                str(getattr(response, "task_id", "")),
                 "Server started successfully",
                 "Failed to start server",
             )
@@ -245,10 +181,10 @@ async def stop_server(ctx, server_name: str):
     click.echo(f"Attempting to stop server '{server_name}'...")
     try:
         response = await client.async_stop_server(server_name)
-        if response.task_id:
+        if getattr(response, "task_id", None):
             await monitor_task(
                 client,
-                response.task_id,
+                str(getattr(response, "task_id", "")),
                 "Server stopped successfully",
                 "Failed to stop server",
             )
@@ -277,10 +213,10 @@ async def restart_server(ctx, server_name: str):
     click.echo(f"Attempting to restart server '{server_name}'...")
     try:
         response = await client.async_restart_server(server_name)
-        if response.task_id:
+        if getattr(response, "task_id", None):
             await monitor_task(
                 client,
-                response.task_id,
+                str(getattr(response, "task_id", "")),
                 "Server restarted successfully",
                 "Failed to restart server",
             )
@@ -405,10 +341,10 @@ async def update(ctx, server_name: str):
     click.echo(f"Checking for updates for server '{server_name}'...")
     try:
         response = await client.async_update_server(server_name)
-        if response.task_id:
+        if getattr(response, "task_id", None):
             await monitor_task(
                 client,
-                response.task_id,
+                str(getattr(response, "task_id", "")),
                 "Server update completed successfully",
                 "Failed to update server",
             )
@@ -449,10 +385,10 @@ async def delete_server(ctx, server_name: str, yes: bool):
     click.echo(f"Proceeding with deletion of server '{server_name}'...")
     try:
         response = await client.async_delete_server(server_name)
-        if response.task_id:
+        if getattr(response, "task_id", None):
             await monitor_task(
                 client,
-                response.task_id,
+                str(getattr(response, "task_id", "")),
                 "Server deleted successfully",
                 "Failed to delete server",
             )

@@ -3,8 +3,13 @@ import json
 import click
 import questionary
 
-from bsm_api_client.models import PluginStatusSetPayload, TriggerEventPayload
+from bsm_api_client.models import (
+    PluginSettingsPayload,
+    PluginStatusSetPayload,
+    TriggerEventPayload,
+)
 from bsm_cli.output import fail, get_client
+from bsm_cli.settings_editor import edit_settings
 
 
 def _print_plugin_table(plugins):
@@ -132,6 +137,8 @@ async def interactive_plugin_workflow(client):  # noqa: C901
             else:
                 pack_menu.append("Enable")
 
+            if config_dict.get("has_settings", False):
+                pack_menu.append("Settings")
             pack_menu.append("Back")
 
             action_choice = await questionary.select(
@@ -141,7 +148,9 @@ async def interactive_plugin_workflow(client):  # noqa: C901
             if not action_choice or action_choice == "Back":
                 continue
 
-            if action_choice == "Enable":
+            if action_choice == "Settings":
+                await edit_plugin_settings(client, plugin_name)
+            elif action_choice == "Enable":
                 payload = PluginStatusSetPayload(enabled=True)
                 res = await client.async_set_plugin_status(plugin_name, payload)
                 if res.status == "success":
@@ -278,3 +287,63 @@ async def trigger_event(ctx, event_name: str, payload_json: str):
             click.secho(f"Failed to trigger event: {response.message}", fg="red")
     except Exception as e:
         fail(e)
+
+
+async def edit_plugin_settings(client, plugin_name):
+    response = await client.async_get_plugin_settings(plugin_name)
+    original = response.settings
+    draft = await edit_settings(original, response.settings_schema)
+    if draft is None:
+        return
+    latest = await client.async_get_plugin_settings(plugin_name)
+    if latest.settings != original:
+        raise click.ClickException(
+            "Settings changed in another session. Reopen the editor to review the current values."
+        )
+    result = await client.async_update_plugin_settings(
+        plugin_name, PluginSettingsPayload(settings=draft)
+    )
+    click.echo(result.message)
+
+
+@plugin.group("settings")
+def plugin_settings():
+    """View or edit settings for a plugin, including disabled plugins."""
+
+
+@plugin_settings.command("show")
+@click.argument("plugin_name")
+@click.pass_context
+async def show_settings(ctx, plugin_name):
+    response = await get_client(ctx).async_get_plugin_settings(plugin_name)
+    # The interactive editor masks credential fields; JSON is an explicit export.
+    from bsm_cli.settings_editor import display, fields
+
+    schema = response.settings_schema
+    if schema:
+        for path, spec, value in fields(schema, schema, response.settings):
+            click.echo(f"{'.'.join(path)}: {display(value, path, spec)}")
+    else:
+        click.echo("Use settings edit to inspect and configure these settings.")
+
+
+@plugin_settings.command("edit")
+@click.argument("plugin_name")
+@click.pass_context
+async def configure_settings(ctx, plugin_name):
+    if ctx.obj.get("json_output"):
+        raise click.UsageError("Use settings set with --json.")
+    await edit_plugin_settings(get_client(ctx), plugin_name)
+
+
+@plugin_settings.command("set")
+@click.argument("plugin_name")
+@click.argument("settings_file", type=click.File("r"))
+@click.pass_context
+async def set_settings(ctx, plugin_name, settings_file):
+    """Replace settings from a JSON object file."""
+    values = json.load(settings_file)
+    response = await get_client(ctx).async_update_plugin_settings(
+        plugin_name, PluginSettingsPayload(settings=values)
+    )
+    click.echo(response.message)

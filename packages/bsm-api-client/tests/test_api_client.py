@@ -58,7 +58,8 @@ async def test_prune_server_backups(client):
         client, "async_call_generated", new_callable=AsyncMock
     ) as mock_request:
         mock_request.return_value = {
-            "status": "success",
+            "status": "accepted",
+            "task_id": "test-task",
             "message": "Pruning initiated.",
         }
         result = await client.async_prune_server_backups("test-server")
@@ -68,7 +69,7 @@ async def test_prune_server_backups(client):
             body=None,
             authenticated=True,
         )
-        assert result.status == "success"
+        assert result.status == "accepted"
 
 
 @pytest.mark.asyncio

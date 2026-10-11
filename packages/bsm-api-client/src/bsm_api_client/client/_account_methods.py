@@ -1,4 +1,3 @@
-# src/bsm_api_client/client/_account_methods.py
 """Mixin class for account-related API methods."""
 
 import logging
