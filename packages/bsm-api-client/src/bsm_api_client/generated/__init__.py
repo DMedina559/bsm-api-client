@@ -1,5 +1,5 @@
+"""A client library for accessing Bedrock Server Manager"""
 
-""" A client library for accessing Bedrock Server Manager """
 from .client import AuthenticatedClient, Client
 
 __all__ = (

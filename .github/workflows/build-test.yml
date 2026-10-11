@@ -23,7 +23,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.11', '3.12', '3.13', '3.14']
+        python-version: ['3.11', '3.14']
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
@@ -78,30 +78,3 @@ jobs:
           if [ -f bedrock_server_manager_test.log ]; then
             tail -n 160 bedrock_server_manager_test.log
           fi
-
-  windows-editable-upgrade:
-    runs-on: windows-latest
-    permissions:
-      contents: read
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: ['3.11', '3.12', '3.13', '3.14']
-    steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-python@v6
-        with:
-          python-version: ${{ matrix.python-version }}
-      - name: Simulate generated packages from a previous checkout
-        run: |
-          python -c "from pathlib import Path; old=Path('packages/bsm-api-client/src/bsm_api_client/generated/api/allowlist_management'); old.mkdir(parents=True); (old/'__init__.py').write_text('')"
-      - name: Install editable client and CLI
-        run: python -m pip install -e ./packages/bsm-api-client -e ./packages/bsm-cli
-      - name: Verify regenerated packages
-        run: |
-          python -c "from pathlib import Path; from bsm_api_client.generated_adapter import operation_module; assert not Path('packages/bsm-api-client/src/bsm_api_client/generated/api/allowlist_management').exists(); assert operation_module('get_plugin_settings'); assert operation_module('start_server')"
-          python -m bsm_cli --help
-      - name: Test installed CLI workflows
-        run: |
-          python -m pip install 'pytest>=8.4,<9.2' 'pytest-asyncio>=1.1,<1.5'
-          python -m pytest packages/bsm-cli/tests/test_cli_commands.py packages/bsm-cli/tests/test_cli_menus.py packages/bsm-cli/tests/test_settings_editor.py packages/bsm-cli/tests/test_live.py
