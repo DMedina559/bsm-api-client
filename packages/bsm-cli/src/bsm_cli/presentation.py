@@ -1,6 +1,7 @@
 """Consistent terminal tables for dashboard data."""
 
 import sys
+
 from rich.console import Console
 from rich.table import Table
 
