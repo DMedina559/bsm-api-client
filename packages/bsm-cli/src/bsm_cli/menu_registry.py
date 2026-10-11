@@ -12,7 +12,10 @@ from bsm_cli.output import get_client
 
 async def command_menu(ctx, group):  # noqa: C901
     """Browse commands as a persistent interactive management menu."""
+    resource_values = {}
     while True:
+        if not await _show_menu_list(ctx, group, resource_values):
+            return
         name = await questionary.select(
             group.help or group.name,
             choices=[*sorted(group.commands), "Back"],
@@ -26,6 +29,9 @@ async def command_menu(ctx, group):  # noqa: C901
         kwargs = {}
         cancelled = False
         for param in command.params:
+            if param.name in resource_values:
+                kwargs[param.name] = resource_values[param.name]
+                continue
             value = await _prompt_parameter(ctx, param)
             if value is _CANCEL:
                 cancelled = True
@@ -43,6 +49,31 @@ async def command_menu(ctx, group):  # noqa: C901
         except Exception as exc:
             click.secho(f"Action failed: {exc}", fg="red")
         click.pause("Press any key to return to the menu...")
+
+
+async def _show_menu_list(ctx, group, resource_values):
+    command = group.commands.get("list")
+    if command is None or isinstance(command, click.Group):
+        return True
+    kwargs = {}
+    for param in command.params:
+        if not param.required:
+            continue
+        if param.name not in resource_values:
+            value = await _prompt_parameter(ctx, param)
+            if value is _CANCEL:
+                return False
+            resource_values[param.name] = value
+        kwargs[param.name] = resource_values[param.name]
+    try:
+        result = ctx.invoke(command, **kwargs)
+        if inspect.isawaitable(result):
+            await result
+    except (click.Abort, KeyboardInterrupt):
+        return False
+    except Exception as exc:
+        click.secho(f"List unavailable: {exc}", fg="yellow")
+    return True
 
 
 _CANCEL = object()
