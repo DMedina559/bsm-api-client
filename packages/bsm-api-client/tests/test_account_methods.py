@@ -36,10 +36,12 @@ async def test_get_account_details(client):
             "is_active": True,
             "theme": "default",
         }
-        result = await client.async_get_account_details()
+        result = await client.account.async_get_account_details()
         assert isinstance(result, UserResponse)
         assert result.username == "admin"
-        mock_request.assert_called_once_with("get_account", authenticated=True)
+        mock_request.assert_called_once_with(
+            "get_account", authenticated=True, typed=True
+        )
 
 
 @pytest.mark.asyncio
@@ -50,11 +52,14 @@ async def test_update_theme(client):
     ) as mock_request:
         mock_request.return_value = {"status": "success"}
         payload = ThemeUpdatePayload(theme="dark")
-        result = await client.async_update_theme(payload)
+        result = await client.account.async_update_theme(payload)
         assert isinstance(result, BaseApiResponse)
         assert result.status == "success"
         mock_request.assert_called_once_with(
-            "update_account_theme", body={"theme": "dark"}, authenticated=True
+            "update_account_theme",
+            body={"theme": "dark"},
+            authenticated=True,
+            typed=True,
         )
 
 
@@ -68,13 +73,14 @@ async def test_update_profile(client):
         payload = ProfileUpdatePayload(
             full_name="Admin User", email="admin@example.com"
         )
-        result = await client.async_update_profile(payload)
+        result = await client.account.async_update_profile(payload)
         assert isinstance(result, BaseApiResponse)
         assert result.status == "success"
         mock_request.assert_called_once_with(
             "update_account_profile",
             body={"full_name": "Admin User", "email": "admin@example.com"},
             authenticated=True,
+            typed=True,
         )
 
 
@@ -88,13 +94,14 @@ async def test_change_password(client):
         payload = ChangePasswordPayload(
             current_password="password", new_password="new_password"
         )
-        result = await client.async_change_password(payload)
+        result = await client.account.async_change_password(payload)
         assert isinstance(result, BaseApiResponse)
         assert result.status == "success"
         mock_request.assert_called_once_with(
             "change_password",
             body={"current_password": "password", "new_password": "new_password"},
             authenticated=True,
+            typed=True,
         )
 
 
@@ -106,7 +113,7 @@ async def test_get_account_details_error(client):
     ) as mock_request:
         mock_request.side_effect = Exception("API Error")
         with pytest.raises(Exception) as excinfo:
-            await client.async_get_account_details()
+            await client.account.async_get_account_details()
         assert "API Error" in str(excinfo.value)
 
 
@@ -118,7 +125,7 @@ async def test_update_theme_error(client):
     ) as mock_request:
         mock_request.side_effect = Exception("API Error")
         with pytest.raises(Exception) as excinfo:
-            await client.async_update_theme(ThemeUpdatePayload(theme="dark"))
+            await client.account.async_update_theme(ThemeUpdatePayload(theme="dark"))
         assert "API Error" in str(excinfo.value)
 
 
@@ -130,7 +137,7 @@ async def test_update_profile_error(client):
     ) as mock_request:
         mock_request.side_effect = Exception("API Error")
         with pytest.raises(Exception) as excinfo:
-            await client.async_update_profile(
+            await client.account.async_update_profile(
                 ProfileUpdatePayload(full_name="Admin User", email="admin@example.com")
             )
         assert "API Error" in str(excinfo.value)
@@ -144,7 +151,7 @@ async def test_change_password_error(client):
     ) as mock_request:
         mock_request.side_effect = Exception("API Error")
         with pytest.raises(Exception) as excinfo:
-            await client.async_change_password(
+            await client.account.async_change_password(
                 ChangePasswordPayload(
                     current_password="password", new_password="new_password"
                 )

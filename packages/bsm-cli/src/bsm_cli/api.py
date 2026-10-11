@@ -248,7 +248,7 @@ async def call(ctx, operation_id, param, json_body, form, file):
 )
 @pass_async_context
 async def diff(ctx, against, against_generated, details=False):
-    """Compare live operations against a saved or generated schema."""
+    """Compare the live API contract against a saved or generated schema."""
     if against and against_generated:
         raise click.BadParameter("Choose --against or --against-generated.")
     try:

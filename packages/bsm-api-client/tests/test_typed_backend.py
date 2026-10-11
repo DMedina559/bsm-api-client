@@ -81,7 +81,7 @@ async def test_lifecycle_and_task_fields_are_preserved():
                 "message": "Already running.",
             }
         )
-        response = await client.async_start_server("example")
+        response = await client.servers.async_start_server("example")
         assert isinstance(response, StartServerResponse)
         assert response.outcome == "already_running"
         assert response.server_name == "example"
@@ -91,6 +91,6 @@ async def test_lifecycle_and_task_fields_are_preserved():
             "message": "Failed.",
             "error": {"code": "server_error", "message": "Server failed."},
         }
-        task = await client.async_get_task_snapshot("task")
+        task = await client.tasks.async_get_task_status("task")
         assert isinstance(task, TaskSnapshot)
         assert task.error.code == "server_error"

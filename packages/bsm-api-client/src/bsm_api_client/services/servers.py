@@ -1,5 +1,5 @@
 import logging
-from typing import Any, List, cast
+from typing import List, cast
 
 from ..exceptions import APIError, ServerNotFoundError
 from ..models import (
@@ -39,22 +39,20 @@ _LOGGER = logging.getLogger(__name__.split(".")[0] + ".client.server_info")
 
 
 class ServersService(Service):
-    """Service for server information endpoints."""
+    """Server lifecycle, configuration, access control, and installation workflows."""
 
     async def async_get_servers(self) -> ServersListResponse:
         """Retrieves a list of all detected server instances with their status and version.
 
-        :returns: A `ServersListResponse` object containing a list of servers.
+        :returns: `ServersListResponse`.
 
-
-        .. rubric:: Example:
         .. code-block:: python
 
-            response = await client.async_get_servers()
+            response = await client.servers.async_get_servers()
         """
         _LOGGER.debug("Fetching server list from /api/servers")
         response_data = await self.async_call_generated(
-            "list_servers", authenticated=True
+            "list_servers", authenticated=True, typed=True
         )
         return cast(
             ServersListResponse, parse_response(ServersListResponse, response_data)
@@ -63,15 +61,11 @@ class ServersService(Service):
     async def async_get_server_names(self) -> List[str]:
         """Fetches a list of server names.
 
-        This is a convenience wrapper around `async_get_servers`.
+        :returns: `List[str]`.
 
-        :returns: A sorted list of server names.
-
-
-        .. rubric:: Example:
         .. code-block:: python
 
-            response = await client.async_get_server_names()
+            response = await client.servers.async_get_server_names()
         """
         _LOGGER.debug("Fetching server names list")
         server_details = await self.async_get_servers()
@@ -80,20 +74,15 @@ class ServersService(Service):
         return []
 
     async def async_get_server_validate(self, server_name: str) -> bool:
-        """Validates the existence of a server's directory and executable.
+        """Validate the server using the backend validation rules.
 
         :param server_name: The name of the server to validate.
 
-        :returns: `True` if the server is valid, `False` otherwise.
+        :returns: `bool`.
 
-        :raises ServerNotFoundError: If the server is not found.
-        :raises APIError: For other API-related errors.
-
-
-        .. rubric:: Example:
         .. code-block:: python
 
-            response = await client.async_get_server_validate('MyServer')
+            response = await client.servers.async_get_server_validate("MyServer")
         """
         _LOGGER.debug("Validating existence of server: '%s'", server_name)
         try:
@@ -101,8 +90,9 @@ class ServersService(Service):
                 "validate_server",
                 parameters={"server_name": server_name},
                 authenticated=True,
+                typed=True,
             )
-            return isinstance(response, dict) and response.get("status") == "success"
+            return bool(response.get("status") == "success")
         except ServerNotFoundError:
             _LOGGER.debug(
                 "Validation API call indicated server '%s' not found.", server_name
@@ -118,18 +108,19 @@ class ServersService(Service):
         """Retrieves the basic summary information for a specific server instance.
 
         :param server_name: The name of the server.
-        :returns: A `ServerSchemaResponse` object containing the server summary.
 
-        .. rubric:: Example:
+        :returns: `ServerSummary`.
+
         .. code-block:: python
 
-            response = await client.async_get_server_summary('MyServer')
+            response = await client.servers.async_get_server_summary("MyServer")
         """
         _LOGGER.debug("Fetching summary for server '%s'", server_name)
         response = await self.async_call_generated(
             "get_server_summary",
             parameters={"server_name": server_name},
             authenticated=True,
+            typed=True,
         )
         return cast(ServerSummary, parse_response(ServerSummary, response))
 
@@ -140,19 +131,18 @@ class ServersService(Service):
 
         :param server_name: The name of the server.
 
-        :returns: A `ServerProcessInfoResponse` object containing process information.
+        :returns: `ServerProcessInfoResponse`.
 
-
-        .. rubric:: Example:
         .. code-block:: python
 
-            response = await client.async_get_server_process_info('MyServer')
+            response = await client.servers.async_get_server_process_info("MyServer")
         """
         _LOGGER.debug("Fetching status info for server '%s'", server_name)
         response = await self.async_call_generated(
             "get_server_process_info",
             parameters={"server_name": server_name},
             authenticated=True,
+            typed=True,
         )
         return cast(
             ServerProcessInfoResponse,
@@ -164,11 +154,7 @@ class ServersService(Service):
 
         :param server_name: The name of the server.
 
-        :returns: The raw bytes of the world icon image.
-
-        :raises ValueError: If `server_name` is empty.
-        :raises CannotConnectError: If a connection to the server cannot be established.
-        :raises APIError: For other API-related errors.
+        :returns: `bytes`.
         """
         if not server_name:
             raise ValueError("Server name cannot be empty.")
@@ -187,19 +173,18 @@ class ServersService(Service):
 
         :param server_name: The name of the server.
 
-        :returns: A `ServerRunningStatusResponse` object containing the running status.
+        :returns: `ServerRunningStatusResponse`.
 
-
-        .. rubric:: Example:
         .. code-block:: python
 
-            response = await client.async_get_world_icon_image('MyServer')
+            response = await client.servers.async_get_server_running_status("MyServer")
         """
         _LOGGER.debug("Fetching running status for server '%s'", server_name)
         response = await self.async_call_generated(
             "get_server_status",
             parameters={"server_name": server_name},
             authenticated=True,
+            typed=True,
         )
         return cast(
             ServerRunningStatusResponse,
@@ -213,19 +198,18 @@ class ServersService(Service):
 
         :param server_name: The name of the server.
 
-        :returns: A `PropertiesGetResponse` object containing the server properties.
+        :returns: `GetPropertiesResponse`.
 
-
-        .. rubric:: Example:
         .. code-block:: python
 
-            response = await client.async_get_server_properties('MyServer')
+            response = await client.servers.async_get_server_properties("MyServer")
         """
         _LOGGER.debug("Fetching server.properties for server '%s'", server_name)
         response = await self.async_call_generated(
             "get_properties",
             parameters={"server_name": server_name},
             authenticated=True,
+            typed=True,
         )
         return cast(
             GetPropertiesResponse, parse_response(GetPropertiesResponse, response)
@@ -238,19 +222,18 @@ class ServersService(Service):
 
         :param server_name: The name of the server.
 
-        :returns: A `PermissionsGetResponse` object containing the permissions data.
+        :returns: `GetPermissionsResponse`.
 
-
-        .. rubric:: Example:
         .. code-block:: python
 
-            response = await client.async_get_server_permissions_data('MyServer')
+            response = await client.servers.async_get_server_permissions_data("MyServer")
         """
         _LOGGER.debug("Fetching permissions.json data for server '%s'", server_name)
         response = await self.async_call_generated(
             "get_permissions",
             parameters={"server_name": server_name},
             authenticated=True,
+            typed=True,
         )
         return cast(
             GetPermissionsResponse, parse_response(GetPermissionsResponse, response)
@@ -263,17 +246,18 @@ class ServersService(Service):
 
         :param server_name: The name of the server.
 
-        :returns: A `AllowlistGetResponse` object containing the allowlist.
+        :returns: `GetAllowlistResponse`.
 
-
-        .. rubric:: Example:
         .. code-block:: python
 
-            response = await client.async_get_server_allowlist('MyServer')
+            response = await client.servers.async_get_server_allowlist("MyServer")
         """
         _LOGGER.debug("Fetching allowlist.json for server '%s'", server_name)
         response = await self.async_call_generated(
-            "get_allowlist", parameters={"server_name": server_name}, authenticated=True
+            "get_allowlist",
+            parameters={"server_name": server_name},
+            authenticated=True,
+            typed=True,
         )
         return cast(
             GetAllowlistResponse, parse_response(GetAllowlistResponse, response)
@@ -285,13 +269,15 @@ class ServersService(Service):
         """Retrieves all settings for a specific server.
 
         :param server_name: The name of the server.
-        :returns: A ServerSettingsResponse.
+
+        :returns: `ServerSettingsResponse`.
         """
         _LOGGER.debug("Fetching settings for server '%s'", server_name)
         response = await self.async_call_generated(
             "get_server_settings",
             parameters={"server_name": server_name},
             authenticated=True,
+            typed=True,
         )
         return cast(
             ServerSettingsResponse, parse_response(ServerSettingsResponse, response)
@@ -303,8 +289,10 @@ class ServersService(Service):
         """Sets a specific setting for a server.
 
         :param server_name: The name of the server.
+
         :param payload: The ServerSettingItemPayload payload.
-        :returns: A ServerSettingsResponse.
+
+        :returns: `ServerSettingsResponse`.
         """
         _LOGGER.debug("Updating setting '%s' for server '%s'", payload.key, server_name)
         response = await self.async_call_generated(
@@ -312,6 +300,7 @@ class ServersService(Service):
             parameters={"server_name": server_name},
             body=payload.model_dump(),
             authenticated=True,
+            typed=True,
         )
         return cast(
             ServerSettingsResponse, parse_response(ServerSettingsResponse, response)
@@ -322,17 +311,18 @@ class ServersService(Service):
 
         :param server_name: The unique name of the server instance to start.
 
-        :returns: An `StartServerResponse` object confirming the action.
+        :returns: `StartServerResponse`.
 
-
-        .. rubric:: Example:
         .. code-block:: python
 
-            response = await client.async_start_server('MyServer')
+            response = await client.servers.async_start_server("MyServer")
         """
         _LOGGER.info("Requesting start for server '%s'", server_name)
         response = await self.async_call_generated(
-            "start_server", parameters={"server_name": server_name}, authenticated=True
+            "start_server",
+            parameters={"server_name": server_name},
+            authenticated=True,
+            typed=True,
         )
         return cast(StartServerResponse, parse_response(StartServerResponse, response))
 
@@ -341,17 +331,18 @@ class ServersService(Service):
 
         :param server_name: The unique name of the server instance to stop.
 
-        :returns: An `StopServerResponse` object confirming the action.
+        :returns: `StopServerResponse`.
 
-
-        .. rubric:: Example:
         .. code-block:: python
 
-            response = await client.async_stop_server('MyServer')
+            response = await client.servers.async_stop_server("MyServer")
         """
         _LOGGER.info("Requesting stop for server '%s'", server_name)
         response = await self.async_call_generated(
-            "stop_server", parameters={"server_name": server_name}, authenticated=True
+            "stop_server",
+            parameters={"server_name": server_name},
+            authenticated=True,
+            typed=True,
         )
         return cast(StopServerResponse, parse_response(StopServerResponse, response))
 
@@ -360,19 +351,18 @@ class ServersService(Service):
 
         :param server_name: The unique name of the server instance to restart.
 
-        :returns: An `RestartServerResponse` object confirming the action.
+        :returns: `RestartServerResponse`.
 
-
-        .. rubric:: Example:
         .. code-block:: python
 
-            response = await client.async_restart_server('MyServer')
+            response = await client.servers.async_restart_server("MyServer")
         """
         _LOGGER.info("Requesting restart for server '%s'", server_name)
         response = await self.async_call_generated(
             "restart_server",
             parameters={"server_name": server_name},
             authenticated=True,
+            typed=True,
         )
         return cast(
             RestartServerResponse, parse_response(RestartServerResponse, response)
@@ -384,15 +374,14 @@ class ServersService(Service):
         """Sends a command to the specified server's console.
 
         :param server_name: The unique name of the target server instance.
+
         :param command: A `CommandPayload` object containing the command to send.
 
-        :returns: An `ActionResponse` object confirming the action.
+        :returns: `ActionResponse`.
 
-
-        .. rubric:: Example:
         .. code-block:: python
 
-            response = await client.async_send_server_command('MyServer')
+            response = await client.servers.async_send_server_command("MyServer", command)
         """
         _LOGGER.debug("Sending a console command to server '%s'", server_name)
         response = await self.async_call_generated(
@@ -400,6 +389,7 @@ class ServersService(Service):
             parameters={"server_name": server_name},
             body=command.model_dump(),
             authenticated=True,
+            typed=True,
         )
         return cast(ActionResponse, parse_response(ActionResponse, response))
 
@@ -408,17 +398,18 @@ class ServersService(Service):
 
         :param server_name: The unique name of the server instance to update.
 
-        :returns: An `ActionResponse` object confirming the action.
+        :returns: `TaskAcceptedResponse`.
 
-
-        .. rubric:: Example:
         .. code-block:: python
 
-            response = await client.async_update_server('MyServer')
+            response = await client.servers.async_update_server("MyServer")
         """
         _LOGGER.info("Requesting update for server '%s'", server_name)
         response = await self.async_call_generated(
-            "update_server", parameters={"server_name": server_name}, authenticated=True
+            "update_server",
+            parameters={"server_name": server_name},
+            authenticated=True,
+            typed=True,
         )
         return cast(
             TaskAcceptedResponse, parse_response(TaskAcceptedResponse, response)
@@ -430,16 +421,14 @@ class ServersService(Service):
         """Adds players to the server's allowlist.
 
         :param server_name: The name of the server.
+
         :param payload: An `AllowlistAddPayload` object with the players to add.
 
-        :returns: A `BaseApiResponse` object confirming the action.
+        :returns: `BaseApiResponse`.
 
-
-        .. rubric:: Example:
         .. code-block:: python
 
-            payload = ...
-            response = await client.async_add_server_allowlist(payload)
+            response = await client.servers.async_add_server_allowlist("MyServer", payload)
         """
         _LOGGER.info(
             "Adding players %s to allowlist for server '%s' (ignores limit: %s)",
@@ -452,6 +441,7 @@ class ServersService(Service):
             parameters={"server_name": server_name},
             body=payload.model_dump(),
             authenticated=True,
+            typed=True,
         )
         return cast(BaseApiResponse, parse_response(BaseApiResponse, response))
 
@@ -461,16 +451,14 @@ class ServersService(Service):
         """Removes players from the server's allowlist.
 
         :param server_name: The name of the server.
+
         :param payload: An `AllowlistRemovePayload` object with the players to remove.
 
-        :returns: A `BaseApiResponse` object confirming the action.
+        :returns: `BaseApiResponse`.
 
-
-        .. rubric:: Example:
         .. code-block:: python
 
-            payload = ...
-            response = await client.async_remove_server_allowlist_players(payload)
+            response = await client.servers.async_remove_server_allowlist_players("MyServer", payload)
         """
         _LOGGER.info(
             "Removing %d players from allowlist for server '%s': %s",
@@ -483,6 +471,7 @@ class ServersService(Service):
             parameters={"server_name": server_name},
             body=payload.model_dump(),
             authenticated=True,
+            typed=True,
         )
         return cast(BaseApiResponse, parse_response(BaseApiResponse, response))
 
@@ -492,16 +481,14 @@ class ServersService(Service):
         """Updates permission levels for players on the server.
 
         :param server_name: The name of the server.
+
         :param payload: A `PermissionsSetPayload` object with the permissions to set.
 
-        :returns: A `PermissionsUpdateResponse` object confirming the action.
+        :returns: `PermissionsUpdateResponse`.
 
-
-        .. rubric:: Example:
         .. code-block:: python
 
-            payload = ...
-            response = await client.async_set_server_permissions(payload)
+            response = await client.servers.async_set_server_permissions("MyServer", payload)
         """
         _LOGGER.info(
             "Setting permissions for server '%s': %s", server_name, payload.permissions
@@ -511,6 +498,7 @@ class ServersService(Service):
             parameters={"server_name": server_name},
             body=payload.model_dump(),
             authenticated=True,
+            typed=True,
         )
         return cast(
             PermissionsUpdateResponse,
@@ -523,16 +511,14 @@ class ServersService(Service):
         """Updates key-value pairs in the server's properties file.
 
         :param server_name: The name of the server.
+
         :param payload: A `PropertiesPayload` object with the properties to update.
 
-        :returns: A `BaseApiResponse` object confirming the action.
+        :returns: `BaseApiResponse`.
 
-
-        .. rubric:: Example:
         .. code-block:: python
 
-            payload = ...
-            response = await client.async_update_server_properties(payload)
+            response = await client.servers.async_update_server_properties("MyServer", payload)
         """
         _LOGGER.info(
             "Updating properties for server '%s': %s", server_name, payload.properties
@@ -542,60 +528,65 @@ class ServersService(Service):
             parameters={"server_name": server_name},
             body=payload.model_dump(),
             authenticated=True,
+            typed=True,
         )
         return cast(BaseApiResponse, parse_response(BaseApiResponse, response))
 
     async def async_delete_server(self, server_name: str) -> TaskAcceptedResponse:
         """Permanently deletes a server instance.
 
-        Warning:
-            This action is irreversible and will delete all data associated with the server.
+        Deletes the server data permanently. The returned task tracks completion.
 
         :param server_name: The unique name of the server instance to delete.
 
-        :returns: An `ActionResponse` object confirming the action.
+        :returns: `TaskAcceptedResponse`.
 
-
-        .. rubric:: Example:
         .. code-block:: python
 
-            response = await client.async_delete_server('MyServer')
+            response = await client.servers.async_delete_server("MyServer")
         """
         _LOGGER.warning(
             "Requesting DELETION of server '%s'. THIS IS IRREVERSIBLE.", server_name
         )
         response = await self.async_call_generated(
-            "delete_server", parameters={"server_name": server_name}, authenticated=True
+            "delete_server",
+            parameters={"server_name": server_name},
+            authenticated=True,
+            typed=True,
         )
         return cast(
             TaskAcceptedResponse, parse_response(TaskAcceptedResponse, response)
         )
 
-    async def async_get_server_bans(self, server_name: str) -> dict[str, Any]:
+    async def async_get_server_bans(self, server_name: str) -> GetServerBansResponse:
         """Get all bans for a specific server.
 
         :param server_name: The name of the server.
-        :returns: A dictionary containing the bans.
+
+        :returns: `GetServerBansResponse`.
         """
         _LOGGER.debug("Fetching bans for server '%s'", server_name)
         response = await self.async_call_generated(
             "get_server_bans",
             parameters={"server_name": server_name},
             authenticated=True,
+            typed=True,
         )
         return cast(
-            dict[str, Any],
-            parse_response(GetServerBansResponse, response).model_dump(mode="json"),
+            GetServerBansResponse,
+            parse_response(GetServerBansResponse, response),
         )
 
     async def async_add_server_ban(
         self, server_name: str, payload: "BanAddRequest"
-    ) -> dict[str, Any]:
+    ) -> AddServerBanResponse:
         """Add a player to the server ban list.
 
         :param server_name: The name of the server.
+
         :param payload: The BanAddRequest payload.
-        :returns: A dictionary response.
+
+        :returns: `AddServerBanResponse`.
         """
         _LOGGER.debug(
             "Adding ban for server '%s': %s", server_name, payload.model_dump()
@@ -605,20 +596,23 @@ class ServersService(Service):
             parameters={"server_name": server_name},
             body=payload.model_dump(),
             authenticated=True,
+            typed=True,
         )
         return cast(
-            dict[str, Any],
-            parse_response(AddServerBanResponse, response).model_dump(mode="json"),
+            AddServerBanResponse,
+            parse_response(AddServerBanResponse, response),
         )
 
     async def async_remove_server_ban(
         self, server_name: str, payload: "BanRemoveRequest"
-    ) -> dict[str, Any]:
+    ) -> RemoveServerBanResponse:
         """Remove a player from the server ban list.
 
         :param server_name: The name of the server.
+
         :param payload: The BanRemoveRequest payload.
-        :returns: A dictionary response.
+
+        :returns: `RemoveServerBanResponse`.
         """
         _LOGGER.debug(
             "Removing ban for server '%s': %s", server_name, payload.model_dump()
@@ -628,10 +622,11 @@ class ServersService(Service):
             parameters={"server_name": server_name},
             body=payload.model_dump(),
             authenticated=True,
+            typed=True,
         )
         return cast(
-            dict[str, Any],
-            parse_response(RemoveServerBanResponse, response).model_dump(mode="json"),
+            RemoveServerBanResponse,
+            parse_response(RemoveServerBanResponse, response),
         )
 
     async def async_install_new_server(
@@ -639,11 +634,9 @@ class ServersService(Service):
     ) -> InstallServerResponse:
         """Requests the installation of a new Bedrock server instance.
 
-        Args:
-            payload: An `InstallServerPayload` object containing the server details.
+        :param payload: The InstallServerPayload request model.
 
-        Returns:
-            An `InstallServerResponse` object with the result of the installation request.
+        :returns: `InstallServerResponse`.
         """
         _LOGGER.info(
             "Requesting installation for server '%s', version: '%s', overwrite: %s",
@@ -652,7 +645,7 @@ class ServersService(Service):
             payload.overwrite,
         )
         response = await self.async_call_generated(
-            "install_server", body=payload.model_dump(), authenticated=True
+            "install_server", body=payload.model_dump(), authenticated=True, typed=True
         )
         return cast(
             InstallServerResponse, parse_response(InstallServerResponse, response)

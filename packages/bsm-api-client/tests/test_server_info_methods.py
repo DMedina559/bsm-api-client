@@ -39,8 +39,10 @@ async def test_get_servers(client):
                 },
             ],
         }
-        result = await client.async_get_servers()
-        mock_request.assert_called_once_with("list_servers", authenticated=True)
+        result = await client.servers.async_get_servers()
+        mock_request.assert_called_once_with(
+            "list_servers", authenticated=True, typed=True
+        )
         assert len(result.servers) == 2
         assert result.servers[0].name == "server1"
 
@@ -64,7 +66,7 @@ async def test_get_server_names(client):
                 name="server1", status="RUNNING", version="1.0.0", player_count=0
             ),
         ]
-        result = await client.async_get_server_names()
+        result = await client.servers.async_get_server_names()
         assert result == ["server1", "server2"]
 
 
@@ -75,11 +77,12 @@ async def test_get_server_validate_success(client):
         client, "async_call_generated", new_callable=AsyncMock
     ) as mock_request:
         mock_request.return_value = {"status": "success"}
-        result = await client.async_get_server_validate("test-server")
+        result = await client.servers.async_get_server_validate("test-server")
         mock_request.assert_called_once_with(
             "validate_server",
             parameters={"server_name": "test-server"},
             authenticated=True,
+            typed=True,
         )
         assert result is True
 
@@ -92,7 +95,7 @@ async def test_get_server_validate_not_found(client):
     ) as mock_request:
         mock_request.side_effect = ServerNotFoundError("Server not found")
         with pytest.raises(ServerNotFoundError):
-            await client.async_get_server_validate("unknown-server")
+            await client.servers.async_get_server_validate("unknown-server")
 
 
 @pytest.mark.asyncio
@@ -108,11 +111,12 @@ async def test_get_server_summary(client):
             "player_count": 5,
             "players": [{"name": "player1", "xuid": "123"}],
         }
-        result = await client.async_get_server_summary("server1")
+        result = await client.servers.async_get_server_summary("server1")
         mock_request.assert_called_once_with(
             "get_server_summary",
             parameters={"server_name": "server1"},
             authenticated=True,
+            typed=True,
         )
         assert result.name == "server1"
         assert result.status == "RUNNING"
@@ -134,11 +138,12 @@ async def test_get_server_process_info(client):
                 "uptime": "1s",
             },
         }
-        result = await client.async_get_server_process_info("test-server")
+        result = await client.servers.async_get_server_process_info("test-server")
         mock_request.assert_called_once_with(
             "get_server_process_info",
             parameters={"server_name": "test-server"},
             authenticated=True,
+            typed=True,
         )
         assert result.process_info["pid"] == 123
 
@@ -150,11 +155,12 @@ async def test_get_server_running_status(client):
         client, "async_call_generated", new_callable=AsyncMock
     ) as mock_request:
         mock_request.return_value = {"status": "success", "running": True}
-        result = await client.async_get_server_running_status("test-server")
+        result = await client.servers.async_get_server_running_status("test-server")
         mock_request.assert_called_once_with(
             "get_server_status",
             parameters={"server_name": "test-server"},
             authenticated=True,
+            typed=True,
         )
         assert result.running is True
 
@@ -170,11 +176,12 @@ async def test_get_server_properties(client):
             "properties": {"level-name": "world"},
             "raw_content": "level-name=world",
         }
-        result = await client.async_get_server_properties("test-server")
+        result = await client.servers.async_get_server_properties("test-server")
         mock_request.assert_called_once_with(
             "get_properties",
             parameters={"server_name": "test-server"},
             authenticated=True,
+            typed=True,
         )
         assert result.properties["level-name"] == "world"
 
@@ -186,11 +193,12 @@ async def test_get_server_permissions_data(client):
         client, "async_call_generated", new_callable=AsyncMock
     ) as mock_request:
         mock_request.return_value = {"status": "success", "permissions": []}
-        result = await client.async_get_server_permissions_data("test-server")
+        result = await client.servers.async_get_server_permissions_data("test-server")
         mock_request.assert_called_once_with(
             "get_permissions",
             parameters={"server_name": "test-server"},
             authenticated=True,
+            typed=True,
         )
         assert result.permissions == []
 
@@ -202,10 +210,11 @@ async def test_get_server_allowlist(client):
         client, "async_call_generated", new_callable=AsyncMock
     ) as mock_request:
         mock_request.return_value = {"status": "success", "players": []}
-        result = await client.async_get_server_allowlist("test-server")
+        result = await client.servers.async_get_server_allowlist("test-server")
         mock_request.assert_called_once_with(
             "get_allowlist",
             parameters={"server_name": "test-server"},
             authenticated=True,
+            typed=True,
         )
         assert result.players == []

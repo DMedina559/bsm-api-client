@@ -222,7 +222,7 @@ async def list_tasks(ctx):
 @click.argument("task_id")
 @click.pass_context
 async def show_task(ctx, task_id):
-    task = await get_client(ctx).tasks.async_get_task_snapshot(task_id)
+    task = await get_client(ctx).tasks.async_get_task_status(task_id)
     click.echo(f"{task.id}: {task.status} — {task.message}")
     outcome(task.result)
     if task.error:

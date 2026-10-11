@@ -6,7 +6,17 @@ import asyncio
 import logging
 import re
 from contextlib import asynccontextmanager
-from typing import TYPE_CHECKING, Any, AsyncIterator, Dict, Mapping, Optional
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    AsyncIterator,
+    Dict,
+    Literal,
+    Mapping,
+    Optional,
+    cast,
+    overload,
+)
 from urllib.parse import quote
 
 import httpx
@@ -55,6 +65,9 @@ class DynamicOpenAPIMixin(GeneratedOperationMethods):
         async def authenticate(self) -> Any: ...
         async def _handle_api_error(self, response: Any, path: str) -> Any: ...
 
+    if TYPE_CHECKING:
+        from .generated.client import AuthenticatedClient, Client
+
     _openapi_schema: Optional[Dict[str, Any]] = None
     _openapi_fingerprint: Optional[str] = None
     _discovered_operations: Dict[str, DiscoveredOperation]
@@ -100,13 +113,26 @@ class DynamicOpenAPIMixin(GeneratedOperationMethods):
             generated_ids=set(index_operations(build_schema)),
         )
 
-    async def async_get_generated_client(self) -> Any:
+    async def async_get_generated_client(self) -> "AuthenticatedClient":
         """Return the shared generated client with managed authentication."""
         if not self._jwt_token:
             await self._ensure_authenticated()
         return self._generated_client(True)
 
-    def _generated_client(self, authenticated: bool) -> Any:
+    @overload
+    def _generated_client(
+        self, authenticated: Literal[True]
+    ) -> "AuthenticatedClient": ...
+
+    @overload
+    def _generated_client(self, authenticated: Literal[False]) -> "Client": ...
+
+    @overload
+    def _generated_client(
+        self, authenticated: bool
+    ) -> "Client | AuthenticatedClient": ...
+
+    def _generated_client(self, authenticated: bool) -> "Client | AuthenticatedClient":
         if getattr(self, "_closed", False):
             raise APIError("The API client is closed.")
         from .generated.client import AuthenticatedClient, Client
@@ -134,7 +160,7 @@ class DynamicOpenAPIMixin(GeneratedOperationMethods):
             if not hasattr(self, "_generated_http_clients"):
                 self._generated_http_clients = []
             self._generated_http_clients.append(transport)
-        return clients[authenticated]
+        return cast("Client | AuthenticatedClient", clients[authenticated])
 
     async def async_discover_api(
         self, *, force: bool = False

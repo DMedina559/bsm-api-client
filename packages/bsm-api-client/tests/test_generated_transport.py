@@ -84,7 +84,7 @@ async def local_api():
 @pytest.mark.asyncio
 async def test_generated_start_refreshes_auth_and_preserves_path_encoding(local_api):
     client, seen = local_api
-    result = await client.async_start_server("A/B & C")
+    result = await client.servers.async_start_server("A/B & C")
     assert result.status == "success"
     assert seen[0][0] == "login" and seen[0][1]["username"] == "test"
     assert seen[1] == ("POST", "A/B & C", None)
@@ -95,7 +95,7 @@ async def test_generated_start_refreshes_auth_and_preserves_path_encoding(local_
 async def test_generated_adapter_uses_schema_delete_and_body(local_api):
     client, seen = local_api
     client._jwt_token = "fresh"
-    await client.async_remove_server_allowlist_players(
+    await client.servers.async_remove_server_allowlist_players(
         "example", AllowlistRemovePayload(players=["Steve"])
     )
     assert seen == [("DELETE", "example", {"players": ["Steve"]})]
@@ -106,14 +106,14 @@ async def test_generated_and_dynamic_errors_share_hierarchy(local_api):
     client, _ = local_api
     client._jwt_token = "fresh"
     with pytest.raises(InvalidInputError) as error:
-        await client.async_stop_server("example")
+        await client.servers.async_stop_server("example")
     assert error.value.status_code == 422
 
 
 @pytest.mark.asyncio
 async def test_binary_response_is_not_decompressed_twice(local_api):
     client, _ = local_api
-    assert await client.async_get_panorama_image() == b"\xff\xd8image"
+    assert await client.application.async_get_panorama_image() == b"\xff\xd8image"
 
 
 @pytest.mark.asyncio
@@ -161,7 +161,7 @@ async def test_concurrent_expired_requests_share_one_refresh(local_api):
 
     client, seen = local_api
     responses = await asyncio.gather(
-        *(client.async_start_server(f"server-{number}") for number in range(5))
+        *(client.servers.async_start_server(f"server-{number}") for number in range(5))
     )
     assert all(response.status == "success" for response in responses)
     assert len([entry for entry in seen if entry[0] == "login"]) == 1
@@ -189,7 +189,7 @@ async def test_expired_token_retry_releases_first_response(local_api):
 
     client._http_client.send = tracked_send
     client.authenticate = assert_released_before_auth
-    result = await client.async_start_server("example")
+    result = await client.servers.async_start_server("example")
     assert result.status == "success"
 
 
@@ -310,3 +310,84 @@ async def test_generated_rest_respects_proxy_mount_and_custom_api_prefix():
         ) as client:
             response = await client.rest.start_server(server_name="example")
             assert response.outcome == "started"
+
+
+@pytest.mark.asyncio
+async def test_content_service_streams_upload_in_bounded_chunks(
+    local_api, tmp_path, monkeypatch
+):
+    from pathlib import Path
+
+    client, seen = local_api
+    document = {
+        "paths": {
+            "/extension/upload": {
+                "post": {"operationId": "upload_content", "x-bsm-plugin": "demo"}
+            }
+        }
+    }
+    client._openapi_schema = document
+    client._discovered_operations = client._index_operations(document)
+    client._jwt_token = "fresh"
+    path = tmp_path / "world.mcworld"
+    payload = b"world" * 40000
+    path.write_bytes(payload)
+    original_open = Path.open
+    reads = []
+    handles = []
+
+    class BoundedFile:
+        def __init__(self, handle):
+            self.handle = handle
+
+        def read(self, size=-1):
+            assert size > 0, "Uploads must not read the entire file at once"
+            reads.append(size)
+            return self.handle.read(size)
+
+        def __getattr__(self, name):
+            return getattr(self.handle, name)
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            self.handle.close()
+
+    def open_file(selected, *args, **kwargs):
+        handle = original_open(selected, *args, **kwargs)
+        if selected == path:
+            handles.append(handle)
+            return BoundedFile(handle)
+        return handle
+
+    monkeypatch.setattr(Path, "open", open_file)
+    assert await client.content.async_upload_content(str(path)) == {"uploaded": True}
+    assert seen == [("file", "world.mcworld", payload)]
+    assert len(reads) > 1
+    assert all(handle.closed for handle in handles)
+
+
+@pytest.mark.asyncio
+async def test_shutdown_attempts_all_owned_transports_after_failure():
+    from unittest.mock import AsyncMock
+
+    import httpx
+
+    client = BedrockServerManagerApi("http://localhost", jwt_token="token")
+    http_close = client._http_client.aclose
+    client._generated_http_clients = [
+        AsyncMock(aclose=AsyncMock(side_effect=RuntimeError("close failed")))
+    ]
+    websocket = AsyncMock()
+    websocket.closed = False
+    client._session = websocket
+    with pytest.raises(RuntimeError, match="close failed"):
+        await client.close()
+    assert client._http_client.is_closed
+    websocket.close.assert_awaited_once()
+    await client.close()
+    await http_close()
+    with pytest.raises(AttributeError):
+        getattr(client, "async_start_server")
+    assert isinstance(client._http_client, httpx.AsyncClient)

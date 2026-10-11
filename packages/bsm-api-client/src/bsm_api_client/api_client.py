@@ -1,6 +1,6 @@
 """BSM SDK: generated REST operations plus domain and live extensions."""
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 import aiohttp
 import httpx
@@ -25,8 +25,9 @@ class BedrockServerManagerApi(DynamicOpenAPIMixin, ClientBase):
     """Own authentication and transports; services own domain workflows.
 
     Generated endpoints are available through ``async_call_generated`` and
-    ``async_get_generated_client``. Legacy async convenience names resolve to
-    the same service implementation while callers migrate to service paths.
+    ``async_get_generated_client``. Use ``rest`` for typed operation-ID methods
+    and the service attributes for domain workflows. ``discovery`` exposes
+    operations advertised by the live backend and its plugins.
     """
 
     rest: "RestClient"
@@ -38,7 +39,7 @@ class BedrockServerManagerApi(DynamicOpenAPIMixin, ClientBase):
     content: ContentService
     account: AccountService
     users: UsersService
-    plugin_management: PluginsService
+    plugins: PluginsService
 
     def __init__(
         self,
@@ -51,7 +52,15 @@ class BedrockServerManagerApi(DynamicOpenAPIMixin, ClientBase):
         request_timeout: float = 90,
         verify_ssl: bool = True,
         http_client: httpx.AsyncClient | None = None,
-    ):
+    ) -> None:
+        """Create the SDK and its domain services without opening a WebSocket.
+
+        Provide a JWT token or both username and password. base_url may include
+        a reverse-proxy mount; base_path selects the REST API prefix.
+        request_timeout applies to REST requests in seconds. verify_ssl controls
+        owned transports. Optional http_client and session transports remain
+        caller-owned; session is used only for WebSockets.
+        """
         super().__init__(
             base_url=base_url,
             username=username,
@@ -72,28 +81,6 @@ class BedrockServerManagerApi(DynamicOpenAPIMixin, ClientBase):
         self.players = PlayersService(self)
         self.tasks = TasksService(self)
         self.content = ContentService(self)
-        self.plugin_management = PluginsService(self)
+        self.plugins = PluginsService(self)
         self.account = AccountService(self)
         self.users = UsersService(self)
-        self._services = (
-            self.application,
-            self.servers,
-            self.players,
-            self.tasks,
-            self.content,
-            self.plugin_management,
-            self.account,
-            self.users,
-        )
-
-    def __getattr__(self, name: str) -> Any:
-        if name.startswith("async_"):
-            for service in self.__dict__.get("_services", ()):
-                method = getattr(service, name, None)
-                if method is not None:
-                    return method
-        raise AttributeError(name)
-
-    @property
-    def plugins(self) -> PluginsService:
-        return self.plugin_management

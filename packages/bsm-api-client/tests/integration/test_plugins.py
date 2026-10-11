@@ -17,8 +17,8 @@ class TestPluginSystem:
         """Tests that we can get the status of all plugins."""
         client = BedrockServerManagerApi(server, "admin", "password")
         try:
-            await client.async_reload_plugins()
-            status_res = await client.async_get_plugin_statuses()
+            await client.plugins.async_reload_plugins()
+            status_res = await client.plugins.async_get_plugin_statuses()
 
             assert status_res.status == "success"
             # The data is a dictionary of plugins, not a list.
@@ -35,7 +35,7 @@ class TestPluginSystem:
         client = BedrockServerManagerApi(server, "admin", "password")
         try:
             # 1. Get initial status
-            status_res = await client.async_get_plugin_statuses()
+            status_res = await client.plugins.async_get_plugin_statuses()
             plugin_data = status_res.plugins
             if plugin_data is None:
                 pytest.skip("No plugins found")
@@ -45,18 +45,22 @@ class TestPluginSystem:
             # 2. Toggle the status
             new_status = not original_status
             payload = PluginStatusSetPayload(enabled=new_status)
-            set_res = await client.async_set_plugin_status(DEFAULT_PLUGIN_NAME, payload)
+            set_res = await client.plugins.async_set_plugin_status(
+                DEFAULT_PLUGIN_NAME, payload
+            )
             assert set_res.status == "success"
 
             # 3. Verify the status changed
-            status_res_after = await client.async_get_plugin_statuses()
+            status_res_after = await client.plugins.async_get_plugin_statuses()
             assert (
                 status_res_after.plugins[DEFAULT_PLUGIN_NAME]["enabled"] is new_status
             )
 
             # 4. Revert to original state for test idempotency
             revert_payload = PluginStatusSetPayload(enabled=original_status)
-            await client.async_set_plugin_status(DEFAULT_PLUGIN_NAME, revert_payload)
+            await client.plugins.async_set_plugin_status(
+                DEFAULT_PLUGIN_NAME, revert_payload
+            )
 
         finally:
             await client.close()
@@ -68,7 +72,7 @@ class TestPluginSystem:
             payload = TriggerEventPayload(
                 event_name="any_event", payload={"data": "some_value"}
             )
-            trigger_res = await client.async_trigger_plugin_event(payload)
+            trigger_res = await client.plugins.async_trigger_plugin_event(payload)
             assert trigger_res.status == "success"
         finally:
             await client.close()
@@ -77,7 +81,7 @@ class TestPluginSystem:
         """Tests the reload plugins endpoint."""
         client = BedrockServerManagerApi(server, "admin", "password")
         try:
-            reload_res = await client.async_reload_plugins()
+            reload_res = await client.plugins.async_reload_plugins()
             assert reload_res.status == "success"
         finally:
             await client.close()
@@ -144,7 +148,7 @@ async def test_typed_plugin_settings_round_trip(server):
 
     async with BedrockServerManagerApi(server, "admin", "password") as client:
         name = "backup_on_start"
-        original = await client.async_get_plugin_settings(name)
+        original = await client.plugins.async_get_plugin_settings(name)
         assert original.settings_schema
         try:
             updated = {
@@ -153,18 +157,20 @@ async def test_typed_plugin_settings_round_trip(server):
                     "enable_backup_on_start"
                 ],
             }
-            await client.async_update_plugin_settings(
+            await client.plugins.async_update_plugin_settings(
                 name, PluginSettingsPayload(settings=updated)
             )
-            assert (await client.async_get_plugin_settings(name)).settings == updated
+            assert (
+                await client.plugins.async_get_plugin_settings(name)
+            ).settings == updated
             with pytest.raises(InvalidInputError):
-                await client.async_update_plugin_settings(
+                await client.plugins.async_update_plugin_settings(
                     name,
                     PluginSettingsPayload(
                         settings={**updated, "servers": ["does_not_exist"]}
                     ),
                 )
         finally:
-            await client.async_update_plugin_settings(
+            await client.plugins.async_update_plugin_settings(
                 name, PluginSettingsPayload(settings=original.settings)
             )

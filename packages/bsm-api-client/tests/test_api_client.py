@@ -30,8 +30,10 @@ async def test_get_custom_zips(client):
             "status": "success",
             "custom_zips": ["zip1.zip", "zip2.zip"],
         }
-        result = await client.async_get_custom_zips()
-        mock_request.assert_called_once_with("list_downloads", authenticated=True)
+        result = await client.application.async_get_custom_zips()
+        mock_request.assert_called_once_with(
+            "list_downloads", authenticated=True, typed=True
+        )
         assert result.custom_zips == ["zip1.zip", "zip2.zip"]
 
 
@@ -45,8 +47,10 @@ async def test_get_themes(client):
             "status": "success",
             "themes": ["dark"],
         }
-        result = await client.async_get_themes()
-        mock_request.assert_called_once_with("list_themes", authenticated=True)
+        result = await client.application.async_get_themes()
+        mock_request.assert_called_once_with(
+            "list_themes", authenticated=True, typed=True
+        )
         assert result.status == "success"
         assert result.themes == ["dark"]
 
@@ -62,12 +66,13 @@ async def test_prune_server_backups(client):
             "task_id": "test-task",
             "message": "Pruning initiated.",
         }
-        result = await client.async_prune_server_backups("test-server")
+        result = await client.content.async_prune_server_backups("test-server")
         mock_request.assert_called_once_with(
             "prune_backups",
             parameters={"server_name": "test-server"},
             body=None,
             authenticated=True,
+            typed=True,
         )
         assert result.status == "accepted"
 
@@ -91,12 +96,15 @@ async def test_set_server_permissions(client):
             "status": "success",
             "message": "Permissions updated.",
         }
-        result = await client.async_set_server_permissions("test-server", payload)
+        result = await client.servers.async_set_server_permissions(
+            "test-server", payload
+        )
         mock_request.assert_called_once_with(
             "set_permissions",
             parameters={"server_name": "test-server"},
             body=payload.model_dump(),
             authenticated=True,
+            typed=True,
         )
         assert result.status == "success"
 
@@ -113,12 +121,15 @@ async def test_update_server_properties(client):
             "status": "success",
             "message": "Properties updated.",
         }
-        result = await client.async_update_server_properties("test-server", payload)
+        result = await client.servers.async_update_server_properties(
+            "test-server", payload
+        )
         mock_request.assert_called_once_with(
             "set_properties",
             parameters={"server_name": "test-server"},
             body=payload.model_dump(),
             authenticated=True,
+            typed=True,
         )
         assert result.status == "success"
 
@@ -133,8 +144,10 @@ async def test_reload_plugins(client):
             "status": "success",
             "message": "Plugins reloaded.",
         }
-        result = await client.async_reload_plugins()
-        mock_request.assert_called_once_with("reload_plugins", authenticated=True)
+        result = await client.plugins.async_reload_plugins()
+        mock_request.assert_called_once_with(
+            "reload_plugins", authenticated=True, typed=True
+        )
         assert result.status == "success"
 
 
@@ -147,7 +160,7 @@ async def test_facade_response_validation_uses_safe_api_errors(client):
     ) as operation:
         operation.return_value = {"servers": "private-response-value"}
         with pytest.raises(APIError) as error:
-            await client.async_get_servers()
+            await client.servers.async_get_servers()
     assert "ServersListResponse" in str(error.value)
     assert error.value.response_data["validation_errors"]
     assert "private-response-value" not in str(error.value.response_data)
@@ -164,13 +177,13 @@ async def test_setting_and_plugin_diagnostics_exclude_payload_secrets(client, ca
         client, "async_call_generated", new_callable=AsyncMock
     ) as operation:
         operation.return_value = {"status": "success"}
-        await client.async_set_server_setting(
+        await client.servers.async_set_server_setting(
             "test",
             ServerSettingItemPayload(
                 key="custom.secret", value="private-setting-value"
             ),
         )
-        await client.async_trigger_plugin_event(
+        await client.plugins.async_trigger_plugin_event(
             TriggerEventPayload(
                 event_name="demo:update", payload={"token": "private-plugin-token"}
             )

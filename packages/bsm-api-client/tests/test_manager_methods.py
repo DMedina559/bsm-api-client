@@ -28,8 +28,10 @@ async def test_get_info(client):
         client, "async_call_generated", new_callable=AsyncMock
     ) as mock_request:
         mock_request.return_value = {"status": "success", "info": {"version": "1.0.0"}}
-        result = await client.async_get_info()
-        mock_request.assert_called_once_with("get_system_info", authenticated=False)
+        result = await client.application.async_get_info()
+        mock_request.assert_called_once_with(
+            "get_system_info", authenticated=False, typed=True
+        )
         assert result.info["version"] == "1.0.0"
 
 
@@ -40,8 +42,10 @@ async def test_scan_players(client):
         client, "async_call_generated", new_callable=AsyncMock
     ) as mock_request:
         mock_request.return_value = {"status": "success", "message": "Scan complete."}
-        result = await client.async_scan_players()
-        mock_request.assert_called_once_with("scan_players", authenticated=True)
+        result = await client.players.async_scan_players()
+        mock_request.assert_called_once_with(
+            "scan_players", authenticated=True, typed=True
+        )
         assert result.status == "success"
 
 
@@ -55,8 +59,10 @@ async def test_get_players(client):
             "status": "success",
             "players": [{"name": "player1", "xuid": "123"}],
         }
-        result = await client.async_get_players()
-        mock_request.assert_called_once_with("list_players", authenticated=True)
+        result = await client.players.async_get_players()
+        mock_request.assert_called_once_with(
+            "list_players", authenticated=True, typed=True
+        )
         assert len(result.players) == 1
         assert (
             getattr(result.players[0], "name", result.players[0].get("name", None))
@@ -72,9 +78,9 @@ async def test_add_players(client):
     ) as mock_request:
         payload = AddPlayersPayload(players=["player1:123", "player2:456"])
         mock_request.return_value = {"status": "success", "message": "Players added."}
-        result = await client.async_add_players(payload)
+        result = await client.players.async_add_players(payload)
         mock_request.assert_called_once_with(
-            "add_players", body=payload.model_dump(), authenticated=True
+            "add_players", body=payload.model_dump(), authenticated=True, typed=True
         )
         assert result.status == "success"
 
@@ -89,8 +95,10 @@ async def test_get_all_settings(client):
             "status": "success",
             "settings": {"web": {"port": 8080}},
         }
-        result = await client.async_get_all_settings()
-        mock_request.assert_called_once_with("get_settings", authenticated=True)
+        result = await client.application.async_get_all_settings()
+        mock_request.assert_called_once_with(
+            "get_settings", authenticated=True, typed=True
+        )
         assert result.settings["web"]["port"] == 8080
 
 
@@ -102,9 +110,9 @@ async def test_set_setting(client):
     ) as mock_request:
         payload = SettingItemResponse(key="web.port", value=8081)
         mock_request.return_value = {"status": "success", "message": "Setting updated."}
-        result = await client.async_set_setting(payload)
+        result = await client.application.async_set_setting(payload)
         mock_request.assert_called_once_with(
-            "set_setting", body=payload.model_dump(), authenticated=True
+            "set_setting", body=payload.model_dump(), authenticated=True, typed=True
         )
         assert result.status == "success"
 
@@ -119,8 +127,10 @@ async def test_reload_settings(client):
             "status": "success",
             "message": "Settings reloaded.",
         }
-        result = await client.async_reload_settings()
-        mock_request.assert_called_once_with("reload_settings", authenticated=True)
+        result = await client.application.async_reload_settings()
+        mock_request.assert_called_once_with(
+            "reload_settings", authenticated=True, typed=True
+        )
         assert result.status == "success"
 
 
@@ -135,9 +145,9 @@ async def test_prune_downloads(client):
             "status": "success",
             "message": "Downloads pruned.",
         }
-        result = await client.async_prune_downloads(payload)
+        result = await client.application.async_prune_downloads(payload)
         mock_request.assert_called_once_with(
-            "prune_downloads", body=payload.model_dump(), authenticated=True
+            "prune_downloads", body=payload.model_dump(), authenticated=True, typed=True
         )
         assert result.status == "success"
 
@@ -157,9 +167,9 @@ async def test_install_new_server(client):
             "message": "Installation started.",
             "task_id": "test-task-id",
         }
-        result = await client.async_install_new_server(payload)
+        result = await client.servers.async_install_new_server(payload)
         mock_request.assert_called_once_with(
-            "install_server", body=payload.model_dump(), authenticated=True
+            "install_server", body=payload.model_dump(), authenticated=True, typed=True
         )
         assert result.status == "accepted"
         assert result.task_id == "test-task-id"
@@ -173,13 +183,15 @@ async def test_get_install_status(client):
     ) as mock_request:
         task_id = "test-task-id"
         mock_request.return_value = {
-            "status": "complete",
+            "id": task_id,
+            "status": "completed",
             "message": "Installation complete.",
         }
-        result = await client.async_get_task_status(task_id)
+        result = await client.tasks.async_get_task_status(task_id)
         mock_request.assert_called_once_with(
             "get_task_status",
             parameters={"task_id": task_id},
             authenticated=True,
+            typed=True,
         )
-        assert result.get("status") == "complete"
+        assert result.status == "completed"

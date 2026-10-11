@@ -164,12 +164,12 @@ async def bedrock_server(server, server_data_dir):
             server_zip_path=archive.name,
             overwrite=True,
         )
-        install_result = await client.async_install_new_server(payload)
+        install_result = await client.servers.async_install_new_server(payload)
 
         if install_result.task_id:
             for _ in range(90):  # 90s timeout for installation task
                 await asyncio.sleep(2)  # Poll every 2 seconds
-                status_response = await client.async_get_task_status(
+                status_response = await client.tasks.async_get_task_status(
                     install_result.task_id
                 )
                 if status_response["status"] in {"success", "completed"}:
@@ -188,9 +188,9 @@ async def bedrock_server(server, server_data_dir):
         elif install_result.status != "success":
             pytest.fail(f"Failed to install server: {install_result.message}")
 
-        assert await client.async_get_server_validate(server_name)
+        assert await client.servers.async_get_server_validate(server_name)
         installed = True
-        await client.async_set_server_setting(
+        await client.servers.async_set_server_setting(
             server_name,
             ServerSettingItemPayload(key="settings.target_version", value=version),
         )
@@ -200,14 +200,18 @@ async def bedrock_server(server, server_data_dir):
         try:
             if installed:
                 # Ensure the server is stopped before trying to delete it
-                status_res = await client.async_get_server_running_status(server_name)
+                status_res = await client.servers.async_get_server_running_status(
+                    server_name
+                )
                 if status_res.running:
-                    await client.async_stop_server(server_name)
+                    await client.servers.async_stop_server(server_name)
                     # Give it a moment to stop
                     for _ in range(30):
                         await asyncio.sleep(1)
-                        status_res = await client.async_get_server_running_status(
-                            server_name
+                        status_res = (
+                            await client.servers.async_get_server_running_status(
+                                server_name
+                            )
                         )
                         if not status_res.running:
                             break
@@ -216,12 +220,12 @@ async def bedrock_server(server, server_data_dir):
                             f"Server {server_name} did not stop within 30 seconds before deletion."
                         )
 
-                delete_result = await client.async_delete_server(server_name)
+                delete_result = await client.servers.async_delete_server(server_name)
                 assert delete_result.status in ["pending", "success", "accepted"]
 
                 for _ in range(10):
                     await asyncio.sleep(1)
-                    servers = await client.async_get_server_names()
+                    servers = await client.servers.async_get_server_names()
                     if server_name not in servers:
                         break
                 else:
@@ -239,7 +243,9 @@ async def wait_for_server_status(server_data_dir):
     async def _wait_for_server_status(client, server_name, is_running, timeout=60):
         """Helper to wait for the server to reach a desired running state."""
         for _ in range(timeout):
-            status_res = await client.async_get_server_running_status(server_name)
+            status_res = await client.servers.async_get_server_running_status(
+                server_name
+            )
             if status_res.running == is_running:
                 if not is_running:
                     return

@@ -27,7 +27,7 @@
 *   Handles authentication (JWT) automatically, including token refresh attempts.
 *   Generates the typed REST surface from BSM 4.x FastAPI OpenAPI at release time.
 *   Discovers new core and plugin FastAPI endpoints at runtime without waiting for a client release.
-*   Provides compatibility methods for the established BSM client API:
+*   Provides typed domain services for BSM workflows:
     *   Manager Information & Global Actions
     *   Server Listing, Status & Configuration
     *   Server Actions (Start, Stop, Command, Update, etc.)
@@ -51,58 +51,26 @@ For a complete list of endpoints and examples, see [API_DOCS.md](../../docs/API_
 
 ```python
 import asyncio
-from bsm_api_client import BedrockServerManagerApi, APIError, CannotConnectError
+
+from bsm_api_client import APIError, BedrockServerManagerApi
+
 
 async def main():
-    client = BedrockServerManagerApi(
-        base_url="http://host:port",    # e.g., "http://127.0.0.1:11325" or "https://bsm.example.internal"
-        username="username",           # Username for BSM login
-        password="password",           # Password for BSM login
-        verify_ssl=True                # Set to False if using HTTPS with a self-signed cert
-    )
-
     try:
-        async with client: # Handles session and token management
-            # Get manager info (no auth needed for this specific call, but client handles it)
-            manager_info = await client.rest.get_system_info()
-            print(f"Manager OS: {(manager_info.info or {}).get('os_type')}, Version: {(manager_info.info or {}).get('app_version')}")
+        async with BedrockServerManagerApi(
+            base_url="http://127.0.0.1:11325",
+            username="username",
+            password="password",
+        ) as client:
+            info = await client.application.async_get_info()
+            print(info.info)
 
-            # Get list of all servers
-            servers = await client.rest.list_servers()
-            if servers.servers:
-                print("\nManaged Servers:")
-                for server in servers.servers or []:
-                    print(f"  - Name: {server['name']}, Status: {server['status']}, Version: {server['version']}")
-            else:
-                print("No servers found.")
+            fleet = await client.servers.async_get_servers()
+            for server in fleet.servers or []:
+                print(server.name, server.status, server.version)
+    except APIError as error:
+        print(f"API request failed: {error}")
 
-            # Example: Start a specific server (replace 'MyServer' with an actual server name)
-            # server_name_to_start = "MyServer"
-            # if any(s['name'] == server_name_to_start for s in servers.servers or []):
-            #     print(f"\nAttempting to start server: {server_name_to_start}")
-            #     start_response = await client.async_start_server(server_name_to_start)
-            #     print(f"Start response: {start_response.get('message')}")
-            # else:
-            #     print(f"\nServer '{server_name_to_start}' not found, cannot start.")
-
-    except AuthError as e:
-        print(f"Authentication Error: {e}")
-    except ServerNotFoundError as e:
-        print(f"Server Not Found Error: {e}")
-    except APIError as e:
-        print(f"An API Error occurred: {e}")
-        print(f"  Status Code: {e.status_code}")
-        print(f"  API Message: {e.api_message}")
-        print(f"  API Errors: {e.api_errors}")
-    except CannotConnectError as e:
-        print(f"Connection Error: {e}")
-    except ValueError as e:
-        print(f"Input Error: {e}")
-    finally:
-        # The `async with client:` block handles closing the session.
-        # If not using context manager, you would call:
-        # await client.close()
-        pass
 
 if __name__ == "__main__":
     asyncio.run(main())
@@ -126,8 +94,8 @@ print(detailed.status_code, detailed.headers, detailed.parsed)
 
 Services organize SDK workflows under `client.servers`, `client.application`,
 `client.tasks`, `client.players`, `client.plugins`, `client.users`, `client.account`,
-and `client.content`. The previous `async_*` convenience names delegate to these
-services; `client.servers` is now a dedicated service rather than the entire SDK.
+and `client.content`. Root-level domain methods have been removed; use the
+corresponding service or the generated operation-ID interface.
 Runtime plugin contracts are available through `client.discovery`. Plugin
 operation groups previously exposed as `client.plugins` are now
 `client.discovery.plugins` (also available as `client.plugin_operations`).
@@ -174,7 +142,7 @@ print(response.parsed)  # Generated typed response
 See [generation](../../docs/OPENAPI_GENERATION.md) and
 [contract conventions](../../docs/OPENAPI_CONTRACT.md) for development and plugins.
 
-## File operations and compatibility
+## File operations and runtime discovery
 
 Multipart operations support repeated files and fields. File tuples contain the
 filename, bytes or readable stream, and content type. Streams start at their
@@ -206,3 +174,12 @@ report = compatibility_report(previous_schema, client.schema)
 
 See [contract conventions](../../docs/OPENAPI_CONTRACT.md) for retry policy,
 validation, supported serialization and compatibility-report limitations.
+
+## Migrating to the service API
+
+Root-level domain methods have been removed. Use `client.servers`, `client.application`,
+`client.content`, `client.tasks`, `client.players`, `client.plugins`, `client.account`, or
+`client.users`, or call operation-ID methods through `client.rest`. For example, replace
+`client.async_start_server(name)` with `client.servers.async_start_server(name)`.
+Task status and ban methods return Pydantic models; `client.tasks.async_get_task_status(id)`
+returns `TaskSnapshot`. Use `.model_dump(mode="json")` when a dictionary is needed.

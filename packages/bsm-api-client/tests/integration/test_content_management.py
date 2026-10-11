@@ -35,7 +35,7 @@ async def wait_for_action(client, response):
     if not response.task_id:
         return
     for _ in range(90):
-        task = await client.async_get_task_status(response.task_id)
+        task = await client.tasks.async_get_task_status(response.task_id)
         assert task["status"] not in {"error", "failed", "cancelled"}, task
         if task["status"] in {"success", "completed"}:
             result = task.get("result")
@@ -54,17 +54,17 @@ async def content_client(server, bedrock_server, wait_for_server_status):
     client = BedrockServerManagerApi(server, "admin", "password")
     server_name = bedrock_server
     try:
-        status_res = await client.async_get_server_running_status(server_name)
+        status_res = await client.servers.async_get_server_running_status(server_name)
         if status_res.running:
-            await client.async_stop_server(server_name)
+            await client.servers.async_stop_server(server_name)
             await wait_for_server_status(
                 client, server_name, is_running=False, timeout=90
             )
         yield client
     finally:
-        status_res = await client.async_get_server_running_status(server_name)
+        status_res = await client.servers.async_get_server_running_status(server_name)
         if status_res.running:
-            await client.async_stop_server(server_name)
+            await client.servers.async_stop_server(server_name)
             await wait_for_server_status(
                 client, server_name, is_running=False, timeout=90
             )
@@ -89,14 +89,16 @@ class TestContentManagement:
         # Dummy server does not implement the live save-query protocol.
         # Stopped-server backups still exercise the full API/storage/archive path.
         backup_payload = BackupActionPayload(backup_type="world")
-        backup_result = await client.async_trigger_server_backup(
+        backup_result = await client.content.async_trigger_server_backup(
             server_name, backup_payload
         )
         assert backup_result.status in ["success", "pending", "accepted"]
         await wait_for_action(client, backup_result)
         list_response = None
         for _ in range(90):  # Increased timeout
-            list_response = await client.async_list_server_backups(server_name, "world")
+            list_response = await client.content.async_list_server_backups(
+                server_name, "world"
+            )
             if list_response.backups and len(list_response.backups) > 0:
                 break
             await asyncio.sleep(1)
@@ -106,17 +108,17 @@ class TestContentManagement:
         restore_payload = RestoreActionPayload(
             restore_type="world", backup_file=backup_file
         )
-        restore_result = await client.async_restore_server_backup(
+        restore_result = await client.content.async_restore_server_backup(
             server_name, restore_payload
         )
         await wait_for_action(client, restore_result)
 
         # Restore Latest All
-        latest_all = await client.async_restore_server_latest_all(server_name)
+        latest_all = await client.content.async_restore_server_latest_all(server_name)
         await wait_for_action(client, latest_all)
 
     async def test_custom_zips(self, content_client):
-        zips = await content_client.async_get_custom_zips()
+        zips = await content_client.application.async_get_custom_zips()
         assert zips.status == "success"
 
     async def test_world_and_addon_management(
@@ -130,29 +132,29 @@ class TestContentManagement:
 
         dummy_world_file = content_files["world_file"]
         dummy_addon_file = content_files["addon_file"]
-        worlds_list = await client.async_get_content_worlds()
+        worlds_list = await client.content.async_get_content_worlds()
         assert worlds_list.status == "success"
         assert dummy_world_file in worlds_list.files
         install_world_payload = FileNamePayload(filename=dummy_world_file)
-        install_world_result = await client.async_install_server_world(
+        install_world_result = await client.content.async_install_server_world(
             server_name, install_world_payload
         )
         await wait_for_action(client, install_world_result)
-        addons_list = await client.async_get_content_addons()
+        addons_list = await client.content.async_get_content_addons()
         assert addons_list.status == "success"
         assert dummy_addon_file in addons_list.files
         install_addon_payload = FileNamePayload(filename=dummy_addon_file)
-        install_addon_result = await client.async_install_server_addon(
+        install_addon_result = await client.content.async_install_server_addon(
             server_name, install_addon_payload
         )
         await wait_for_action(client, install_addon_result)
 
-        await client.async_start_server(server_name)
+        await client.servers.async_start_server(server_name)
         await wait_for_server_status(client, server_name, is_running=True, timeout=90)
-        await client.async_stop_server(server_name)
+        await client.servers.async_stop_server(server_name)
         await wait_for_server_status(client, server_name, is_running=False, timeout=90)
 
-        addons_res = await client.async_get_server_addons(server_name)
+        addons_res = await client.content.async_get_server_addons(server_name)
         assert addons_res.status == "success"
 
     async def test_other_content_actions(
@@ -163,22 +165,22 @@ class TestContentManagement:
         """
         client = content_client
         server_name = bedrock_server
-        worlds_before_list = await client.async_get_content_worlds()
+        worlds_before_list = await client.content.async_get_content_worlds()
         worlds_before = worlds_before_list.files or []
-        export_result = await client.async_export_server_world(server_name)
+        export_result = await client.content.async_export_server_world(server_name)
         assert export_result.status in ["success", "pending", "accepted"]
         await wait_for_action(client, export_result)
         for _ in range(90):  # Increased timeout
-            worlds_after_list = await client.async_get_content_worlds()
+            worlds_after_list = await client.content.async_get_content_worlds()
             worlds_after = worlds_after_list.files or []
             if len(worlds_after) > len(worlds_before):
                 break
             await asyncio.sleep(1)
         else:
             pytest.fail("World export did not result in a new file in time.")
-        await client.async_stop_server(server_name)
+        await client.servers.async_stop_server(server_name)
         await wait_for_server_status(client, server_name, is_running=False, timeout=90)
-        prune_result = await client.async_prune_server_backups(server_name)
+        prune_result = await client.content.async_prune_server_backups(server_name)
         await wait_for_action(client, prune_result)
-        reset_result = await client.async_reset_server_world(server_name)
+        reset_result = await client.content.async_reset_server_world(server_name)
         await wait_for_action(client, reset_result)

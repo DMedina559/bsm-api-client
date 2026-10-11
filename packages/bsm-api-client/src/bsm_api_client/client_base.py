@@ -35,7 +35,7 @@ class ClientBase:
     """Base class containing core API client logic.
 
     This class manages the HTTP session, authentication state, and provides
-    low-level methods for making requests to the API. It is not intended to be
+    shared authentication and error handling for REST and WebSocket clients. It is not intended to be
     used directly by end-users, but rather extended by the main API client class.
 
     Attributes:
@@ -43,7 +43,7 @@ class ClientBase:
         _port: The port of the Bedrock Server Manager.
         _username: The username for authentication.
         _password: The password for authentication.
-        _session: The `aiohttp.ClientSession` used for making requests.
+        _session: The optional `aiohttp.ClientSession` used for WebSockets.
         _jwt_token: The JWT token used for authentication.
     """
 
@@ -92,10 +92,13 @@ class ClientBase:
         :param username: The username for authentication.
         :param password: The password for authentication.
         :param jwt_token: An optional JWT token to use for authentication.
-        :param session: An optional `aiohttp.ClientSession` to use for requests.
+        :param session: A caller-owned aiohttp session used only for WebSockets.
         :param base_path: The base path for the API.
         :param request_timeout: The timeout for requests in seconds.
-        :param verify_ssl: Whether to verify the SSL certificate.
+        :param verify_ssl: Whether owned transports verify TLS certificates.
+        :param http_client: A caller-owned HTTPX client for REST connections.
+            Its pool and TLS settings are retained; SDK authentication and request
+            timeouts apply to each request.
         """
         if not base_url:
             raise ValueError("base_url must be provided.")
@@ -162,26 +165,23 @@ class ClientBase:
         _LOGGER.debug("ClientBase initialized for base URL: %s", self._base_url)
 
     async def close(self) -> None:
-        """Closes the underlying aiohttp.ClientSession if it was created internally.
+        """Close all owned REST and WebSocket transports, including after a cleanup failure.
+
+        Caller-provided transports remain open. Repeated calls are safe.
 
         .. rubric:: Example:
         .. code-block:: python
 
-            response = await client.close()
+            await client.close()
         """
         self._closed = True
-        results = await asyncio.gather(
-            *(client.aclose() for client in self._generated_http_clients),
-            return_exceptions=True,
-        )
-        self._generated_http_clients = []
+        clients, self._generated_http_clients = self._generated_http_clients, []
+        cleanup = [client.aclose() for client in clients]
         if self._close_http_client:
-            await self._http_client.aclose()
+            cleanup.append(self._http_client.aclose())
         if self._session and self._close_session and not self._session.closed:
-            await self._session.close()
-            _LOGGER.debug(
-                "Closed internally managed ClientSession for %s", self._base_url
-            )
+            cleanup.append(self._session.close())
+        results = await asyncio.gather(*cleanup, return_exceptions=True)
         for result in results:
             if isinstance(result, BaseException):
                 raise result
@@ -203,12 +203,6 @@ class ClientBase:
         :param response: The `httpx.Response` object from the failed request.
 
         :returns: A tuple containing the error message string and the full error data dictionary.
-
-
-        .. rubric:: Example:
-        .. code-block:: python
-
-            response = await client.__aenter__()
         """
         response_text = ""
         error_data: Dict[str, Any] = {}
@@ -303,12 +297,6 @@ class ClientBase:
         :raises ServerNotRunningError: If the error message indicates the server is not running.
         :raises APIServerSideError: For 5xx status codes.
         :raises APIError: For any other 4xx status codes.
-
-
-        .. rubric:: Example:
-        .. code-block:: python
-
-            response = await client._handle_api_error()
         """
         message, error_data = await self._extract_error_details(response)
         status = response.status_code
@@ -390,27 +378,6 @@ class ClientBase:
             f"Unhandled API error condition: Status {status}, Message: {message}"
         )
         raise APIError(message, status_code=status, response_data=error_data)
-
-    async def _request(
-        self,
-        method: str,
-        path: str,
-        json_data: Optional[Dict[str, Any]] = None,
-        params: Optional[Dict[str, Any]] = None,
-        authenticated: bool = True,
-        is_retry: bool = False,
-    ) -> Any:
-        """Compatibility request adapter backed by the OpenAPI transport."""
-        request_path_segment = path if path.startswith("/") else f"/{path}"
-        return await self._dynamic_request(
-            method,
-            f"{self._api_base_segment}{request_path_segment}",
-            query=params,
-            json_data=json_data,
-            headers=None,
-            authenticated=authenticated,
-            is_retry=is_retry,
-        )
 
     async def authenticate(self) -> TokenResponse:
         """Authenticate against BSM's OpenAPI-described OAuth2 token endpoint."""

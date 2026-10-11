@@ -23,6 +23,8 @@ def parse_response(model: Any, value: Any) -> Any: ...
 
 def parse_response(model: Any, value: Any) -> Any:
     """Keep response contract failures in the API exception hierarchy."""
+    if isinstance(model, type) and isinstance(value, model):
+        return value
     try:
         return TypeAdapter(model).validate_python(value)
     except ValidationError as exc:

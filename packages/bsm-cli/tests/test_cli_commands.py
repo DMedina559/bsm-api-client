@@ -21,8 +21,8 @@ def response_for(method, path, values):
         pattern = re.sub(r"\{[^}]+\}", "[^/]+", template)
         if re.fullmatch(pattern, path) and method.lower() in routes:
             operation = routes[method.lower()]
-            response = next(
-                value
+            code, response = next(
+                (code, value)
                 for code, value in operation["responses"].items()
                 if str(code).startswith("2")
             )
@@ -31,8 +31,8 @@ def response_for(method, path, values):
                 .get("application/json", {})
                 .get("schema", {})
             )
-            return shape(document, spec, values)
-    return values
+            return int(code), shape(document, spec, values)
+    return 200, values
 
 
 def shape(document, spec, values):
@@ -175,6 +175,7 @@ def command_client(monkeypatch, tmp_path):
         client = BedrockServerManagerApi(**kwargs)
 
         async def request(method, path, **kwargs):
+            status = 200
             body = dict(SUCCESS)
             if path == "/api/server/install":
                 body.update(status="accepted", task_id="test-task")
@@ -191,8 +192,8 @@ def command_client(monkeypatch, tmp_path):
                     "error": None,
                 }
             else:
-                body = response_for(method, path, body)
-            return httpx.Response(200, json=body)
+                status, body = response_for(method, path, body)
+            return httpx.Response(status, json=body)
 
         client._dynamic_request = AsyncMock(side_effect=request)
         clients.append(client)

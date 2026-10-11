@@ -23,18 +23,16 @@ class PluginsService(Service):
     async def async_get_plugin_statuses(self) -> PluginStatusesResponse:
         """Retrieves the status of all discovered plugins.
 
-        :returns: A `PluginStatusesResponse` object containing the statuses of all plugins.
+        :returns: `PluginStatusesResponse`.
 
-        :raises APIError: For API-related errors.
-
-
-        .. rubric:: Example:
         .. code-block:: python
 
-            response = await client.async_get_plugin_statuses()
+            response = await client.plugins.async_get_plugin_statuses()
         """
         _LOGGER.info("Requesting status of all plugins.")
-        response = await self.async_call_generated("list_plugins", authenticated=True)
+        response = await self.async_call_generated(
+            "list_plugins", authenticated=True, typed=True
+        )
         return cast(
             PluginStatusesResponse, parse_response(PluginStatusesResponse, response)
         )
@@ -45,19 +43,15 @@ class PluginsService(Service):
         """Enables or disables a specific plugin.
 
         :param plugin_name: The name of the plugin to modify.
+
         :param payload: A `PluginStatusSetPayload` object with the new status.
 
-        :returns: A `ActionResponse` object confirming the status change.
+        :returns: `ActionResponse`.
+        :raises ValueError: If plugin_name is empty.
 
-        :raises ValueError: If `plugin_name` is empty.
-        :raises APIError: For API-related errors.
-
-
-        .. rubric:: Example:
         .. code-block:: python
 
-            payload = ...
-            response = await client.async_set_plugin_status(payload)
+            response = await client.plugins.async_set_plugin_status("my_plugin", payload)
         """
         if not plugin_name:
             _LOGGER.error("Plugin name cannot be empty for set_plugin_enabled.")
@@ -70,24 +64,23 @@ class PluginsService(Service):
             parameters={"plugin_name": plugin_name},
             body=payload.model_dump(),
             authenticated=True,
+            typed=True,
         )
         return cast(ActionResponse, parse_response(ActionResponse, response))
 
     async def async_reload_plugins(self) -> ActionResponse:
         """Triggers a full reload of all plugins.
 
-        :returns: A `ActionResponse` object confirming the reload.
+        :returns: `ActionResponse`.
 
-        :raises APIError: For API-related errors.
-
-
-        .. rubric:: Example:
         .. code-block:: python
 
-            response = await client.async_reload_plugins()
+            response = await client.plugins.async_reload_plugins()
         """
         _LOGGER.info("Requesting reload of all plugins.")
-        response = await self.async_call_generated("reload_plugins", authenticated=True)
+        response = await self.async_call_generated(
+            "reload_plugins", authenticated=True, typed=True
+        )
         return cast(ActionResponse, parse_response(ActionResponse, response))
 
     async def async_trigger_plugin_event(
@@ -97,20 +90,18 @@ class PluginsService(Service):
 
         :param payload: A `TriggerEventPayload` object with the event details.
 
-        :returns: A `TriggerEventResponse` object confirming the event was triggered.
+        :returns: `TriggerEventResponse`.
 
-        :raises APIError: For API-related errors.
-
-
-        .. rubric:: Example:
         .. code-block:: python
 
-            payload = ...
-            response = await client.async_trigger_plugin_event(payload)
+            response = await client.plugins.async_trigger_plugin_event(payload)
         """
         _LOGGER.debug("Triggering custom plugin event '%s'", payload.event_name)
         response = await self.async_call_generated(
-            "trigger_plugin_event", body=payload.model_dump(), authenticated=True
+            "trigger_plugin_event",
+            body=payload.model_dump(),
+            authenticated=True,
+            typed=True,
         )
         return cast(
             TriggerEventResponse, parse_response(TriggerEventResponse, response)
@@ -119,22 +110,36 @@ class PluginsService(Service):
     async def async_get_plugin_settings(
         self, plugin_name: str
     ) -> GetPluginSettingsResponse:
-        """Read settings and the plugin's current validation schema."""
+        """Read settings and the plugin's current validation schema.
+
+        :param plugin_name: The plugin identifier.
+
+        :returns: `GetPluginSettingsResponse`.
+        """
         response = await self.async_call_generated(
             "get_plugin_settings",
             parameters={"plugin_name": plugin_name},
             authenticated=True,
+            typed=True,
         )
         return parse_response(GetPluginSettingsResponse, response)
 
     async def async_update_plugin_settings(
         self, plugin_name: str, payload: PluginSettingsPayload
     ) -> SetPluginSettingResponse:
-        """Validate and persist a plugin's settings."""
+        """Validate and persist a plugin's settings.
+
+        :param plugin_name: The plugin identifier.
+
+        :param payload: The PluginSettingsPayload request model.
+
+        :returns: `SetPluginSettingResponse`.
+        """
         response = await self.async_call_generated(
             "update_plugin_settings",
             parameters={"plugin_name": plugin_name},
             body=payload.model_dump(mode="json"),
             authenticated=True,
+            typed=True,
         )
         return parse_response(SetPluginSettingResponse, response)

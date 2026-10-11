@@ -6,7 +6,7 @@ from pydantic import BaseModel, SecretBytes, SecretStr, TypeAdapter
 
 
 class ContractModel(BaseModel):
-    """Typed fields with mapping access for existing convenience consumers."""
+    """Canonical Pydantic fields with mapping access for SDK and CLI consumers."""
 
     def get(self, key: str, default: Any = None) -> Any:
         return getattr(self, key) if key in type(self).model_fields else default
@@ -22,7 +22,7 @@ class ContractModel(BaseModel):
         return cls.model_validate(value)
 
     def to_dict(self) -> dict[str, Any]:
-        """Serialize only supplied fields using their OpenAPI aliases."""
+        """Serialize supplied fields with OpenAPI aliases, revealing secrets for the wire."""
         value = self.model_dump(mode="python", by_alias=True, exclude_unset=True)
         return cast(
             dict[str, Any],

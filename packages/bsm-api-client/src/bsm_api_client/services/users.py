@@ -14,16 +14,16 @@ class UsersService(Service):
     async def async_get_users(self) -> List[UserResponse]:
         """Gets a list of all users.
 
-        :returns: A list of `UserResponse` objects.
+        :returns: `List[UserResponse]`.
 
-
-        .. rubric:: Example:
         .. code-block:: python
 
-            response = await client.async_get_users()
+            response = await client.users.async_get_users()
         """
         _LOGGER.debug("Fetching users from /users/list")
-        response = await self.async_call_generated("list_users", authenticated=True)
+        response = await self.async_call_generated(
+            "list_users", authenticated=True, typed=True
+        )
         return [parse_response(UserResponse, user) for user in response]
 
     async def async_delete_user(self, user_id: int) -> BaseApiResponse:
@@ -31,17 +31,18 @@ class UsersService(Service):
 
         :param user_id: The ID of the user to delete.
 
-        :returns: A `BaseApiResponse` object.
+        :returns: `BaseApiResponse`.
 
-
-        .. rubric:: Example:
         .. code-block:: python
 
-            response = await client.async_delete_user()
+            response = await client.users.async_delete_user(1)
         """
         _LOGGER.info("Deleting user %s", user_id)
         response = await self.async_call_generated(
-            "delete_user", parameters={"user_id": user_id}, authenticated=True
+            "delete_user",
+            parameters={"user_id": user_id},
+            authenticated=True,
+            typed=True,
         )
         return cast(BaseApiResponse, parse_response(BaseApiResponse, response))
 
@@ -49,15 +50,14 @@ class UsersService(Service):
         """Updates a user's role.
 
         :param user_id: The ID of the user.
+
         :param role: The new role.
 
-        :returns: A `BaseApiResponse` object.
+        :returns: `BaseApiResponse`.
 
-
-        .. rubric:: Example:
         .. code-block:: python
 
-            response = await client.async_update_user_role()
+            response = await client.users.async_update_user_role(1, "moderator")
         """
         _LOGGER.info("Updating role for user %s to %s", user_id, role)
         response = await self.async_call_generated(
@@ -65,6 +65,7 @@ class UsersService(Service):
             parameters={"user_id": user_id},
             body={"role": role},
             authenticated=True,
+            typed=True,
         )
         return cast(BaseApiResponse, parse_response(BaseApiResponse, response))
 
@@ -73,17 +74,18 @@ class UsersService(Service):
 
         :param user_id: The ID of the user.
 
-        :returns: A `BaseApiResponse` object.
+        :returns: `BaseApiResponse`.
 
-
-        .. rubric:: Example:
         .. code-block:: python
 
-            response = await client.async_disable_user()
+            response = await client.users.async_disable_user(1)
         """
         _LOGGER.info("Disabling user %s", user_id)
         response = await self.async_call_generated(
-            "disable_user", parameters={"user_id": user_id}, authenticated=True
+            "disable_user",
+            parameters={"user_id": user_id},
+            authenticated=True,
+            typed=True,
         )
         return cast(BaseApiResponse, parse_response(BaseApiResponse, response))
 
@@ -92,17 +94,18 @@ class UsersService(Service):
 
         :param user_id: The ID of the user.
 
-        :returns: A `BaseApiResponse` object.
+        :returns: `BaseApiResponse`.
 
-
-        .. rubric:: Example:
         .. code-block:: python
 
-            response = await client.async_enable_user()
+            response = await client.users.async_enable_user(1)
         """
         _LOGGER.info("Enabling user %s", user_id)
         response = await self.async_call_generated(
-            "enable_user", parameters={"user_id": user_id}, authenticated=True
+            "enable_user",
+            parameters={"user_id": user_id},
+            authenticated=True,
+            typed=True,
         )
         return cast(BaseApiResponse, parse_response(BaseApiResponse, response))
 
@@ -111,17 +114,18 @@ class UsersService(Service):
 
         :param role: The role for the new user.
 
-        :returns: A dict containing the redirect_url.
+        :returns: `RegistrationResponse`.
 
-
-        .. rubric:: Example:
         .. code-block:: python
 
-            response = await client.async_generate_invite_token()
+            response = await client.users.async_generate_invite_token("moderator")
         """
         _LOGGER.info("Generating invite token for role %s", role)
         response = await self.async_call_generated(
-            "generate_registration_token", body={"role": role}, authenticated=True
+            "generate_registration_token",
+            body={"role": role},
+            authenticated=True,
+            typed=True,
         )
         return cast(
             RegistrationResponse, parse_response(RegistrationResponse, response)

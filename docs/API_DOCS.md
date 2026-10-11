@@ -2,7 +2,7 @@
 
 This document provides a high-level overview of the `bsm_api_client.BedrockServerManagerApi` Python client, used to interact with the Bedrock Server Manager API.
 
-**Detailed method documentation has been migrated to the source code.** The client uses standard docstrings formatted with reStructuredText (RST) for Sphinx autodoc. You can view these docstrings directly in your IDE or by building the Sphinx documentation if configured. Each method docstring includes examples of how to use it.
+**Detailed method documentation has been migrated to the source code.** The client uses standard docstrings formatted with reStructuredText (RST) for Sphinx autodoc. You can view these docstrings directly in your IDE or by building the Sphinx documentation if configured. Service docstrings describe their current parameters and typed results, with examples where useful.
 
 ## Initialization
 
@@ -18,13 +18,13 @@ async def main():
         username="your_username",
         password="your_password",
         # base_path="/api", # Optional, defaults to /api
-        # request_timeout=10, # Optional, defaults to 10 seconds
+        # request_timeout=90, # Optional, defaults to 90 seconds
         # verify_ssl=True # Optional, defaults to True
     )
 
     try:
         # Example: Get server list
-        servers = await client.async_get_servers_details()
+        servers = await client.rest.list_servers()
         print(servers)
 
     except Exception as e:

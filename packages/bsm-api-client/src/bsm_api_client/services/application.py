@@ -27,81 +27,75 @@ class ApplicationService(Service):
     async def async_get_info(self) -> AppInfoResponse:
         """Gets system and application information from the manager.
 
-        Returns:
-            An `AppInfoResponse` object containing system and application information.
+        :returns: `AppInfoResponse`.
         """
         _LOGGER.debug("Fetching manager system and application information from /info")
         response = await self.async_call_generated(
-            "get_system_info", authenticated=False
+            "get_system_info", authenticated=False, typed=True
         )
         return cast(AppInfoResponse, parse_response(AppInfoResponse, response))
 
     async def async_get_custom_zips(self) -> CustomZipsResponse:
         """Retrieves a list of available custom server ZIP files.
 
-        Returns:
-            A `CustomZipsResponse` object containing the list of custom ZIP files.
+        :returns: `CustomZipsResponse`.
         """
         _LOGGER.info("Fetching list of custom zips.")
-        response = await self.async_call_generated("list_downloads", authenticated=True)
+        response = await self.async_call_generated(
+            "list_downloads", authenticated=True, typed=True
+        )
         return cast(CustomZipsResponse, parse_response(CustomZipsResponse, response))
 
     async def async_get_themes(self) -> ThemeListResponse:
         """Retrieves a list of available themes.
 
-        Returns:
-            A `ThemeListResponse` containing the list of themes.
+        :returns: `ThemeListResponse`.
         """
         _LOGGER.info("Fetching list of available themes.")
-        result = await self.async_call_generated("list_themes", authenticated=True)
+        result = await self.async_call_generated(
+            "list_themes", authenticated=True, typed=True
+        )
         return cast(ThemeListResponse, parse_response(ThemeListResponse, result))
 
     async def async_get_all_settings(self) -> SettingsResponse:
         """Retrieve all global application settings.
 
-        Returns:
-            A `SettingsResponse` object containing all settings.
+        :returns: `SettingsResponse`.
         """
         _LOGGER.info("Fetching all global application settings.")
-        response = await self.async_call_generated("get_settings", authenticated=True)
+        response = await self.async_call_generated(
+            "get_settings", authenticated=True, typed=True
+        )
         return cast(SettingsResponse, parse_response(SettingsResponse, response))
 
     async def async_set_setting(self, payload: SettingItemResponse) -> SettingsResponse:
         """Sets a specific global application setting.
 
-        Args:
-            payload: A `SettingItemResponse` object containing the setting to set.
+        :param payload: The SettingItemResponse request model.
 
-        Returns:
-            A `SettingsResponse` object containing the result of the set operation.
+        :returns: `SettingsResponse`.
         """
         _LOGGER.debug("Updating global application setting '%s'", payload.key)
         response = await self.async_call_generated(
-            "set_setting", body=payload.model_dump(), authenticated=True
+            "set_setting", body=payload.model_dump(), authenticated=True, typed=True
         )
         return cast(SettingsResponse, parse_response(SettingsResponse, response))
 
     async def async_reload_settings(self) -> SettingsResponse:
         """Forces a reload of global application settings and logging configuration.
 
-        Returns:
-            A `SettingsResponse` object containing the result of the reload operation.
+        :returns: `SettingsResponse`.
         """
         _LOGGER.info("Requesting reload of global settings and logging configuration.")
         response = await self.async_call_generated(
-            "reload_settings", authenticated=True
+            "reload_settings", authenticated=True, typed=True
         )
         return cast(SettingsResponse, parse_response(SettingsResponse, response))
 
     async def async_get_panorama_image(self) -> bytes:
         """Retrieves the panorama background image.
 
-        Returns:
-            The raw bytes of the panorama image.
-
-        Raises:
-            CannotConnectError: If a connection to the server cannot be established.
-            APIError: For any other API-related errors.
+        :returns: `bytes`.
         """
         response = await self.async_call_generated(
             "get_panorama", authenticated=False, detailed=True
@@ -113,11 +107,9 @@ class ApplicationService(Service):
     ) -> PruneDownloadsResponse:
         """Triggers pruning of downloaded server archives.
 
-        Args:
-            payload: A `PruneDownloadsPayload` object containing the prune options.
+        :param payload: The PruneDownloadsPayload request model.
 
-        Returns:
-            A `PruneDownloadsResponse` object containing the result of the prune operation.
+        :returns: `PruneDownloadsResponse`.
         """
         _LOGGER.info(
             "Triggering download cache prune for directory '%s', keep: %s",
@@ -125,46 +117,63 @@ class ApplicationService(Service):
             payload.keep if payload.keep is not None else "server default",
         )
         response = await self.async_call_generated(
-            "prune_downloads", body=payload.model_dump(), authenticated=True
+            "prune_downloads", body=payload.model_dump(), authenticated=True, typed=True
         )
         return cast(
             PruneDownloadsResponse, parse_response(PruneDownloadsResponse, response)
         )
 
     async def async_get_application_health(self) -> GetApplicationHealthResponse:
-        """Return manager lifecycle and component health checks."""
+        """Return manager lifecycle and component health checks.
+
+        :returns: `GetApplicationHealthResponse`.
+        """
         return parse_response(
             GetApplicationHealthResponse,
             await self.async_call_generated(
-                "get_application_health", authenticated=True
+                "get_application_health", authenticated=True, typed=True
             ),
         )
 
     async def async_get_application_metrics(self) -> GetApplicationMetricsResponse:
-        """Return application and system samples with their bounded history."""
+        """Return application and system samples with their bounded history.
+
+        :returns: `GetApplicationMetricsResponse`.
+        """
         return parse_response(
             GetApplicationMetricsResponse,
             await self.async_call_generated(
-                "get_application_metrics", authenticated=True
+                "get_application_metrics", authenticated=True, typed=True
             ),
         )
 
     async def async_get_setup_status(self) -> SetupStatusResponse:
-        """Check whether the backend needs its first administrator."""
+        """Check whether the backend needs its first administrator.
+
+        :returns: `SetupStatusResponse`.
+        """
         return parse_response(
             SetupStatusResponse,
-            await self.async_call_generated("get_setup_status", authenticated=False),
+            await self.async_call_generated(
+                "get_setup_status", authenticated=False, typed=True
+            ),
         )
 
     async def async_create_first_user(
         self, payload: UserLoginPayload
     ) -> SetupAccountResponse:
-        """Create the initial administrator on an unconfigured backend."""
+        """Create the initial administrator on an unconfigured backend.
+
+        :param payload: The UserLoginPayload request model.
+
+        :returns: `SetupAccountResponse`.
+        """
         return parse_response(
             SetupAccountResponse,
             await self.async_call_generated(
                 "create_first_user",
                 body=payload.model_dump(mode="json"),
                 authenticated=False,
+                typed=True,
             ),
         )

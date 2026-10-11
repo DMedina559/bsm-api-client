@@ -137,33 +137,6 @@ async def test_generated_client_bridge_reuses_token(monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_compat_request_uses_openapi_transport():
-    from bsm_api_client.api_client import BedrockServerManagerApi
-
-    client = BedrockServerManagerApi("http://localhost", jwt_token="token")
-    try:
-        client._dynamic_request = AsyncMock(return_value={"status": "success"})
-        result = await client._request(
-            "POST",
-            "/server/example/start",
-            json_data={"force": True},
-            params={"wait": "1"},
-        )
-        assert result == {"status": "success"}
-        client._dynamic_request.assert_awaited_once_with(
-            "POST",
-            "/api/server/example/start",
-            query={"wait": "1"},
-            json_data={"force": True},
-            headers=None,
-            authenticated=True,
-            is_retry=False,
-        )
-    finally:
-        await client.close()
-
-
-@pytest.mark.asyncio
 async def test_discovered_operation_rejects_missing_required_query():
     client = DummyClient()
     client._discovered_operations = client._index_operations(

@@ -1,7 +1,6 @@
 import logging
 from typing import Any, Dict, cast
 
-from ..dynamic import DynamicOpenAPIMixin
 from ..models import (
     AddonActionPayload,
     AddonListResponse,
@@ -31,17 +30,15 @@ class ContentService(Service):
         """Lists backup files for a specific server and backup type.
 
         :param server_name: The name of the server.
-        :param backup_type: The type of backups to list (e.g., "world", "properties").
 
-        :returns: An `ActionResponse` object containing the list of backups.
+        :param backup_type: Backup category: world, properties, allowlist, or permissions.
 
-        :raises ValueError: If an invalid `backup_type` is provided.
+        :returns: `BackupFilesResponse`.
+        :raises ValueError: If backup_type is not a supported category.
 
-
-        .. rubric:: Example:
         .. code-block:: python
 
-            response = await client.async_list_server_backups('MyServer')
+            response = await client.content.async_list_server_backups("MyServer", "world")
         """
         bt_lower = backup_type.lower()
         if bt_lower not in ALLOWED_BACKUP_LIST_TYPES:
@@ -60,22 +57,27 @@ class ContentService(Service):
             "list_server_backups",
             parameters={"server_name": server_name, "backup_type": bt_lower},
             authenticated=True,
+            typed=True,
         )
         return cast(BackupFilesResponse, parse_response(BackupFilesResponse, response))
 
     async def async_get_server_addons(self, server_name: str) -> AddonListResponse:
         """Retrieves a list of addons installed on a server's active world.
 
-        .. rubric:: Example:
+        :param server_name: The server name.
+
+        :returns: `AddonListResponse`.
+
         .. code-block:: python
 
-            response = await client.async_get_server_addons('MyServer')
+            response = await client.content.async_get_server_addons("MyServer")
         """
         _LOGGER.debug("Fetching addons for server '%s'", server_name)
         response = await self.async_call_generated(
             "list_server_addons",
             parameters={"server_name": server_name},
             authenticated=True,
+            typed=True,
         )
         return cast(AddonListResponse, parse_response(AddonListResponse, response))
 
@@ -84,11 +86,15 @@ class ContentService(Service):
     ) -> TaskAcceptedResponse:
         """Enables an addon on a server.
 
-        .. rubric:: Example:
+        :param server_name: The server name.
+
+        :param payload: The AddonActionPayload request model.
+
+        :returns: `TaskAcceptedResponse`.
+
         .. code-block:: python
 
-            payload = ...
-            response = await client.async_enable_server_addon(payload)
+            response = await client.content.async_enable_server_addon("MyServer", payload)
         """
         _LOGGER.info(
             "Enabling addon '%s' for server '%s'", payload.pack_uuid, server_name
@@ -98,6 +104,7 @@ class ContentService(Service):
             parameters={"server_name": server_name},
             body=payload.model_dump(),
             authenticated=True,
+            typed=True,
         )
         return cast(
             TaskAcceptedResponse, parse_response(TaskAcceptedResponse, response)
@@ -108,11 +115,15 @@ class ContentService(Service):
     ) -> TaskAcceptedResponse:
         """Disables an addon on a server.
 
-        .. rubric:: Example:
+        :param server_name: The server name.
+
+        :param payload: The AddonActionPayload request model.
+
+        :returns: `TaskAcceptedResponse`.
+
         .. code-block:: python
 
-            payload = ...
-            response = await client.async_disable_server_addon(payload)
+            response = await client.content.async_disable_server_addon("MyServer", payload)
         """
         _LOGGER.info(
             "Disabling addon '%s' for server '%s'", payload.pack_uuid, server_name
@@ -122,6 +133,7 @@ class ContentService(Service):
             parameters={"server_name": server_name},
             body=payload.model_dump(),
             authenticated=True,
+            typed=True,
         )
         return cast(
             TaskAcceptedResponse, parse_response(TaskAcceptedResponse, response)
@@ -132,11 +144,15 @@ class ContentService(Service):
     ) -> TaskAcceptedResponse:
         """Updates an addon's active subpack.
 
-        .. rubric:: Example:
+        :param server_name: The server name.
+
+        :param payload: The AddonSubpackPayload request model.
+
+        :returns: `TaskAcceptedResponse`.
+
         .. code-block:: python
 
-            payload = ...
-            response = await client.async_update_server_addon_subpack(payload)
+            response = await client.content.async_update_server_addon_subpack("MyServer", payload)
         """
         _LOGGER.info(
             "Updating subpack for addon '%s' on server '%s'",
@@ -148,6 +164,7 @@ class ContentService(Service):
             parameters={"server_name": server_name},
             body=payload.model_dump(),
             authenticated=True,
+            typed=True,
         )
         return cast(
             TaskAcceptedResponse, parse_response(TaskAcceptedResponse, response)
@@ -158,11 +175,15 @@ class ContentService(Service):
     ) -> TaskAcceptedResponse:
         """Uninstalls an addon on a server.
 
-        .. rubric:: Example:
+        :param server_name: The server name.
+
+        :param payload: The AddonActionPayload request model.
+
+        :returns: `TaskAcceptedResponse`.
+
         .. code-block:: python
 
-            payload = ...
-            response = await client.async_uninstall_server_addon(payload)
+            response = await client.content.async_uninstall_server_addon("MyServer", payload)
         """
         _LOGGER.info(
             "Uninstalling addon '%s' for server '%s'", payload.pack_uuid, server_name
@@ -172,6 +193,7 @@ class ContentService(Service):
             parameters={"server_name": server_name},
             body=payload.model_dump(),
             authenticated=True,
+            typed=True,
         )
         return cast(
             TaskAcceptedResponse, parse_response(TaskAcceptedResponse, response)
@@ -182,11 +204,15 @@ class ContentService(Service):
     ) -> TaskAcceptedResponse:
         """Reorders active addons on a server.
 
-        .. rubric:: Example:
+        :param server_name: The server name.
+
+        :param payload: The AddonReorderPayload request model.
+
+        :returns: `TaskAcceptedResponse`.
+
         .. code-block:: python
 
-            payload = ...
-            response = await client.async_reorder_server_addon(payload)
+            response = await client.content.async_reorder_server_addon("MyServer", payload)
         """
         _LOGGER.info(
             "Reordering %s packs for server '%s'", payload.pack_type, server_name
@@ -196,6 +222,7 @@ class ContentService(Service):
             parameters={"server_name": server_name},
             body=payload.model_dump(),
             authenticated=True,
+            typed=True,
         )
         return cast(
             TaskAcceptedResponse, parse_response(TaskAcceptedResponse, response)
@@ -204,34 +231,30 @@ class ContentService(Service):
     async def async_get_content_worlds(self) -> ContentListResponse:
         """Lists available world template files (.mcworld).
 
-        :returns: A `ContentListResponse` object containing the list of world files.
+        :returns: `ContentListResponse`.
 
-
-        .. rubric:: Example:
         .. code-block:: python
 
-            response = await client.async_get_content_worlds()
+            response = await client.content.async_get_content_worlds()
         """
         _LOGGER.debug("Fetching available world files from /content/worlds")
         response = await self.async_call_generated(
-            "list_available_worlds", authenticated=True
+            "list_available_worlds", authenticated=True, typed=True
         )
         return cast(ContentListResponse, parse_response(ContentListResponse, response))
 
     async def async_get_content_addons(self) -> ListAvailableAddonsResponse:
         """Lists available addon files (.mcpack, .mcaddon).
 
-        :returns: A `ContentListResponse` object containing the list of addon files.
+        :returns: `ListAvailableAddonsResponse`.
 
-
-        .. rubric:: Example:
         .. code-block:: python
 
-            response = await client.async_get_content_addons()
+            response = await client.content.async_get_content_addons()
         """
         _LOGGER.debug("Fetching available addon files from /content/addons")
         response = await self.async_call_generated(
-            "list_available_addons", authenticated=True
+            "list_available_addons", authenticated=True, typed=True
         )
         return cast(
             ListAvailableAddonsResponse,
@@ -244,16 +267,14 @@ class ContentService(Service):
         """Triggers a backup operation for a specific server.
 
         :param server_name: The name of the server to back up.
+
         :param payload: A `BackupActionPayload` object specifying the backup details.
 
-        :returns: An `ActionResponse` object confirming the backup action.
+        :returns: `TaskAcceptedResponse`.
 
-
-        .. rubric:: Example:
         .. code-block:: python
 
-            payload = ...
-            response = await client.async_trigger_server_backup(payload)
+            response = await client.content.async_trigger_server_backup("MyServer", payload)
         """
         _LOGGER.info(
             "Triggering backup for server '%s', type: %s, file: %s",
@@ -266,6 +287,7 @@ class ContentService(Service):
             parameters={"server_name": server_name},
             body=payload.model_dump(),
             authenticated=True,
+            typed=True,
         )
         return cast(
             TaskAcceptedResponse, parse_response(TaskAcceptedResponse, response)
@@ -276,13 +298,11 @@ class ContentService(Service):
 
         :param server_name: The name of the server whose world to export.
 
-        :returns: An `ActionResponse` object confirming the export action.
+        :returns: `TaskAcceptedResponse`.
 
-
-        .. rubric:: Example:
         .. code-block:: python
 
-            response = await client.async_export_server_world('MyServer')
+            response = await client.content.async_export_server_world("MyServer")
         """
         _LOGGER.info("Triggering world export for server '%s'", server_name)
         response = await self.async_call_generated(
@@ -290,29 +310,34 @@ class ContentService(Service):
             parameters={"server_name": server_name},
             body=None,
             authenticated=True,
+            typed=True,
         )
         return cast(
             TaskAcceptedResponse, parse_response(TaskAcceptedResponse, response)
         )
 
     async def async_upload_content(self, file_path: str) -> Dict[str, Any]:
-        """Uploads a content file (e.g., .mcworld, .mcaddon) to the server.
+        """Stream a local content file to the advertised upload_content plugin operation.
+
+        The file is read in bounded chunks and closed on success or failure.
+        Uploads are not automatically replayed after authentication failures.
 
         :param file_path: The local path to the file to upload.
 
-        :returns: A dictionary containing the API response.
+        :returns: `Dict[str, Any]`.
 
+        :raises NotFoundError: If the upload plugin operation is unavailable.
+        :raises OSError: If the local file cannot be opened or read.
 
-        .. rubric:: Example:
         .. code-block:: python
 
-            response = await client.async_upload_content()
+            response = await client.content.async_upload_content("world.mcworld")
         """
         from pathlib import Path
 
         from ..exceptions import NotFoundError
 
-        dynamic = cast("DynamicOpenAPIMixin", self._owner)
+        dynamic = self._owner
         await dynamic.async_discover_api()
         if "upload_content" not in dynamic.operations:
             raise NotFoundError(
@@ -322,7 +347,7 @@ class ContentService(Service):
         with path.open("rb") as handle:
             response = await dynamic.async_call_operation(
                 "upload_content",
-                files={"file": (path.name, handle.read(), "application/octet-stream")},
+                files={"file": (path.name, handle, "application/octet-stream")},
             )
         return cast(Dict[str, Any], response)
 
@@ -331,13 +356,11 @@ class ContentService(Service):
 
         :param server_name: The name of the server whose world to reset.
 
-        :returns: An `ActionResponse` object confirming the reset action.
+        :returns: `TaskAcceptedResponse`.
 
-
-        .. rubric:: Example:
         .. code-block:: python
 
-            response = await client.async_reset_server_world('MyServer')
+            response = await client.content.async_reset_server_world("MyServer")
         """
         _LOGGER.warning("Triggering world reset for server '%s'", server_name)
         response = await self.async_call_generated(
@@ -345,6 +368,7 @@ class ContentService(Service):
             parameters={"server_name": server_name},
             body=None,
             authenticated=True,
+            typed=True,
         )
         return cast(
             TaskAcceptedResponse, parse_response(TaskAcceptedResponse, response)
@@ -357,13 +381,11 @@ class ContentService(Service):
 
         :param server_name: The name of the server whose backups to prune.
 
-        :returns: An `ActionResponse` object confirming the prune action.
+        :returns: `TaskAcceptedResponse`.
 
-
-        .. rubric:: Example:
         .. code-block:: python
 
-            response = await client.async_prune_server_backups('MyServer')
+            response = await client.content.async_prune_server_backups("MyServer")
         """
         _LOGGER.info(
             "Triggering backup pruning for server '%s' (using server-defined retention)",
@@ -374,6 +396,7 @@ class ContentService(Service):
             parameters={"server_name": server_name},
             body=None,
             authenticated=True,
+            typed=True,
         )
         return cast(
             TaskAcceptedResponse, parse_response(TaskAcceptedResponse, response)
@@ -385,16 +408,14 @@ class ContentService(Service):
         """Restores a server's world or configuration from a backup.
 
         :param server_name: The name of the server.
+
         :param payload: A `RestoreActionPayload` object specifying the restore details.
 
-        :returns: An `ActionResponse` object confirming the restore action.
+        :returns: `TaskAcceptedResponse`.
 
-
-        .. rubric:: Example:
         .. code-block:: python
 
-            payload = ...
-            response = await client.async_restore_server_backup(payload)
+            response = await client.content.async_restore_server_backup("MyServer", payload)
         """
         _LOGGER.info(
             "Requesting restore for server '%s', type: %s, file: '%s'",
@@ -407,6 +428,7 @@ class ContentService(Service):
             parameters={"server_name": server_name},
             body=payload.model_dump(),
             authenticated=True,
+            typed=True,
         )
         return cast(
             TaskAcceptedResponse, parse_response(TaskAcceptedResponse, response)
@@ -417,18 +439,15 @@ class ContentService(Service):
     ) -> TaskAcceptedResponse:
         """Restores a server from the latest 'all' backup.
 
-        This restores the server's world and standard configuration files from
-        their most recent backups.
+        Restores the world and standard configuration from their latest backups.
 
         :param server_name: The name of the server to restore.
 
-        :returns: An `ActionResponse` object confirming the restore action.
+        :returns: `TaskAcceptedResponse`.
 
-
-        .. rubric:: Example:
         .. code-block:: python
 
-            response = await client.async_restore_server_latest_all('MyServer')
+            response = await client.content.async_restore_server_latest_all("MyServer")
         """
         _LOGGER.info(
             "Requesting restore of latest 'all' backup for server '%s'", server_name
@@ -439,6 +458,7 @@ class ContentService(Service):
             parameters={"server_name": server_name},
             body=payload,
             authenticated=True,
+            typed=True,
         )
         return cast(
             TaskAcceptedResponse, parse_response(TaskAcceptedResponse, response)
@@ -450,16 +470,14 @@ class ContentService(Service):
         """Installs a world to a server from a .mcworld file.
 
         :param server_name: The name of the server.
+
         :param payload: A `FileNamePayload` object with the name of the .mcworld file.
 
-        :returns: An `ActionResponse` object confirming the installation.
+        :returns: `TaskAcceptedResponse`.
 
-
-        .. rubric:: Example:
         .. code-block:: python
 
-            payload = ...
-            response = await client.async_install_server_world(payload)
+            response = await client.content.async_install_server_world("MyServer", payload)
         """
         _LOGGER.info(
             "Requesting world install for server '%s' from file '%s'",
@@ -471,6 +489,7 @@ class ContentService(Service):
             parameters={"server_name": server_name},
             body=payload.model_dump(),
             authenticated=True,
+            typed=True,
         )
         return cast(
             TaskAcceptedResponse, parse_response(TaskAcceptedResponse, response)
@@ -482,16 +501,14 @@ class ContentService(Service):
         """Installs an addon to a server from a .mcaddon or .mcpack file.
 
         :param server_name: The name of the server.
+
         :param payload: A `FileNamePayload` object with the name of the addon file.
 
-        :returns: An `ActionResponse` object confirming the installation.
+        :returns: `TaskAcceptedResponse`.
 
-
-        .. rubric:: Example:
         .. code-block:: python
 
-            payload = ...
-            response = await client.async_install_server_addon(payload)
+            response = await client.content.async_install_server_addon("MyServer", payload)
         """
         _LOGGER.info(
             "Requesting addon install for server '%s' from file '%s'",
@@ -503,6 +520,7 @@ class ContentService(Service):
             parameters={"server_name": server_name},
             body=payload.model_dump(),
             authenticated=True,
+            typed=True,
         )
         return cast(
             TaskAcceptedResponse, parse_response(TaskAcceptedResponse, response)

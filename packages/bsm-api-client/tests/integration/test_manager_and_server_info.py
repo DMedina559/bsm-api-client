@@ -20,11 +20,11 @@ class TestManagerAndServerInfo:
         """Tests the unauthenticated /info endpoint and themes."""
         client = BedrockServerManagerApi(server, "admin", "password")
         try:
-            info = await client.async_get_info()
+            info = await client.application.async_get_info()
             assert info.status == "success"
             assert "app_version" in info.info
 
-            themes = await client.async_get_themes()
+            themes = await client.application.async_get_themes()
             assert themes is not None
 
         finally:
@@ -36,7 +36,7 @@ class TestManagerAndServerInfo:
         client = BedrockServerManagerApi(server, "admin", "password")
         try:
             payload = PruneDownloadsPayload(directory="stable", keep=1)
-            res = await client.async_prune_downloads(payload)
+            res = await client.application.async_prune_downloads(payload)
             assert res.status == "success"
         finally:
             await client.close()
@@ -49,15 +49,15 @@ class TestManagerAndServerInfo:
             unique_xuid = f"{int(time.time())}"
             player_string = f"{unique_name}:{unique_xuid}"
 
-            players_before_res = await client.async_get_players()
+            players_before_res = await client.players.async_get_players()
             players_before = players_before_res.players
             assert not any(p["name"] == unique_name for p in players_before)
 
             add_payload = AddPlayersPayload(players=[player_string])
-            add_result = await client.async_add_players(add_payload)
+            add_result = await client.players.async_add_players(add_payload)
             assert add_result.status == "success"
 
-            players_after_res = await client.async_get_players()
+            players_after_res = await client.players.async_get_players()
             players_after = players_after_res.players
             assert any(
                 p["name"] == unique_name and p["xuid"] == unique_xuid
@@ -75,13 +75,13 @@ class TestManagerAndServerInfo:
             setting_value = f"test_value_{int(time.time())}"
 
             setting_payload = SettingItemResponse(key=setting_key, value=setting_value)
-            set_result = await client.async_set_setting(setting_payload)
+            set_result = await client.application.async_set_setting(setting_payload)
             assert set_result.status == "success"
 
-            reload_result = await client.async_reload_settings()
+            reload_result = await client.application.async_reload_settings()
             assert reload_result.status == "success"
 
-            settings_after = await client.async_get_all_settings()
+            settings_after = await client.application.async_get_all_settings()
             assert settings_after.status == "success"
 
             keys = setting_key.split(".")
@@ -102,18 +102,24 @@ class TestManagerAndServerInfo:
         server_name = bedrock_server
         try:
             # Ensure server is stopped before this test
-            status_res = await client.async_get_server_running_status(server_name)
+            status_res = await client.servers.async_get_server_running_status(
+                server_name
+            )
             if status_res.running:
-                await client.async_stop_server(server_name)
+                await client.servers.async_stop_server(server_name)
                 await wait_for_server_status(client, server_name, is_running=False)
 
-            validate_result = await client.async_get_server_validate(server_name)
+            validate_result = await client.servers.async_get_server_validate(
+                server_name
+            )
             assert validate_result is True
 
-            process_info_res = await client.async_get_server_process_info(server_name)
+            process_info_res = await client.servers.async_get_server_process_info(
+                server_name
+            )
             assert process_info_res.status == "success"
 
-            running_status_res = await client.async_get_server_running_status(
+            running_status_res = await client.servers.async_get_server_running_status(
                 server_name
             )
             assert running_status_res.status == "success"

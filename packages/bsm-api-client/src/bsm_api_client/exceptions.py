@@ -49,7 +49,7 @@ class CannotConnectError(
 ):  # Changed from Exception to APIError for consistency, but could be Exception
     """
     Raised when the client cannot connect to the Bedrock Server Manager API host.
-    This typically wraps a lower-level connection error from the HTTP client (e.g., requests.exceptions.ConnectionError).
+    This typically wraps a lower-level connection error from the HTTP client (for example, httpx.ConnectError or aiohttp.ClientError).
     """
 
     def __init__(self, message: str, original_exception: Optional[Exception] = None):
@@ -93,7 +93,7 @@ class ServerNotRunningError(APIError):
 
 
 class InvalidInputError(APIError, ValueError):
-    """Client-side input validation error (e.g., 400 Bad Request)."""
+    """Input validation failed locally or remotely (HTTP 400 or 422)."""
 
     pass
 
