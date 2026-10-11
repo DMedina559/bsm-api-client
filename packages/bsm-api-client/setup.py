@@ -5,7 +5,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from setuptools import setup
+from setuptools import find_packages, setup
 from setuptools.command.build_py import build_py
 from setuptools.command.sdist import sdist
 
@@ -41,6 +41,15 @@ class GeneratedBuildPy(build_py):
             ],
             check=True,
         )
+        if getattr(self, "editable_mode", False):
+            # Regeneration can replace tag packages discovered when setup began.
+            # Both build_py and the subsequent egg_info must use the new tree.
+            packages = find_packages(
+                where=str(HERE / "src"), include=["bsm_api_client*"]
+            )
+            self.distribution.packages = packages
+            self.packages = packages
+            self.__dict__.pop("data_files", None)
 
 
 class GeneratedSdist(sdist):
