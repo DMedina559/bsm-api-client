@@ -14,6 +14,7 @@ from bsm_api_client.models import (
 from bsm_cli.completion import complete_server
 from bsm_cli.decorators import monitor_task, pass_async_context
 from bsm_cli.output import fail, get_client
+from bsm_cli.presentation import screen_header
 
 
 @click.group()
@@ -118,7 +119,7 @@ async def manage_addons(ctx, server_name: str):  # noqa: C901
             bp = addons.behavior_packs or []
             rp = addons.resource_packs or []
 
-            click.clear()
+            screen_header("Addons")
             click.secho(
                 f"--- Manage Addons for {server_name} ---", fg="magenta", bold=True
             )

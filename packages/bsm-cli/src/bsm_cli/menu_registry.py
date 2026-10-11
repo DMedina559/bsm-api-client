@@ -9,24 +9,19 @@ import questionary
 from bsm_cli.api import invoke
 from bsm_cli.interaction import menu_action
 from bsm_cli.output import get_client
+from bsm_cli.presentation import screen_header
 
 
 async def command_menu(ctx, group, *, values=None):  # noqa: C901
     """Browse commands as a persistent interactive management menu."""
     resource_values = dict(values or {})
     while True:
+        screen_header(group.name.replace("-", " ").title())
         if not await _show_menu_list(ctx, group, resource_values):
             return
         name = await questionary.select(
             group.help or group.name,
-            choices=[
-                *(
-                    questionary.Choice(name.replace("-", " ").capitalize(), value=name)
-                    for name in group.commands
-                    if name != "list"
-                ),
-                "Back",
-            ],
+            choices=_command_choices(group),
         ).ask_async()
         if not name or name == "Back":
             return
@@ -57,6 +52,39 @@ async def command_menu(ctx, group, *, values=None):  # noqa: C901
         except Exception as exc:
             click.secho(f"Action failed: {exc}", fg="red")
         click.pause("Press any key to return to the menu...")
+
+
+def _command_choices(group):
+    sections = {"View and inspect": [], "Manage": [], "Advanced": []}
+    for name in group.commands:
+        if name == "list":
+            continue
+        if name in {
+            "show",
+            "get",
+            "details",
+            "info",
+            "operations",
+            "operation",
+            "schema",
+            "diff",
+            "scan",
+            "export",
+            "download",
+        }:
+            section = "View and inspect"
+        elif name in {"call", "trigger-event", "refresh"}:
+            section = "Advanced"
+        else:
+            section = "Manage"
+        sections[section].append(
+            questionary.Choice(name.replace("-", " ").capitalize(), value=name)
+        )
+    choices = []
+    for title, items in sections.items():
+        if items:
+            choices.extend([questionary.Separator(f"── {title} ──"), *items])
+    return [*choices, questionary.Separator(), "Back"]
 
 
 async def _show_menu_list(ctx, group, resource_values):
@@ -182,6 +210,7 @@ async def _prompt_parameter(ctx, param):  # noqa: C901
 
 async def plugin_api_menu(ctx):  # noqa: C901
     """Show only plugin operations actually advertised by this server."""
+    screen_header("Plugin API")
     client = get_client(ctx)
     await client.async_discover_api()
     plugin = await questionary.select(

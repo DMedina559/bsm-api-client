@@ -3,7 +3,7 @@
 import click
 
 from bsm_cli.output import get_client
-from bsm_cli.presentation import table
+from bsm_cli.presentation import screen_header, table
 
 
 def memory(mb, unit="auto"):
@@ -132,7 +132,7 @@ async def monitor(ctx, interval, unit, once):
         interval=interval,
         transform=update,
     ):
-        click.clear()
+        screen_header("Monitor")
         click.echo(
             f"WebSocket: {'Live' if live else 'Offline'} | Connection: Connected"
         )

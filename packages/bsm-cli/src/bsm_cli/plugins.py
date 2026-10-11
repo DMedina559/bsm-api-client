@@ -9,6 +9,7 @@ from bsm_api_client.models import (
     TriggerEventPayload,
 )
 from bsm_cli.output import fail, get_client
+from bsm_cli.presentation import screen_header
 from bsm_cli.settings_editor import edit_settings
 
 
@@ -66,7 +67,7 @@ async def interactive_plugin_workflow(client):  # noqa: C901
         click.echo()
 
         while True:
-            click.clear()
+            screen_header("Plugins")
             click.secho("--- Manage Plugins ---", fg="magenta", bold=True)
 
             response = await client.async_get_plugin_statuses()

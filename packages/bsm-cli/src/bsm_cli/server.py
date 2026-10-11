@@ -9,6 +9,7 @@ from bsm_cli.completion import complete_server
 from bsm_cli.decorators import monitor_task, pass_async_context
 from bsm_cli.output import fail, get_client
 from bsm_cli.permissions import interactive_permissions_workflow
+from bsm_cli.presentation import screen_header
 from bsm_cli.properties import interactive_properties_workflow
 
 
@@ -108,7 +109,7 @@ async def list_servers(ctx, loop, server_name):  # noqa: C901
             async for response, live in watch_resource(
                 client, client.async_get_servers, topics
             ):
-                click.clear()
+                screen_header("Servers")
                 click.secho(
                     f"Bedrock servers | {'Live' if live else 'Offline'} (Ctrl+C to exit)",
                     bold=True,

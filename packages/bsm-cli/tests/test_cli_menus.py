@@ -307,3 +307,43 @@ async def test_home_connection_retry_recovers(monkeypatch):
     with click.Context(cli, obj={"client": client, "cli": cli}) as ctx:
         await main_menu(ctx)
     assert client.async_get_servers.await_count == 2
+
+
+def test_shared_header_uses_backend_version_and_splash(monkeypatch, capsys):
+    from bsm_cli.presentation import screen_header
+
+    monkeypatch.setattr("click.clear", lambda: None)
+    with click.Context(
+        click.Command("menu"),
+        obj={
+            "app_info": {
+                "app_version": "4.0.0b2",
+                "splash_text": "Your worlds. Your infrastructure.",
+            }
+        },
+    ):
+        screen_header("Manage server · alpha")
+    output = capsys.readouterr().out
+    assert "Bedrock Server Manager · 4.0.0b2" in output
+    assert "Your worlds. Your infrastructure." in output
+    assert "Manage server · alpha" in output
+
+
+def test_command_menu_separates_inspection_and_management():
+    from bsm_cli.menu_registry import _command_choices
+
+    group = click.Group(
+        "example",
+        commands={
+            "list": click.Command("list"),
+            "show": click.Command("show"),
+            "set": click.Command("set"),
+        },
+    )
+    choices = _command_choices(group)
+    titles = [
+        choice.title if hasattr(choice, "title") else choice for choice in choices
+    ]
+    assert "── View and inspect ──" in titles
+    assert "── Manage ──" in titles
+    assert "List" not in titles

@@ -11,6 +11,7 @@ from bsm_cli.interaction import menu_action
 from bsm_cli.menu_registry import command_menu, plugin_api_menu
 from bsm_cli.output import CliConnectionError, get_client
 from bsm_cli.plugins import interactive_plugin_workflow
+from bsm_cli.presentation import load_header, screen_header
 from bsm_cli.server import _print_server_table, list_servers
 
 
@@ -29,6 +30,7 @@ async def operations_menu(ctx):
     from bsm_cli.manager import show_task
 
     while True:
+        screen_header("Operations")
         tasks = await get_client(ctx).async_list_tasks()
         choices = [
             Choice(
@@ -60,6 +62,7 @@ async def logs_menu(ctx):
 
 async def _action_menu(ctx, title, actions, **kwargs):
     while True:
+        screen_header(title)
         choice = await questionary.select(title, choices=[*actions, "Back"]).ask_async()
         if choice is None or choice == "Back":
             return
@@ -91,8 +94,8 @@ async def main_menu(ctx):
     }
     while True:
         try:
-            click.clear()
-            click.secho("Bedrock Server Manager", bold=True, fg="magenta")
+            await load_header(ctx, client)
+            screen_header()
             fleet = await _load_home_fleet(ctx, client)
             if fleet is None:
                 return
@@ -108,9 +111,7 @@ async def main_menu(ctx):
                 Separator("── Servers ──"),
             ]
             choices.extend(
-                Choice(
-                    f"{server.name} · {server.status}", value=("server", server.name)
-                )
+                Choice(server.name, value=("server", server.name))
                 for server in fleet.servers or []
             )
             choices.extend(
@@ -208,33 +209,35 @@ async def manage_server_menu(ctx, server_name):
     }
     access = {"Allowlist": "allowlist", "Permissions": "permissions", "Bans": "bans"}
     choices = [
+        Separator("── Monitoring ──"),
         "Monitor",
-        Separator("Lifecycle"),
+        Separator("── Lifecycle ──"),
         "Start",
         "Stop",
         "Restart",
         "Send command",
-        Separator("Configuration"),
+        Separator("── Configuration ──"),
         "Settings",
         "Properties",
+        Separator("── Access control ──"),
         *access,
-        Separator("Backups"),
+        Separator("── Backups ──"),
         "Create backup",
         "Restore backup",
         "Prune backups",
-        Separator("World and addons"),
+        Separator("── World and addons ──"),
         "Install world",
         "Export world",
         "Reset world",
         "Install addon",
         "Manage addons",
-        Separator("Maintenance"),
+        Separator("── Maintenance ──"),
         "Update",
         "Delete",
         "Back",
     ]
     while True:
-        click.clear()
+        screen_header(f"Manage server · {server_name}")
         await _invoke(ctx, list_servers, server_name=server_name)
         choice = await questionary.select(server_name, choices=choices).ask_async()
         if choice is None or choice == "Back":

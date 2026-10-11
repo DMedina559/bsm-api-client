@@ -11,6 +11,7 @@ import questionary
 from bsm_api_client.exceptions import InvalidInputError
 from bsm_api_client.openapi import resolve
 from bsm_api_client.validation import validate_input
+from bsm_cli.presentation import screen_header
 
 CANCEL = object()
 
@@ -169,6 +170,7 @@ async def edit_settings(values, schema=None, *, title="Settings"):  # noqa: C901
     draft = copy.deepcopy(values)
     document = schema or infer_schema(values)
     while True:
+        screen_header(title)
         editable = list(fields(document, document, draft))
         choices = [
             questionary.Choice(
