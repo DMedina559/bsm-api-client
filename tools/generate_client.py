@@ -42,6 +42,8 @@ def generate(schema: dict[str, Any], output: Path) -> None:
                 {
                     "package_name_override": "generated",
                     "project_name_override": "bsm-api-client-generated",
+                    # Generation must not depend on formatters available in PATH.
+                    "post_hooks": [],
                 }
             ),
             encoding="utf-8",

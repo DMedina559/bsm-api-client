@@ -30,6 +30,8 @@ def test_omitted_operations_preserve_existing_package(tmp_path, monkeypatch):
     sentinel.write_text("working client")
 
     def incomplete_generation(command, **kwargs):
+        config = Path(command[command.index("--config") + 1])
+        assert json.loads(config.read_text())["post_hooks"] == []
         package = Path(command[command.index("--output-path") + 1]) / "generated"
         package.mkdir(parents=True)
 
