@@ -6,8 +6,9 @@ import click
 import questionary
 from questionary import Choice, Separator
 
+from bsm_api_client.exceptions import CannotConnectError
 from bsm_cli.menu_registry import command_menu, plugin_api_menu
-from bsm_cli.output import get_client
+from bsm_cli.output import CliConnectionError, get_client
 from bsm_cli.plugins import interactive_plugin_workflow
 from bsm_cli.server import _print_server_table, list_servers
 
@@ -91,7 +92,9 @@ async def main_menu(ctx):
         try:
             click.clear()
             click.secho("Bedrock Server Manager", bold=True, fg="magenta")
-            fleet = await client.async_get_servers()
+            fleet = await _load_home_fleet(ctx, client)
+            if fleet is None:
+                return
             click.echo()
             _print_server_table(fleet.servers or [])
             click.echo()
@@ -140,6 +143,24 @@ async def main_menu(ctx):
         except Exception as error:
             click.secho(f"Action failed: {error}", fg="red")
             click.pause("Press any key to return home...")
+
+
+async def _load_home_fleet(ctx, client):
+    while True:
+        try:
+            return await client.async_get_servers()
+        except (CannotConnectError, CliConnectionError):
+            config = ctx.obj.get("config")
+            endpoint = config.base_url if config else "the configured backend"
+            click.secho(f"Connection: Unavailable — {endpoint}", fg="yellow")
+            click.echo(
+                "Check that the backend is running and reachable at this address."
+            )
+            choice = await questionary.select(
+                "Connection unavailable", choices=["Retry", "Exit"]
+            ).ask_async()
+            if choice != "Retry":
+                return None
 
 
 async def _open_destination(ctx, choice, routes, groups):

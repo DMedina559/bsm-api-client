@@ -271,3 +271,39 @@ async def test_operations_selects_task_without_another_menu(monkeypatch):
         await operations_menu(ctx)
         invoked.assert_awaited_once_with(ctx, show_task, task_id="task-123")
     assert client.async_list_tasks.await_count == 2
+
+
+@pytest.mark.asyncio
+async def test_home_connection_failure_can_exit_without_retry_loop(monkeypatch, capsys):
+    from bsm_api_client.exceptions import CannotConnectError
+    from bsm_cli.__main__ import cli
+    from bsm_cli.main_menus import main_menu
+
+    client = AsyncMock()
+    client.async_get_servers.side_effect = CannotConnectError("ClientOSError")
+    monkeypatch.setattr("click.clear", lambda: None)
+    monkeypatch.setattr("questionary.select", lambda *a, **k: Answer("Exit"))
+    with click.Context(cli, obj={"client": client, "cli": cli}) as ctx:
+        await main_menu(ctx)
+    assert client.async_get_servers.await_count == 1
+    assert "Connection: Unavailable" in capsys.readouterr().out
+
+
+@pytest.mark.asyncio
+async def test_home_connection_retry_recovers(monkeypatch):
+    from bsm_api_client.exceptions import CannotConnectError
+    from bsm_api_client.models import ServersListResponse
+    from bsm_cli.__main__ import cli
+    from bsm_cli.main_menus import main_menu
+
+    client = AsyncMock()
+    client.async_get_servers.side_effect = [
+        CannotConnectError("ClientOSError"),
+        ServersListResponse(status="success", servers=[]),
+    ]
+    answers = iter(["Retry", "Exit"])
+    monkeypatch.setattr("click.clear", lambda: None)
+    monkeypatch.setattr("questionary.select", lambda *a, **k: Answer(next(answers)))
+    with click.Context(cli, obj={"client": client, "cli": cli}) as ctx:
+        await main_menu(ctx)
+    assert client.async_get_servers.await_count == 2
