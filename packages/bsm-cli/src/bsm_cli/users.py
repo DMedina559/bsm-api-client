@@ -1,14 +1,17 @@
 import click
 import questionary
+
 from bsm_cli.decorators import pass_async_context
+from bsm_cli.output import get_client
+from bsm_cli.presentation import screen_header
 
 
 async def interactive_user_workflow(ctx, client):  # noqa: C901
     """Interactive menu for managing users."""
     while True:
         try:
-            users_list = await client.async_get_users()
-            click.clear()
+            users_list = await client.users.async_get_users()
+            screen_header("Users")
             click.secho("--- Manage Users ---", fg="magenta", bold=True)
             for user in users_list:
                 click.echo(
@@ -62,7 +65,7 @@ async def interactive_user_workflow(ctx, client):  # noqa: C901
                         f"Are you sure you want to delete user {user_id}?"
                     ).ask_async()
                     if confirm:
-                        response = await client.async_delete_user(user_id)
+                        response = await client.users.async_delete_user(user_id)
                         click.echo(response.model_dump_json(indent=2))
                         await questionary.press_any_key_to_continue().ask_async()
 
@@ -88,7 +91,9 @@ async def interactive_user_workflow(ctx, client):  # noqa: C901
                         choices=["user", "moderator", "admin"],
                     ).ask_async()
                     if role:
-                        response = await client.async_update_user_role(user_id, role)
+                        response = await client.users.async_update_user_role(
+                            user_id, role
+                        )
                         click.echo(response.model_dump_json(indent=2))
                         await questionary.press_any_key_to_continue().ask_async()
 
@@ -115,7 +120,7 @@ async def interactive_user_workflow(ctx, client):  # noqa: C901
                 ).ask_async()
 
                 if user_id and user_id != "Cancel":
-                    response = await client.async_enable_user(user_id)
+                    response = await client.users.async_enable_user(user_id)
                     click.echo(response.model_dump_json(indent=2))
                     await questionary.press_any_key_to_continue().ask_async()
 
@@ -142,7 +147,7 @@ async def interactive_user_workflow(ctx, client):  # noqa: C901
                 ).ask_async()
 
                 if user_id and user_id != "Cancel":
-                    response = await client.async_disable_user(user_id)
+                    response = await client.users.async_disable_user(user_id)
                     click.echo(response.model_dump_json(indent=2))
                     await questionary.press_any_key_to_continue().ask_async()
 
@@ -152,7 +157,7 @@ async def interactive_user_workflow(ctx, client):  # noqa: C901
                     choices=["user", "moderator", "admin"],
                 ).ask_async()
                 if role:
-                    response = await client.async_generate_invite_token(role)
+                    response = await client.users.async_generate_invite_token(role)
                     click.echo(f"Invite Link: {response.registration_url}")
                     await questionary.press_any_key_to_continue().ask_async()
 
@@ -163,22 +168,20 @@ async def interactive_user_workflow(ctx, client):  # noqa: C901
 
 @click.group(invoke_without_command=True)
 @click.pass_context
-async def users(ctx):
+def users(ctx):
     """Commands for managing users."""
     if ctx.invoked_subcommand is None:
-        client = ctx.obj.get("client")
-        if not client:
-            click.secho("You are not logged in.", fg="red")
-            return
-        await interactive_user_workflow(ctx, client)
+        if ctx.obj.get("json_output"):
+            raise click.UsageError("Choose a subcommand with --json.")
+        return interactive_user_workflow(ctx, get_client(ctx))
 
 
 @users.command()
 @pass_async_context
 async def list(ctx):
     """List all users."""
-    client = ctx.obj["client"]
-    users = await client.async_get_users()
+    client = get_client(ctx)
+    users = await client.users.async_get_users()
     for user in users:
         click.echo(
             f"ID: {user.id} | Username: {user.username} | Role: {user.role} | Active: {user.is_active} | Type: {user.identity_type}"
@@ -191,7 +194,7 @@ async def list(ctx):
 @pass_async_context
 async def delete(ctx, user_id: int, yes: bool):
     """Delete a user."""
-    client = ctx.obj["client"]
+    client = get_client(ctx)
     if not yes:
         confirm = await questionary.confirm(
             f"Are you sure you want to delete user {user_id}?"
@@ -200,7 +203,7 @@ async def delete(ctx, user_id: int, yes: bool):
             click.echo("Aborted.")
             return
 
-    response = await client.async_delete_user(user_id)
+    response = await client.users.async_delete_user(user_id)
     click.echo(response.model_dump_json(indent=2))
 
 
@@ -210,8 +213,8 @@ async def delete(ctx, user_id: int, yes: bool):
 @pass_async_context
 async def set_role(ctx, user_id: int, role: str):
     """Set a user's role."""
-    client = ctx.obj["client"]
-    response = await client.async_update_user_role(user_id, role)
+    client = get_client(ctx)
+    response = await client.users.async_update_user_role(user_id, role)
     click.echo(response.model_dump_json(indent=2))
 
 
@@ -220,8 +223,8 @@ async def set_role(ctx, user_id: int, role: str):
 @pass_async_context
 async def enable(ctx, user_id: int):
     """Enable a user account."""
-    client = ctx.obj["client"]
-    response = await client.async_enable_user(user_id)
+    client = get_client(ctx)
+    response = await client.users.async_enable_user(user_id)
     click.echo(response.model_dump_json(indent=2))
 
 
@@ -230,8 +233,8 @@ async def enable(ctx, user_id: int):
 @pass_async_context
 async def disable(ctx, user_id: int):
     """Disable a user account."""
-    client = ctx.obj["client"]
-    response = await client.async_disable_user(user_id)
+    client = get_client(ctx)
+    response = await client.users.async_disable_user(user_id)
     click.echo(response.model_dump_json(indent=2))
 
 
@@ -240,6 +243,6 @@ async def disable(ctx, user_id: int):
 @pass_async_context
 async def invite(ctx, role: str):
     """Generate an invite link for a new user."""
-    client = ctx.obj["client"]
-    response = await client.async_generate_invite_token(role)
+    client = get_client(ctx)
+    response = await client.users.async_generate_invite_token(role)
     click.echo(f"Invite Link: {response.registration_url}")

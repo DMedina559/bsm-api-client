@@ -4,6 +4,27 @@
 
 # bsm-api-client Changelog
 
+## Unreleased — BSM 4.0 contract client
+
+- Share connection ownership, authentication refresh and response handling across
+  generated, dynamic and streaming operations; bound replay to one 401 retry.
+- Coalesce concurrent discovery and keep the last validated contract on failure.
+- Validate runtime JSON inputs, local references and generated request bodies.
+- Add conservative compatibility reports and CLI method/plugin filtering.
+- Support repeated multipart files, form-only multipart and streaming downloads.
+- Validate offline completion caches, suggest enum/boolean values and select live
+  operation IDs in interactive menus.
+- Pin the current BSM dev contract, including log history and cancelling tasks.
+- Test against isolated BSM processes and offline `bsm-test-utils` server/content
+  assets, with wheel and source-distribution validation on Python 3.11–3.14.
+
+Behavior changes: API redirects are rejected; malformed advertised JSON raises
+`APIError`; text and binary responses follow their media type. Upload streams
+start at their current position and are not automatically replayed. The client
+requires aiohttp 3.14 or newer. Compatibility reports conservatively flag changed
+wire contracts for review; cookie parameters and special path styles still need
+custom adapters.
+
 # 1.4.0
 1. Added support for BSM 3.7.0
 2. Bumped minimum Python version to 3.11

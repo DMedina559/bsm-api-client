@@ -9,11 +9,16 @@ import pytest
 import pytest_asyncio
 
 from bsm_api_client.api_client import BedrockServerManagerApi
-from bsm_api_client.models import InstallServerPayload
+from bsm_api_client.models import InstallServerPayload, ServerSettingItemPayload
 
 
 @pytest.fixture(scope="session")
-def server():  # noqa: C901
+def server_data_dir(tmp_path_factory):
+    return tmp_path_factory.mktemp("bsm-data")
+
+
+@pytest.fixture(scope="session")
+def server(server_data_dir):  # noqa: C901
     """
     A pytest fixture that starts the bedrock-server-manager web server
     and sets it up for testing in an isolated temporary directory.
@@ -26,27 +31,22 @@ def server():  # noqa: C901
 
     # Use a temporary directory for complete isolation
     with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as temp_dir:
-        # Copy the current environment and hijack the data directory paths.
-        # This prevents the test server from ever touching your real BSM installation.
-        # Save original env vars we are about to modify
-        keys_to_modify = [
-            "HOME",
-            "USERPROFILE",
-            "APPDATA",
-            "LOCALAPPDATA",
-            "XDG_DATA_HOME",
-            "XDG_CONFIG_HOME",
-            "BSM_DATA_DIR",
-        ]
-        old_env_vars = {k: os.environ.get(k) for k in keys_to_modify}
+        import socket
+        from pathlib import Path
+
+        root = Path(temp_dir)
+        config_dir = root / "config"
+        data_dir = server_data_dir
+        config_dir.mkdir()
+        with socket.socket() as listener:
+            listener.bind(("127.0.0.1", 0))
+            port = listener.getsockname()[1]
+        base_url = f"http://{connect_host}:{port}"
+        env = os.environ.copy()
 
         process = None
         server_log = None
         try:
-            for k in keys_to_modify:
-                os.environ[k] = temp_dir
-            env = os.environ.copy()
-
             print(f"\n[Test Server] Starting isolated instance in: {temp_dir}")
             server_log = open("bedrock_server_manager_test.log", "w")
             process = subprocess.Popen(
@@ -54,10 +54,18 @@ def server():  # noqa: C901
                     sys.executable,
                     "-m",
                     "bedrock_server_manager",
+                    "--config-dir",
+                    str(config_dir),
+                    "--data-dir",
+                    str(data_dir),
+                    "--db-url",
+                    f"sqlite+aiosqlite:///{data_dir / 'bsm.db'}",
                     "web",
                     "start",
                     "--host",
                     host,
+                    "--port",
+                    str(port),
                 ],
                 env=env,
                 stdout=server_log,
@@ -113,14 +121,13 @@ def server():  # noqa: C901
             asyncio.run(wait_and_setup())
             yield base_url
         finally:
-            for k, v in old_env_vars.items():
-                if v is None:
-                    os.environ.pop(k, None)
-                else:
-                    os.environ[k] = v
             if process is not None:
                 process.terminate()
-                process.wait()
+                try:
+                    process.wait(timeout=20)
+                except subprocess.TimeoutExpired:
+                    process.kill()
+                    process.wait(timeout=10)
                 if process.returncode not in (0, 15, -15):
                     print(
                         f"Server exited with an error (code {process.returncode}). Check bedrock_server_manager_test.log for details."
@@ -129,17 +136,33 @@ def server():  # noqa: C901
                 server_log.close()
 
 
-@pytest_asyncio.fixture(scope="session")
-async def bedrock_server(server):
+@pytest_asyncio.fixture
+async def bedrock_server(server, server_data_dir):
     """
-    A pytest fixture that creates a single bedrock server instance for all tests to use.
+    Create an isolated dummy Bedrock instance for each integration test.
     The server is deleted at the end of the test session.
     """
     server_name = "test-server"
     client = BedrockServerManagerApi(server, "admin", "password")
+    installed = False
     try:
+        from bsm_test_utils import create_server_zip
+
+        # Exercise real extraction and lifecycle without downloading Minecraft.
+        version = "1.26.45.1"
+        archive = create_server_zip(
+            server_data_dir / ".downloads" / "custom", version=version
+        )
+        import zipfile
+
+        with zipfile.ZipFile(archive, "a") as package:
+            package.writestr("worlds/Bedrock level/db/", "")
+            package.writestr("worlds/Bedrock level/level.dat", b"test world")
         payload = InstallServerPayload(
-            server_name=server_name, version="LATEST", overwrite=True
+            server_name=server_name,
+            server_version="CUSTOM",
+            server_zip_path=archive.name,
+            overwrite=True,
         )
         install_result = await client.async_install_new_server(payload)
 
@@ -149,9 +172,14 @@ async def bedrock_server(server):
                 status_response = await client.async_get_task_status(
                     install_result.task_id
                 )
-                if status_response["status"] == "success":
+                if status_response["status"] in {"success", "completed"}:
+                    result = status_response.get("result") or {}
+                    if isinstance(result, dict) and result.get("status") == "error":
+                        pytest.fail(
+                            f"Installation task failed: {result.get('message')}"
+                        )
                     break
-                elif status_response["status"] == "error":
+                elif status_response["status"] in {"error", "failed", "cancelled"}:
                     pytest.fail(
                         f"Installation task failed: {status_response['message']}"
                     )
@@ -160,43 +188,52 @@ async def bedrock_server(server):
         elif install_result.status != "success":
             pytest.fail(f"Failed to install server: {install_result.message}")
 
+        assert await client.async_get_server_validate(server_name)
+        installed = True
+        await client.async_set_server_setting(
+            server_name,
+            ServerSettingItemPayload(key="settings.target_version", value=version),
+        )
         yield server_name
 
     finally:
         try:
-            # Ensure the server is stopped before trying to delete it
-            status_res = await client.async_get_server_running_status(server_name)
-            if status_res.running:
-                await client.async_stop_server(server_name)
-                # Give it a moment to stop
-                for _ in range(30):
+            if installed:
+                # Ensure the server is stopped before trying to delete it
+                status_res = await client.async_get_server_running_status(server_name)
+                if status_res.running:
+                    await client.async_stop_server(server_name)
+                    # Give it a moment to stop
+                    for _ in range(30):
+                        await asyncio.sleep(1)
+                        status_res = await client.async_get_server_running_status(
+                            server_name
+                        )
+                        if not status_res.running:
+                            break
+                    else:
+                        pytest.fail(
+                            f"Server {server_name} did not stop within 30 seconds before deletion."
+                        )
+
+                delete_result = await client.async_delete_server(server_name)
+                assert delete_result.status in ["pending", "success", "accepted"]
+
+                for _ in range(10):
                     await asyncio.sleep(1)
-                    status_res = await client.async_get_server_running_status(
-                        server_name
-                    )
-                    if not status_res.running:
+                    servers = await client.async_get_server_names()
+                    if server_name not in servers:
                         break
                 else:
                     pytest.fail(
-                        f"Server {server_name} did not stop within 30 seconds before deletion."
+                        f"Server {server_name} was not deleted within 10 seconds."
                     )
-
-            delete_result = await client.async_delete_server(server_name)
-            assert delete_result.status in ["pending", "success"]
-
-            for _ in range(10):
-                await asyncio.sleep(1)
-                servers = await client.async_get_server_names()
-                if server_name not in servers:
-                    break
-            else:
-                pytest.fail(f"Server {server_name} was not deleted within 10 seconds.")
         finally:
             await client.close()
 
 
 @pytest_asyncio.fixture(scope="session")
-async def wait_for_server_status():
+async def wait_for_server_status(server_data_dir):
     """Provides a helper function to wait for server status."""
 
     async def _wait_for_server_status(client, server_name, is_running, timeout=60):
@@ -204,11 +241,20 @@ async def wait_for_server_status():
         for _ in range(timeout):
             status_res = await client.async_get_server_running_status(server_name)
             if status_res.running == is_running:
-                return
+                if not is_running:
+                    return
+                # A spawned process is running before Bedrock accepts commands.
+                log = server_data_dir / "servers" / server_name / "server_output.txt"
+                if log.exists() and "Server started" in log.read_text(errors="replace"):
+                    return
             await asyncio.sleep(1)
         status_str = "running" if is_running else "stopped"
+        log = server_data_dir / "servers" / server_name / "server_output.txt"
+        output = (
+            log.read_text(errors="replace")[-2000:] if log.exists() else "No output"
+        )
         pytest.fail(
-            f"Server did not enter '{status_str}' state within {timeout} seconds."
+            f"Server did not enter '{status_str}' state within {timeout} seconds.\n{output}"
         )
 
     return _wait_for_server_status

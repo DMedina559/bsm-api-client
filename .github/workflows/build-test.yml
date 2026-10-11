@@ -1,5 +1,3 @@
-# .github/workflows/build-test.yml
-
 name: Build Lint Test
 
 on:
@@ -8,39 +6,72 @@ on:
       - 'main'
     paths:
       - 'packages/**'
+      - 'tools/**'
+      - '.github/workflows/build-test.yml'
+      - '.pre-commit-config.yaml'
+      - '.gitignore'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
     permissions:
-      contents: write
-      packages: write
-
+      contents: read
     strategy:
+      fail-fast: false
       matrix:
         python-version: ['3.11', '3.14']
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v7
-      with:
-        fetch-depth: 0
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
 
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v6
-      with:
-        python-version: ${{ matrix.python-version }}
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python-version }}
 
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install build
-        pip install --upgrade --force -e ./packages/bsm-api-client[dev]
-        pip install --upgrade --force -e ./packages/bsm-cli[dev]
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install build
+          python -m pip install -e './packages/bsm-api-client[dev]' -e './packages/bsm-cli[dev]'
+          python -c "from bsm_api_client.generated.client import Client; assert Client"
 
-    - name: Run pre-commit
-      run: |
-        pre-commit run --all-files
+      - name: Run pre-commit
+        run: pre-commit run --all-files
 
-    - name: Run Pytest
-      run: |
-        python -m pytest
+      - name: Check fresh-checkout client and distributions
+        run: |
+          python -m pytest --ignore=packages/bsm-api-client/tests/integration
+          python tools/generate_client.py packages/bsm-api-client/src/bsm_api_client/generated/openapi.json --check
+          python -m build packages/bsm-api-client
+          python -m build packages/bsm-cli
+          python tools/check_distributions.py packages/bsm-api-client/dist/*
+          python -m pip wheel --no-deps --wheel-dir "$RUNNER_TEMP/bsm-sdist-wheels" packages/bsm-api-client/dist/*.tar.gz
+          python tools/check_distributions.py "$RUNNER_TEMP"/bsm-sdist-wheels/*.whl
+
+      - name: Test installed wheels
+        run: |
+          python -m venv --system-site-packages "$RUNNER_TEMP/bsm-wheel-smoke"
+          "$RUNNER_TEMP/bsm-wheel-smoke/bin/python" -m pip install --ignore-installed --no-deps packages/bsm-api-client/dist/*.whl packages/bsm-cli/dist/*.whl
+          cd "$RUNNER_TEMP"
+          "$RUNNER_TEMP/bsm-wheel-smoke/bin/python" -c "from bsm_api_client.generated.client import Client; from bsm_api_client.generated_adapter import operation_module; assert Client and operation_module('get_account')"
+          "$RUNNER_TEMP/bsm-wheel-smoke/bin/python" -m pytest -c /dev/null --import-mode=importlib "$GITHUB_WORKSPACE/packages/bsm-cli/tests/test_cli_commands.py"
+
+      - name: Verify generated public models
+        run: python tools/generate_models.py --check
+
+      - name: Run Pytest
+        run: python -m pytest
+
+      - name: Show integration diagnostics
+        if: failure()
+        run: |
+          if [ -f bedrock_server_manager_test.log ]; then
+            tail -n 160 bedrock_server_manager_test.log
+          fi

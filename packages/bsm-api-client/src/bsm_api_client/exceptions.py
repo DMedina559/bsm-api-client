@@ -21,6 +21,14 @@ class APIError(Exception):
         # Extract common fields from API response if available for convenience
         self.api_message: str = self.response_data.get("message", "")
         self.api_errors: Dict[str, Any] = self.response_data.get("errors", {})
+        envelope = self.response_data.get("error", {})
+        if isinstance(envelope, dict):
+            self.api_code: Optional[str] = envelope.get("code")
+            self.api_message = envelope.get("message", self.api_message)
+            self.api_details: Dict[str, Any] = envelope.get("details", {})
+        else:
+            self.api_code = None
+            self.api_details = {}
 
     def __str__(self):
         base_str = super().__str__()
@@ -53,7 +61,7 @@ class CannotConnectError(
         # Call the parent's __str__ to get its formatting (without status_code part)
         base_str = Exception.__str__(self)  # Get the original message part directly
         if self.original_exception:
-            base_str += f" (Original error: {type(self.original_exception).__name__}: {str(self.original_exception)})"
+            base_str += f" (Original error: {type(self.original_exception).__name__})"
         return base_str
 
 
@@ -84,7 +92,7 @@ class ServerNotRunningError(APIError):
     pass
 
 
-class InvalidInputError(APIError):
+class InvalidInputError(APIError, ValueError):
     """Client-side input validation error (e.g., 400 Bad Request)."""
 
     pass

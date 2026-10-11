@@ -49,11 +49,11 @@ class TestServerLifecycle:
         server_name = bedrock_server
 
         start_res = await client.async_start_server(server_name)
-        assert start_res.status in ["success", "pending"]
+        assert start_res.status in ["success", "pending", "accepted"]
         await wait_for_server_status(client, server_name, is_running=True, timeout=90)
 
         stop_res = await client.async_stop_server(server_name)
-        assert stop_res.status in ["success", "pending"]
+        assert stop_res.status in ["success", "pending", "accepted"]
         await wait_for_server_status(client, server_name, is_running=False, timeout=90)
 
     async def test_restart(
@@ -67,7 +67,7 @@ class TestServerLifecycle:
         await wait_for_server_status(client, server_name, is_running=True, timeout=90)
 
         restart_res = await client.async_restart_server(server_name)
-        assert restart_res.status in ["success", "pending"]
+        assert restart_res.status in ["success", "pending", "accepted"]
 
         await asyncio.sleep(5)
         await wait_for_server_status(client, server_name, is_running=True, timeout=90)
@@ -80,7 +80,7 @@ class TestServerLifecycle:
         # The ActionResponse for this endpoint does not contain a task_id,
         # so we can only verify that the command is accepted.
         update_res = await client.async_update_server(server_name)
-        assert update_res.status in ["success", "pending"]
+        assert update_res.status in ["success", "pending", "accepted"]
 
     async def test_send_command(
         self, bedrock_server, wait_for_server_status, client_fixture

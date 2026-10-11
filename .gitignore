@@ -179,3 +179,8 @@ data
 
 
 *Zone.Identifier
+
+# Ignore scratch OpenAPI exports.
+/openapi.json
+
+.mypy_cache*/

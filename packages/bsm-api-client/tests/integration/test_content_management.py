@@ -1,5 +1,4 @@
 import asyncio
-import os
 
 import pytest
 import pytest_asyncio
@@ -13,31 +12,38 @@ from bsm_api_client.models import (
 
 
 @pytest_asyncio.fixture(scope="class")
-async def content_files():
+async def content_files(server, server_data_dir):
     """
     Fixture to create dummy content files for testing world/addon installation.
     """
-    bsm_dir = os.path.expanduser("~/bedrock-server-manager")
-    # Fallback to BSM_DATA_DIR if set (like in tests)
-    if os.environ.get("BSM_DATA_DIR"):
-        bsm_dir = os.environ["BSM_DATA_DIR"]
-    worlds_dir = os.path.join(bsm_dir, "content", "worlds")
-    addons_dir = os.path.join(bsm_dir, "content", "addons")
-    os.makedirs(worlds_dir, exist_ok=True)
-    os.makedirs(addons_dir, exist_ok=True)
-    dummy_world_file = "test_world.mcworld"
-    dummy_addon_file = "test_addon.mcpack"
-    world_path = os.path.join(worlds_dir, dummy_world_file)
-    addon_path = os.path.join(addons_dir, dummy_addon_file)
-    with open(world_path, "w") as f:
-        f.write("dummy world content")
-    with open(addon_path, "w") as f:
-        f.write("dummy addon content")
-    yield {"world_file": dummy_world_file, "addon_file": dummy_addon_file}
-    if os.path.exists(world_path):
-        os.remove(world_path)
-    if os.path.exists(addon_path):
-        os.remove(addon_path)
+    from bsm_test_utils.addons import create_mcworld, create_resource_pack
+
+    world = create_mcworld(server_data_dir / "content" / "worlds", name="Test World")
+    addon = create_resource_pack(
+        server_data_dir / "content" / "addons", name="Test Addon", as_zip=True
+    )
+    try:
+        yield {"world_file": world.name, "addon_file": addon.name}
+    finally:
+        world.unlink(missing_ok=True)
+        addon.unlink(missing_ok=True)
+
+
+async def wait_for_action(client, response):
+    """Require background content operations to finish before the next action."""
+    assert response.status in {"success", "pending", "accepted"}, response
+    if not response.task_id:
+        return
+    for _ in range(90):
+        task = await client.async_get_task_status(response.task_id)
+        assert task["status"] not in {"error", "failed", "cancelled"}, task
+        if task["status"] in {"success", "completed"}:
+            result = task.get("result")
+            if isinstance(result, dict):
+                assert result.get("status") not in {"error", "failed", "skipped"}, task
+            return
+        await asyncio.sleep(1)
+    pytest.fail(f"Content task {response.task_id} did not complete in time.")
 
 
 @pytest_asyncio.fixture
@@ -80,13 +86,14 @@ class TestContentManagement:
         """
         client = content_client
         server_name = bedrock_server
-        await client.async_start_server(server_name)
-        await wait_for_server_status(client, server_name, is_running=True, timeout=90)
+        # Dummy server does not implement the live save-query protocol.
+        # Stopped-server backups still exercise the full API/storage/archive path.
         backup_payload = BackupActionPayload(backup_type="world")
         backup_result = await client.async_trigger_server_backup(
             server_name, backup_payload
         )
-        assert backup_result.status in ["success", "pending"]
+        assert backup_result.status in ["success", "pending", "accepted"]
+        await wait_for_action(client, backup_result)
         list_response = None
         for _ in range(90):  # Increased timeout
             list_response = await client.async_list_server_backups(server_name, "world")
@@ -102,14 +109,11 @@ class TestContentManagement:
         restore_result = await client.async_restore_server_backup(
             server_name, restore_payload
         )
-        assert restore_result.status in ["success", "pending"]
-
-        # Wait a bit after the first restore to make sure the server status is idle for next actions.
-        await asyncio.sleep(5)
+        await wait_for_action(client, restore_result)
 
         # Restore Latest All
         latest_all = await client.async_restore_server_latest_all(server_name)
-        assert latest_all.status in ["success", "pending"]
+        await wait_for_action(client, latest_all)
 
     async def test_custom_zips(self, content_client):
         zips = await content_client.async_get_custom_zips()
@@ -133,7 +137,7 @@ class TestContentManagement:
         install_world_result = await client.async_install_server_world(
             server_name, install_world_payload
         )
-        assert install_world_result.status in ["success", "pending"]
+        await wait_for_action(client, install_world_result)
         addons_list = await client.async_get_content_addons()
         assert addons_list.status == "success"
         assert dummy_addon_file in addons_list.files
@@ -141,12 +145,8 @@ class TestContentManagement:
         install_addon_result = await client.async_install_server_addon(
             server_name, install_addon_payload
         )
-        assert install_addon_result.status in ["success", "pending"]
+        await wait_for_action(client, install_addon_result)
 
-        # Note: The test previously failed here with "World directory for 'new-world-name' not found"
-        # This occurs because `test_manager_and_server_info.py` changes the level-name property of the server to `new-world-name`!
-        # Thus `get_server_addons` will error out because the level-name is mismatched in bedrock-server-manager unless the server is started and generates the world.
-        # We start and stop the server before calling get_addons to ensure the world folder is generated
         await client.async_start_server(server_name)
         await wait_for_server_status(client, server_name, is_running=True, timeout=90)
         await client.async_stop_server(server_name)
@@ -163,12 +163,11 @@ class TestContentManagement:
         """
         client = content_client
         server_name = bedrock_server
-        await client.async_start_server(server_name)
-        await wait_for_server_status(client, server_name, is_running=True, timeout=90)
         worlds_before_list = await client.async_get_content_worlds()
         worlds_before = worlds_before_list.files or []
         export_result = await client.async_export_server_world(server_name)
-        assert export_result.status in ["success", "pending"]
+        assert export_result.status in ["success", "pending", "accepted"]
+        await wait_for_action(client, export_result)
         for _ in range(90):  # Increased timeout
             worlds_after_list = await client.async_get_content_worlds()
             worlds_after = worlds_after_list.files or []
@@ -180,6 +179,6 @@ class TestContentManagement:
         await client.async_stop_server(server_name)
         await wait_for_server_status(client, server_name, is_running=False, timeout=90)
         prune_result = await client.async_prune_server_backups(server_name)
-        assert prune_result.status in ["success", "pending"]
+        await wait_for_action(client, prune_result)
         reset_result = await client.async_reset_server_world(server_name)
-        assert reset_result.status in ["success", "pending"]
+        await wait_for_action(client, reset_result)

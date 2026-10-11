@@ -8,17 +8,17 @@ method for interacting with the Bedrock Server Manager API.
 
 import asyncio
 import logging
-from typing import Any, Dict, List, Mapping, Optional, Tuple, Union, cast
+from typing import Any, Dict, Mapping, Optional, Tuple, cast
 from urllib.parse import urlparse
 
 import aiohttp
+import httpx
 
 # Import exceptions from the same package level
 from .exceptions import (
     APIError,
     APIServerSideError,
     AuthError,
-    CannotConnectError,
     InvalidInputError,
     NotFoundError,
     OperationFailedError,
@@ -47,6 +47,34 @@ class ClientBase:
         _jwt_token: The JWT token used for authentication.
     """
 
+    async def async_call_generated(
+        self,
+        operation_id: str,
+        *,
+        parameters: Optional[Dict[str, Any]] = None,
+        body: Any = None,
+        authenticated: bool = True,
+        detailed: bool = False,
+        typed: bool = False,
+    ) -> Any:
+        """Implemented by DynamicOpenAPIMixin."""
+        raise NotImplementedError
+
+    async def _dynamic_request(
+        self,
+        method: str,
+        path: str,
+        *,
+        query: Optional[Mapping[str, Any]] = None,
+        json_data: Any = None,
+        authenticated: bool = True,
+        form_data: Optional[Mapping[str, Any]] = None,
+        headers: Optional[Mapping[str, str]] = None,
+        is_retry: bool = False,
+    ) -> Any:
+        """Implemented by DynamicOpenAPIMixin on BedrockServerManagerApi."""
+        raise NotImplementedError
+
     def __init__(
         self,
         base_url: str,
@@ -55,8 +83,9 @@ class ClientBase:
         jwt_token: Optional[str] = None,
         session: Optional[aiohttp.ClientSession] = None,
         base_path: str = "/api",
-        request_timeout: int = 90,
+        request_timeout: float = 90,
         verify_ssl: bool = True,
+        http_client: Optional[httpx.AsyncClient] = None,
     ):
         """Initializes the base API client.
         :param base_url: The base URL of the Bedrock Server Manager (e.g., http://localhost:8080).
@@ -70,6 +99,8 @@ class ClientBase:
         """
         if not base_url:
             raise ValueError("base_url must be provided.")
+        if request_timeout <= 0:
+            raise ValueError("request_timeout must be positive.")
 
         if not jwt_token and not (username and password):
             raise ValueError(
@@ -78,9 +109,18 @@ class ClientBase:
 
         # Robustly parse the input base_url string
         parsed_uri = urlparse(base_url)
-        if not parsed_uri.scheme or not parsed_uri.netloc:
+        if parsed_uri.scheme not in {"http", "https"} or not parsed_uri.hostname:
             raise ValueError(
                 f"Invalid base_url provided: '{base_url}'. Must include scheme (http/https) and hostname."
+            )
+        if (
+            parsed_uri.username
+            or parsed_uri.password
+            or parsed_uri.query
+            or parsed_uri.fragment
+        ):
+            raise ValueError(
+                "base_url must not contain credentials, a query, or a fragment."
             )
 
         self._host = parsed_uri.hostname
@@ -92,40 +132,32 @@ class ClientBase:
         )
 
         # _server_root_url is the base part of the server's address (e.g., http://localhost:8000)
-        self._server_root_url = f"{parsed_uri.scheme}://{parsed_uri.netloc}"
+        self._server_root_url = (
+            f"{parsed_uri.scheme}://{parsed_uri.netloc}{parsed_uri.path.rstrip('/')}"
+        )
         # _base_url includes the _api_base_segment (e.g., /api) and is used for most standard API calls.
         self._base_url = f"{self._server_root_url}{self._api_base_segment}"
 
+        self._closed = False
         self._username = username
         self._password = password
-        self._request_timeout = aiohttp.ClientTimeout(total=request_timeout)
+        self._request_timeout = request_timeout
         self._verify_ssl = verify_ssl
 
-        if session is None:
-            _LOGGER.debug("No session provided, creating an internal ClientSession.")
-            connector = None
-            if self._use_ssl and not self._verify_ssl:
-                _LOGGER.warning(
-                    "Creating internal session with SSL certificate verification DISABLED. "
-                    "This is insecure for production."
-                )
-                connector = aiohttp.TCPConnector(ssl=False)
-            self._session = aiohttp.ClientSession(connector=connector)
-            self._close_session = True
-        else:
-            self._session = session
-            self._close_session = False
-            if self._use_ssl and not self._verify_ssl:
-                _LOGGER.info(
-                    "An external ClientSession is provided, and verify_ssl=False was requested by user. "
-                    "The provided session's SSL verification behavior will take precedence."
-                )
-
         self._jwt_token: Optional[str] = jwt_token
-        self._default_headers: Mapping[str, str] = {
-            "Accept": "application/json",
-        }
+        self._default_headers: Mapping[str, str] = {"Accept": "application/json"}
+        self._session = session
+        self._close_session = session is None
+        self._http_client = http_client or httpx.AsyncClient(
+            timeout=request_timeout,
+            verify=verify_ssl,
+            follow_redirects=False,
+            trust_env=False,
+        )
+        self._close_http_client = http_client is None
         self._auth_lock = asyncio.Lock()
+        self._auth_generation = 0
+        self._generated_http_clients: list[Any] = []
 
         _LOGGER.debug("ClientBase initialized for base URL: %s", self._base_url)
 
@@ -137,11 +169,22 @@ class ClientBase:
 
             response = await client.close()
         """
+        self._closed = True
+        results = await asyncio.gather(
+            *(client.aclose() for client in self._generated_http_clients),
+            return_exceptions=True,
+        )
+        self._generated_http_clients = []
+        if self._close_http_client:
+            await self._http_client.aclose()
         if self._session and self._close_session and not self._session.closed:
             await self._session.close()
             _LOGGER.debug(
                 "Closed internally managed ClientSession for %s", self._base_url
             )
+        for result in results:
+            if isinstance(result, BaseException):
+                raise result
 
     async def __aenter__(self) -> "ClientBase":
         return self
@@ -150,14 +193,14 @@ class ClientBase:
         await self.close()
 
     async def _extract_error_details(  # noqa: C901
-        self, response: aiohttp.ClientResponse
+        self, response: httpx.Response
     ) -> Tuple[str, Dict[str, Any]]:
         """Extracts error details from an API response.
 
         Tries to parse a JSON response body to find a detailed error message.
         Falls back to using the response text or reason if JSON parsing fails.
 
-        :param response: The `aiohttp.ClientResponse` object from the failed request.
+        :param response: The `httpx.Response` object from the failed request.
 
         :returns: A tuple containing the error message string and the full error data dictionary.
 
@@ -171,9 +214,10 @@ class ClientBase:
         error_data: Dict[str, Any] = {}
 
         try:
-            response_text = await response.text()
-            if response.content_type == "application/json":
-                parsed_json = await response.json(content_type=None)
+            await response.aread()
+            response_text = response.text
+            if "json" in response.headers.get("content-type", ""):
+                parsed_json = response.json()
                 if isinstance(parsed_json, dict):
                     error_data = parsed_json
                 else:
@@ -182,14 +226,16 @@ class ClientBase:
                 error_data = {"raw_error": response_text}
 
         except (aiohttp.ClientResponseError, ValueError, asyncio.TimeoutError) as e:
-            _LOGGER.warning(
-                f"Could not parse error response JSON or read text: {e}. Raw text (if available): {response_text[:200]}"
-            )
+            _LOGGER.debug("Could not parse API error response (%s)", type(e).__name__)
             error_data = {
                 "raw_error": response_text
-                or response.reason
+                or response.reason_phrase
                 or "Unknown error reading response."
             }
+
+        envelope = error_data.get("error")
+        if isinstance(envelope, dict) and isinstance(envelope.get("message"), str):
+            return envelope["message"], error_data
 
         # Prioritize "detail" for FastAPI standard errors (often a string),
         # then "message" (custom in this app), then "error" (generic).
@@ -233,12 +279,12 @@ class ClientBase:
             ):  # If we stored raw text due to parsing failure
                 message = error_data["raw_error"]
             else:  # Absolute fallback
-                message = response.reason or "Unknown API error"
+                message = response.reason_phrase or "Unknown API error"
 
         return str(message), error_data
 
     async def _handle_api_error(  # noqa: C901
-        self, response: aiohttp.ClientResponse, request_path_for_log: str
+        self, response: httpx.Response, request_path_for_log: str
     ):
         """Processes an error response and raises the appropriate custom exception.
 
@@ -246,7 +292,7 @@ class ClientBase:
         API response to the appropriate exception classes defined in the
         `exceptions` module.
 
-        :param response: The `aiohttp.ClientResponse` object from the failed request.
+        :param response: The `httpx.Response` object from the failed request.
         :param request_path_for_log: The path of the request for logging purposes.
 
         :raises InvalidInputError: For 400 or 422 status codes.
@@ -265,7 +311,7 @@ class ClientBase:
             response = await client._handle_api_error()
         """
         message, error_data = await self._extract_error_details(response)
-        status = response.status
+        status = response.status_code
 
         if status == 400:  # Bad Request
             raise InvalidInputError(
@@ -345,7 +391,7 @@ class ClientBase:
         )
         raise APIError(message, status_code=status, response_data=error_data)
 
-    async def _request(  # noqa: C901
+    async def _request(
         self,
         method: str,
         path: str,
@@ -354,372 +400,50 @@ class ClientBase:
         authenticated: bool = True,
         is_retry: bool = False,
     ) -> Any:
-        """Internal method to make API requests.
-
-        This method constructs the full URL, adds authentication headers if
-        required, and handles the request/response cycle, including error
-        handling and automatic token refresh on 401 errors.
-
-        :param method: The HTTP method for the request (e.g., "GET", "POST").
-        :param path: The API endpoint path.
-        :param json_data: An optional dictionary to be sent as the JSON request body.
-        :param params: An optional dictionary of query parameters.
-        :param authenticated: Whether the request requires authentication.
-        :param is_retry: Whether this is a retry attempt after a token refresh.
-
-        :returns: The JSON response from the API as a dictionary or list.
-
-        :raises CannotConnectError: If a connection to the server cannot be established.
-        :raises APIError: For various API-related errors.
-
-
-        .. rubric:: Example:
-        .. code-block:: python
-
-            response = await client._request()
-        """
+        """Compatibility request adapter backed by the OpenAPI transport."""
         request_path_segment = path if path.startswith("/") else f"/{path}"
-        url = f"{self._base_url}{request_path_segment}"
+        return await self._dynamic_request(
+            method,
+            f"{self._api_base_segment}{request_path_segment}",
+            query=params,
+            json_data=json_data,
+            headers=None,
+            authenticated=authenticated,
+            is_retry=is_retry,
+        )
 
-        headers: Dict[str, str] = dict(self._default_headers)
-        if json_data is not None:
-            headers["Content-Type"] = "application/json"
-
-        if authenticated:
-            async with self._auth_lock:
-                if not self._jwt_token and not is_retry:
-                    _LOGGER.debug(
-                        "No token for auth request to %s, attempting login.", url
-                    )
-                    try:
-                        await self.authenticate()
-                    except AuthError:
-                        raise
-            if authenticated and not self._jwt_token:
-                _LOGGER.error(
-                    "Auth required for %s but no token after lock/login attempt.", url
-                )
-                raise AuthError(
-                    "Authentication required but no token available after login attempt."
-                )
-            if authenticated and self._jwt_token:
-                headers["Authorization"] = f"Bearer {self._jwt_token}"
-
-        _LOGGER.debug(
-            "Request: %s %s (Params: %s, Auth: %s)", method, url, params, authenticated
+    async def authenticate(self) -> TokenResponse:
+        """Authenticate against BSM's OpenAPI-described OAuth2 token endpoint."""
+        if not self._username or not self._password:
+            raise AuthError("Username and password are required to authenticate.")
+        response_data = await self.async_call_generated(
+            "login",
+            body={
+                "grant_type": "password",
+                "username": self._username,
+                "password": self._password,
+                "remember_me": False,
+            },
+            authenticated=False,
         )
         try:
-            async with self._session.request(
-                method,
-                url,
-                json=json_data,
-                params=params,
-                headers=headers,
-                timeout=self._request_timeout,
-            ) as response:
-                _LOGGER.debug(
-                    "Response Status for %s %s: %s", method, url, response.status
-                )
-
-                if not response.ok:
-                    if response.status == 401 and authenticated and not is_retry:
-                        _LOGGER.warning(
-                            "Received 401 for %s, attempting token refresh and retry.",
-                            url,
-                        )
-                        async with self._auth_lock:
-                            self._jwt_token = None
-                        return await self._request(
-                            method,
-                            request_path_segment,
-                            json_data=json_data,
-                            params=params,
-                            authenticated=True,
-                            is_retry=True,
-                        )
-                    await self._handle_api_error(response, request_path_segment)
-                    raise APIError(  # Should be unreachable
-                        "Error handler did not raise, this should not happen."
-                    )
-
-                _LOGGER.debug(
-                    "API request successful for %s [%s]",
-                    request_path_segment,
-                    response.status,
-                )
-                if response.status == 204 or response.content_length == 0:
-                    return {
-                        "status": "success",
-                        "message": "Operation successful (No Content)",
-                    }
-
-                try:
-                    json_response: Union[Dict[str, Any], List[Any]] = (
-                        await response.json(content_type=None)
-                    )
-                    if (
-                        isinstance(json_response, dict)
-                        and json_response.get("status") == "error"
-                    ):
-                        message = json_response.get(
-                            "message", "Unknown error in successful HTTP response."
-                        )
-                        _LOGGER.error(
-                            "API success status (%s) but error in JSON body for %s: %s. Data: %s",
-                            response.status,
-                            request_path_segment,
-                            message,
-                            json_response,
-                        )
-                        if "is not running" in message.lower():
-                            raise ServerNotRunningError(
-                                message,
-                                status_code=response.status,
-                                response_data=json_response,
-                            )
-                        raise APIError(
-                            message,
-                            status_code=response.status,
-                            response_data=json_response,
-                        )
-
-                    if (
-                        isinstance(json_response, dict)
-                        and json_response.get("status") == "confirm_needed"
-                    ):
-                        _LOGGER.info(
-                            "API returned 'confirm_needed' status for %s",
-                            request_path_segment,
-                        )
-                        # Calling method handles this specific status.
-                    return json_response
-                except (
-                    aiohttp.ContentTypeError,
-                    ValueError,
-                    asyncio.TimeoutError,
-                ) as json_error:
-                    resp_text = await response.text()
-                    _LOGGER.warning(
-                        "Successful API response (%s) for %s not valid JSON (%s). Raw: %s",
-                        response.status,
-                        request_path_segment,
-                        json_error,
-                        resp_text[:200],
-                    )
-                    return {
-                        "status": "success_with_parsing_issue",
-                        "message": "Operation successful (Non-JSON or malformed JSON response)",
-                        "raw_response": resp_text,
-                    }
-
-        except aiohttp.ClientConnectionError as e:
-            # Construct target address string for error message
-            target_address = (
-                f"{self._host}{f':{self._port}' if self._port is not None else ''}"
-            )
-            _LOGGER.error(
-                "API connection error for %s: %s", url, e
-            )  # url already has full path
-            raise CannotConnectError(
-                f"Connection Error: Cannot connect to host {target_address}.",  # Use specific target_address
-                original_exception=e,
-            ) from e
-        except asyncio.TimeoutError as e:
-            _LOGGER.error("API request timed out for %s: %s", url, e)
-            raise CannotConnectError(
-                f"Request timed out for {url}", original_exception=e
-            ) from e
-        except aiohttp.ClientError as e:
-            _LOGGER.error("Generic aiohttp client error for %s: %s", url, e)
-            raise CannotConnectError(
-                f"AIOHTTP Client Error: {e}", original_exception=e
-            ) from e
-        except (
-            APIError,
-            AuthError,
-            NotFoundError,
-            ServerNotFoundError,
-            ServerNotRunningError,
-            CannotConnectError,
-            InvalidInputError,
-            OperationFailedError,
-            APIServerSideError,
-        ) as e:
-            raise e
-        except Exception as e:
-            _LOGGER.exception("Unexpected error during API request to %s: %s", url, e)
-            raise APIError(
-                f"An unexpected error occurred during request to {url}: {e}"
-            ) from e
-
-    async def authenticate(self) -> TokenResponse:  # noqa: C901
-        """Authenticates with the API and retrieves a JWT token.
-
-        This method sends a POST request to the `/auth/token` endpoint with the
-        username and password provided during client initialization. The retrieved
-        JWT token is stored internally for subsequent authenticated requests.
-
-        :returns: A `TokenResponse` object containing the access token and token type.
-
-        :raises AuthError: If authentication fails due to invalid credentials,
-                connection issues, or other API errors.
-        """
-        _LOGGER.info("Attempting API authentication for user %s", self._username)
-        self._jwt_token = None
-        try:
-            url = f"{self._server_root_url}/auth/token"
-            headers = {"Accept": "application/json"}  # Still expect JSON response
-
-            _LOGGER.debug("Request: POST %s (Form Auth)", url)
-            async with self._session.post(
-                url,
-                data={
-                    "grant_type": "password",
-                    "username": self._username,
-                    "password": self._password,
-                },
-                headers=headers,
-                timeout=self._request_timeout,
-            ) as response:
-                _LOGGER.debug("Response Status for POST %s: %s", url, response.status)
-                if not response.ok:
-                    # Use _handle_api_error for consistent error raising based on status
-                    await self._handle_api_error(response, "/auth/token")
-                    # Should be unreachable if _handle_api_error raises
-                    raise AuthError(
-                        f"Authentication failed with status {response.status}"
-                    )
-
-                try:
-                    response_data = await response.json(content_type=None)
-                except (
-                    aiohttp.ContentTypeError,
-                    ValueError,
-                    asyncio.TimeoutError,
-                ) as json_error:
-                    resp_text = await response.text()
-                    _LOGGER.error(
-                        "Auth response was not valid JSON: %s. Raw: %s",
-                        json_error,
-                        resp_text[:200],
-                    )
-                    raise AuthError(
-                        f"Authentication response was not valid JSON: {json_error}"
-                    )
-
             token = TokenResponse.model_validate(response_data)
-            self._jwt_token = token.access_token
-            _LOGGER.info("Authentication successful, token received.")
-            return cast(TokenResponse, token)
-
-        except AuthError:  # Re-raise specific AuthErrors
-            _LOGGER.error("Authentication failed.")
+        except Exception as exc:
             self._jwt_token = None
-            raise
-        except APIError as e:  # Catch errors from _handle_api_error
-            _LOGGER.error("API error during authentication: %s", e)
-            self._jwt_token = None
-            # Wrap it in AuthError if it's not already one (e.g. 400 from _handle_api_error)
-            if not isinstance(e, AuthError):
-                raise AuthError(f"API error during login: {e.args[0]}") from e
-            raise e
-        except aiohttp.ClientConnectionError as e:
-            target_address = (
-                f"{self._host}{f':{self._port}' if self._port is not None else ''}"
-            )
-            _LOGGER.error(
-                "Connection error during authentication to %s: %s", target_address, e
-            )
-            self._jwt_token = None
-            raise AuthError(
-                f"Connection error during login to {target_address}: {e}"
-            ) from e
-        except asyncio.TimeoutError as e:
-            _LOGGER.error("Timeout during authentication: %s", e)
-            self._jwt_token = None
-            raise AuthError(f"Timeout during login: {e}") from e
-        except Exception as e:
-            _LOGGER.exception("Unexpected error during authentication: %s", e)
-            self._jwt_token = None
-            raise AuthError(f"An unexpected error occurred during login: {e}") from e
+            raise AuthError("Authentication response was invalid.") from exc
+        self._jwt_token = token.access_token
+        self._auth_generation += 1
+        return cast(TokenResponse, token)
 
     async def async_logout(self) -> Dict[str, Any]:
-        """Logs the current user out.
-
-        This method calls the `GET /auth/logout` endpoint to invalidate the
-        session on the server side and clears the internally stored JWT token.
-
-        :returns: A dictionary containing the response from the API, typically a success message.
-
-        :raises APIError: If the logout request fails.
-
-
-        .. rubric:: Example:
-        .. code-block:: python
-
-            response = await client.authenticate()
-        """
-        _LOGGER.info("Attempting API logout.")
+        """Log out through the shared REST transport and clear the local token."""
         try:
-            # Logout path is /auth/logout, relative to server root, not under the main API base segment.
-            # Called directly using _session.get for consistency with authenticate().
-            url = f"{self._server_root_url}/auth/logout"
-            headers = dict(self._default_headers)
-            if (
-                self._jwt_token
-            ):  # Should be present if authenticated=True logic was to be mimicked
-                headers["Authorization"] = f"Bearer {self._jwt_token}"
-
-            _LOGGER.debug("Request: GET %s (Logout to root path)", url)
-            async with self._session.get(
-                url,
-                headers=headers,
-                timeout=self._request_timeout,
-            ) as response:
-                _LOGGER.debug("Response Status for GET %s: %s", url, response.status)
-                if not response.ok:
-                    await self._handle_api_error(response, "/auth/logout")
-                    # Should be unreachable
-                    raise APIError(f"Logout failed with status {response.status}")
-
-                try:
-                    response_data = (
-                        await response.json(content_type=None)
-                        if response.content_length != 0
-                        else {}
-                    )
-                except (
-                    aiohttp.ContentTypeError,
-                    ValueError,
-                    asyncio.TimeoutError,
-                ) as json_error:
-                    resp_text = await response.text()
-                    _LOGGER.warning(
-                        "Logout response was not valid JSON: %s. Raw: %s",
-                        json_error,
-                        resp_text[:200],
-                    )
-                    # Still consider logout successful on server if HTTP 200 OK, even if response body is weird
-                    response_data = {
-                        "status": "success_with_parsing_issue",
-                        "message": "Logout successful, but response parsing failed.",
-                    }
-
-            # Clear local token regardless of exact response content, if HTTP call was ok
+            response = await self.async_call_generated(
+                "logout", authenticated=bool(self._jwt_token)
+            )
+            return cast(Dict[str, Any], response or {})
+        finally:
             self._jwt_token = None
-            _LOGGER.info("Logout request successful. Local token cleared.")
-            return response_data  # Typically an empty dict or success message
-        except APIError as e:
-            _LOGGER.error("API error during logout: %s", e)
-            # Decide if to clear local token even on error.
-            # If auth error (401), token might be invalid anyway.
-            if isinstance(e, AuthError):
-                self._jwt_token = None
-                _LOGGER.warning("AuthError during logout, cleared local token anyway.")
-            raise
-        except Exception as e:
-            _LOGGER.exception("Unexpected error during logout: %s", e)
-            raise APIError(f"An unexpected error occurred during logout: {e}") from e
 
     async def websocket_connect(self) -> WebSocketClient:
         """
@@ -740,8 +464,10 @@ class ClientBase:
 
         ws_scheme = "wss" if self._use_ssl else "ws"
         # Typically the websocket endpoint is at /ws relative to the server root
-        ws_url = (
-            f"{ws_scheme}://{self._host}{f':{self._port}' if self._port else ''}/ws"
-        )
+        authority = urlparse(self._server_root_url).netloc
+        ws_url = f"{ws_scheme}://{authority}/ws"
 
+        if self._session is None:
+            connector = aiohttp.TCPConnector(ssl=self._verify_ssl)
+            self._session = aiohttp.ClientSession(connector=connector)
         return WebSocketClient(self._session, ws_url, self._jwt_token)

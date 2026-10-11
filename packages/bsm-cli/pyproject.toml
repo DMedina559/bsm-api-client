@@ -17,13 +17,15 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Operating System :: OS Independent",
     "Intended Audience :: Developers",
 ]
 dependencies = [
     "click >=8.2.0,<8.5",
     "questionary >=2.1.0,<2.2",
-    "bsm-api-client >=1.6.0b3,<1.7",
+    "rich >=13.9,<16",
+    "bsm-api-client >=1.6.1.dev0,<2",
 ]
 keywords = ["minecraft", "bedrock", "server", "manager", "cli"]
 
@@ -36,7 +38,7 @@ dev = [
     "flake8 >=7.3.0,<7.4",
     "isort >=5.13.0,<8.1",
     "mypy >=1.10.0,<2.2",
-    "bedrock-server-manager >=3.10.0b3,<3.11.0",
+    "bedrock-server-manager @ git+https://github.com/DMedina559/bedrock-server-manager.git@dev",
     "pre-commit >=4.6.0,<4.7",
 ]
 
@@ -53,11 +55,14 @@ include = ["bsm_cli*"]
 [tool.setuptools_scm]
 root = "../.."
 local_scheme = "no-local-version"
+fallback_version = "1.6.1.dev0"
 
 [tool.black]
+target-version = ["py311"]
 
 [tool.isort]
 profile = "black"
+known_first_party = ["bsm_api_client", "bsm_cli"]
 line_length = 88
 
 [tool.mypy]

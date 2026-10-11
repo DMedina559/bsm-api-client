@@ -1,9 +1,12 @@
+import asyncio
 import time
 
 import click
-import questionary
 
 from bsm_api_client.models import ServerSettingItemPayload
+from bsm_cli.completion import complete_server
+from bsm_cli.output import get_client
+from bsm_cli.presentation import screen_header
 
 
 @click.group()
@@ -19,70 +22,34 @@ def system():
     "server_name",
     required=True,
     help="Name of the server to configure.",
+    shell_complete=complete_server,
 )
 @click.pass_context
 async def server_settings(ctx, server_name: str):
-    """Configures autostart and autoupdate settings for a Bedrock server."""
-    client = ctx.obj.get("client")
-    if not client:
-        click.secho("You are not logged in.", fg="red")
+    """Review and edit all available Bedrock server settings."""
+    client = get_client(ctx)
+
+    from bsm_cli.settings_editor import edit_settings, fields, infer_schema
+
+    response = await client.servers.async_get_server_settings(server_name)
+    original = response.settings or {}
+    draft = await edit_settings(original, title=f"Settings: {server_name}")
+    if draft is None:
         return
-
-    click.secho(
-        f"Starting interactive settings configuration for '{server_name}'...",
-        fg="yellow",
-    )
-
-    settings_response = await client.async_get_server_settings(server_name)
-    if settings_response.status != "success" or not settings_response.settings:
-        click.secho(
-            f"Failed to fetch server settings: {settings_response.message}", fg="red"
+    latest = await client.servers.async_get_server_settings(server_name)
+    if latest.settings != original:
+        raise click.ClickException(
+            "Settings changed in another session. Reopen the editor."
         )
-        return
-
-    settings = settings_response.settings
-
-    current_autoupdate = settings.get("settings", {}).get("autoupdate", False)
-    current_autostart = settings.get("settings", {}).get("autostart", False)
-
-    click.secho(
-        f"\n--- Interactive Settings Configuration for '{server_name}' ---", bold=True
-    )
-
-    autoupdate_choice = await questionary.confirm(
-        "Enable check for updates when the server starts?", default=current_autoupdate
-    ).ask_async()
-
-    if autoupdate_choice is not None and autoupdate_choice != current_autoupdate:
-        payload = ServerSettingItemPayload(
-            key="settings.autoupdate", value=autoupdate_choice
-        )
-        response = await client.async_set_server_setting(server_name, payload)
-        if response.status == "success":
-            click.secho(
-                f"Autoupdate setting configured to '{autoupdate_choice}'.", fg="green"
+    for path, spec, value in fields(infer_schema(draft), infer_schema(draft), draft):
+        previous = original
+        for key in path:
+            previous = previous.get(key) if isinstance(previous, dict) else None
+        if previous != value:
+            await client.servers.async_set_server_setting(
+                server_name, ServerSettingItemPayload(key=".".join(path), value=value)
             )
-        else:
-            click.secho(f"Failed to set autoupdate: {response.message}", fg="red")
-
-    autostart_choice = await questionary.confirm(
-        "Enable the server to start automatically when the manager starts?",
-        default=current_autostart,
-    ).ask_async()
-
-    if autostart_choice is not None and autostart_choice != current_autostart:
-        payload = ServerSettingItemPayload(
-            key="settings.autostart", value=autostart_choice
-        )
-        response = await client.async_set_server_setting(server_name, payload)
-        if response.status == "success":
-            click.secho(
-                f"Autostart setting configured to '{autostart_choice}'.", fg="green"
-            )
-        else:
-            click.secho(f"Failed to set autostart: {response.message}", fg="red")
-
-    click.secho("\nSettings configuration complete.", fg="green", bold=True)
+            click.echo(f"Saved {'.'.join(path)}")
 
 
 @system.command("monitor")
@@ -92,26 +59,27 @@ async def server_settings(ctx, server_name: str):
     "server_name",
     required=True,
     help="Name of the server to monitor.",
+    shell_complete=complete_server,
 )
 @click.pass_context
 async def monitor_usage(ctx, server_name: str):
     """Continuously monitors CPU and memory usage of a specific server process."""
-    client = ctx.obj.get("client")
-    if not client:
-        click.secho("You are not logged in.", fg="red")
-        return
+    client = get_client(ctx)
+
+    if ctx.obj.get("json_output"):
+        return await client.servers.async_get_server_process_info(server_name)
 
     click.secho(
         f"Starting resource monitoring for server '{server_name}'. Press CTRL+C to exit.",
         fg="cyan",
     )
-    time.sleep(1)
+    await asyncio.sleep(1)
 
     try:
         while True:
-            response = await client.async_get_server_process_info(server_name)
+            response = await client.servers.async_get_server_process_info(server_name)
 
-            click.clear()
+            screen_header("Server monitor")
             click.secho(
                 f"--- Monitoring Server: {server_name} ---", fg="magenta", bold=True
             )
@@ -127,7 +95,10 @@ async def monitor_usage(ctx, server_name: str):
                 info = response.process_info
                 pid_str = info.get("pid", "N/A")
                 cpu_str = f"{info.get('cpu_percent', 0.0):.1f}%"
-                mem_str = f"{info.get('memory_mb', 0.0):.1f} MB"
+                from bsm_cli.appearance import preferred_unit
+                from bsm_cli.manager import memory
+
+                mem_str = memory(info.memory_mb, preferred_unit(ctx, None))
                 uptime_str = info.get("uptime", "N/A")
 
                 click.echo(f"  {'PID':<15}: {click.style(str(pid_str), fg='cyan')}")
@@ -137,6 +108,6 @@ async def monitor_usage(ctx, server_name: str):
                 )
                 click.echo(f"  {'Uptime':<15}: {click.style(uptime_str, fg='white')}")
 
-            time.sleep(2)
+            await asyncio.sleep(2)
     except (KeyboardInterrupt, click.Abort):
         click.secho("\nMonitoring stopped.", fg="green")

@@ -2,9 +2,11 @@ import os
 
 import click
 import questionary
-from bsm_cli.decorators import monitor_task, pass_async_context
 
 from bsm_api_client.models import BackupActionPayload, RestoreActionPayload
+from bsm_cli.completion import complete_server
+from bsm_cli.decorators import monitor_task, pass_async_context
+from bsm_cli.output import fail, get_client
 
 
 @click.group()
@@ -15,7 +17,12 @@ def backup():
 
 @backup.command("create")
 @click.option(
-    "-s", "--server", "server_name", required=True, help="Name of the target server."
+    "-s",
+    "--server",
+    "server_name",
+    required=True,
+    help="Name of the target server.",
+    shell_complete=complete_server,
 )
 @click.option(
     "-t",
@@ -33,10 +40,7 @@ def backup():
 @pass_async_context
 async def create_backup(ctx, server_name: str, backup_type: str, file_to_backup: str):
     """Creates a backup of specified server data."""
-    client = ctx.obj.get("client")
-    if not client:
-        click.secho("You are not logged in.", fg="red")
-        return
+    client = get_client(ctx)
 
     try:
         if not backup_type:
@@ -52,21 +56,25 @@ async def create_backup(ctx, server_name: str, backup_type: str, file_to_backup:
         payload = BackupActionPayload(
             backup_type=backup_type, file_to_backup=file_to_backup
         )
-        response = await client.async_trigger_server_backup(server_name, payload)
+        response = await client.content.async_trigger_server_backup(
+            server_name, payload
+        )
 
-        if response.task_id:
+        if getattr(response, "task_id", None):
             await monitor_task(
                 client,
-                response.task_id,
+                str(getattr(response, "task_id", "")),
                 "Backup completed successfully",
                 "Failed to create backup",
             )
             click.echo("Pruning old backups...")
-            prune_response = await client.async_prune_server_backups(server_name)
-            if prune_response.task_id:
+            prune_response = await client.content.async_prune_server_backups(
+                server_name
+            )
+            if getattr(prune_response, "task_id", None):
                 await monitor_task(
                     client,
-                    prune_response.task_id,
+                    str(getattr(prune_response, "task_id", "")),
                     "Pruning complete",
                     "Failed to prune backups",
                 )
@@ -82,47 +90,44 @@ async def create_backup(ctx, server_name: str, backup_type: str, file_to_backup:
             click.secho(f"Failed to create backup: {response.message}", fg="red")
 
     except Exception as e:
-        click.secho(f"An error occurred: {e}", fg="red")
+        fail(e)
 
 
 @backup.command("restore")
 @click.option(
-    "-s", "--server", "server_name", required=True, help="Name of the target server."
+    "-s",
+    "--server",
+    "server_name",
+    required=True,
+    help="Name of the target server.",
+    shell_complete=complete_server,
 )
 @click.option(
     "-f",
     "--file",
     "backup_file_path",
-    type=click.Path(exists=True, dir_okay=False, resolve_path=True),
-    help="Path to the backup file to restore; skips interactive menu.",
+    help="Filename in the backend backup directory; skips interactive menu.",
+)
+@click.option(
+    "--type",
+    "restore_type",
+    type=click.Choice(["world", "allowlist", "permissions", "properties"]),
+    help="Data type to restore; inferred from standard backup filenames if omitted.",
 )
 @pass_async_context
-async def restore_backup(ctx, server_name: str, backup_file_path: str):  # noqa: C901
+async def restore_backup(
+    ctx, server_name: str, backup_file_path: str, restore_type: str
+):  # noqa: C901
     """Restores server data from a specified backup file."""
-    client = ctx.obj.get("client")
-    if not client:
-        click.secho("You are not logged in.", fg="red")
-        return
+    client = get_client(ctx)
 
     try:
         if not backup_file_path:
             restore_type, backup_file_path, _ = await _interactive_restore_menu(
                 client, server_name
             )
-        else:
-            filename = os.path.basename(backup_file_path).lower()
-            if "world" in filename:
-                restore_type = "world"
-            elif "allowlist" in filename:
-                restore_type = "allowlist"
-            elif "permissions" in filename:
-                restore_type = "permissions"
-            elif "properties" in filename:
-                restore_type = "properties"
-            else:
-                raise click.UsageError(
-                    f"Could not determine restore type from filename '{filename}'."
-                )
+        elif not restore_type:
+            restore_type = _infer_restore_type(backup_file_path)
 
         click.echo(
             f"Starting '{restore_type}' restore for server '{server_name}' from '{os.path.basename(backup_file_path)}'..."
@@ -131,12 +136,14 @@ async def restore_backup(ctx, server_name: str, backup_file_path: str):  # noqa:
         payload = RestoreActionPayload(
             restore_type=restore_type, backup_file=os.path.basename(backup_file_path)
         )
-        response = await client.async_restore_server_backup(server_name, payload)
+        response = await client.content.async_restore_server_backup(
+            server_name, payload
+        )
 
-        if response.task_id:
+        if getattr(response, "task_id", None):
             await monitor_task(
                 client,
-                response.task_id,
+                str(getattr(response, "task_id", "")),
                 "Restore completed successfully",
                 "Failed to restore backup",
             )
@@ -146,7 +153,7 @@ async def restore_backup(ctx, server_name: str, backup_file_path: str):  # noqa:
             click.secho(f"Failed to restore backup: {response.message}", fg="red")
 
     except Exception as e:
-        click.secho(f"An error occurred: {e}", fg="red")
+        fail(e)
 
 
 @backup.command("prune")
@@ -156,22 +163,20 @@ async def restore_backup(ctx, server_name: str, backup_file_path: str):  # noqa:
     "server_name",
     required=True,
     help="Name of the server whose backups to prune.",
+    shell_complete=complete_server,
 )
 @pass_async_context
 async def prune_backups(ctx, server_name: str):
     """Deletes old backups for a server."""
-    client = ctx.obj.get("client")
-    if not client:
-        click.secho("You are not logged in.", fg="red")
-        return
+    client = get_client(ctx)
 
     try:
         click.echo(f"Pruning old backups for server '{server_name}'...")
-        response = await client.async_prune_server_backups(server_name)
-        if response.task_id:
+        response = await client.content.async_prune_server_backups(server_name)
+        if getattr(response, "task_id", None):
             await monitor_task(
                 client,
-                response.task_id,
+                str(getattr(response, "task_id", "")),
                 "Pruning complete",
                 "Failed to prune backups",
             )
@@ -180,7 +185,19 @@ async def prune_backups(ctx, server_name: str):
         else:
             click.secho(f"Failed to prune backups: {response.message}", fg="red")
     except Exception as e:
-        click.secho(f"An error occurred during pruning: {e}", fg="red")
+        fail(e)
+
+
+def _infer_restore_type(path):
+    filename = os.path.basename(path).lower()
+    if filename.endswith(".mcworld"):
+        return "world"
+    for kind in ("allowlist", "permissions", "properties", "world"):
+        if kind in filename:
+            return kind
+    raise click.UsageError(
+        f"Could not determine restore type from filename '{filename}'. Supply --type."
+    )
 
 
 async def _interactive_backup_menu(server_name: str):
@@ -239,7 +256,7 @@ async def _interactive_restore_menu(client, server_name: str):
         raise click.Abort()
     restore_type = restore_type_map[choice]
 
-    response = await client.async_list_server_backups(server_name, restore_type)
+    response = await client.content.async_list_server_backups(server_name, restore_type)
     backup_files = response.backups
     if not backup_files:
         click.secho(
