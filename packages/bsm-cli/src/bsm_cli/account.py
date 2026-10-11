@@ -18,7 +18,7 @@ def account():
 async def details(ctx):
     """Get your account details."""
     client = get_client(ctx)
-    details = await client.async_get_account_details()
+    details = await client.account.async_get_account_details()
     click.echo(details.model_dump_json(indent=2))
 
 
@@ -31,7 +31,7 @@ async def update_theme(ctx, theme):
 
     client = get_client(ctx)
     payload = ThemeUpdatePayload(theme=theme)
-    response = await client.async_update_theme(payload)
+    response = await client.account.async_update_theme(payload)
     click.echo(response.model_dump_json(indent=2))
 
 
@@ -45,7 +45,7 @@ async def update_profile(ctx, full_name, email):
 
     client = get_client(ctx)
     payload = ProfileUpdatePayload(full_name=full_name, email=email)
-    response = await client.async_update_profile(payload)
+    response = await client.account.async_update_profile(payload)
     click.echo(response.model_dump_json(indent=2))
 
 
@@ -73,5 +73,5 @@ async def change_password(ctx, current_password, new_password):
     payload = ChangePasswordPayload(
         current_password=current_password, new_password=new_password
     )
-    response = await client.async_change_password(payload)
+    response = await client.account.async_change_password(payload)
     click.echo(response.model_dump_json(indent=2))

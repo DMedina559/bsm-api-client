@@ -9,17 +9,25 @@ python tools/generate_client.py openapi.json
 python -m pytest
 ```
 
-The backend revision is pinned in both development extras and the publication
-workflow. When upgrading it, export and review the bundled schema together with
-facade models and integration coverage. CI compares the export to the pinned
-contract and tests Python 3.11, 3.12, 3.13 and 3.14.
+The backend `dev` branch is the source contract. Export and review its schema,
+then regenerate both public contracts and REST operations:
 
-Generated endpoint/model modules are disposable and untracked. The source
-archive carries the schema and generator; build isolation installs the pinned
-minor generator series. Wheels contain all generated modules and the operation
-registry, while consumers need neither the generator nor the backend package.
+```bash
+python tools/generate_models.py
+python tools/generate_client.py packages/bsm-api-client/src/bsm_api_client/generated/openapi.json
+python tools/generate_models.py --check
+python tools/generate_client.py packages/bsm-api-client/src/bsm_api_client/generated/openapi.json --check
+```
+
+Generated code is committed and reviewed alongside the schema. Installation and
+packaging never run a generator or mutate source files. Wheels and source archives
+contain the same generated endpoints, Pydantic model imports, typed `RestClient`,
+and operation registry. The pinned `openapi-python-client` release generates the
+endpoint serialization; the shared Pydantic contracts supply request validation
+and response parsing. Python 3.11–3.14 are supported; CI verifies regeneration
+and builds on the range's Python 3.11 and 3.14 endpoints.
 Generation validates complete operation coverage before replacing an existing
-package and restores the previous package if publication fails.
+package and restores the previous package if replacement fails.
 
 ```bash
 python -m build packages/bsm-api-client

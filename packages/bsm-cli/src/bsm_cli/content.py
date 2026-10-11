@@ -19,5 +19,5 @@ def content():
 async def upload(ctx, file_path):
     """Upload a content file."""
     client = get_client(ctx)
-    response = await client.async_upload_content(file_path)
+    response = await client.content.async_upload_content(file_path)
     return emit(ctx, response)

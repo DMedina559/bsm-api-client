@@ -56,7 +56,7 @@ async def set_perm(
             return
 
         click.echo(f"Finding player '{player_name}' in global database...")
-        all_players_resp = await client.async_get_players()
+        all_players_resp = await client.players.async_get_players()
         player_data = next(
             (
                 p
@@ -83,7 +83,9 @@ async def set_perm(
                 )
             ]
         )
-        response = await client.async_set_server_permissions(server_name, payload)
+        response = await client.servers.async_set_server_permissions(
+            server_name, payload
+        )
 
         if response.status == "success":
             click.secho("Permission updated successfully.", fg="green")
@@ -108,7 +110,7 @@ async def list_perms(ctx, server_name: str):
     """Lists all configured player permissions for a specific server."""
     client = get_client(ctx)
 
-    response = await client.async_get_server_permissions_data(server_name)
+    response = await client.servers.async_get_server_permissions_data(server_name)
 
     if response.status == "success":
         permissions = response.permissions
@@ -139,7 +141,7 @@ async def interactive_permissions_workflow(client, server_name: str):
     click.secho("\n--- Interactive Permission Configuration ---", bold=True)
 
     while True:
-        player_response = await client.async_get_players()
+        player_response = await client.players.async_get_players()
         all_players = player_response.players or []
 
         if not all_players:
@@ -180,7 +182,9 @@ async def interactive_permissions_workflow(client, server_name: str):
                 )
             ]
         )
-        perm_response = await client.async_set_server_permissions(server_name, payload)
+        perm_response = await client.servers.async_set_server_permissions(
+            server_name, payload
+        )
 
         if perm_response.status == "success":
             click.secho(

@@ -124,7 +124,10 @@ async def test_generated_adapter_typed_mode_preserves_parsed_model(monkeypatch):
             return self
 
     monkeypatch.setattr(generated, "Client", FakeClient)
-    owner = SimpleNamespace(_server_root_url="http://localhost")
+    owner = SimpleNamespace(
+        _server_root_url="http://localhost",
+        _generated_client=lambda authenticated: FakeClient(),
+    )
     assert await generated_adapter.call_generated(owner, "test", typed=True) is parsed
     assert await generated_adapter.call_generated(owner, "test") == {"status": "ok"}
     with pytest.raises(generated_adapter.InvalidInputError):

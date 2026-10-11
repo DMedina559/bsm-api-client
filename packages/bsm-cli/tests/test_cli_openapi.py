@@ -63,7 +63,10 @@ class FakeClient(DynamicOpenAPIMixin):
         self._fetch_openapi_schema = AsyncMock(return_value=SCHEMA)
         self.async_call_operation = AsyncMock(return_value={"status": "success"})
         self.close = AsyncMock()
-        self.async_get_servers = AsyncMock(return_value={"servers": []})
+        from bsm_api_client.services.servers import ServersService
+
+        self.servers = ServersService(self)
+        self.servers.async_get_servers = AsyncMock(return_value={"servers": []})
 
 
 @pytest.fixture
@@ -225,7 +228,7 @@ def test_human_operations_table_and_machine_curated_response(client):
 def test_curated_command_has_structured_response(client):
     from bsm_api_client.models import ServersListResponse
 
-    client.async_get_servers.return_value = ServersListResponse(
+    client.servers.async_get_servers.return_value = ServersListResponse(
         status="success", servers=[]
     )
     result = run("--json", "server", "list")
@@ -283,7 +286,7 @@ def test_server_completion_ignores_another_servers_cache(client):
 def test_curated_failure_returns_nonzero_status(client):
     from bsm_api_client.exceptions import OperationFailedError
 
-    client.async_get_servers.side_effect = OperationFailedError("Failed")
+    client.servers.async_get_servers.side_effect = OperationFailedError("Failed")
     result = run("--json", "server", "list")
     assert result.exit_code == 1
     assert json.loads(result.stderr)["exit_code"] == 1

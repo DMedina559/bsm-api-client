@@ -202,7 +202,7 @@ async def test_home_opens_server_directly_and_has_no_duplicate_command_groups(
     from bsm_cli.main_menus import main_menu
 
     client = AsyncMock()
-    client.async_get_servers.return_value = ServersListResponse(
+    client.servers.async_get_servers.return_value = ServersListResponse(
         status="success",
         servers=[
             ServerSummary(name="alpha", status="STOPPED", version="1", player_count=0)
@@ -226,7 +226,7 @@ async def test_home_opens_server_directly_and_has_no_duplicate_command_groups(
     opened.assert_awaited_once()
     assert opened.await_args.args[1] == "alpha"
     assert table.call_count == 2
-    table.assert_called_with(client.async_get_servers.return_value.servers)
+    table.assert_called_with(client.servers.async_get_servers.return_value.servers)
     assert "Monitor" in observed
     assert not any(isinstance(value, str) and "Commands" in value for value in observed)
 
@@ -259,7 +259,7 @@ async def test_operations_selects_task_without_another_menu(monkeypatch):
     from bsm_cli.manager import show_task
 
     client = AsyncMock()
-    client.async_list_tasks.return_value = [
+    client.tasks.async_list_tasks.return_value = [
         SimpleNamespace(id="task-123", status="completed", message="Backup finished")
     ]
     invoked = AsyncMock()
@@ -270,7 +270,7 @@ async def test_operations_selects_task_without_another_menu(monkeypatch):
     with click.Context(cli, obj={"client": client, "cli": cli}) as ctx:
         await operations_menu(ctx)
         invoked.assert_awaited_once_with(ctx, show_task, task_id="task-123")
-    assert client.async_list_tasks.await_count == 2
+    assert client.tasks.async_list_tasks.await_count == 2
 
 
 @pytest.mark.asyncio
@@ -280,12 +280,12 @@ async def test_home_connection_failure_can_exit_without_retry_loop(monkeypatch, 
     from bsm_cli.main_menus import main_menu
 
     client = AsyncMock()
-    client.async_get_servers.side_effect = CannotConnectError("ClientOSError")
+    client.servers.async_get_servers.side_effect = CannotConnectError("ClientOSError")
     monkeypatch.setattr("click.clear", lambda: None)
     monkeypatch.setattr("questionary.select", lambda *a, **k: Answer("Exit"))
     with click.Context(cli, obj={"client": client, "cli": cli}) as ctx:
         await main_menu(ctx)
-    assert client.async_get_servers.await_count == 1
+    assert client.servers.async_get_servers.await_count == 1
     assert "Connection: Unavailable" in capsys.readouterr().out
 
 
@@ -297,7 +297,7 @@ async def test_home_connection_retry_recovers(monkeypatch):
     from bsm_cli.main_menus import main_menu
 
     client = AsyncMock()
-    client.async_get_servers.side_effect = [
+    client.servers.async_get_servers.side_effect = [
         CannotConnectError("ClientOSError"),
         ServersListResponse(status="success", servers=[]),
     ]
@@ -306,7 +306,7 @@ async def test_home_connection_retry_recovers(monkeypatch):
     monkeypatch.setattr("questionary.select", lambda *a, **k: Answer(next(answers)))
     with click.Context(cli, obj={"client": client, "cli": cli}) as ctx:
         await main_menu(ctx)
-    assert client.async_get_servers.await_count == 2
+    assert client.servers.async_get_servers.await_count == 2
 
 
 def test_shared_header_uses_backend_version_and_splash(monkeypatch, capsys):

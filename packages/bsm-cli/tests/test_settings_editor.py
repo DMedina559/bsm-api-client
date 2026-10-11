@@ -90,7 +90,7 @@ async def test_plugin_editor_refuses_overwriting_other_sessions(monkeypatch):
     from bsm_cli.plugins import edit_plugin_settings
 
     client = AsyncMock()
-    client.async_get_plugin_settings.side_effect = [
+    client.plugins.async_get_plugin_settings.side_effect = [
         GetPluginSettingsResponse(settings={"enabled": True}),
         GetPluginSettingsResponse(settings={"enabled": False}),
     ]
@@ -100,4 +100,4 @@ async def test_plugin_editor_refuses_overwriting_other_sessions(monkeypatch):
     )
     with pytest.raises(click.ClickException, match="another session"):
         await edit_plugin_settings(client, "demo")
-    client.async_update_plugin_settings.assert_not_called()
+    client.plugins.async_update_plugin_settings.assert_not_called()

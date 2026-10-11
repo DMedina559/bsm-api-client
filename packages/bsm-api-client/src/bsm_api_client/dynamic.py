@@ -9,7 +9,6 @@ from contextlib import asynccontextmanager
 from typing import TYPE_CHECKING, Any, AsyncIterator, Dict, Mapping, Optional
 from urllib.parse import quote
 
-import aiohttp
 import httpx
 
 from .exceptions import (
@@ -48,6 +47,8 @@ class DynamicOpenAPIMixin(GeneratedOperationMethods):
         _request_timeout: Any
         _verify_ssl: bool
         _session: Any
+        _http_client: httpx.AsyncClient
+        _generated_clients: Dict[bool, Any]
 
         _auth_lock: asyncio.Lock
 
@@ -79,7 +80,7 @@ class DynamicOpenAPIMixin(GeneratedOperationMethods):
         return ApiCapabilities(self.operations)
 
     @property
-    def plugins(self) -> Mapping[str, tuple[DiscoveredOperation, ...]]:
+    def plugin_operations(self) -> Mapping[str, tuple[DiscoveredOperation, ...]]:
         return self.capabilities.plugins
 
     def api_diff(
@@ -100,30 +101,40 @@ class DynamicOpenAPIMixin(GeneratedOperationMethods):
         )
 
     async def async_get_generated_client(self) -> Any:
-        """Return the generated client using the current authentication state."""
+        """Return the shared generated client with managed authentication."""
         if not self._jwt_token:
             await self._ensure_authenticated()
-        try:
-            from .generated.client import AuthenticatedClient
-        except ImportError as exc:
-            raise RuntimeError(
-                "The generated OpenAPI client is not present. Run the OpenAPI generation tools."
-            ) from exc
-        if not self._jwt_token:
-            raise AuthError("Authentication did not provide a token.")
-        generated = AuthenticatedClient(
-            base_url=self._server_root_url,
-            token=self._jwt_token,
-            verify_ssl=self._verify_ssl,
-        )
-        transport = httpx.AsyncClient(
-            base_url=self._server_root_url, transport=SharedTransport(self, True)
-        )
-        generated.set_async_httpx_client(transport)
-        if not hasattr(self, "_generated_http_clients"):
-            self._generated_http_clients = []
-        self._generated_http_clients.append(transport)
-        return generated
+        return self._generated_client(True)
+
+    def _generated_client(self, authenticated: bool) -> Any:
+        if getattr(self, "_closed", False):
+            raise APIError("The API client is closed.")
+        from .generated.client import AuthenticatedClient, Client
+
+        clients = getattr(self, "_generated_clients", None)
+        if clients is None:
+            clients = self._generated_clients = {}
+        if authenticated not in clients:
+            kwargs: Dict[str, Any] = {
+                "base_url": self._server_root_url,
+                "verify_ssl": self._verify_ssl,
+            }
+            generated = (
+                AuthenticatedClient(token=self._jwt_token or "", **kwargs)
+                if authenticated
+                else Client(**kwargs)
+            )
+            transport = httpx.AsyncClient(
+                base_url=self._server_root_url,
+                transport=SharedTransport(self, authenticated),
+                trust_env=False,
+            )
+            generated.set_async_httpx_client(transport)
+            clients[authenticated] = generated
+            if not hasattr(self, "_generated_http_clients"):
+                self._generated_http_clients = []
+            self._generated_http_clients.append(transport)
+        return clients[authenticated]
 
     async def async_discover_api(
         self, *, force: bool = False
@@ -394,24 +405,6 @@ class DynamicOpenAPIMixin(GeneratedOperationMethods):
             result["Authorization"] = f"Bearer {self._jwt_token}"
         return result
 
-    @staticmethod
-    def _request_body(form_data, files, raw_request, multipart=False):
-        if raw_request is not None:
-            return raw_request.stream
-        if not files and not multipart:
-            return _query_values(form_data) if form_data is not None else None
-        upload = aiohttp.FormData(default_to_multipart=True)
-        for key, value in (form_data or {}).items():
-            for item in value if isinstance(value, (list, tuple)) else [value]:
-                upload.add_field(key, _form_value(item))
-        for key, value in (files or {}).items():
-            entries = value if isinstance(value, list) else [value]
-            for filename, content, content_type in entries:
-                upload.add_field(
-                    key, content, filename=filename, content_type=content_type
-                )
-        return upload
-
     @asynccontextmanager
     async def _open_response(
         self,
@@ -427,8 +420,10 @@ class DynamicOpenAPIMixin(GeneratedOperationMethods):
         raw_request=None,
         files=None,
         multipart=False,
-    ) -> AsyncIterator[aiohttp.ClientResponse]:
+    ) -> AsyncIterator[httpx.Response]:
         """Own connections, authentication, and bounded replay for every transport."""
+        if getattr(self, "_closed", False):
+            raise APIError("The API client is closed.")
         if authenticated and not self._jwt_token:
             await self._ensure_authenticated()
         url = f"{self._server_root_url}{path if path.startswith('/') else '/' + path}"
@@ -444,7 +439,31 @@ class DynamicOpenAPIMixin(GeneratedOperationMethods):
             generation_used = getattr(self, "_auth_generation", 0)
             request_headers = self._request_headers(headers, raw_request, authenticated)
             try:
-                context = self._session.request(
+                upload: list[Any] = [
+                    (
+                        key,
+                        (
+                            entry[0],
+                            (
+                                UploadStream(entry[1])
+                                if hasattr(entry[1], "read")
+                                else entry[1]
+                            ),
+                            entry[2],
+                        ),
+                    )
+                    for key, value in (files or {}).items()
+                    for entry in (value if isinstance(value, list) else [value])
+                ]
+                if multipart or files:
+                    upload[0:0] = [
+                        (key, (None, _form_value(item)))
+                        for key, value in (form_data or {}).items()
+                        for item in (
+                            value if isinstance(value, (list, tuple)) else [value]
+                        )
+                    ]
+                request = self._http_client.build_request(
                     method.upper(),
                     url,
                     params=(
@@ -453,14 +472,22 @@ class DynamicOpenAPIMixin(GeneratedOperationMethods):
                         else _query_values(query or {})
                     ),
                     json=json_data,
-                    data=self._request_body(form_data, files, raw_request, multipart),
+                    content=raw_request.content if raw_request is not None else None,
+                    data=(
+                        _query_values(form_data)
+                        if form_data and not multipart and not files
+                        else None
+                    ),
+                    files=upload or None,
                     headers=request_headers,
-                    timeout=self._request_timeout,
-                    ssl=None if self._verify_ssl else False,
-                    allow_redirects=False,
                 )
-                response = await context.__aenter__()
-            except (aiohttp.ClientError, asyncio.TimeoutError, OSError) as exc:
+                request.headers.pop("Authorization", None)
+                if authenticated and self._jwt_token:
+                    request.headers["Authorization"] = f"Bearer {self._jwt_token}"
+                response = await self._http_client.send(
+                    request, stream=True, follow_redirects=False, auth=None
+                )
+            except (httpx.HTTPError, asyncio.TimeoutError, OSError) as exc:
                 raise CannotConnectError(
                     "Unable to connect to the API.", original_exception=exc
                 ) from exc
@@ -468,12 +495,12 @@ class DynamicOpenAPIMixin(GeneratedOperationMethods):
                 "API response received",
                 extra={
                     "http_method": method.upper(),
-                    "http_status": response.status,
+                    "http_status": response.status_code,
                     "auth_retry": bool(attempt),
                 },
             )
             refresh = (
-                response.status == 401
+                response.status_code == 401
                 and authenticated
                 and replayable
                 and attempt == 0
@@ -484,19 +511,19 @@ class DynamicOpenAPIMixin(GeneratedOperationMethods):
                     await self._check_response(response, path)
                     yield response
                     return
-                response.release()
+                await response.aclose()
             finally:
-                await context.__aexit__(None, None, None)
+                await response.aclose()
             await self._ensure_authenticated(
                 stale_token=token_used, stale_generation=generation_used
             )
 
     async def _check_response(self, response, path):
-        if response.status >= 400:
+        if response.status_code >= 400:
             await self._handle_api_error(response, path)
-        if 300 <= response.status < 400:
+        if 300 <= response.status_code < 400:
             raise APIError(
-                "API redirects are not followed.", status_code=response.status
+                "API redirects are not followed.", status_code=response.status_code
             )
 
     async def _dynamic_request(
@@ -529,16 +556,19 @@ class DynamicOpenAPIMixin(GeneratedOperationMethods):
         ) as response:
             if raw_request is not None:
                 return httpx.Response(
-                    response.status,
+                    response.status_code,
                     headers={
                         key: value
                         for key, value in response.headers.items()
                         if key.lower() not in {"content-encoding", "content-length"}
                     },
-                    content=await response.read(),
+                    content=await response.aread(),
                     request=raw_request,
                 )
-            if response.status == 204 or response.content_length == 0:
+            if (
+                response.status_code == 204
+                or response.headers.get("content-length") == "0"
+            ):
                 return None
             return await _read_response(response)
 
@@ -551,11 +581,11 @@ class DynamicOpenAPIMixin(GeneratedOperationMethods):
         query: Optional[Mapping[str, Any]] = None,
         headers: Optional[Mapping[str, str]] = None,
         authenticated: Optional[bool] = None,
-    ) -> AsyncIterator[aiohttp.ClientResponse]:
+    ) -> AsyncIterator[httpx.Response]:
         """Stream a discovered GET response without buffering the entire file.
 
         Use ``async with client.async_stream_operation(id) as response`` and
-        iterate ``response.content.iter_chunked(65536)``. Exiting the context
+        iterate ``response.aiter_bytes(65536)``. Exiting the context
         releases the connection, including on cancellation or partial reads.
         """
         if not self.operations:
@@ -610,6 +640,16 @@ class DynamicOpenAPIMixin(GeneratedOperationMethods):
         return rendered
 
 
+class UploadStream:
+    """Read caller-owned uploads from their current position without rewinding."""
+
+    def __init__(self, stream):
+        self.stream = stream
+
+    def read(self, size=-1):
+        return self.stream.read(size)
+
+
 def _query_values(query: Mapping[str, Any]) -> Dict[str, Any]:
     def value(item: Any) -> Any:
         if isinstance(item, bool):
@@ -625,15 +665,16 @@ def _form_value(value: Any) -> str:
     return str(value).lower() if isinstance(value, bool) else str(value)
 
 
-async def _read_response(response: aiohttp.ClientResponse) -> Any:
-    content_type = response.content_type
+async def _read_response(response: httpx.Response) -> Any:
+    await response.aread()
+    content_type = response.headers.get("content-type", "").split(";", 1)[0]
     if content_type == "application/json" or content_type.endswith("+json"):
         try:
-            return await response.json(content_type=None)
+            return response.json()
         except (ValueError, UnicodeDecodeError) as exc:
             raise APIError(
-                "API returned malformed JSON.", status_code=response.status
+                "API returned malformed JSON.", status_code=response.status_code
             ) from exc
     if content_type.startswith("text/"):
-        return await response.text()
-    return await response.read()
+        return response.text
+    return response.content

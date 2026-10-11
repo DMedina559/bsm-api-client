@@ -38,9 +38,9 @@ def mock_client():
     client = AsyncMock()
     # Mocking servers response
     server1 = {"name": "server1", "status": "RUNNING", "version": "1.0"}
-    client.async_get_servers.return_value = MagicMock(servers=[server1])
+    client.servers.async_get_servers.return_value = MagicMock(servers=[server1])
     # Mocking task response
-    client.async_get_task_status.return_value = {
+    client.tasks.async_get_task_status.return_value = {
         "status": "success",
         "message": "Task done",
     }
@@ -93,7 +93,7 @@ async def test_list_servers_websocket_flow(mock_client, mock_ws_client):
     mock_client.websocket_connect.assert_called_once()
 
     mock_ws_client.subscribe.assert_any_call("event:after_server_statuses_updated")
-    assert mock_client.async_get_servers.call_count >= 2
+    assert mock_client.servers.async_get_servers.call_count >= 2
     # Verify sleep was called (fallback triggered after WS finished)
     mock_sleep.assert_called()
 
@@ -122,14 +122,14 @@ async def test_list_servers_fallback(mock_client):
 
     mock_client.websocket_connect.assert_called_once()
     mock_sleep.assert_called()
-    assert mock_client.async_get_servers.call_count >= 1
+    assert mock_client.servers.async_get_servers.call_count >= 1
 
 
 @pytest.mark.asyncio
 async def test_monitor_task_websocket(mock_client, mock_ws_client):
     mock_client.websocket_connect.return_value = mock_ws_client
 
-    mock_client.async_get_task_status.return_value = {"status": "running"}
+    mock_client.tasks.async_get_task_status.return_value = {"status": "running"}
     task_id = "123"
     msg = {
         "type": "task_update",
@@ -152,7 +152,7 @@ async def test_monitor_task_websocket(mock_client, mock_ws_client):
 @pytest.mark.asyncio
 async def test_monitor_task_fallback(mock_client):
     mock_client.websocket_connect.side_effect = Exception("WS Failed")
-    mock_client.async_get_task_status.return_value = {
+    mock_client.tasks.async_get_task_status.return_value = {
         "status": "success",
         "message": "Done via poll",
     }
@@ -165,7 +165,7 @@ async def test_monitor_task_fallback(mock_client):
         await monitor_task(mock_client, "123", "Success", "Failure")
 
     mock_client.websocket_connect.assert_called_once()
-    mock_client.async_get_task_status.assert_called_once_with("123")
+    mock_client.tasks.async_get_task_status.assert_called_once_with("123")
     mock_secho.assert_any_call(
         "WebSocket monitoring failed (WS Failed), falling back to polling...",
         fg="yellow",
@@ -178,7 +178,7 @@ async def test_monitor_task_propagates_failed_background_result(mock_client):
     from bsm_api_client.exceptions import OperationFailedError
 
     mock_client.websocket_connect.side_effect = Exception("WS Failed")
-    mock_client.async_get_task_status.return_value = {
+    mock_client.tasks.async_get_task_status.return_value = {
         "status": "success",
         "message": "Task completed",
         "result": {"status": "error", "message": "Install failed"},
@@ -192,7 +192,7 @@ async def test_task_already_finished_at_subscription(mock_client, mock_ws_client
     mock_client.websocket_connect.return_value = mock_ws_client
     await monitor_task(mock_client, "123", "Success", "Failure")
     mock_ws_client.subscribe.assert_awaited_once_with("task:123")
-    mock_client.async_get_task_status.assert_awaited_once_with("123")
+    mock_client.tasks.async_get_task_status.assert_awaited_once_with("123")
     mock_ws_client.listen.assert_not_called()
 
 
@@ -203,7 +203,7 @@ async def test_idle_task_socket_falls_back_to_rest(
     import asyncio
 
     mock_client.websocket_connect.return_value = mock_ws_client
-    mock_client.async_get_task_status.side_effect = [
+    mock_client.tasks.async_get_task_status.side_effect = [
         {"status": "running", "message": "Running"},
         {"status": "completed", "message": "Done"},
     ]
@@ -219,7 +219,7 @@ async def test_idle_task_socket_falls_back_to_rest(
     mock_ws_client.listen.side_effect = listen
     monkeypatch.setattr("bsm_cli.decorators.asyncio.wait_for", timeout)
     await monitor_task(mock_client, "123", "Success", "Failure")
-    assert mock_client.async_get_task_status.await_count == 2
+    assert mock_client.tasks.async_get_task_status.await_count == 2
     mock_ws_client.__aexit__.assert_awaited_once()
 
 
@@ -228,13 +228,13 @@ async def test_task_poll_recovers_after_connection_loss(mock_client, monkeypatch
     from bsm_api_client.exceptions import CannotConnectError
 
     mock_client.websocket_connect.side_effect = CannotConnectError("disconnected")
-    mock_client.async_get_task_status.side_effect = [
+    mock_client.tasks.async_get_task_status.side_effect = [
         CannotConnectError("disconnected"),
         {"status": "completed", "message": "Installed"},
     ]
     monkeypatch.setattr("bsm_cli.decorators.asyncio.sleep", AsyncMock())
     await monitor_task(mock_client, "task-123", "Installed", "Failed")
-    assert mock_client.async_get_task_status.await_count == 2
+    assert mock_client.tasks.async_get_task_status.await_count == 2
 
 
 @pytest.mark.asyncio
@@ -244,8 +244,10 @@ async def test_task_poll_reports_unknown_outcome_on_disconnect(
     from bsm_api_client.exceptions import CannotConnectError
 
     mock_client.websocket_connect.side_effect = CannotConnectError("disconnected")
-    mock_client.async_get_task_status.side_effect = CannotConnectError("disconnected")
+    mock_client.tasks.async_get_task_status.side_effect = CannotConnectError(
+        "disconnected"
+    )
     monkeypatch.setattr("bsm_cli.decorators.asyncio.sleep", AsyncMock())
     with pytest.raises(CannotConnectError, match="Task task-123 was submitted"):
         await monitor_task(mock_client, "task-123", "Installed", "Failed")
-    assert mock_client.async_get_task_status.await_count == 3
+    assert mock_client.tasks.async_get_task_status.await_count == 3

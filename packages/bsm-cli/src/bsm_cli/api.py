@@ -174,7 +174,7 @@ async def info(ctx):
             "info": client.schema.get("info", {}),
             "fingerprint": client.schema_fingerprint,
             "operations": len(client.operations),
-            "plugins": sorted(client.plugins),
+            "plugins": sorted(client.plugin_operations),
             "runtime_only": list(client.capabilities.runtime_only),
         },
     )
@@ -290,7 +290,7 @@ async def refresh(ctx):
             },
         )
         if client.capabilities.has("list_servers"):
-            names = await client.async_get_server_names()
+            names = await client.servers.async_get_server_names()
             config.set(
                 "server_cache", {"base_url": config.base_url, "names": sorted(names)}
             )
@@ -350,7 +350,7 @@ async def download(ctx, operation_id, output, param):
                 dir=output.parent, prefix=".bsm-download-", delete=False
             ) as handle:
                 temporary = Path(handle.name)
-                async for chunk in response.content.iter_chunked(65536):
+                async for chunk in response.aiter_bytes(65536):
                     handle.write(chunk)
                     size += len(chunk)
             os.replace(temporary, output)
@@ -370,14 +370,15 @@ def register_plugin_commands(plugin):
     @pass_async_context
     async def plugin_operations(ctx, plugin_name):
         client = await discover(ctx)
-        if plugin_name not in client.plugins:
+        if plugin_name not in client.plugin_operations:
             raise NotFoundError(f"No discovered operations for plugin: {plugin_name}")
         return emit(
             ctx,
             [
                 op.to_dict()
                 for op in sorted(
-                    client.plugins[plugin_name], key=lambda op: op.operation_id
+                    client.plugin_operations[plugin_name],
+                    key=lambda op: op.operation_id,
                 )
             ],
             columns=("method", "operation_id", "path"),

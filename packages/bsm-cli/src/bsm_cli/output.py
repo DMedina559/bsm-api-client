@@ -130,6 +130,12 @@ class RecordingClient:
 
     def __getattr__(self, name: str) -> Any:
         target = getattr(self.client, name)
+        from bsm_api_client.services.base import Service
+
+        if isinstance(target, Service):
+            nested = RecordingClient(target, record=self.record)
+            nested.results = self.results
+            return nested
         if (
             name == "async_stream_operation"
             or not name.startswith("async_")

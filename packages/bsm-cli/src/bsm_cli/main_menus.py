@@ -31,7 +31,7 @@ async def operations_menu(ctx):
 
     while True:
         screen_header("Operations")
-        tasks = await get_client(ctx).async_list_tasks()
+        tasks = await get_client(ctx).tasks.async_list_tasks()
         choices = [
             Choice(
                 f"{task.status.capitalize()} · {task.message} ({task.id})",
@@ -150,7 +150,7 @@ async def main_menu(ctx):
 async def _load_home_fleet(ctx, client):
     while True:
         try:
-            return await client.async_get_servers()
+            return await client.servers.async_get_servers()
         except (CannotConnectError, CliConnectionError):
             config = ctx.obj.get("config")
             endpoint = config.base_url if config else "the configured backend"
@@ -271,5 +271,5 @@ async def _deleted_server(ctx, choice, server_name):
     if choice != "Delete":
         return False
     # A cancelled delete leaves the server registered.
-    fleet = await get_client(ctx).async_get_servers()
+    fleet = await get_client(ctx).servers.async_get_servers()
     return not any(item.name == server_name for item in fleet.servers or [])

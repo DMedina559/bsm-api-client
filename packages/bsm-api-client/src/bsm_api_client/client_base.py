@@ -12,6 +12,7 @@ from typing import Any, Dict, Mapping, Optional, Tuple, cast
 from urllib.parse import urlparse
 
 import aiohttp
+import httpx
 
 # Import exceptions from the same package level
 from .exceptions import (
@@ -82,8 +83,9 @@ class ClientBase:
         jwt_token: Optional[str] = None,
         session: Optional[aiohttp.ClientSession] = None,
         base_path: str = "/api",
-        request_timeout: int = 90,
+        request_timeout: float = 90,
         verify_ssl: bool = True,
+        http_client: Optional[httpx.AsyncClient] = None,
     ):
         """Initializes the base API client.
         :param base_url: The base URL of the Bedrock Server Manager (e.g., http://localhost:8080).
@@ -136,30 +138,23 @@ class ClientBase:
         # _base_url includes the _api_base_segment (e.g., /api) and is used for most standard API calls.
         self._base_url = f"{self._server_root_url}{self._api_base_segment}"
 
+        self._closed = False
         self._username = username
         self._password = password
-        self._request_timeout = aiohttp.ClientTimeout(total=request_timeout)
+        self._request_timeout = request_timeout
         self._verify_ssl = verify_ssl
 
-        if session is None:
-            _LOGGER.debug("No session provided, creating an internal ClientSession.")
-            connector = None
-            if self._use_ssl and not self._verify_ssl:
-                _LOGGER.warning(
-                    "Creating internal session with SSL certificate verification DISABLED. "
-                    "This is insecure for production."
-                )
-                connector = aiohttp.TCPConnector(ssl=False)
-            self._session = aiohttp.ClientSession(connector=connector)
-            self._close_session = True
-        else:
-            self._session = session
-            self._close_session = False
-
         self._jwt_token: Optional[str] = jwt_token
-        self._default_headers: Mapping[str, str] = {
-            "Accept": "application/json",
-        }
+        self._default_headers: Mapping[str, str] = {"Accept": "application/json"}
+        self._session = session
+        self._close_session = session is None
+        self._http_client = http_client or httpx.AsyncClient(
+            timeout=request_timeout,
+            verify=verify_ssl,
+            follow_redirects=False,
+            trust_env=False,
+        )
+        self._close_http_client = http_client is None
         self._auth_lock = asyncio.Lock()
         self._auth_generation = 0
         self._generated_http_clients: list[Any] = []
@@ -174,11 +169,14 @@ class ClientBase:
 
             response = await client.close()
         """
+        self._closed = True
         results = await asyncio.gather(
             *(client.aclose() for client in self._generated_http_clients),
             return_exceptions=True,
         )
         self._generated_http_clients = []
+        if self._close_http_client:
+            await self._http_client.aclose()
         if self._session and self._close_session and not self._session.closed:
             await self._session.close()
             _LOGGER.debug(
@@ -195,14 +193,14 @@ class ClientBase:
         await self.close()
 
     async def _extract_error_details(  # noqa: C901
-        self, response: aiohttp.ClientResponse
+        self, response: httpx.Response
     ) -> Tuple[str, Dict[str, Any]]:
         """Extracts error details from an API response.
 
         Tries to parse a JSON response body to find a detailed error message.
         Falls back to using the response text or reason if JSON parsing fails.
 
-        :param response: The `aiohttp.ClientResponse` object from the failed request.
+        :param response: The `httpx.Response` object from the failed request.
 
         :returns: A tuple containing the error message string and the full error data dictionary.
 
@@ -216,9 +214,10 @@ class ClientBase:
         error_data: Dict[str, Any] = {}
 
         try:
-            response_text = await response.text()
-            if response.content_type == "application/json":
-                parsed_json = await response.json(content_type=None)
+            await response.aread()
+            response_text = response.text
+            if "json" in response.headers.get("content-type", ""):
+                parsed_json = response.json()
                 if isinstance(parsed_json, dict):
                     error_data = parsed_json
                 else:
@@ -230,7 +229,7 @@ class ClientBase:
             _LOGGER.debug("Could not parse API error response (%s)", type(e).__name__)
             error_data = {
                 "raw_error": response_text
-                or response.reason
+                or response.reason_phrase
                 or "Unknown error reading response."
             }
 
@@ -280,12 +279,12 @@ class ClientBase:
             ):  # If we stored raw text due to parsing failure
                 message = error_data["raw_error"]
             else:  # Absolute fallback
-                message = response.reason or "Unknown API error"
+                message = response.reason_phrase or "Unknown API error"
 
         return str(message), error_data
 
     async def _handle_api_error(  # noqa: C901
-        self, response: aiohttp.ClientResponse, request_path_for_log: str
+        self, response: httpx.Response, request_path_for_log: str
     ):
         """Processes an error response and raises the appropriate custom exception.
 
@@ -293,7 +292,7 @@ class ClientBase:
         API response to the appropriate exception classes defined in the
         `exceptions` module.
 
-        :param response: The `aiohttp.ClientResponse` object from the failed request.
+        :param response: The `httpx.Response` object from the failed request.
         :param request_path_for_log: The path of the request for logging purposes.
 
         :raises InvalidInputError: For 400 or 422 status codes.
@@ -312,7 +311,7 @@ class ClientBase:
             response = await client._handle_api_error()
         """
         message, error_data = await self._extract_error_details(response)
-        status = response.status
+        status = response.status_code
 
         if status == 400:  # Bad Request
             raise InvalidInputError(
@@ -468,4 +467,7 @@ class ClientBase:
         authority = urlparse(self._server_root_url).netloc
         ws_url = f"{ws_scheme}://{authority}/ws"
 
+        if self._session is None:
+            connector = aiohttp.TCPConnector(ssl=self._verify_ssl)
+            self._session = aiohttp.ClientSession(connector=connector)
         return WebSocketClient(self._session, ws_url, self._jwt_token)

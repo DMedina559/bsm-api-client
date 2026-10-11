@@ -22,7 +22,7 @@
 
 ## Features
 
-*   Fully asynchronous with a generated OpenAPI client plus an `aiohttp` compatibility/WebSocket transport.
+*   Fully asynchronous with generated OpenAPI operations, Pydantic contracts, persistent HTTPX REST transport, and aiohttp WebSockets.
 *   Context manager support for session management.
 *   Handles authentication (JWT) automatically, including token refresh attempts.
 *   Generates the typed REST surface from BSM 4.x FastAPI OpenAPI at release time.
@@ -64,21 +64,21 @@ async def main():
     try:
         async with client: # Handles session and token management
             # Get manager info (no auth needed for this specific call, but client handles it)
-            manager_info = await client.async_get_info()
-            print(f"Manager OS: {manager_info.get('data', {}).get('os_type')}, Version: {manager_info.get('data', {}).get('app_version')}")
+            manager_info = await client.rest.get_system_info()
+            print(f"Manager OS: {(manager_info.info or {}).get('os_type')}, Version: {(manager_info.info or {}).get('app_version')}")
 
             # Get list of all servers
-            servers = await client.async_get_servers_details()
-            if servers:
+            servers = await client.rest.list_servers()
+            if servers.servers:
                 print("\nManaged Servers:")
-                for server in servers:
+                for server in servers.servers or []:
                     print(f"  - Name: {server['name']}, Status: {server['status']}, Version: {server['version']}")
             else:
                 print("No servers found.")
 
             # Example: Start a specific server (replace 'MyServer' with an actual server name)
             # server_name_to_start = "MyServer"
-            # if any(s['name'] == server_name_to_start for s in servers):
+            # if any(s['name'] == server_name_to_start for s in servers.servers or []):
             #     print(f"\nAttempting to start server: {server_name_to_start}")
             #     start_response = await client.async_start_server(server_name_to_start)
             #     print(f"Start response: {start_response.get('message')}")
@@ -111,26 +111,48 @@ if __name__ == "__main__":
 
 ## Generated and dynamic API
 
-BSM 4.x is the source of truth for the REST contract. Release builds export
-`/api/openapi.json` from the pinned BSM typed-contract revision and generate
-`bsm_api_client.generated`. The existing `BedrockServerManagerApi` methods
-are compatibility adapters that invoke generated operations by stable ID.
+BSM 4.x is the source of truth for the REST contract. Generated code is committed,
+reviewed, and shipped in both wheels and source archives; installation does not
+run code generation. Endpoint request and response models are the same public
+Pydantic contracts exposed by `bsm_api_client.models`.
+
+Use the generated operation-ID interface for ordinary REST operations:
+
+```python
+result = await client.rest.start_server(server_name="MyServer")
+detailed = await client.rest.start_server_detailed(server_name="MyServer")
+print(detailed.status_code, detailed.headers, detailed.parsed)
+```
+
+Services organize SDK workflows under `client.servers`, `client.application`,
+`client.tasks`, `client.players`, `client.plugins`, `client.users`, `client.account`,
+and `client.content`. The previous `async_*` convenience names delegate to these
+services; `client.servers` is now a dedicated service rather than the entire SDK.
+Runtime plugin contracts are available through `client.discovery`. Plugin
+operation groups previously exposed as `client.plugins` are now
+`client.discovery.plugins` (also available as `client.plugin_operations`).
+
+REST uses a persistent HTTPX client with shared authentication, token refresh,
+timeouts, and error translation. Pass `http_client=httpx.AsyncClient(...)` to use
+caller-owned transport settings; closing the SDK leaves that client open.
+The `session=` argument supplies only the WebSocket aiohttp session. The SDK
+creates an internal WebSocket session lazily and closes only sessions it owns.
 
 For endpoints added after the installed client was released (including plugin
 FastAPI routers), discover and invoke them at runtime:
 
 ```python
-operations = await client.async_discover_api()
+operations = await client.discovery.discover()
 for operation_id, operation in operations.items():
     print(operation_id, operation.method, operation.path)
 
-result = await client.async_call_operation(
+result = await client.discovery.call(
     "some_operation_id",
     path_params={"server_name": "MyServer"},
 )
 ```
 
-Call `await client.async_refresh_api()` after plugins are reloaded to detect a
+Call `await client.discovery.refresh()` after plugins are reloaded to detect a
 changed schema. WebSocket routes remain handled by `WebSocketClient`, because
 OpenAPI describes HTTP operations rather than WebSocket routes.
 
@@ -167,7 +189,7 @@ await client.async_call_operation(
 
 async with client.async_stream_operation("plugin_download") as response:
     with open("download.zip", "wb") as output:
-        async for chunk in response.content.iter_chunked(65536):
+        async for chunk in response.aiter_bytes(65536):
             output.write(chunk)
 ```
 

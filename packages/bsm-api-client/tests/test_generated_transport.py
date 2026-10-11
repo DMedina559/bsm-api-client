@@ -172,31 +172,22 @@ async def test_expired_token_retry_releases_first_response(local_api):
     """The 401 response must be closed before authentication is attempted."""
     client, _ = local_api
     original_authenticate = client.authenticate
-    original_request = client._session.request
+    original_send = client._http_client.send
     unauthorized_response = None
 
-    def tracked_request(*args, **kwargs):
-        context = original_request(*args, **kwargs)
-
-        class TrackedContext:
-            async def __aenter__(self):
-                nonlocal unauthorized_response
-                response = await context.__aenter__()
-                if response.status == 401:
-                    unauthorized_response = response
-                return response
-
-            async def __aexit__(self, *exc):
-                return await context.__aexit__(*exc)
-
-        return TrackedContext()
+    async def tracked_send(*args, **kwargs):
+        nonlocal unauthorized_response
+        response = await original_send(*args, **kwargs)
+        if response.status_code == 401:
+            unauthorized_response = response
+        return response
 
     async def assert_released_before_auth():
         assert unauthorized_response is not None
-        assert unauthorized_response.closed
+        assert unauthorized_response.is_closed
         return await original_authenticate()
 
-    client._session.request = tracked_request
+    client._http_client.send = tracked_send
     client.authenticate = assert_released_before_auth
     result = await client.async_start_server("example")
     assert result.status == "success"
@@ -218,3 +209,104 @@ async def test_dynamic_multipart_accepts_file_stream(local_api, tmp_path):
         )
     assert result == {"uploaded": True}
     assert seen == [("file", "payload.bin", b"streamed upload")]
+
+
+@pytest.mark.asyncio
+async def test_rest_interface_uses_one_contract_and_shared_generated_client(local_api):
+    from bsm_api_client.contracts import StartServerResponse
+    from bsm_api_client.generated.models.start_server_response import (
+        StartServerResponse as GeneratedResponse,
+    )
+
+    client, _ = local_api
+    assert GeneratedResponse is StartServerResponse
+    response = await client.rest.start_server(server_name="example")
+    assert isinstance(response, StartServerResponse)
+    detailed = await client.rest.start_server_detailed(server_name="example")
+    assert detailed.status_code == 200
+    assert isinstance(detailed.parsed, StartServerResponse)
+    assert "application/json" in detailed.headers["Content-Type"]
+    first = await client.async_get_generated_client()
+    assert await client.async_get_generated_client() is first
+    assert len(client._generated_http_clients) == 2  # authenticated REST and login
+    assert client._session is None  # REST does not create a WebSocket session
+
+
+@pytest.mark.asyncio
+async def test_caller_owned_httpx_client_remains_open():
+    import httpx
+
+    from bsm_api_client import BedrockServerManagerApi
+    from bsm_api_client.exceptions import APIError
+
+    async def respond(request):
+        return httpx.Response(200, json={"status": "success", "servers": []})
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(respond)) as transport:
+        client = BedrockServerManagerApi(
+            "http://localhost", jwt_token="token", http_client=transport
+        )
+        response = await client.rest.list_servers()
+        assert response.servers == []
+        await client.close()
+        assert not transport.is_closed
+        with pytest.raises(APIError, match="closed"):
+            await client.rest.list_servers()
+
+
+@pytest.mark.asyncio
+async def test_generated_login_sends_secret_without_unmasking_model_dumps():
+    from urllib.parse import parse_qs
+
+    import httpx
+
+    from bsm_api_client import BedrockServerManagerApi
+    from bsm_api_client.contracts import BodyLogin
+
+    body = BodyLogin(username="admin", password="test-password", grant_type="password")
+    assert "test-password" not in repr(body)
+    assert body.model_dump(mode="json")["password"] != "test-password"
+
+    async def respond(request):
+        values = parse_qs(request.content.decode())
+        assert values["password"] == ["test-password"]
+        return httpx.Response(
+            200, json={"access_token": "token", "token_type": "bearer"}
+        )
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(respond)) as transport:
+        async with BedrockServerManagerApi(
+            "http://localhost", jwt_token="placeholder", http_client=transport
+        ) as client:
+            response = await client.rest.login(body=body)
+            assert response.access_token == "token"
+
+
+@pytest.mark.asyncio
+async def test_generated_rest_respects_proxy_mount_and_custom_api_prefix():
+    import httpx
+
+    from bsm_api_client import BedrockServerManagerApi
+
+    async def respond(request):
+        assert request.url.path == "/bsm/custom/server/example/start"
+        assert request.headers["Authorization"] == "Bearer token"
+        return httpx.Response(
+            200,
+            json={
+                "status": "success",
+                "message": "Started",
+                "outcome": "started",
+                "server_name": "example",
+            },
+        )
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(respond)) as transport:
+        async with BedrockServerManagerApi(
+            "http://localhost/bsm",
+            base_path="custom",
+            jwt_token="token",
+            http_client=transport,
+        ) as client:
+            response = await client.rest.start_server(server_name="example")
+            assert response.outcome == "started"

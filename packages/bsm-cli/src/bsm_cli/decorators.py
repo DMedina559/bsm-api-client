@@ -121,7 +121,7 @@ async def monitor_task(
     connection_failures = 0
     while True:
         try:
-            data = await client.async_get_task_status(task_id)
+            data = await client.tasks.async_get_task_status(task_id)
         except CannotConnectError as error:
             connection_failures += 1
             if connection_failures >= 3:
@@ -160,7 +160,7 @@ async def _watch_task(client, task_id, success_message, failure_message):
         await ws_client.subscribe(f"task:{task_id}")
         # Completion can precede the subscription; always check the snapshot.
         if _task_finished(
-            await client.async_get_task_status(task_id),
+            await client.tasks.async_get_task_status(task_id),
             success_message,
             failure_message,
         ):

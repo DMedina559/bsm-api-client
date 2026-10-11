@@ -1,60 +1,99 @@
-# src/bsm_api_client/client.py
-"""Main API client class for Bedrock Server Manager.
+"""BSM SDK: generated REST operations plus domain and live extensions."""
 
-This module provides the main API client class, `BedrockServerManagerApi`,
-which integrates connection handling, authentication, and various API
-endpoint methods organized into mixins.
-"""
+from typing import TYPE_CHECKING, Any
 
-import logging
+import aiohttp
+import httpx
 
-from .client._account_methods import AccountMethodsMixin
-from .client._content_methods import ContentMethodsMixin
-from .client._manager_methods import ManagerMethodsMixin
-from .client._plugin_methods import PluginMethodsMixin
-from .client._server_action_methods import ServerActionMethodsMixin
-from .client._server_info_methods import ServerInfoMethodsMixin
-from .client._users_methods import UsersMethodsMixin
 from .client_base import ClientBase
 from .dynamic import DynamicOpenAPIMixin
+from .services.account import AccountService
+from .services.application import ApplicationService
+from .services.content import ContentService
+from .services.discovery import DiscoveryService
+from .services.players import PlayersService
+from .services.plugins import PluginsService
+from .services.servers import ServersService
+from .services.tasks import TasksService
+from .services.users import UsersService
 
-_LOGGER = logging.getLogger(__name__.split(".")[0] + ".client")
+if TYPE_CHECKING:
+    from .generated.rest import RestClient
 
 
-class BedrockServerManagerApi(
-    DynamicOpenAPIMixin,
-    ManagerMethodsMixin,
-    ServerInfoMethodsMixin,
-    ServerActionMethodsMixin,
-    ContentMethodsMixin,
-    PluginMethodsMixin,
-    AccountMethodsMixin,
-    UsersMethodsMixin,
-    ClientBase,
-):
-    """API Client for the Bedrock Server Manager.
+class BedrockServerManagerApi(DynamicOpenAPIMixin, ClientBase):
+    """Own authentication and transports; services own domain workflows.
 
-    This class combines the base connection and authentication logic from
-    `ClientBase` with methods for interacting with various API endpoints,
-    which are organized into mixin classes.
-
-    Example:
-        >>> from bsm_api_client import BedrockServerManagerApi
-        >>> client = BedrockServerManagerApi("http://localhost:8080", "admin", "password")
-        >>> await client.async_get_info()
+    Generated endpoints are available through ``async_call_generated`` and
+    ``async_get_generated_client``. Legacy async convenience names resolve to
+    the same service implementation while callers migrate to service paths.
     """
 
-    # __init__ is inherited from ClientBase.
-    # All async API methods are inherited from mixins.
+    rest: "RestClient"
+    discovery: DiscoveryService
+    application: ApplicationService
+    servers: ServersService
+    players: PlayersService
+    tasks: TasksService
+    content: ContentService
+    account: AccountService
+    users: UsersService
+    plugin_management: PluginsService
+
+    def __init__(
+        self,
+        base_url: str,
+        username: str | None = None,
+        password: str | None = None,
+        jwt_token: str | None = None,
+        session: aiohttp.ClientSession | None = None,
+        base_path: str = "/api",
+        request_timeout: float = 90,
+        verify_ssl: bool = True,
+        http_client: httpx.AsyncClient | None = None,
+    ):
+        super().__init__(
+            base_url=base_url,
+            username=username,
+            password=password,
+            jwt_token=jwt_token,
+            session=session,
+            base_path=base_path,
+            request_timeout=request_timeout,
+            verify_ssl=verify_ssl,
+            http_client=http_client,
+        )
+        from .generated.rest import RestClient
+
+        self.rest = RestClient(self)
+        self.discovery = DiscoveryService(self)
+        self.application = ApplicationService(self)
+        self.servers = ServersService(self)
+        self.players = PlayersService(self)
+        self.tasks = TasksService(self)
+        self.content = ContentService(self)
+        self.plugin_management = PluginsService(self)
+        self.account = AccountService(self)
+        self.users = UsersService(self)
+        self._services = (
+            self.application,
+            self.servers,
+            self.players,
+            self.tasks,
+            self.content,
+            self.plugin_management,
+            self.account,
+            self.users,
+        )
+
+    def __getattr__(self, name: str) -> Any:
+        if name.startswith("async_"):
+            for service in self.__dict__.get("_services", ()):
+                method = getattr(service, name, None)
+                if method is not None:
+                    return method
+        raise AttributeError(name)
 
     @property
-    def servers(self):
-        """Provides access to server-related methods.
-
-        This is a convenience property that returns the client instance itself,
-        allowing for a more intuitive call structure (e.g., `client.servers.async_get_list()`).
-
-        Returns:
-            The client instance.
-        """
-        return self
+    def plugins(self) -> PluginsService:
+        return self.plugin_management
