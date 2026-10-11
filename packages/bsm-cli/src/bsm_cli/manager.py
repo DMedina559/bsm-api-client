@@ -138,6 +138,8 @@ def render_metrics(response, unit):  # noqa: C901
         elif key.endswith("_percent"):
             value = f"{value:.1f}%"
             label = label.removesuffix(" percent")
+            if key == "sys_ram_percent":
+                label = "ram usage"
         elif key.endswith("_kib_s"):
             value = f"{value:.2f} KiB/s"
             label = label.removesuffix(" kib s")
@@ -153,7 +155,7 @@ def render_metrics(response, unit):  # noqa: C901
             click.echo()
     for server in response.latest.servers or []:
         click.echo(
-            f"{server.name}: CPU {server.cpu_percent}% | Memory {memory(server.memory_mb, unit)}"
+            f"{server.server_name}: CPU {server.cpu_percent}% | Memory {memory(server.memory_mb, unit)}"
         )
     for label, key in (
         ("App CPU", "app_cpu_percent"),

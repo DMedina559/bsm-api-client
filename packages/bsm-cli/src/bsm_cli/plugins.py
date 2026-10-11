@@ -81,6 +81,8 @@ async def interactive_plugin_workflow(client):  # noqa: C901
                 click.secho("No plugins found or configured to edit.", fg="yellow")
                 return
 
+            _print_plugin_table(plugins)
+            click.echo()
             menu_choices = []
             for name, config_dict in sorted(plugins.items()):
                 is_enabled = config_dict.get("enabled", False)

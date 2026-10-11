@@ -96,6 +96,7 @@ async def _bans_menu(ctx: click.Context, server_name: str):
     }
 
     while True:
+        await ctx.invoke(bans_group.get_command(ctx, "list"), server_name=server_name)
         choice = await questionary.select(
             f"Bans for '{server_name}':",
             choices=list(menu_map.keys()),

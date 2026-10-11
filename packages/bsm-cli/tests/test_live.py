@@ -80,3 +80,30 @@ async def test_closing_live_view_cancels_pending_listener(monkeypatch):
     assert (await anext(stream))[1] is True
     await stream.aclose()
     assert socket.closed and socket.cancelled
+
+
+def test_monitor_renders_backend_server_metrics_and_both_ram_values(capsys):
+    from bsm_api_client.models import (
+        GetApplicationMetricsResponse,
+        MetricsSample,
+        ServerMetrics,
+    )
+    from bsm_cli.manager import render_metrics
+
+    sample = MetricsSample(
+        timestamp=100,
+        asyncio_task_count=16,
+        background_task_count=0,
+        loop_lag_ms=3.9,
+        sys_ram_mb=8192,
+        sys_ram_percent=90.7,
+        servers=[ServerMetrics(server_name="alpha", cpu_percent=0.8, memory_mb=156.25)],
+    )
+    response = GetApplicationMetricsResponse(
+        latest=sample, history=[sample], history_limit=60, interval_seconds=3
+    )
+    render_metrics(response, "auto")
+    output = capsys.readouterr().out
+    assert "alpha: CPU 0.8% | Memory 156.25 MB" in output
+    assert "Ram: 8.00 GB" in output
+    assert "Ram usage: 90.7%" in output

@@ -148,3 +148,46 @@ async def test_blank_menu_options_match_command_line_defaults(
     with click.Context(group) as ctx:
         await command_menu(ctx, group)
     assert received == [expected], path
+
+
+@pytest.mark.asyncio
+async def test_menu_lists_before_actions_and_refreshes_after_changes(monkeypatch):
+    events = []
+
+    @click.group()
+    def group():
+        pass
+
+    @group.command("list")
+    @click.option("--server-name", required=True)
+    async def listing(server_name):
+        events.append(("list", server_name))
+
+    @group.command("change")
+    @click.option("--server-name", required=True)
+    async def change(server_name):
+        events.append(("change", server_name))
+
+    monkeypatch.setattr(
+        "bsm_cli.menu_registry._prompt_parameter", AsyncMock(return_value="alpha")
+    )
+    selections = iter(["change", "Back"])
+
+    def select(*args, **kwargs):
+        events.append(("menu",))
+        return Answer(next(selections))
+
+    monkeypatch.setattr("questionary.select", select)
+    monkeypatch.setattr("click.pause", lambda *a, **k: None)
+    with click.Context(group) as ctx:
+        await command_menu(ctx, group)
+    assert events == [
+        ("list", "alpha"),
+        ("menu",),
+        ("change", "alpha"),
+        ("list", "alpha"),
+        ("menu",),
+    ]
+    from bsm_cli import menu_registry
+
+    assert menu_registry._prompt_parameter.await_count == 1
