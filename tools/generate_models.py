@@ -70,7 +70,7 @@ def generate(source: Path) -> str:  # noqa: C901
                                 )
 
                         field.annotation = JsonTypes().visit(field.annotation)
-        roots = []
+        roots: list[ast.stmt] = []
         for node in tree.body:
             if isinstance(node, ast.ClassDef) and any(
                 isinstance(base, ast.Subscript)
