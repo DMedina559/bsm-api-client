@@ -31,13 +31,26 @@ def auth():
 @click.option("--username", help="The username for authentication.")
 @click.option("--password", help="The password for authentication.")
 @click.option("--token", help="The JWT token for authentication.")
+@click.option(
+    "--remember-me",
+    is_flag=True,
+    default=False,
+    help="Request a longer-lived token when signing in with username and password.",
+)
 @click.pass_context
-async def login(ctx, base_url, username, password, verify_ssl, token):
-    """Logs in to the Bedrock Server Manager API."""
-    return await _login(ctx, base_url, username, password, verify_ssl, token)
+async def login(ctx, base_url, username, password, verify_ssl, token, remember_me):
+    """Sign in; --remember-me requests the backend-configured longer token lifetime.
+
+    A supplied --token keeps its existing expiry.
+    """
+    return await _login(
+        ctx, base_url, username, password, verify_ssl, token, remember_me
+    )
 
 
-async def _login(ctx, base_url, username, password, verify_ssl, token):
+async def _login(
+    ctx, base_url, username, password, verify_ssl, token, remember_me=False
+):
     config = ctx.obj["config"]
     validated_url = _validate_and_get_url(base_url or config.base_url)
     supplied_token = bool(token)
@@ -49,6 +62,7 @@ async def _login(ctx, base_url, username, password, verify_ssl, token):
             username=username,
             password=password,
             verify_ssl=verify_ssl,
+            remember_me=remember_me,
         ) as client:
             token = (await client.authenticate()).access_token
 
@@ -74,7 +88,10 @@ async def _login(ctx, base_url, username, password, verify_ssl, token):
 async def interactive_login(ctx):
     """Use the same login path from interactive menus."""
     config = ctx.obj["config"]
-    return await _login(ctx, config.base_url, None, None, config.verify_ssl, None)
+    remember_me = click.confirm("Request a longer-lived login token?", default=False)
+    return await _login(
+        ctx, config.base_url, None, None, config.verify_ssl, None, remember_me
+    )
 
 
 @auth.command()

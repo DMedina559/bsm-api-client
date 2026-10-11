@@ -86,6 +86,7 @@ class ClientBase:
         request_timeout: float = 90,
         verify_ssl: bool = True,
         http_client: Optional[httpx.AsyncClient] = None,
+        remember_me: bool = False,
     ):
         """Initializes the base API client.
         :param base_url: The base URL of the Bedrock Server Manager (e.g., http://localhost:8080).
@@ -99,6 +100,9 @@ class ClientBase:
         :param http_client: A caller-owned HTTPX client for REST connections.
             Its pool and TLS settings are retained; SDK authentication and request
             timeouts apply to each request.
+        :param remember_me: Request the backend-configured longer token lifetime
+            on credential login and subsequent reauthentication; defaults to False.
+            This does not change the expiry of a supplied JWT.
         """
         if not base_url:
             raise ValueError("base_url must be provided.")
@@ -144,6 +148,7 @@ class ClientBase:
         self._closed = False
         self._username = username
         self._password = password
+        self._remember_me = remember_me
         self._request_timeout = request_timeout
         self._verify_ssl = verify_ssl
 
@@ -389,7 +394,7 @@ class ClientBase:
                 "grant_type": "password",
                 "username": self._username,
                 "password": self._password,
-                "remember_me": False,
+                "remember_me": self._remember_me,
             },
             authenticated=False,
         )

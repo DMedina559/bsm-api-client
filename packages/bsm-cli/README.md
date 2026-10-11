@@ -214,3 +214,8 @@ server settings are saved one key at a time; the CLI prints each successfully sa
 key so partial updates remain visible if a later request fails. Plugins use one
 request to replace their settings. `--json` continues to return structured API data
 for noninteractive commands; use `plugin settings set` for scripted updates.
+
+Use `bsm-cli auth login --remember-me` to request the backend-configured longer
+token lifetime. Interactive login also offers this choice, defaulting to off.
+The CLI saves the issued token without storing your password; the flag cannot
+extend the lifetime of an existing token supplied with `--token`.

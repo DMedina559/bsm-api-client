@@ -52,6 +52,7 @@ class BedrockServerManagerApi(DynamicOpenAPIMixin, ClientBase):
         request_timeout: float = 90,
         verify_ssl: bool = True,
         http_client: httpx.AsyncClient | None = None,
+        remember_me: bool = False,
     ) -> None:
         """Create the SDK and its domain services without opening a WebSocket.
 
@@ -59,7 +60,9 @@ class BedrockServerManagerApi(DynamicOpenAPIMixin, ClientBase):
         a reverse-proxy mount; base_path selects the REST API prefix.
         request_timeout applies to REST requests in seconds. verify_ssl controls
         owned transports. Optional http_client and session transports remain
-        caller-owned; session is used only for WebSockets.
+        caller-owned; session is used only for WebSockets. remember_me requests
+        the backend-configured longer token lifetime for credential login and
+        reauthentication. It defaults to False and cannot extend a supplied JWT.
         """
         super().__init__(
             base_url=base_url,
@@ -71,6 +74,7 @@ class BedrockServerManagerApi(DynamicOpenAPIMixin, ClientBase):
             request_timeout=request_timeout,
             verify_ssl=verify_ssl,
             http_client=http_client,
+            remember_me=remember_me,
         )
         from .generated.rest import RestClient
 

@@ -183,3 +183,7 @@ Root-level domain methods have been removed. Use `client.servers`, `client.appli
 `client.async_start_server(name)` with `client.servers.async_start_server(name)`.
 Task status and ban methods return Pydantic models; `client.tasks.async_get_task_status(id)`
 returns `TaskSnapshot`. Use `.model_dump(mode="json")` when a dictionary is needed.
+
+Pass `remember_me=True` when creating the SDK to request the backend-configured
+longer token lifetime on login and reauthentication. The default is `False`.
+This option does not extend an existing JWT supplied through `jwt_token`.

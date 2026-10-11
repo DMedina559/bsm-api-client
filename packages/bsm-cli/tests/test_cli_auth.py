@@ -26,9 +26,10 @@ def auth_config(tmp_path, monkeypatch):
     return config, path
 
 
+@pytest.mark.parametrize("remember_me", [False, True])
 @pytest.mark.parametrize("success", [True, False])
 def test_login_commits_destination_and_token_together(
-    auth_config, monkeypatch, success
+    auth_config, monkeypatch, success, remember_me
 ):
     config, path = auth_config
     monkeypatch.setattr("bsm_cli.__main__.Config", lambda: config)
@@ -39,7 +40,13 @@ def test_login_commits_destination_and_token_together(
     )
     if not success:
         client.authenticate.side_effect = AuthError("Bad credentials")
-    monkeypatch.setattr("bsm_cli.auth.BedrockServerManagerApi", lambda **kwargs: client)
+    supplied = {}
+
+    def create(**kwargs):
+        supplied.update(kwargs)
+        return client
+
+    monkeypatch.setattr("bsm_cli.auth.BedrockServerManagerApi", create)
     result = CliRunner().invoke(
         cli,
         [
@@ -53,9 +60,11 @@ def test_login_commits_destination_and_token_together(
             "new-user",
             "--password",
             "new-password",
-        ],
+        ]
+        + (["--remember-me"] if remember_me else []),
     )
     saved = json.loads(path.read_text())
+    assert supplied["remember_me"] is remember_me
     assert result.exit_code == (0 if success else 3), result.output
     assert saved["base_url"] == (
         "http://new-server" if success else "http://old-server"
@@ -86,3 +95,30 @@ def test_config_file_is_owner_only_and_replaced_atomically(auth_config):
     if os.name == "posix":
         assert stat.S_IMODE(path.stat().st_mode) == 0o600
     assert list(path.parent.glob(f".{path.name}.*")) == []
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("remember_me", [False, True])
+async def test_interactive_login_offers_remember_me(
+    auth_config, monkeypatch, remember_me
+):
+    import click
+
+    from bsm_cli.auth import auth, interactive_login
+
+    config, _ = auth_config
+    login = AsyncMock()
+    monkeypatch.setattr("bsm_cli.auth._login", login)
+    prompts = []
+
+    def confirm(message, default):
+        prompts.append(default)
+        return remember_me
+
+    monkeypatch.setattr("bsm_cli.auth.click.confirm", confirm)
+    context = click.Context(auth, obj={"config": config})
+    await interactive_login(context)
+    assert prompts == [False]
+    login.assert_awaited_once_with(
+        context, config.base_url, None, None, config.verify_ssl, None, remember_me
+    )

@@ -391,3 +391,19 @@ async def test_shutdown_attempts_all_owned_transports_after_failure():
     with pytest.raises(AttributeError):
         getattr(client, "async_start_server")
     assert isinstance(client._http_client, httpx.AsyncClient)
+
+
+@pytest.mark.parametrize("remember_me", [False, True])
+@pytest.mark.asyncio
+async def test_login_and_reauthentication_preserve_remember_me(local_api, remember_me):
+    original, seen = local_api
+    options = {"remember_me": True} if remember_me else {}
+    async with BedrockServerManagerApi(
+        original._server_root_url, username="test", password="test", **options
+    ) as client:
+        await client.authenticate()
+        client._jwt_token = "expired"
+        await client.rest.start_server("example")
+    logins = [entry[1] for entry in seen if entry[0] == "login"]
+    assert len(logins) == 2
+    assert all(data["remember_me"] == str(remember_me).lower() for data in logins)
