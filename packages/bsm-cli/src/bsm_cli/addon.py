@@ -1,8 +1,8 @@
 import os
+from typing import Literal
 
 import click
 import questionary
-from bsm_cli.decorators import monitor_task, pass_async_context
 from questionary import Separator
 
 from bsm_api_client.models import (
@@ -11,6 +11,10 @@ from bsm_api_client.models import (
     AddonSubpackPayload,
     FileNamePayload,
 )
+from bsm_cli.completion import complete_server
+from bsm_cli.decorators import monitor_task, pass_async_context
+from bsm_cli.output import fail, get_client
+from bsm_cli.presentation import screen_header
 
 
 @click.group()
@@ -21,22 +25,23 @@ def addon():
 
 @addon.command("install")
 @click.option(
-    "-s", "--server", "server_name", required=True, help="Name of the target server."
+    "-s",
+    "--server",
+    "server_name",
+    required=True,
+    help="Name of the target server.",
+    shell_complete=complete_server,
 )
 @click.option(
     "-f",
     "--file",
     "addon_file_path",
-    type=click.Path(exists=True, dir_okay=False, resolve_path=True),
-    help="Path to the addon file (.mcpack, .mcaddon); skips interactive menu.",
+    help="Filename in the backend content/addons directory; skips interactive menu.",
 )
 @pass_async_context
 async def install_addon(ctx, server_name: str, addon_file_path: str):
     """Installs a behavior or resource pack addon to a specified server."""
-    client = ctx.obj.get("client")
-    if not client:
-        click.secho("You are not logged in.", fg="red")
-        return
+    client = get_client(ctx)
 
     try:
         selected_addon_path = addon_file_path
@@ -46,7 +51,7 @@ async def install_addon(ctx, server_name: str, addon_file_path: str):
                 f"Entering interactive addon installation for server: {server_name}",
                 fg="yellow",
             )
-            response = await client.async_get_content_addons()
+            response = await client.content.async_get_content_addons()
             available_files = response.files
 
             if not available_files:
@@ -70,11 +75,11 @@ async def install_addon(ctx, server_name: str, addon_file_path: str):
         click.echo(f"Installing addon '{addon_filename}' to server '{server_name}'...")
 
         payload = FileNamePayload(filename=addon_filename)
-        response = await client.async_install_server_addon(server_name, payload)
-        if response.task_id:
+        response = await client.content.async_install_server_addon(server_name, payload)
+        if getattr(response, "task_id", None):
             await monitor_task(
                 client,
-                response.task_id,
+                str(getattr(response, "task_id", "")),
                 f"Addon '{addon_filename}' installed successfully",
                 "Failed to install addon",
             )
@@ -84,24 +89,26 @@ async def install_addon(ctx, server_name: str, addon_file_path: str):
             click.secho(f"Failed to install addon: {response.message}", fg="red")
 
     except Exception as e:
-        click.secho(f"An error occurred: {e}", fg="red")
+        fail(e)
 
 
 @addon.command("manage")
 @click.option(
-    "-s", "--server", "server_name", required=True, help="Name of the target server."
+    "-s",
+    "--server",
+    "server_name",
+    required=True,
+    help="Name of the target server.",
+    shell_complete=complete_server,
 )
 @pass_async_context
 async def manage_addons(ctx, server_name: str):  # noqa: C901
     """Interactively manages installed addons on a specified server."""
-    client = ctx.obj.get("client")
-    if not client:
-        click.secho("You are not logged in.", fg="red")
-        return
+    client = get_client(ctx)
 
     while True:
         try:
-            response = await client.async_get_server_addons(server_name)
+            response = await client.content.async_get_server_addons(server_name)
             addons = response.addons
             if not addons:
                 click.secho(
@@ -112,7 +119,7 @@ async def manage_addons(ctx, server_name: str):  # noqa: C901
             bp = addons.behavior_packs or []
             rp = addons.resource_packs or []
 
-            click.clear()
+            screen_header("Addons")
             click.secho(
                 f"--- Manage Addons for {server_name} ---", fg="magenta", bold=True
             )
@@ -187,7 +194,9 @@ async def manage_addons(ctx, server_name: str):  # noqa: C901
                     payload = AddonReorderPayload(
                         pack_type="behavior", uuids=ordered_uuids
                     )
-                    res = await client.async_reorder_server_addon(server_name, payload)
+                    res = await client.content.async_reorder_server_addon(
+                        server_name, payload
+                    )
                     if res.task_id:
                         await monitor_task(
                             client,
@@ -230,7 +239,9 @@ async def manage_addons(ctx, server_name: str):  # noqa: C901
                     payload = AddonReorderPayload(
                         pack_type="resource", uuids=ordered_uuids
                     )
-                    res = await client.async_reorder_server_addon(server_name, payload)
+                    res = await client.content.async_reorder_server_addon(
+                        server_name, payload
+                    )
                     if res.task_id:
                         await monitor_task(
                             client,
@@ -248,7 +259,9 @@ async def manage_addons(ctx, server_name: str):  # noqa: C901
 
             # Handle specific pack
             is_bp = "[BP]" in choice
-            pack_type = "behavior" if is_bp else "resource"
+            pack_type: Literal["behavior", "resource"] = (
+                "behavior" if is_bp else "resource"
+            )
             pack_name = choice.split("] ")[1].split(" (v")[0]
 
             pack = next((p for p in (bp if is_bp else rp) if p.name == pack_name), None)
@@ -274,7 +287,7 @@ async def manage_addons(ctx, server_name: str):  # noqa: C901
                 continue
 
             if action_choice == "Enable":
-                res = await client.async_enable_server_addon(
+                res = await client.content.async_enable_server_addon(
                     server_name,
                     AddonActionPayload(pack_uuid=pack.uuid, pack_type=pack_type),
                 )
@@ -283,7 +296,7 @@ async def manage_addons(ctx, server_name: str):  # noqa: C901
                         client, res.task_id, "Enabled successfully", "Failed to enable"
                     )
             elif action_choice == "Disable":
-                res = await client.async_disable_server_addon(
+                res = await client.content.async_disable_server_addon(
                     server_name,
                     AddonActionPayload(pack_uuid=pack.uuid, pack_type=pack_type),
                 )
@@ -298,7 +311,7 @@ async def manage_addons(ctx, server_name: str):  # noqa: C901
                 if await questionary.confirm(
                     f"Are you sure you want to uninstall {pack.name}?"
                 ).ask_async():
-                    res = await client.async_uninstall_server_addon(
+                    res = await client.content.async_uninstall_server_addon(
                         server_name,
                         AddonActionPayload(pack_uuid=pack.uuid, pack_type=pack_type),
                     )
@@ -340,13 +353,8 @@ async def manage_addons(ctx, server_name: str):  # noqa: C901
                             pack_type=pack_type,
                             subpack_name=selected_sp.get("folder_name"),
                         )
-                        setattr(
-                            subpack_payload,
-                            f"subpack_{pack.uuid}",
-                            selected_sp.get("folder_name"),
-                        )
 
-                        res = await client.async_update_server_addon_subpack(
+                        res = await client.content.async_update_server_addon_subpack(
                             server_name, subpack_payload
                         )
                         if res.task_id:

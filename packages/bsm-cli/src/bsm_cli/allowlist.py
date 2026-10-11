@@ -2,6 +2,8 @@ import click
 import questionary
 
 from bsm_api_client.models import AllowlistAddPayload, AllowlistRemovePayload
+from bsm_cli.completion import complete_server
+from bsm_cli.output import fail, get_client
 
 
 @click.group()
@@ -12,7 +14,12 @@ def allowlist():
 
 @allowlist.command("add")
 @click.option(
-    "-s", "--server", "server_name", required=True, help="The name of the server."
+    "-s",
+    "--server",
+    "server_name",
+    required=True,
+    help="The name of the server.",
+    shell_complete=complete_server,
 )
 @click.option(
     "-p",
@@ -29,10 +36,7 @@ def allowlist():
 @click.pass_context
 async def add(ctx, server_name: str, players: tuple[str], ignore_limit: bool):
     """Adds one or more players to a server's allowlist."""
-    client = ctx.obj.get("client")
-    if not client:
-        click.secho("You are not logged in.", fg="red")
-        return
+    client = get_client(ctx)
 
     try:
         if not players:
@@ -46,7 +50,7 @@ async def add(ctx, server_name: str, players: tuple[str], ignore_limit: bool):
         payload = AllowlistAddPayload(
             players=list(players), ignoresPlayerLimit=ignore_limit
         )
-        response = await client.async_add_server_allowlist(server_name, payload)
+        response = await client.servers.async_add_server_allowlist(server_name, payload)
 
         message = response.message
         click.secho(
@@ -55,12 +59,17 @@ async def add(ctx, server_name: str, players: tuple[str], ignore_limit: bool):
         )
 
     except Exception as e:
-        click.secho(f"\nAn error occurred: {e}", fg="red")
+        fail(e)
 
 
 @allowlist.command("remove")
 @click.option(
-    "-s", "--server", "server_name", required=True, help="The name of the server."
+    "-s",
+    "--server",
+    "server_name",
+    required=True,
+    help="The name of the server.",
+    shell_complete=complete_server,
 )
 @click.option(
     "-p",
@@ -73,10 +82,7 @@ async def add(ctx, server_name: str, players: tuple[str], ignore_limit: bool):
 @click.pass_context
 async def remove(ctx, server_name: str, players: tuple[str]):
     """Removes one or more players from a server's allowlist."""
-    client = ctx.obj.get("client")
-    if not client:
-        click.secho("You are not logged in.", fg="red")
-        return
+    client = get_client(ctx)
 
     player_list = list(players)
     click.echo(
@@ -84,12 +90,14 @@ async def remove(ctx, server_name: str, players: tuple[str]):
     )
 
     payload = AllowlistRemovePayload(players=player_list)
-    response = await client.async_remove_server_allowlist_players(server_name, payload)
+    response = await client.servers.async_remove_server_allowlist_players(
+        server_name, payload
+    )
 
     if response.status == "success":
-        details = response.details or {}
-        removed_players = details["removed"] or []
-        not_found_players = details["not_found"] or []
+        details = getattr(response, "details", None) or {}
+        removed_players = details.get("removed") or []
+        not_found_players = details.get("not_found") or []
 
         message = response.message
         click.secho(message, fg="cyan" if not removed_players else "green")
@@ -115,17 +123,19 @@ async def remove(ctx, server_name: str, players: tuple[str]):
 
 @allowlist.command("list")
 @click.option(
-    "-s", "--server", "server_name", required=True, help="The name of the server."
+    "-s",
+    "--server",
+    "server_name",
+    required=True,
+    help="The name of the server.",
+    shell_complete=complete_server,
 )
 @click.pass_context
 async def list_players(ctx, server_name: str):
     """Lists all players currently on a server's allowlist."""
-    client = ctx.obj.get("client")
-    if not client:
-        click.secho("You are not logged in.", fg="red")
-        return
+    client = get_client(ctx)
 
-    response = await client.async_get_server_allowlist(server_name)
+    response = await client.servers.async_get_server_allowlist(server_name)
 
     if response.status == "success":
         players = response.players
@@ -149,7 +159,7 @@ async def list_players(ctx, server_name: str):
 
 async def interactive_allowlist_workflow(client, server_name: str):  # noqa: C901
     """Guides the user through an interactive session to view and add players to the allowlist."""
-    response = await client.async_get_server_allowlist(server_name)
+    response = await client.servers.async_get_server_allowlist(server_name)
     existing_players = response.players or []
 
     click.secho("\n--- Interactive Allowlist Configuration ---", bold=True)
@@ -186,6 +196,8 @@ async def interactive_allowlist_workflow(client, server_name: str):  # noqa: C90
         ignore_limit = await questionary.confirm(
             f"Should '{player_name}' ignore the player limit?", default=False
         ).ask_async()
+        if ignore_limit is None:
+            return
         new_players_to_add.append(
             {"name": player_name.strip(), "ignoresPlayerLimit": ignore_limit}
         )
@@ -205,7 +217,9 @@ async def interactive_allowlist_workflow(client, server_name: str):  # noqa: C90
             payload = AllowlistAddPayload(
                 players=players_ignore_limit, ignoresPlayerLimit=True
             )
-            response = await client.async_add_server_allowlist(server_name, payload)
+            response = await client.servers.async_add_server_allowlist(
+                server_name, payload
+            )
             if response.status != "success":
                 click.secho(
                     f"Failed to add players with ignore limit: {response.message}",
@@ -217,7 +231,9 @@ async def interactive_allowlist_workflow(client, server_name: str):  # noqa: C90
             payload = AllowlistAddPayload(
                 players=players_no_ignore_limit, ignoresPlayerLimit=False
             )
-            response = await client.async_add_server_allowlist(server_name, payload)
+            response = await client.servers.async_add_server_allowlist(
+                server_name, payload
+            )
             if response.status != "success":
                 click.secho(
                     f"Failed to add players without ignore limit: {response.message}",

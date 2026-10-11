@@ -17,7 +17,7 @@ async def test_login(server):
     """
     client = BedrockServerManagerApi(server, "admin", "password")
     try:
-        servers_response = await client.async_get_servers()
+        servers_response = await client.servers.async_get_servers()
         assert servers_response is not None
         assert isinstance(servers_response.servers, list)
     finally:
@@ -32,7 +32,7 @@ async def test_login_invalid_credentials(server):
     client = BedrockServerManagerApi(server, "admin", "wrong_password")
     try:
         with pytest.raises(APIError) as excinfo:
-            await client.async_get_servers()
+            await client.servers.async_get_servers()
         assert excinfo.value.status_code == 401
     finally:
         await client.close()
@@ -49,24 +49,26 @@ async def test_server_operations(server, bedrock_server):
 
     try:
         # Verify server exists
-        servers = await client.async_get_server_names()
+        servers = await client.servers.async_get_server_names()
         assert server_name in servers
 
         # -- Test Properties Management --
-        properties_response = await client.async_get_server_properties(server_name)
+        properties_response = await client.servers.async_get_server_properties(
+            server_name
+        )
         assert properties_response.status == "success"
         original_properties = properties_response.properties
         assert "level-name" in original_properties
 
         new_properties = {"level-name": "new-world-name"}
         update_payload = PropertiesPayload(properties=new_properties)
-        update_result = await client.async_update_server_properties(
+        update_result = await client.servers.async_update_server_properties(
             server_name, update_payload
         )
         assert update_result.status == "success"
 
-        properties_response_after_update = await client.async_get_server_properties(
-            server_name
+        properties_response_after_update = (
+            await client.servers.async_get_server_properties(server_name)
         )
         assert (
             properties_response_after_update.properties["level-name"]
@@ -74,35 +76,39 @@ async def test_server_operations(server, bedrock_server):
         )
 
         # -- Test Allowlist Management --
-        allowlist_response = await client.async_get_server_allowlist(server_name)
+        allowlist_response = await client.servers.async_get_server_allowlist(
+            server_name
+        )
         assert allowlist_response.status == "success"
         if allowlist_response.players:
             assert allowlist_response.players == []
 
         add_payload = AllowlistAddPayload(players=["TestPlayer"])
-        add_result = await client.async_add_server_allowlist(server_name, add_payload)
+        add_result = await client.servers.async_add_server_allowlist(
+            server_name, add_payload
+        )
         assert add_result.status == "success"
 
-        allowlist_response_after_add = await client.async_get_server_allowlist(
+        allowlist_response_after_add = await client.servers.async_get_server_allowlist(
             server_name
         )
         assert allowlist_response_after_add.players is not None
         assert "TestPlayer" in [p["name"] for p in allowlist_response_after_add.players]
 
         remove_payload = AllowlistRemovePayload(players=["TestPlayer"])
-        remove_result = await client.async_remove_server_allowlist_players(
+        remove_result = await client.servers.async_remove_server_allowlist_players(
             server_name, remove_payload
         )
         assert remove_result.status == "success"
 
-        allowlist_response_after_remove = await client.async_get_server_allowlist(
-            server_name
+        allowlist_response_after_remove = (
+            await client.servers.async_get_server_allowlist(server_name)
         )
         if allowlist_response_after_remove.players:
             assert allowlist_response_after_remove.players == []
 
         # -- Test Permissions Management --
-        permissions_response = await client.async_get_server_permissions_data(
+        permissions_response = await client.servers.async_get_server_permissions_data(
             server_name
         )
         assert permissions_response.status == "success"
@@ -116,19 +122,27 @@ async def test_server_operations(server, bedrock_server):
         permission = PlayerPermissionPayload(
             name="TestPlayer", xuid="123456789", permission_level="operator"
         )
-        initial_models = [PlayerPermissionPayload(**p) for p in initial_permissions]
+        initial_models = [
+            PlayerPermissionPayload(**p.model_dump()) for p in initial_permissions
+        ]
 
-        set_payload = PermissionsSetPayload(permissions=initial_models + [permission])
-        set_result = await client.async_set_server_permissions(server_name, set_payload)
+        # Permissions are upserted by XUID; an earlier test may already have it.
+        expected_permissions = {p.xuid: p for p in initial_models}
+        expected_permissions[permission.xuid] = permission
+        set_payload = PermissionsSetPayload(
+            permissions=list(expected_permissions.values())
+        )
+        set_result = await client.servers.async_set_server_permissions(
+            server_name, set_payload
+        )
         assert set_result.status == "success"
 
-        permissions_response_after_set = await client.async_get_server_permissions_data(
-            server_name
+        permissions_response_after_set = (
+            await client.servers.async_get_server_permissions_data(server_name)
         )
         assert permissions_response_after_set.permissions is not None
-        assert (
-            len(permissions_response_after_set.permissions)
-            == len(initial_permissions) + 1
+        assert len(permissions_response_after_set.permissions) == len(
+            expected_permissions
         )
         found_player = next(
             (

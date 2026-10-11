@@ -24,11 +24,13 @@ async def client():
 @pytest.mark.asyncio
 async def test_get_info(client):
     """Test async_get_info method."""
-    with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
+    with patch.object(
+        client, "async_call_generated", new_callable=AsyncMock
+    ) as mock_request:
         mock_request.return_value = {"status": "success", "info": {"version": "1.0.0"}}
-        result = await client.async_get_info()
+        result = await client.application.async_get_info()
         mock_request.assert_called_once_with(
-            method="GET", path="/info", authenticated=False
+            "get_system_info", authenticated=False, typed=True
         )
         assert result.info["version"] == "1.0.0"
 
@@ -36,11 +38,13 @@ async def test_get_info(client):
 @pytest.mark.asyncio
 async def test_scan_players(client):
     """Test async_scan_players method."""
-    with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
+    with patch.object(
+        client, "async_call_generated", new_callable=AsyncMock
+    ) as mock_request:
         mock_request.return_value = {"status": "success", "message": "Scan complete."}
-        result = await client.async_scan_players()
+        result = await client.players.async_scan_players()
         mock_request.assert_called_once_with(
-            method="PUT", path="/players/scan", authenticated=True
+            "scan_players", authenticated=True, typed=True
         )
         assert result.status == "success"
 
@@ -48,14 +52,16 @@ async def test_scan_players(client):
 @pytest.mark.asyncio
 async def test_get_players(client):
     """Test async_get_players method."""
-    with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
+    with patch.object(
+        client, "async_call_generated", new_callable=AsyncMock
+    ) as mock_request:
         mock_request.return_value = {
             "status": "success",
             "players": [{"name": "player1", "xuid": "123"}],
         }
-        result = await client.async_get_players()
+        result = await client.players.async_get_players()
         mock_request.assert_called_once_with(
-            method="GET", path="/players/get", authenticated=True
+            "list_players", authenticated=True, typed=True
         )
         assert len(result.players) == 1
         assert (
@@ -67,15 +73,14 @@ async def test_get_players(client):
 @pytest.mark.asyncio
 async def test_add_players(client):
     """Test async_add_players method."""
-    with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
+    with patch.object(
+        client, "async_call_generated", new_callable=AsyncMock
+    ) as mock_request:
         payload = AddPlayersPayload(players=["player1:123", "player2:456"])
         mock_request.return_value = {"status": "success", "message": "Players added."}
-        result = await client.async_add_players(payload)
+        result = await client.players.async_add_players(payload)
         mock_request.assert_called_once_with(
-            method="POST",
-            path="/players/add",
-            json_data=payload.model_dump(),
-            authenticated=True,
+            "add_players", body=payload.model_dump(), authenticated=True, typed=True
         )
         assert result.status == "success"
 
@@ -83,14 +88,16 @@ async def test_add_players(client):
 @pytest.mark.asyncio
 async def test_get_all_settings(client):
     """Test async_get_all_settings method."""
-    with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
+    with patch.object(
+        client, "async_call_generated", new_callable=AsyncMock
+    ) as mock_request:
         mock_request.return_value = {
             "status": "success",
             "settings": {"web": {"port": 8080}},
         }
-        result = await client.async_get_all_settings()
+        result = await client.application.async_get_all_settings()
         mock_request.assert_called_once_with(
-            method="GET", path="/settings/get", authenticated=True
+            "get_settings", authenticated=True, typed=True
         )
         assert result.settings["web"]["port"] == 8080
 
@@ -98,15 +105,14 @@ async def test_get_all_settings(client):
 @pytest.mark.asyncio
 async def test_set_setting(client):
     """Test async_set_setting method."""
-    with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
+    with patch.object(
+        client, "async_call_generated", new_callable=AsyncMock
+    ) as mock_request:
         payload = SettingItemResponse(key="web.port", value=8081)
         mock_request.return_value = {"status": "success", "message": "Setting updated."}
-        result = await client.async_set_setting(payload)
+        result = await client.application.async_set_setting(payload)
         mock_request.assert_called_once_with(
-            method="POST",
-            path="/settings/set",
-            json_data=payload.model_dump(),
-            authenticated=True,
+            "set_setting", body=payload.model_dump(), authenticated=True, typed=True
         )
         assert result.status == "success"
 
@@ -114,14 +120,16 @@ async def test_set_setting(client):
 @pytest.mark.asyncio
 async def test_reload_settings(client):
     """Test async_reload_settings method."""
-    with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
+    with patch.object(
+        client, "async_call_generated", new_callable=AsyncMock
+    ) as mock_request:
         mock_request.return_value = {
             "status": "success",
             "message": "Settings reloaded.",
         }
-        result = await client.async_reload_settings()
+        result = await client.application.async_reload_settings()
         mock_request.assert_called_once_with(
-            method="PUT", path="/settings/reload", authenticated=True
+            "reload_settings", authenticated=True, typed=True
         )
         assert result.status == "success"
 
@@ -129,18 +137,17 @@ async def test_reload_settings(client):
 @pytest.mark.asyncio
 async def test_prune_downloads(client):
     """Test async_prune_downloads method."""
-    with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
+    with patch.object(
+        client, "async_call_generated", new_callable=AsyncMock
+    ) as mock_request:
         payload = PruneDownloadsPayload(directory="stable", keep=2)
         mock_request.return_value = {
             "status": "success",
             "message": "Downloads pruned.",
         }
-        result = await client.async_prune_downloads(payload)
+        result = await client.application.async_prune_downloads(payload)
         mock_request.assert_called_once_with(
-            method="PUT",
-            path="/downloads/prune",
-            json_data=payload.model_dump(),
-            authenticated=True,
+            "prune_downloads", body=payload.model_dump(), authenticated=True, typed=True
         )
         assert result.status == "success"
 
@@ -148,39 +155,43 @@ async def test_prune_downloads(client):
 @pytest.mark.asyncio
 async def test_install_new_server(client):
     """Test async_install_new_server method."""
-    with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
+    with patch.object(
+        client, "async_call_generated", new_callable=AsyncMock
+    ) as mock_request:
         payload = InstallServerPayload(
             server_name="test-server", server_version="LATEST", overwrite=True
         )
         mock_request.return_value = {
-            "status": "pending",
+            "status": "accepted",
+            "server_name": "test-server",
             "message": "Installation started.",
             "task_id": "test-task-id",
         }
-        result = await client.async_install_new_server(payload)
+        result = await client.servers.async_install_new_server(payload)
         mock_request.assert_called_once_with(
-            method="POST",
-            path="/server/install",
-            json_data=payload.model_dump(),
-            authenticated=True,
+            "install_server", body=payload.model_dump(), authenticated=True, typed=True
         )
-        assert result.status == "pending"
+        assert result.status == "accepted"
         assert result.task_id == "test-task-id"
 
 
 @pytest.mark.asyncio
 async def test_get_install_status(client):
     """Test async_get_task_status method."""
-    with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
+    with patch.object(
+        client, "async_call_generated", new_callable=AsyncMock
+    ) as mock_request:
         task_id = "test-task-id"
         mock_request.return_value = {
-            "status": "complete",
+            "id": task_id,
+            "status": "completed",
             "message": "Installation complete.",
         }
-        result = await client.async_get_task_status(task_id)
+        result = await client.tasks.async_get_task_status(task_id)
         mock_request.assert_called_once_with(
-            method="GET",
-            path=f"/tasks/status/{task_id}",
+            "get_task_status",
+            parameters={"task_id": task_id},
             authenticated=True,
+            typed=True,
         )
-        assert result.get("status") == "complete"
+        assert result.status == "completed"

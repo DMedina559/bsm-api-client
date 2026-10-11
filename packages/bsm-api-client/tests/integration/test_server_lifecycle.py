@@ -17,18 +17,18 @@ async def client_fixture(server, bedrock_server, wait_for_server_status):
     server_name = bedrock_server
     try:
         # Ensure server is stopped before the test begins
-        status_res = await client.async_get_server_running_status(server_name)
+        status_res = await client.servers.async_get_server_running_status(server_name)
         if status_res.running:
-            await client.async_stop_server(server_name)
+            await client.servers.async_stop_server(server_name)
             await wait_for_server_status(client, server_name, is_running=False)
 
         yield client
 
     finally:
         # Ensure server is stopped after the test
-        status_res = await client.async_get_server_running_status(server_name)
+        status_res = await client.servers.async_get_server_running_status(server_name)
         if status_res.running:
-            await client.async_stop_server(server_name)
+            await client.servers.async_stop_server(server_name)
             await wait_for_server_status(
                 client, server_name, is_running=False, timeout=90
             )
@@ -48,12 +48,12 @@ class TestServerLifecycle:
         client = client_fixture
         server_name = bedrock_server
 
-        start_res = await client.async_start_server(server_name)
-        assert start_res.status in ["success", "pending"]
+        start_res = await client.servers.async_start_server(server_name)
+        assert start_res.status in ["success", "pending", "accepted"]
         await wait_for_server_status(client, server_name, is_running=True, timeout=90)
 
-        stop_res = await client.async_stop_server(server_name)
-        assert stop_res.status in ["success", "pending"]
+        stop_res = await client.servers.async_stop_server(server_name)
+        assert stop_res.status in ["success", "pending", "accepted"]
         await wait_for_server_status(client, server_name, is_running=False, timeout=90)
 
     async def test_restart(
@@ -63,11 +63,11 @@ class TestServerLifecycle:
         client = client_fixture
         server_name = bedrock_server
 
-        await client.async_start_server(server_name)
+        await client.servers.async_start_server(server_name)
         await wait_for_server_status(client, server_name, is_running=True, timeout=90)
 
-        restart_res = await client.async_restart_server(server_name)
-        assert restart_res.status in ["success", "pending"]
+        restart_res = await client.servers.async_restart_server(server_name)
+        assert restart_res.status in ["success", "pending", "accepted"]
 
         await asyncio.sleep(5)
         await wait_for_server_status(client, server_name, is_running=True, timeout=90)
@@ -79,8 +79,8 @@ class TestServerLifecycle:
 
         # The ActionResponse for this endpoint does not contain a task_id,
         # so we can only verify that the command is accepted.
-        update_res = await client.async_update_server(server_name)
-        assert update_res.status in ["success", "pending"]
+        update_res = await client.servers.async_update_server(server_name)
+        assert update_res.status in ["success", "pending", "accepted"]
 
     async def test_send_command(
         self, bedrock_server, wait_for_server_status, client_fixture
@@ -89,9 +89,11 @@ class TestServerLifecycle:
         client = client_fixture
         server_name = bedrock_server
 
-        await client.async_start_server(server_name)
+        await client.servers.async_start_server(server_name)
         await wait_for_server_status(client, server_name, is_running=True, timeout=90)
 
         payload = CommandPayload(command="say hello from test")
-        command_res = await client.async_send_server_command(server_name, payload)
+        command_res = await client.servers.async_send_server_command(
+            server_name, payload
+        )
         assert command_res.status == "success"
