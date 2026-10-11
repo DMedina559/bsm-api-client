@@ -3,6 +3,7 @@ import questionary
 
 from bsm_cli.decorators import pass_async_context
 from bsm_cli.output import get_client
+from bsm_cli.presentation import screen_header
 
 
 async def interactive_user_workflow(ctx, client):  # noqa: C901
@@ -10,7 +11,7 @@ async def interactive_user_workflow(ctx, client):  # noqa: C901
     while True:
         try:
             users_list = await client.async_get_users()
-            click.clear()
+            screen_header("Users")
             click.secho("--- Manage Users ---", fg="magenta", bold=True)
             for user in users_list:
                 click.echo(

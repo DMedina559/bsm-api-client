@@ -6,6 +6,7 @@ import click
 from bsm_api_client.models import ServerSettingItemPayload
 from bsm_cli.completion import complete_server
 from bsm_cli.output import get_client
+from bsm_cli.presentation import screen_header
 
 
 @click.group()
@@ -78,7 +79,7 @@ async def monitor_usage(ctx, server_name: str):
         while True:
             response = await client.async_get_server_process_info(server_name)
 
-            click.clear()
+            screen_header("Server monitor")
             click.secho(
                 f"--- Monitoring Server: {server_name} ---", fg="magenta", bold=True
             )
