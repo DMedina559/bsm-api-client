@@ -14,7 +14,7 @@ from bsm_cli.properties import interactive_properties_workflow
 
 def _print_server_table(servers):
     """Prints a formatted table of server information to the console."""
-    header = f"{'SERVER NAME':<25} {'STATUS':<15} {'VERSION'}"
+    header = f"  {'SERVER NAME':<25} {'STATUS':<15} {'VERSION'}"
     click.secho(header, bold=True)
     click.echo("-" * 65)
 
@@ -39,11 +39,11 @@ def _print_server_table(servers):
             }
             status_color = color_map.get(status, "red")
 
-            status_styled = click.style(f"{status:<10}", fg=status_color)
-            name_styled = click.style(name, fg="cyan")
-            version_styled = click.style(version, fg="bright_white")
+            status_styled = click.style(f"{status:<15}", fg=status_color)
+            name_styled = click.style(f"{name:<25}", fg="cyan")
+            version_styled = click.style(str(version), fg="bright_white")
 
-            click.echo(f"  {name_styled:<38} {status_styled:<20} {version_styled}")
+            click.echo(f"  {name_styled} {status_styled} {version_styled}")
     click.echo("-" * 65)
 
 

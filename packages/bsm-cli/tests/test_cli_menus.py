@@ -1,7 +1,7 @@
 """Registry prompts preserve values, conceal passwords, and support cancellation."""
 
 from copy import copy
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, Mock
 
 import click
 import pytest
@@ -209,6 +209,8 @@ async def test_home_opens_server_directly_and_has_no_duplicate_command_groups(
         ],
     )
     opened = AsyncMock()
+    table = Mock()
+    monkeypatch.setattr("bsm_cli.main_menus._print_server_table", table)
     monkeypatch.setattr("bsm_cli.main_menus.manage_server_menu", opened)
     monkeypatch.setattr("click.clear", lambda: None)
     answers = iter([("server", "alpha"), "Exit"])
@@ -223,6 +225,8 @@ async def test_home_opens_server_directly_and_has_no_duplicate_command_groups(
         await main_menu(ctx)
     opened.assert_awaited_once()
     assert opened.await_args.args[1] == "alpha"
+    assert table.call_count == 2
+    table.assert_called_with(client.async_get_servers.return_value.servers)
     assert "Monitor" in observed
     assert not any(isinstance(value, str) and "Commands" in value for value in observed)
 

@@ -9,7 +9,7 @@ from questionary import Choice, Separator
 from bsm_cli.menu_registry import command_menu, plugin_api_menu
 from bsm_cli.output import get_client
 from bsm_cli.plugins import interactive_plugin_workflow
-from bsm_cli.server import list_servers
+from bsm_cli.server import _print_server_table, list_servers
 
 
 async def _invoke(ctx, command, **kwargs):
@@ -91,13 +91,16 @@ async def main_menu(ctx):
             click.clear()
             click.secho("Bedrock Server Manager", bold=True, fg="magenta")
             fleet = await client.async_get_servers()
+            click.echo()
+            _print_server_table(fleet.servers or [])
+            click.echo()
             choices = [
+                Separator("── Monitoring ──"),
                 "Overview",
                 "Monitor",
                 "Operations",
-                "Plugins",
                 "Logs",
-                Separator("Servers"),
+                Separator("── Servers ──"),
             ]
             choices.extend(
                 Choice(
@@ -108,22 +111,25 @@ async def main_menu(ctx):
             choices.extend(
                 [
                     "Install server",
-                    Separator("Administration"),
+                    Separator("── Application ──"),
+                    "Plugins",
                     "App settings",
                     "Appearance",
                     "Health checks",
+                    Separator("── Accounts and content ──"),
                     "Account",
                     "Users",
                     "Players",
                     "Content",
-                    Separator("Developer"),
+                    Separator("── Developer ──"),
                     "Advanced API",
                     "Plugin API",
+                    Separator(),
                     "Exit",
                 ]
             )
             choice = await questionary.select(
-                "Choose a destination", choices=choices
+                "Choose a destination", choices=choices, use_shortcuts=False
             ).ask_async()
             if choice is None or choice == "Exit":
                 return
