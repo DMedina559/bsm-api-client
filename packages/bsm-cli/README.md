@@ -180,7 +180,9 @@ bsm-cli audit
 bsm-cli logs --topic app_logs
 ```
 
-The existing `manager` and `system` command paths remain available for scripts.
+Application commands use their direct paths (`overview`, `monitor`, `settings`,
+`health`, `logs`, `audit`, and `operations`). Server monitoring and settings live
+under `server`; the duplicate `manager` and `system` groups have been removed.
 Use `bsm-cli server monitor --server survival` for a single server.
 
 Live views reconnect automatically and reconcile WebSocket updates with HTTP

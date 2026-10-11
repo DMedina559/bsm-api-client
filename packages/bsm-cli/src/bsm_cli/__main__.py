@@ -80,7 +80,6 @@ async def cli_context(ctx):
 
 
 cli.add_command(appearance)
-cli.add_command(manager)
 cli.add_command(api)
 register_plugin_commands(plugin)
 cli.add_command(auth)
@@ -93,14 +92,12 @@ cli.add_command(allowlist)
 cli.add_command(bans)
 cli.add_command(permissions)
 cli.add_command(properties)
-cli.add_command(system)
 cli.add_command(world)
 cli.add_command(account)
 cli.add_command(content)
 cli.add_command(users)
 
-# Direct commands mirror the interactive destinations; existing groups remain
-# available so scripts do not have to change.
+# Register each workflow at its canonical command path.
 for name in ("overview", "monitor", "settings", "health", "audit", "logs"):
     cli.add_command(manager.commands[name], name=name)
 cli.add_command(manager.commands["tasks"], name="operations")

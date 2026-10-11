@@ -282,7 +282,7 @@ def test_curated_api_failures(monkeypatch, tmp_path, args, machine):
             [False],
         ),
         (("addon", "manage", "-s", "test"), [], ["Back"], []),
-        (("system", "settings", "-s", "test"), [], ["cancel"], []),
+        (("server", "settings", "-s", "test"), [], ["cancel"], []),
         (("users",), [], ["Back"], []),
     ],
 )
