@@ -10,21 +10,28 @@ from bsm_cli.api import invoke
 from bsm_cli.output import get_client
 
 
-async def command_menu(ctx, group):  # noqa: C901
+async def command_menu(ctx, group, *, values=None):  # noqa: C901
     """Browse commands as a persistent interactive management menu."""
-    resource_values = {}
+    resource_values = dict(values or {})
     while True:
         if not await _show_menu_list(ctx, group, resource_values):
             return
         name = await questionary.select(
             group.help or group.name,
-            choices=[*sorted(group.commands), "Back"],
+            choices=[
+                *(
+                    questionary.Choice(name.replace("-", " ").capitalize(), value=name)
+                    for name in group.commands
+                    if name != "list"
+                ),
+                "Back",
+            ],
         ).ask_async()
         if not name or name == "Back":
             return
         command = group.commands[name]
         if isinstance(command, click.Group):
-            await command_menu(ctx, command)
+            await command_menu(ctx, command, values=resource_values)
             continue
         kwargs = {}
         cancelled = False

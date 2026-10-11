@@ -161,21 +161,27 @@ menus can select live operation IDs and return to the menu after each action.
 
 ## Manager dashboard and settings
 
-The interactive main menu provides Overview, Application Monitor, and Active
-Operations shortcuts alongside server management. These views are also available
-without entering the menu:
+The home menu opens Overview, Monitor, and Operations directly. Select a server
+to see its lifecycle, configuration, backup, and world actions on one screen.
+Menus with a list display it automatically before offering actions. Operations
+can be selected directly to inspect their outcomes.
+
+These views are also available without entering the menu:
 
 ```bash
 bsm-cli auth setup --base-url http://localhost:11325
-bsm-cli manager overview
-bsm-cli manager health
-bsm-cli manager monitor
-bsm-cli manager monitor --once --unit GB
-bsm-cli manager tasks list
-bsm-cli manager tasks show TASK_ID
-bsm-cli manager audit
-bsm-cli manager logs --topic app_logs
+bsm-cli overview
+bsm-cli health
+bsm-cli monitor
+bsm-cli monitor --once --unit GB
+bsm-cli operations list
+bsm-cli operations show TASK_ID
+bsm-cli audit
+bsm-cli logs --topic app_logs
 ```
+
+The existing `manager` and `system` command paths remain available for scripts.
+Use `bsm-cli server monitor --server survival` for a single server.
 
 Live views reconnect automatically and reconcile WebSocket updates with HTTP
 snapshots. Revision checks prevent older snapshots from replacing newer state.
@@ -183,8 +189,8 @@ Application monitoring separates app and system metrics and shows recent CPU
 history. Log history returns a cursor for requesting older pages.
 
 ```bash
-bsm-cli manager settings
-bsm-cli system settings --server survival
+bsm-cli settings
+bsm-cli server settings --server survival
 bsm-cli plugin settings edit backup_on_start
 bsm-cli plugin settings show backup_on_start
 bsm-cli plugin settings set backup_on_start settings.json
