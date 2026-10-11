@@ -82,10 +82,10 @@ async def install_world(ctx, server_name: str, world_file_path: str, yes: bool):
         payload = FileNamePayload(filename=filename)
         response = await client.async_install_server_world(server_name, payload)
 
-        if response.task_id:
+        if getattr(response, "task_id", None):
             await monitor_task(
                 client,
-                response.task_id,
+                str(getattr(response, "task_id", "")),
                 f"World '{filename}' installed successfully",
                 "Failed to install world",
             )
@@ -115,10 +115,10 @@ async def export_world(ctx, server_name: str):
     click.echo(f"Attempting to export world for server '{server_name}'...")
     try:
         response = await client.async_export_server_world(server_name)
-        if response.task_id:
+        if getattr(response, "task_id", None):
             await monitor_task(
                 client,
-                response.task_id,
+                str(getattr(response, "task_id", "")),
                 "World exported successfully",
                 "Failed to export world",
             )
@@ -159,10 +159,10 @@ async def reset_world(ctx, server_name: str, yes: bool):
     click.echo(f"Resetting world for server '{server_name}'...")
     try:
         response = await client.async_reset_server_world(server_name)
-        if response.task_id:
+        if getattr(response, "task_id", None):
             await monitor_task(
                 client,
-                response.task_id,
+                str(getattr(response, "task_id", "")),
                 "World has been reset successfully",
                 "Failed to reset world",
             )

@@ -143,7 +143,13 @@ async def main_menu(ctx: click.Context):  # noqa: C901
 
             from questionary import Choice
 
-            menu_choices: list[Choice | Separator | str] = ["Install New Server"]
+            menu_choices: list[Choice | Separator | str] = [
+                "Overview",
+                "Application Monitor",
+                "Active Operations",
+                Separator("--- Fleet ---"),
+                "Install New Server",
+            ]
             if server_names:
                 menu_choices.append("Manage Existing Server")
 
@@ -173,7 +179,17 @@ async def main_menu(ctx: click.Context):  # noqa: C901
             if choice is None or choice == "Exit":
                 return
 
-            if choice == "Install New Server":
+            if choice in {"Overview", "Application Monitor", "Active Operations"}:
+                from bsm_cli.manager import list_tasks, monitor, show_overview
+
+                command = {
+                    "Overview": show_overview,
+                    "Application Monitor": monitor,
+                    "Active Operations": list_tasks,
+                }[choice]
+                await ctx.invoke(command)
+                click.pause("Press any key to return to the main menu...")
+            elif choice == "Install New Server":
                 server_group = cli.get_command(ctx, "server")
                 install_cmd = server_group.get_command(ctx, "install")
                 await ctx.invoke(install_cmd)

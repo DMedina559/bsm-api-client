@@ -1,10 +1,10 @@
 """Validate runtime inputs against the advertised local JSON Schema contract."""
 
-from typing import Any, Mapping, TypeVar, cast
+from typing import Any, Mapping, TypeVar, overload
 
 from jsonschema import Draft202012Validator
 from jsonschema.exceptions import SchemaError
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, TypeAdapter, ValidationError
 from referencing import Registry
 from referencing.exceptions import Unresolvable
 
@@ -13,13 +13,21 @@ from .exceptions import APIError, InvalidInputError
 Model = TypeVar("Model", bound=BaseModel)
 
 
-def parse_response(model: type[Model], value: Any) -> Model:
+@overload
+def parse_response(model: type[Model], value: Any) -> Model: ...
+
+
+@overload
+def parse_response(model: Any, value: Any) -> Any: ...
+
+
+def parse_response(model: Any, value: Any) -> Any:
     """Keep response contract failures in the API exception hierarchy."""
     try:
-        return cast(Model, model.model_validate(value))
+        return TypeAdapter(model).validate_python(value)
     except ValidationError as exc:
         raise APIError(
-            f"API response did not match {model.__name__}.",
+            f"API response did not match {getattr(model, '__name__', 'operation contract')}.",
             response_data={
                 "validation_errors": exc.errors(
                     include_input=False, include_context=False, include_url=False

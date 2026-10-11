@@ -152,7 +152,8 @@ async def test_install_new_server(client):
             server_name="test-server", server_version="LATEST", overwrite=True
         )
         mock_request.return_value = {
-            "status": "pending",
+            "status": "accepted",
+            "server_name": "test-server",
             "message": "Installation started.",
             "task_id": "test-task-id",
         }
@@ -160,7 +161,7 @@ async def test_install_new_server(client):
         mock_request.assert_called_once_with(
             "install_server", body=payload.model_dump(), authenticated=True
         )
-        assert result.status == "pending"
+        assert result.status == "accepted"
         assert result.task_id == "test-task-id"
 
 

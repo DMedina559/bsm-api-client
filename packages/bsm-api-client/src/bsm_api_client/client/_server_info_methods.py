@@ -1,23 +1,19 @@
-# src/bsm_api_client/client/_server_info_methods.py
-"""Mixin class for server information retrieval methods.
+from ..models import (
+    GetAllowlistResponse,
+    GetPermissionsResponse,
+    GetPropertiesResponse,
+    ServerSummary,
+)
 
-This module provides the `ServerInfoMethodsMixin` class, which includes
-methods for retrieving information about server instances from the Bedrock
-Server Manager API.
-"""
-
+"Mixin class for server information retrieval methods.\n\nThis module provides the `ServerInfoMethodsMixin` class, which includes\nmethods for retrieving information about server instances from the Bedrock\nServer Manager API.\n"
 import logging
 from typing import List, cast
 
 from ..exceptions import APIError, ServerNotFoundError
 from ..generated_adapter import GeneratedOperationMethods
 from ..models import (
-    AllowlistGetResponse,
-    PermissionsGetResponse,
-    PropertiesGetResponse,
     ServerProcessInfoResponse,
     ServerRunningStatusResponse,
-    ServerSchemaResponse,
     ServerSettingItemPayload,
     ServerSettingsResponse,
     ServersListResponse,
@@ -85,30 +81,25 @@ class ServerInfoMethodsMixin(GeneratedOperationMethods):
             response = await client.async_get_server_validate('MyServer')
         """
         _LOGGER.debug("Validating existence of server: '%s'", server_name)
-        # Server names might have characters needing encoding, though install rules try to limit this.
         try:
-            # This request will raise ServerNotFoundError via ClientBase if API returns 404
-            # or other APIError for different issues.
             response = await self.async_call_generated(
                 "validate_server",
                 parameters={"server_name": server_name},
                 authenticated=True,
             )
-            # If no exception, and we get here, it means 200 OK.
-            # The API docs say 200 OK means "status": "success"
             return isinstance(response, dict) and response.get("status") == "success"
         except ServerNotFoundError:
             _LOGGER.debug(
                 "Validation API call indicated server '%s' not found.", server_name
             )
             raise
-        except APIError as e:  # Catch other API errors
+        except APIError as e:
             _LOGGER.error(
                 "API error during validation for server '%s': %s", server_name, e
             )
             raise
 
-    async def async_get_server_summary(self, server_name: str) -> ServerSchemaResponse:
+    async def async_get_server_summary(self, server_name: str) -> ServerSummary:
         """Retrieves the basic summary information for a specific server instance.
 
         :param server_name: The name of the server.
@@ -125,9 +116,7 @@ class ServerInfoMethodsMixin(GeneratedOperationMethods):
             parameters={"server_name": server_name},
             authenticated=True,
         )
-        return cast(
-            ServerSchemaResponse, parse_response(ServerSchemaResponse, response)
-        )
+        return cast(ServerSummary, parse_response(ServerSummary, response))
 
     async def async_get_server_process_info(
         self, server_name: str
@@ -155,7 +144,7 @@ class ServerInfoMethodsMixin(GeneratedOperationMethods):
             parse_response(ServerProcessInfoResponse, response),
         )
 
-    async def async_get_world_icon_image(self, server_name: str) -> bytes:  # noqa: C901
+    async def async_get_world_icon_image(self, server_name: str) -> bytes:
         """Retrieves the world icon image for a server.
 
         :param server_name: The name of the server.
@@ -192,7 +181,6 @@ class ServerInfoMethodsMixin(GeneratedOperationMethods):
             response = await client.async_get_world_icon_image('MyServer')
         """
         _LOGGER.debug("Fetching running status for server '%s'", server_name)
-        # Path changed from /running_status to /status for the new API.
         response = await self.async_call_generated(
             "get_server_status",
             parameters={"server_name": server_name},
@@ -205,7 +193,7 @@ class ServerInfoMethodsMixin(GeneratedOperationMethods):
 
     async def async_get_server_properties(
         self, server_name: str
-    ) -> PropertiesGetResponse:
+    ) -> GetPropertiesResponse:
         """Retrieves the server's properties.
 
         :param server_name: The name of the server.
@@ -225,12 +213,12 @@ class ServerInfoMethodsMixin(GeneratedOperationMethods):
             authenticated=True,
         )
         return cast(
-            PropertiesGetResponse, parse_response(PropertiesGetResponse, response)
+            GetPropertiesResponse, parse_response(GetPropertiesResponse, response)
         )
 
     async def async_get_server_permissions_data(
         self, server_name: str
-    ) -> PermissionsGetResponse:
+    ) -> GetPermissionsResponse:
         """Retrieves player permissions from the server.
 
         :param server_name: The name of the server.
@@ -250,12 +238,12 @@ class ServerInfoMethodsMixin(GeneratedOperationMethods):
             authenticated=True,
         )
         return cast(
-            PermissionsGetResponse, parse_response(PermissionsGetResponse, response)
+            GetPermissionsResponse, parse_response(GetPermissionsResponse, response)
         )
 
     async def async_get_server_allowlist(
         self, server_name: str
-    ) -> AllowlistGetResponse:
+    ) -> GetAllowlistResponse:
         """Retrieves the server's allowlist.
 
         :param server_name: The name of the server.
@@ -273,7 +261,7 @@ class ServerInfoMethodsMixin(GeneratedOperationMethods):
             "get_allowlist", parameters={"server_name": server_name}, authenticated=True
         )
         return cast(
-            AllowlistGetResponse, parse_response(AllowlistGetResponse, response)
+            GetAllowlistResponse, parse_response(GetAllowlistResponse, response)
         )
 
     async def async_get_server_settings(

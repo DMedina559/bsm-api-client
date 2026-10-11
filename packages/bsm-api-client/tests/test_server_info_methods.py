@@ -127,7 +127,12 @@ async def test_get_server_process_info(client):
     ) as mock_request:
         mock_request.return_value = {
             "status": "success",
-            "process_info": {"pid": 123},
+            "process_info": {
+                "pid": 123,
+                "cpu_percent": 0.0,
+                "memory_mb": 10.0,
+                "uptime": "1s",
+            },
         }
         result = await client.async_get_server_process_info("test-server")
         mock_request.assert_called_once_with(
@@ -163,6 +168,7 @@ async def test_get_server_properties(client):
         mock_request.return_value = {
             "status": "success",
             "properties": {"level-name": "world"},
+            "raw_content": "level-name=world",
         }
         result = await client.async_get_server_properties("test-server")
         mock_request.assert_called_once_with(

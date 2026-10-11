@@ -198,5 +198,9 @@ def _task_finished(data, success_message, failure_message):
         raise OperationFailedError(f"{failure_message}: {detail}", response_data=data)
     if status in {"success", "completed"}:
         click.secho(f"{success_message}: {message}", fg="green")
+        if result is not None:
+            from bsm_cli.manager import outcome
+
+            outcome(result)
         return True
     return False

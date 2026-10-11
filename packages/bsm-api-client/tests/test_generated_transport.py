@@ -25,11 +25,13 @@ async def local_api():
             return web.json_response({"detail": "expired"}, status=401)
         body = await request.json() if request.can_read_body else None
         seen.append((request.method, request.match_info["server_name"], body))
+        if request.method == "DELETE":
+            return web.json_response({"status": "success", "message": "done"})
         return web.json_response(
             {
                 "status": "success",
                 "message": "done",
-                "server_name": request.match_info["server_name"],
+                "server_name": "example",
                 "outcome": "started",
             }
         )
@@ -140,7 +142,9 @@ async def test_dynamic_multipart_and_boolean_query(local_api):
 
 @pytest.mark.asyncio
 async def test_generated_bridge_uses_shared_transport_and_closes_with_facade(local_api):
-    from bsm_api_client.generated.api.server_mannagement import start_server
+    from bsm_api_client.generated_adapter import operation_module
+
+    start_server = operation_module("start_server")
 
     client, seen = local_api
     generated = await client.async_get_generated_client()

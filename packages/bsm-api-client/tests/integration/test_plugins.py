@@ -135,3 +135,36 @@ def test_builtin_plugin_operation_discovery(
     assert {row["path"] for row in rows} == paths
     assert all(row["plugin"] == module for row in rows)
     assert not result.stderr
+
+
+@pytest.mark.asyncio
+async def test_typed_plugin_settings_round_trip(server):
+    from bsm_api_client.exceptions import InvalidInputError
+    from bsm_api_client.models import PluginSettingsPayload
+
+    async with BedrockServerManagerApi(server, "admin", "password") as client:
+        name = "backup_on_start"
+        original = await client.async_get_plugin_settings(name)
+        assert original.settings_schema
+        try:
+            updated = {
+                **original.settings,
+                "enable_backup_on_start": not original.settings[
+                    "enable_backup_on_start"
+                ],
+            }
+            await client.async_update_plugin_settings(
+                name, PluginSettingsPayload(settings=updated)
+            )
+            assert (await client.async_get_plugin_settings(name)).settings == updated
+            with pytest.raises(InvalidInputError):
+                await client.async_update_plugin_settings(
+                    name,
+                    PluginSettingsPayload(
+                        settings={**updated, "servers": ["does_not_exist"]}
+                    ),
+                )
+        finally:
+            await client.async_update_plugin_settings(
+                name, PluginSettingsPayload(settings=original.settings)
+            )

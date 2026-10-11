@@ -1,4 +1,5 @@
 import os
+from typing import Literal
 
 import click
 import questionary
@@ -74,10 +75,10 @@ async def install_addon(ctx, server_name: str, addon_file_path: str):
 
         payload = FileNamePayload(filename=addon_filename)
         response = await client.async_install_server_addon(server_name, payload)
-        if response.task_id:
+        if getattr(response, "task_id", None):
             await monitor_task(
                 client,
-                response.task_id,
+                str(getattr(response, "task_id", "")),
                 f"Addon '{addon_filename}' installed successfully",
                 "Failed to install addon",
             )
@@ -253,7 +254,9 @@ async def manage_addons(ctx, server_name: str):  # noqa: C901
 
             # Handle specific pack
             is_bp = "[BP]" in choice
-            pack_type = "behavior" if is_bp else "resource"
+            pack_type: Literal["behavior", "resource"] = (
+                "behavior" if is_bp else "resource"
+            )
             pack_name = choice.split("] ")[1].split(" (v")[0]
 
             pack = next((p for p in (bp if is_bp else rp) if p.name == pack_name), None)
@@ -344,11 +347,6 @@ async def manage_addons(ctx, server_name: str):  # noqa: C901
                             pack_uuid=pack.uuid,
                             pack_type=pack_type,
                             subpack_name=selected_sp.get("folder_name"),
-                        )
-                        setattr(
-                            subpack_payload,
-                            f"subpack_{pack.uuid}",
-                            selected_sp.get("folder_name"),
                         )
 
                         res = await client.async_update_server_addon_subpack(

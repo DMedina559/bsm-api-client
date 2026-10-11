@@ -95,7 +95,7 @@ async def _prompt_parameter(ctx, param):  # noqa: C901
     prompt += " (blank for default):" if not param.required else ":"
     if isinstance(param, click.Option) and param.is_flag:
         answer = await questionary.confirm(
-            prompt, default=bool(param.default)
+            prompt, default=bool(param.get_default(ctx))
         ).ask_async()
         return _CANCEL if answer is None else answer
     if not multiple and not getattr(param, "hide_input", False):

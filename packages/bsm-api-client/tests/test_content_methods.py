@@ -79,7 +79,8 @@ async def test_trigger_server_backup(client):
     ) as mock_request:
         payload = BackupActionPayload(backup_type="all")
         mock_request.return_value = {
-            "status": "success",
+            "status": "accepted",
+            "task_id": "test-task",
             "message": "Backup triggered.",
         }
         result = await client.async_trigger_server_backup("test-server", payload)
@@ -89,7 +90,7 @@ async def test_trigger_server_backup(client):
             body=payload.model_dump(),
             authenticated=True,
         )
-        assert result.status == "success"
+        assert result.status == "accepted"
 
 
 @pytest.mark.asyncio
@@ -254,7 +255,11 @@ async def test_enable_server_addon(client):
         client, "async_call_generated", new_callable=AsyncMock
     ) as mock_request:
         payload = AddonActionPayload(pack_uuid="123", pack_type="behavior")
-        mock_request.return_value = {"status": "success", "message": "Enabled"}
+        mock_request.return_value = {
+            "status": "accepted",
+            "task_id": "test-task",
+            "message": "Enabled",
+        }
         result = await client.async_enable_server_addon("test-server", payload)
         mock_request.assert_called_once_with(
             "enable_addon",
@@ -262,7 +267,7 @@ async def test_enable_server_addon(client):
             body=payload.model_dump(),
             authenticated=True,
         )
-        assert result.status == "success"
+        assert result.status == "accepted"
 
 
 @pytest.mark.asyncio
@@ -271,7 +276,11 @@ async def test_disable_server_addon(client):
         client, "async_call_generated", new_callable=AsyncMock
     ) as mock_request:
         payload = AddonActionPayload(pack_uuid="123", pack_type="behavior")
-        mock_request.return_value = {"status": "success", "message": "Disabled"}
+        mock_request.return_value = {
+            "status": "accepted",
+            "task_id": "test-task",
+            "message": "Disabled",
+        }
         result = await client.async_disable_server_addon("test-server", payload)
         mock_request.assert_called_once_with(
             "disable_addon",
@@ -279,7 +288,7 @@ async def test_disable_server_addon(client):
             body=payload.model_dump(),
             authenticated=True,
         )
-        assert result.status == "success"
+        assert result.status == "accepted"
 
 
 @pytest.mark.asyncio
@@ -290,7 +299,11 @@ async def test_update_server_addon_subpack(client):
         payload = AddonSubpackPayload(
             pack_uuid="123", pack_type="behavior", subpack_name="test"
         )
-        mock_request.return_value = {"status": "success", "message": "Subpack updated"}
+        mock_request.return_value = {
+            "status": "accepted",
+            "task_id": "test-task",
+            "message": "Subpack updated",
+        }
         result = await client.async_update_server_addon_subpack("test-server", payload)
         mock_request.assert_called_once_with(
             "update_addon_subpack",
@@ -298,7 +311,7 @@ async def test_update_server_addon_subpack(client):
             body=payload.model_dump(),
             authenticated=True,
         )
-        assert result.status == "success"
+        assert result.status == "accepted"
 
 
 @pytest.mark.asyncio
@@ -307,7 +320,11 @@ async def test_uninstall_server_addon(client):
         client, "async_call_generated", new_callable=AsyncMock
     ) as mock_request:
         payload = AddonActionPayload(pack_uuid="123", pack_type="behavior")
-        mock_request.return_value = {"status": "success", "message": "Uninstalled"}
+        mock_request.return_value = {
+            "status": "accepted",
+            "task_id": "test-task",
+            "message": "Uninstalled",
+        }
         result = await client.async_uninstall_server_addon("test-server", payload)
         mock_request.assert_called_once_with(
             "uninstall_addon",
@@ -315,7 +332,7 @@ async def test_uninstall_server_addon(client):
             body=payload.model_dump(),
             authenticated=True,
         )
-        assert result.status == "success"
+        assert result.status == "accepted"
 
 
 @pytest.mark.asyncio
@@ -324,7 +341,11 @@ async def test_reorder_server_addon(client):
         client, "async_call_generated", new_callable=AsyncMock
     ) as mock_request:
         payload = AddonReorderPayload(pack_type="behavior", uuids=["123", "456"])
-        mock_request.return_value = {"status": "success", "message": "Reordered"}
+        mock_request.return_value = {
+            "status": "accepted",
+            "task_id": "test-task",
+            "message": "Reordered",
+        }
         result = await client.async_reorder_server_addon("test-server", payload)
         mock_request.assert_called_once_with(
             "reorder_addons",
@@ -332,7 +353,7 @@ async def test_reorder_server_addon(client):
             body=payload.model_dump(),
             authenticated=True,
         )
-        assert result.status == "success"
+        assert result.status == "accepted"
 
 
 @pytest.mark.skip(reason="Content uploader is a disabled-by-default plugin")
@@ -360,7 +381,8 @@ async def test_export_server_world(client):
         client, "async_call_generated", new_callable=AsyncMock
     ) as mock_request:
         mock_request.return_value = {
-            "status": "success",
+            "status": "accepted",
+            "task_id": "test-task",
             "message": "Export triggered.",
         }
         result = await client.async_export_server_world("test-server")
@@ -370,7 +392,7 @@ async def test_export_server_world(client):
             body=None,
             authenticated=True,
         )
-        assert result.status == "success"
+        assert result.status == "accepted"
 
 
 @pytest.mark.asyncio
@@ -379,7 +401,11 @@ async def test_reset_server_world(client):
     with patch.object(
         client, "async_call_generated", new_callable=AsyncMock
     ) as mock_request:
-        mock_request.return_value = {"status": "success", "message": "Reset triggered."}
+        mock_request.return_value = {
+            "status": "accepted",
+            "task_id": "test-task",
+            "message": "Reset triggered.",
+        }
         result = await client.async_reset_server_world("test-server")
         mock_request.assert_called_once_with(
             "reset_world",
@@ -387,7 +413,7 @@ async def test_reset_server_world(client):
             body=None,
             authenticated=True,
         )
-        assert result.status == "success"
+        assert result.status == "accepted"
 
 
 @pytest.mark.asyncio
@@ -397,7 +423,8 @@ async def test_prune_server_backups(client):
         client, "async_call_generated", new_callable=AsyncMock
     ) as mock_request:
         mock_request.return_value = {
-            "status": "success",
+            "status": "accepted",
+            "task_id": "test-task",
             "message": "Pruning triggered.",
         }
         result = await client.async_prune_server_backups("test-server")
@@ -407,7 +434,7 @@ async def test_prune_server_backups(client):
             body=None,
             authenticated=True,
         )
-        assert result.status == "success"
+        assert result.status == "accepted"
 
 
 @pytest.mark.asyncio
@@ -418,7 +445,8 @@ async def test_restore_server_backup(client):
     ) as mock_request:
         payload = RestoreActionPayload(restore_type="world", backup_file="backup1.zip")
         mock_request.return_value = {
-            "status": "success",
+            "status": "accepted",
+            "task_id": "test-task",
             "message": "Restore triggered.",
         }
         result = await client.async_restore_server_backup("test-server", payload)
@@ -428,7 +456,7 @@ async def test_restore_server_backup(client):
             body=payload.model_dump(),
             authenticated=True,
         )
-        assert result.status == "success"
+        assert result.status == "accepted"
 
 
 @pytest.mark.asyncio
@@ -438,7 +466,8 @@ async def test_restore_server_latest_all(client):
         client, "async_call_generated", new_callable=AsyncMock
     ) as mock_request:
         mock_request.return_value = {
-            "status": "success",
+            "status": "accepted",
+            "task_id": "test-task",
             "message": "Restore triggered.",
         }
         result = await client.async_restore_server_latest_all("test-server")
@@ -448,7 +477,7 @@ async def test_restore_server_latest_all(client):
             body={"restore_type": "all"},
             authenticated=True,
         )
-        assert result.status == "success"
+        assert result.status == "accepted"
 
 
 @pytest.mark.asyncio
@@ -459,7 +488,8 @@ async def test_install_server_world(client):
     ) as mock_request:
         payload = FileNamePayload(filename="world1.mcworld")
         mock_request.return_value = {
-            "status": "success",
+            "status": "accepted",
+            "task_id": "test-task",
             "message": "Install triggered.",
         }
         result = await client.async_install_server_world("test-server", payload)
@@ -469,7 +499,7 @@ async def test_install_server_world(client):
             body=payload.model_dump(),
             authenticated=True,
         )
-        assert result.status == "success"
+        assert result.status == "accepted"
 
 
 @pytest.mark.asyncio
@@ -480,7 +510,8 @@ async def test_install_server_addon(client):
     ) as mock_request:
         payload = FileNamePayload(filename="addon1.mcaddon")
         mock_request.return_value = {
-            "status": "success",
+            "status": "accepted",
+            "task_id": "test-task",
             "message": "Install triggered.",
         }
         result = await client.async_install_server_addon("test-server", payload)
@@ -490,4 +521,4 @@ async def test_install_server_addon(client):
             body=payload.model_dump(),
             authenticated=True,
         )
-        assert result.status == "success"
+        assert result.status == "accepted"

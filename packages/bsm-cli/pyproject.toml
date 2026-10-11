@@ -37,7 +37,7 @@ dev = [
     "flake8 >=7.3.0,<7.4",
     "isort >=5.13.0,<8.1",
     "mypy >=1.10.0,<2.2",
-    "bedrock-server-manager @ git+https://github.com/DMedina559/bedrock-server-manager.git@0b04fefafb4452f54ba48cc6659d4fbf8ba4e5ad",
+    "bedrock-server-manager @ git+https://github.com/DMedina559/bedrock-server-manager.git@dev",
     "pre-commit >=4.6.0,<4.7",
 ]
 

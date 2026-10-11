@@ -1,10 +1,11 @@
-"""Mixin class for users-related API methods."""
+from ..models import RegistrationResponse
 
+"Mixin class for users-related API methods."
 import logging
 from typing import List, cast
 
 from ..generated_adapter import GeneratedOperationMethods
-from ..models import ActionResponse, BaseApiResponse, UserResponse
+from ..models import BaseApiResponse, UserResponse
 from ..validation import parse_response
 
 _LOGGER = logging.getLogger(__name__.split(".")[0] + ".client.users")
@@ -108,7 +109,7 @@ class UsersMethodsMixin(GeneratedOperationMethods):
         )
         return cast(BaseApiResponse, parse_response(BaseApiResponse, response))
 
-    async def async_generate_invite_token(self, role: str) -> ActionResponse:
+    async def async_generate_invite_token(self, role: str) -> RegistrationResponse:
         """Generates an invite token.
 
         :param role: The role for the new user.
@@ -125,4 +126,6 @@ class UsersMethodsMixin(GeneratedOperationMethods):
         response = await self.async_call_generated(
             "generate_registration_token", body={"role": role}, authenticated=True
         )
-        return cast(ActionResponse, parse_response(ActionResponse, response))
+        return cast(
+            RegistrationResponse, parse_response(RegistrationResponse, response)
+        )

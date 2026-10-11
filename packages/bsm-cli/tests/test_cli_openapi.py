@@ -281,11 +281,9 @@ def test_server_completion_ignores_another_servers_cache(client):
 
 
 def test_curated_failure_returns_nonzero_status(client):
-    from bsm_api_client.models import BaseApiResponse
+    from bsm_api_client.exceptions import OperationFailedError
 
-    client.async_get_servers.return_value = BaseApiResponse(
-        status="error", message="Failed"
-    )
+    client.async_get_servers.side_effect = OperationFailedError("Failed")
     result = run("--json", "server", "list")
     assert result.exit_code == 1
     assert json.loads(result.stderr)["exit_code"] == 1

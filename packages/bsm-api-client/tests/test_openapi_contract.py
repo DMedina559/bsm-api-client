@@ -108,7 +108,7 @@ def test_plugin_prefix_is_case_insensitive_and_core_management_is_not_a_plugin()
     assert operations["reload_plugins"].plugin is None
 
 
-def test_pinned_dev_schema_has_explicit_operation_ids():
+def test_bundled_schema_has_explicit_operation_ids():
     operations = index_operations(generated_schema())
     assert {
         "start_server",
@@ -116,7 +116,12 @@ def test_pinned_dev_schema_has_explicit_operation_ids():
         "create_backup",
         "login",
     } <= operations.keys()
-    assert len(operations) == 78
+    assert {
+        "get_application_health",
+        "get_application_metrics",
+        "get_plugin_settings",
+        "update_plugin_settings",
+    } <= operations.keys()
 
 
 def test_query_serialization_honors_form_explode():

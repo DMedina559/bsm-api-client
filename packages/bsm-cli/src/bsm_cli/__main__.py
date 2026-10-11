@@ -15,6 +15,7 @@ from bsm_cli.account import account
 from bsm_cli.addon import addon
 from bsm_cli.allowlist import allowlist
 from bsm_cli.api import api, register_plugin_commands
+from bsm_cli.appearance import appearance
 from bsm_cli.auth import auth
 from bsm_cli.backup import backup
 from bsm_cli.bans import bans
@@ -22,6 +23,7 @@ from bsm_cli.config import Config
 from bsm_cli.content import content
 from bsm_cli.decorators import AsyncGroup
 from bsm_cli.main_menus import main_menu
+from bsm_cli.manager import manager
 from bsm_cli.permissions import permissions
 from bsm_cli.player import player
 from bsm_cli.plugins import plugin
@@ -77,6 +79,8 @@ async def cli_context(ctx):
             await ctx.obj["client"].close()
 
 
+cli.add_command(appearance)
+cli.add_command(manager)
 cli.add_command(api)
 register_plugin_commands(plugin)
 cli.add_command(auth)
