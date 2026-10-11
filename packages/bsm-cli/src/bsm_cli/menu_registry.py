@@ -7,6 +7,7 @@ import click
 import questionary
 
 from bsm_cli.api import invoke
+from bsm_cli.interaction import menu_action
 from bsm_cli.output import get_client
 
 
@@ -50,7 +51,7 @@ async def command_menu(ctx, group, *, values=None):  # noqa: C901
         try:
             result = ctx.invoke(command, **kwargs)
             if inspect.isawaitable(result):
-                await result
+                await menu_action(result)
         except (click.Abort, KeyboardInterrupt):
             click.secho("Action cancelled.", fg="yellow")
         except Exception as exc:
@@ -75,7 +76,7 @@ async def _show_menu_list(ctx, group, resource_values):
     try:
         result = ctx.invoke(command, **kwargs)
         if inspect.isawaitable(result):
-            await result
+            await menu_action(result)
     except (click.Abort, KeyboardInterrupt):
         return False
     except Exception as exc:
