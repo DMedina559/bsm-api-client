@@ -17,18 +17,39 @@ def load_config() -> Dict[str, Any]:
     config_path = get_config_path()
     if not config_path.exists():
         return {}
-    with open(config_path, "r") as f:
-        data = json.load(f)
-        if isinstance(data, dict):
-            return data
+    try:
+        with config_path.open(encoding="utf-8") as handle:
+            data = json.load(handle)
+    except (OSError, ValueError):
         return {}
+    return data if isinstance(data, dict) else {}
 
 
 def save_config(config: Dict[str, Any]):
-    """Saves the configuration to the config file."""
+    """Atomically save configuration with owner-only permissions."""
+    import tempfile
+
     config_path = get_config_path()
-    with open(config_path, "w") as f:
-        json.dump(config, f, indent=4)
+    config_path.parent.mkdir(parents=True, exist_ok=True)
+    temporary_path = None
+    try:
+        # NamedTemporaryFile defaults to restrictive permissions on POSIX.
+        with tempfile.NamedTemporaryFile(
+            mode="w",
+            encoding="utf-8",
+            dir=config_path.parent,
+            prefix=f".{config_path.name}.",
+            delete=False,
+        ) as handle:
+            temporary_path = Path(handle.name)
+            json.dump(config, handle, indent=4)
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.chmod(temporary_path, 0o600)
+        os.replace(temporary_path, config_path)
+    finally:
+        if temporary_path is not None:
+            temporary_path.unlink(missing_ok=True)
 
 
 class Config:
@@ -54,6 +75,12 @@ class Config:
         """Sets a configuration value."""
         self._config[key] = value
         save_config(self._config)
+
+    def update(self, **values: Any) -> None:
+        """Save related configuration values in one write."""
+        updated = {**self._config, **values}
+        save_config(updated)
+        self._config = updated
 
     @property
     def base_url(self) -> str:

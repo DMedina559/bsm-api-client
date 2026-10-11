@@ -2,6 +2,8 @@ import click
 import questionary
 
 from bsm_api_client.models import BanAddRequest, BanRemoveRequest
+from bsm_cli.completion import complete_server
+from bsm_cli.output import get_client
 
 
 @click.group()
@@ -17,17 +19,15 @@ def bans():
     "server_name",
     required=True,
     help="Name of the server.",
+    shell_complete=complete_server,
 )
 @click.pass_context
 async def list_bans(ctx, server_name: str):
     """Lists all players on the server's ban list."""
-    client = ctx.obj.get("client")
-    if not client:
-        click.secho("You are not logged in.", fg="red")
-        return
+    client = get_client(ctx)
 
     click.echo(f"Fetching ban list for server '{server_name}'...")
-    response = await client.async_get_server_bans(server_name)
+    response = await client.servers.async_get_server_bans(server_name)
 
     if response.get("status") == "success":
         bans_list = response.get("bans", [])
@@ -53,14 +53,12 @@ async def list_bans(ctx, server_name: str):
     "server_name",
     required=True,
     help="Name of the server.",
+    shell_complete=complete_server,
 )
 @click.pass_context
 async def add_ban(ctx, server_name: str):
     """Adds a player to the server ban list interactively."""
-    client = ctx.obj.get("client")
-    if not client:
-        click.secho("You are not logged in.", fg="red")
-        return
+    client = get_client(ctx)
 
     await interactive_ban_workflow(client, server_name)
 
@@ -72,16 +70,14 @@ async def add_ban(ctx, server_name: str):
     "server_name",
     required=True,
     help="Name of the server.",
+    shell_complete=complete_server,
 )
 @click.pass_context
 async def remove_ban(ctx, server_name: str):
     """Removes a player from the server ban list interactively."""
-    client = ctx.obj.get("client")
-    if not client:
-        click.secho("You are not logged in.", fg="red")
-        return
+    client = get_client(ctx)
 
-    response = await client.async_get_server_bans(server_name)
+    response = await client.servers.async_get_server_bans(server_name)
     if response.get("status") != "success":
         click.secho(
             f"Failed to fetch ban list: {response.get('message', 'Unknown Error')}",
@@ -121,7 +117,7 @@ async def remove_ban(ctx, server_name: str):
     click.echo(
         f"Removing XUID '{selected_xuid}' from the ban list for '{server_name}'..."
     )
-    rem_response = await client.async_remove_server_ban(server_name, payload)
+    rem_response = await client.servers.async_remove_server_ban(server_name, payload)
 
     if rem_response.get("status") == "success":
         click.secho("Player successfully removed from the ban list.", fg="green")
@@ -134,7 +130,7 @@ async def remove_ban(ctx, server_name: str):
 
 async def interactive_ban_workflow(client, server_name: str):
     """Guides the user through an interactive session to view and add players to the ban list."""
-    response = await client.async_get_server_bans(server_name)
+    response = await client.servers.async_get_server_bans(server_name)
     existing_bans = response.get("bans", [])
 
     click.secho("\n--- Interactive Ban List Configuration ---", bold=True)
@@ -159,6 +155,8 @@ async def interactive_ban_workflow(client, server_name: str):
             continue
 
         reason = await questionary.text("Reason (optional):").ask_async()
+        if reason is None:
+            return
 
         if any(b.get("xuid") == xuid.strip() for b in existing_bans):
             click.secho(
@@ -172,7 +170,7 @@ async def interactive_ban_workflow(client, server_name: str):
             xuid=xuid.strip(),
             reason=reason.strip() if reason.strip() else None,
         )
-        res = await client.async_add_server_ban(server_name, payload)
+        res = await client.servers.async_add_server_ban(server_name, payload)
         if res.get("status") == "success":
             click.secho(f"Successfully banned {player_name}.", fg="green")
             existing_bans.append(
