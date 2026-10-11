@@ -231,16 +231,23 @@ async def test_home_opens_server_directly_and_has_no_duplicate_command_groups(
     assert not any(isinstance(value, str) and "Commands" in value for value in observed)
 
 
-def test_direct_commands_share_the_existing_implementations():
+def test_workflows_have_one_canonical_command_path():
     from bsm_cli.__main__ import cli
 
-    for name in ("overview", "monitor", "settings", "health", "audit", "logs"):
-        assert cli.commands[name] is cli.commands["manager"].commands[name]
-    assert cli.commands["operations"] is cli.commands["manager"].commands["tasks"]
-    assert (
-        cli.commands["server"].commands["monitor"]
-        is cli.commands["system"].commands["monitor"]
-    )
+    assert "manager" not in cli.commands
+    assert "system" not in cli.commands
+    for name in (
+        "overview",
+        "monitor",
+        "settings",
+        "health",
+        "audit",
+        "logs",
+        "operations",
+    ):
+        assert name in cli.commands
+    assert "monitor" in cli.commands["server"].commands
+    assert "settings" in cli.commands["server"].commands
 
 
 @pytest.mark.asyncio

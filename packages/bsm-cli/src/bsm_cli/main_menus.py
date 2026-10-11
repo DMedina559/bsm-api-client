@@ -18,7 +18,8 @@ async def _invoke(ctx, command, **kwargs):
 
 
 def _command(ctx, group, name):
-    return ctx.obj["cli"].commands[group].commands[name]
+    root = ctx.obj["cli"]
+    return root.commands[group].commands[name] if group else root.commands[name]
 
 
 async def operations_menu(ctx):
@@ -49,8 +50,8 @@ async def operations_menu(ctx):
 
 async def logs_menu(ctx):
     actions = {
-        "Application logs": ("manager", "logs"),
-        "Audit log": ("manager", "audit"),
+        "Application logs": (None, "logs"),
+        "Audit log": (None, "audit"),
     }
     await _action_menu(ctx, "Logs", actions)
 
@@ -73,10 +74,10 @@ async def main_menu(ctx):
         )
         return
     routes = {
-        "Overview": ("manager", "overview"),
-        "Monitor": ("manager", "monitor"),
-        "App settings": ("manager", "settings"),
-        "Health checks": ("manager", "health"),
+        "Overview": (None, "overview"),
+        "Monitor": (None, "monitor"),
+        "App settings": (None, "settings"),
+        "Health checks": (None, "health"),
     }
     groups = {
         "Account": "account",
@@ -165,12 +166,12 @@ async def _open_destination(ctx, choice, routes, groups):
 async def manage_server_menu(ctx, server_name):
     """Keep monitoring, lifecycle, and content actions on one server screen."""
     actions = {
-        "Monitor": ("system", "monitor"),
+        "Monitor": ("server", "monitor"),
         "Start": ("server", "start"),
         "Stop": ("server", "stop"),
         "Restart": ("server", "restart"),
         "Send command": ("server", "send-command"),
-        "Settings": ("system", "settings"),
+        "Settings": ("server", "settings"),
         "Properties": ("properties", "set"),
         "Create backup": ("backup", "create"),
         "Restore backup": ("backup", "restore"),
