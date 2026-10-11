@@ -19,7 +19,7 @@ class ContractModel(BaseModel):
     @classmethod
     def from_dict(cls, value: Mapping[str, Any]) -> Self:
         """OpenAPI generator protocol backed by the public Pydantic contract."""
-        return cls.model_validate(value)
+        return cast(Self, cls.model_validate(value))
 
     def to_dict(self) -> dict[str, Any]:
         """Serialize supplied fields with OpenAPI aliases, revealing secrets for the wire."""
