@@ -99,5 +99,13 @@ cli.add_command(account)
 cli.add_command(content)
 cli.add_command(users)
 
+# Direct commands mirror the interactive destinations; existing groups remain
+# available so scripts do not have to change.
+for name in ("overview", "monitor", "settings", "health", "audit", "logs"):
+    cli.add_command(manager.commands[name], name=name)
+cli.add_command(manager.commands["tasks"], name="operations")
+server.add_command(system.commands["monitor"], name="monitor")
+server.add_command(system.commands["settings"], name="settings")
+
 if __name__ == "__main__":
     cli()

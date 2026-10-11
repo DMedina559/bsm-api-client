@@ -191,3 +191,72 @@ async def test_menu_lists_before_actions_and_refreshes_after_changes(monkeypatch
     from bsm_cli import menu_registry
 
     assert menu_registry._prompt_parameter.await_count == 1
+
+
+@pytest.mark.asyncio
+async def test_home_opens_server_directly_and_has_no_duplicate_command_groups(
+    monkeypatch,
+):
+    from bsm_api_client.models import ServersListResponse, ServerSummary
+    from bsm_cli.__main__ import cli
+    from bsm_cli.main_menus import main_menu
+
+    client = AsyncMock()
+    client.async_get_servers.return_value = ServersListResponse(
+        status="success",
+        servers=[
+            ServerSummary(name="alpha", status="STOPPED", version="1", player_count=0)
+        ],
+    )
+    opened = AsyncMock()
+    monkeypatch.setattr("bsm_cli.main_menus.manage_server_menu", opened)
+    monkeypatch.setattr("click.clear", lambda: None)
+    answers = iter([("server", "alpha"), "Exit"])
+    observed = []
+
+    def select(*args, **kwargs):
+        observed.extend(kwargs["choices"])
+        return Answer(next(answers))
+
+    monkeypatch.setattr("questionary.select", select)
+    with click.Context(cli, obj={"client": client, "cli": cli}) as ctx:
+        await main_menu(ctx)
+    opened.assert_awaited_once()
+    assert opened.await_args.args[1] == "alpha"
+    assert "Monitor" in observed
+    assert not any(isinstance(value, str) and "Commands" in value for value in observed)
+
+
+def test_direct_commands_share_the_existing_implementations():
+    from bsm_cli.__main__ import cli
+
+    for name in ("overview", "monitor", "settings", "health", "audit", "logs"):
+        assert cli.commands[name] is cli.commands["manager"].commands[name]
+    assert cli.commands["operations"] is cli.commands["manager"].commands["tasks"]
+    assert (
+        cli.commands["server"].commands["monitor"]
+        is cli.commands["system"].commands["monitor"]
+    )
+
+
+@pytest.mark.asyncio
+async def test_operations_selects_task_without_another_menu(monkeypatch):
+    from types import SimpleNamespace
+
+    from bsm_cli.__main__ import cli
+    from bsm_cli.main_menus import operations_menu
+    from bsm_cli.manager import show_task
+
+    client = AsyncMock()
+    client.async_list_tasks.return_value = [
+        SimpleNamespace(id="task-123", status="completed", message="Backup finished")
+    ]
+    invoked = AsyncMock()
+    monkeypatch.setattr("bsm_cli.main_menus._invoke", invoked)
+    monkeypatch.setattr("click.pause", lambda *a, **k: None)
+    answers = iter(["task-123", "back"])
+    monkeypatch.setattr("questionary.select", lambda *a, **k: Answer(next(answers)))
+    with click.Context(cli, obj={"client": client, "cli": cli}) as ctx:
+        await operations_menu(ctx)
+        invoked.assert_awaited_once_with(ctx, show_task, task_id="task-123")
+    assert client.async_list_tasks.await_count == 2

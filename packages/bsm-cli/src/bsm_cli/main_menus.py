@@ -1,349 +1,243 @@
+"""Task-oriented terminal navigation with direct server and manager actions."""
+
 import inspect
 
 import click
 import questionary
-from questionary import Separator
+from questionary import Choice, Separator
 
 from bsm_cli.menu_registry import command_menu, plugin_api_menu
+from bsm_cli.output import get_client
 from bsm_cli.plugins import interactive_plugin_workflow
 from bsm_cli.server import list_servers
 
 
-async def _world_management_menu(ctx: click.Context, server_name: str):
-    """Displays a sub-menu for world management actions."""
-    world_group = ctx.obj["cli"].get_command(ctx, "world")
-    if not world_group:
-        click.secho("Error: World command group not found.", fg="red")
-        return
-
-    menu_map = {
-        "Install/Replace World": world_group.get_command(ctx, "install"),
-        "Export Current World": world_group.get_command(ctx, "export"),
-        "Reset Current World": world_group.get_command(ctx, "reset"),
-        "Back": None,
-    }
-
-    while True:
-        choice = await questionary.select(
-            f"World Management for '{server_name}':",
-            choices=list(menu_map.keys()),
-            use_indicator=True,
-        ).ask_async()
-
-        if choice is None or choice == "Back":
-            return
-        command = menu_map.get(choice)
-        if command:
-            try:
-                result = ctx.invoke(command, server_name=server_name)
-                if inspect.isawaitable(result):
-                    await result
-            except (click.Abort, KeyboardInterrupt):
-                click.secho("Action cancelled.", fg="yellow")
-            except Exception as exc:
-                click.secho(f"Action failed: {exc}", fg="red")
-            click.pause("Press any key to return to this menu...")
+async def _invoke(ctx, command, **kwargs):
+    result = ctx.invoke(command, **kwargs)
+    return await result if inspect.isawaitable(result) else result
 
 
-async def _backup_restore_menu(ctx: click.Context, server_name: str):
-    """Displays a sub-menu for backup and restore actions."""
-    backup_group = ctx.obj["cli"].get_command(ctx, "backup")
-    if not backup_group:
-        click.secho("Error: Backup command group not found.", fg="red")
-        return
+def _command(ctx, group, name):
+    return ctx.obj["cli"].commands[group].commands[name]
 
-    menu_map = {
-        "Create Backup": backup_group.get_command(ctx, "create"),
-        "Restore from Backup": backup_group.get_command(ctx, "restore"),
-        "Prune Old Backups": backup_group.get_command(ctx, "prune"),
-        "Back": None,
-    }
+
+async def operations_menu(ctx):
+    """Choose a retained operation directly to inspect its outcome."""
+    from bsm_cli.manager import show_task
 
     while True:
-        choice = await questionary.select(
-            f"Backup/Restore for '{server_name}':",
-            choices=list(menu_map.keys()),
-            use_indicator=True,
-        ).ask_async()
-
-        if choice is None or choice == "Back":
+        tasks = await get_client(ctx).async_list_tasks()
+        choices = [
+            Choice(
+                f"{task.status.capitalize()} · {task.message} ({task.id})",
+                value=task.id,
+            )
+            for task in tasks
+        ]
+        if not tasks:
+            click.echo("No operations recorded.")
+        choices.extend(
+            [Choice("Refresh", value="refresh"), Choice("Back", value="back")]
+        )
+        task_id = await questionary.select("Operations", choices=choices).ask_async()
+        if task_id in (None, "back"):
             return
-        command = menu_map.get(choice)
-        if command:
-            try:
-                result = ctx.invoke(command, server_name=server_name)
-                if inspect.isawaitable(result):
-                    await result
-            except (click.Abort, KeyboardInterrupt):
-                click.secho("Action cancelled.", fg="yellow")
-            except Exception as exc:
-                click.secho(f"Action failed: {exc}", fg="red")
-            click.pause("Press any key to return to this menu...")
+        if task_id != "refresh":
+            await _invoke(ctx, show_task, task_id=task_id)
+            click.pause("Press any key to return to operations...")
 
 
-async def _bans_menu(ctx: click.Context, server_name: str):
-    """Displays a sub-menu for ban management actions."""
-    bans_group = ctx.obj["cli"].get_command(ctx, "bans")
-    if not bans_group:
-        click.secho("Error: Bans command group not found.", fg="red")
-        return
-
-    menu_map = {
-        "List Bans": bans_group.get_command(ctx, "list"),
-        "Add Ban": bans_group.get_command(ctx, "add"),
-        "Remove Ban": bans_group.get_command(ctx, "remove"),
-        "Back": None,
+async def logs_menu(ctx):
+    actions = {
+        "Application logs": ("manager", "logs"),
+        "Audit log": ("manager", "audit"),
     }
+    await _action_menu(ctx, "Logs", actions)
 
+
+async def _action_menu(ctx, title, actions, **kwargs):
     while True:
-        await ctx.invoke(bans_group.get_command(ctx, "list"), server_name=server_name)
-        choice = await questionary.select(
-            f"Bans for '{server_name}':",
-            choices=list(menu_map.keys()),
-            use_indicator=True,
-        ).ask_async()
-
+        choice = await questionary.select(title, choices=[*actions, "Back"]).ask_async()
         if choice is None or choice == "Back":
             return
-        command = menu_map.get(choice)
-        if command:
-            try:
-                result = ctx.invoke(command, server_name=server_name)
-                if inspect.isawaitable(result):
-                    await result
-            except (click.Abort, KeyboardInterrupt):
-                click.secho("Action cancelled.", fg="yellow")
-            except Exception as exc:
-                click.secho(f"Action failed: {exc}", fg="red")
-            click.pause("Press any key to return to this menu...")
+        group, name = actions[choice]
+        await _invoke(ctx, _command(ctx, group, name), **kwargs)
+        click.pause("Press any key to return...")
 
 
-async def main_menu(ctx: click.Context):  # noqa: C901
-    """Displays the main application menu and drives interactive mode."""
+async def main_menu(ctx):
     client = ctx.obj.get("client")
     if not client:
-        click.secho(
-            "You are not logged in. Please run `bsm-cli auth login` first.", fg="red"
+        click.echo(
+            "Sign in with bsm-cli auth login, or configure a new installation with bsm-cli auth setup."
         )
         return
-
-    cli = ctx.obj["cli"]
-
+    routes = {
+        "Overview": ("manager", "overview"),
+        "Monitor": ("manager", "monitor"),
+        "App settings": ("manager", "settings"),
+        "Health checks": ("manager", "health"),
+    }
+    groups = {
+        "Account": "account",
+        "Users": "users",
+        "Players": "player",
+        "Content": "content",
+        "Appearance": "appearance",
+        "Advanced API": "api",
+    }
     while True:
         try:
             click.clear()
-            click.secho("BSM API Client - Main Menu", fg="magenta", bold=True)
-
-            await ctx.invoke(list_servers)
-
-            # --- Dynamically build menu choices ---
-            response = await client.async_get_servers()
-            server_names = (
-                [s.name for s in response.servers] if response.servers else []
-            )
-
-            from questionary import Choice
-
-            menu_choices: list[Choice | Separator | str] = [
+            click.secho("Bedrock Server Manager", bold=True, fg="magenta")
+            fleet = await client.async_get_servers()
+            choices = [
                 "Overview",
-                "Application Monitor",
-                "Active Operations",
-                Separator("--- Fleet ---"),
-                "Install New Server",
+                "Monitor",
+                "Operations",
+                "Plugins",
+                "Logs",
+                Separator("Servers"),
             ]
-            if server_names:
-                menu_choices.append("Manage Existing Server")
-
-            registry = {
-                f"{name.title()} Commands": group
-                for name, group in cli.commands.items()
-                if isinstance(group, click.Group) and name not in {"auth", "server"}
-            }
-            menu_choices.extend(registry)
-            menu_choices.append("Manage Plugins")
-            try:
-                await client.async_discover_api()
-            except Exception as exc:
-                click.secho(f"Plugin API discovery unavailable: {exc}", fg="yellow")
-            else:
-                if client.capabilities.plugins:
-                    menu_choices.append("Plugin API")
-            menu_choices.append(Separator("--- Application ---"))
-            menu_choices.append("Exit")
-
+            choices.extend(
+                Choice(
+                    f"{server.name} · {server.status}", value=("server", server.name)
+                )
+                for server in fleet.servers or []
+            )
+            choices.extend(
+                [
+                    "Install server",
+                    Separator("Administration"),
+                    "App settings",
+                    "Appearance",
+                    "Health checks",
+                    "Account",
+                    "Users",
+                    "Players",
+                    "Content",
+                    Separator("Developer"),
+                    "Advanced API",
+                    "Plugin API",
+                    "Exit",
+                ]
+            )
             choice = await questionary.select(
-                "\nChoose an action:",
-                choices=menu_choices,  # type: ignore
-                use_indicator=True,
+                "Choose a destination", choices=choices
             ).ask_async()
-
             if choice is None or choice == "Exit":
                 return
-
-            if choice in {"Overview", "Application Monitor", "Active Operations"}:
-                from bsm_cli.manager import list_tasks, monitor, show_overview
-
-                command = {
-                    "Overview": show_overview,
-                    "Application Monitor": monitor,
-                    "Active Operations": list_tasks,
-                }[choice]
-                await ctx.invoke(command)
-                click.pause("Press any key to return to the main menu...")
-            elif choice == "Install New Server":
-                server_group = cli.get_command(ctx, "server")
-                install_cmd = server_group.get_command(ctx, "install")
-                await ctx.invoke(install_cmd)
-                click.pause("Press any key to return to the main menu...")
-
-            elif choice == "Manage Existing Server":
-                server_name = await questionary.select(
-                    "Select a server:", choices=server_names
-                ).ask_async()
-                if server_name:
-                    await manage_server_menu(ctx, server_name)
-
-            elif choice == "Manage Plugins":
-                await interactive_plugin_workflow(client)
-            elif choice == "Plugin API":
-                await plugin_api_menu(ctx)
-                click.pause("Press any key to return to the main menu...")
-            elif choice in registry:
-                await command_menu(ctx, registry[choice])
-                click.pause("Press any key to return to the main menu...")
-
+            await _open_destination(ctx, choice, routes, groups)
         except (click.Abort, KeyboardInterrupt):
-            click.echo("\nAction cancelled. Returning to the main menu.")
-            click.pause()
-        except Exception as e:
-            click.secho(f"\nAn unexpected error occurred: {e}", fg="red")
-            click.pause("Press any key to return to the main menu...")
+            click.echo("Returned home.")
+        except Exception as error:
+            click.secho(f"Action failed: {error}", fg="red")
+            click.pause("Press any key to return home...")
 
 
-async def manage_server_menu(ctx: click.Context, server_name: str):  # noqa: C901
-    """Displays the menu for managing a specific, existing server."""
-    cli = ctx.obj["cli"]
+async def _open_destination(ctx, choice, routes, groups):
+    if isinstance(choice, tuple):
+        await manage_server_menu(ctx, choice[1])
+    elif choice in routes:
+        await _invoke(ctx, _command(ctx, *routes[choice]))
+        click.pause("Press any key to return home...")
+    elif choice in groups:
+        await command_menu(ctx, ctx.obj["cli"].commands[groups[choice]])
+    elif choice == "Plugins":
+        await interactive_plugin_workflow(get_client(ctx))
+    elif choice == "Operations":
+        await operations_menu(ctx)
+    elif choice == "Logs":
+        await logs_menu(ctx)
+    elif choice == "Plugin API":
+        await plugin_api_menu(ctx)
+    elif choice == "Install server":
+        await _invoke(ctx, _command(ctx, "server", "install"))
+        click.pause("Press any key to return home...")
 
-    def get_cmd(group_name, cmd_name):
-        """Helper to safely retrieve a command object from the CLI."""
-        group = cli.get_command(ctx, group_name)
-        return group.get_command(ctx, cmd_name) if group else None
 
-    from typing import Any, Dict, Optional, Tuple
-
-    import click
-
-    # ---- Define static menu sections ----
-    control_map: Dict[str, Tuple[Optional[click.Command], Dict[str, Any]]] = {
-        "Start Server": (get_cmd("server", "start"), {}),
-        "Stop Server": (get_cmd("server", "stop"), {}),
-        "Restart Server": (get_cmd("server", "restart"), {}),
-        "Send Command to Server": (get_cmd("server", "send-command"), {}),
+async def manage_server_menu(ctx, server_name):
+    """Keep monitoring, lifecycle, and content actions on one server screen."""
+    actions = {
+        "Monitor": ("system", "monitor"),
+        "Start": ("server", "start"),
+        "Stop": ("server", "stop"),
+        "Restart": ("server", "restart"),
+        "Send command": ("server", "send-command"),
+        "Settings": ("system", "settings"),
+        "Properties": ("properties", "set"),
+        "Create backup": ("backup", "create"),
+        "Restore backup": ("backup", "restore"),
+        "Prune backups": ("backup", "prune"),
+        "Install world": ("world", "install"),
+        "Export world": ("world", "export"),
+        "Reset world": ("world", "reset"),
+        "Install addon": ("addon", "install"),
+        "Manage addons": ("addon", "manage"),
+        "Update": ("server", "update"),
+        "Delete": ("server", "delete"),
     }
-    management_map = {
-        "Backup or Restore": _backup_restore_menu,
-        "Manage World": _world_management_menu,
-        "Install Addon": (get_cmd("addon", "install"), {}),
-        "Manage Addons": (get_cmd("addon", "manage"), {}),
-    }
-    config_map: Dict[str, Any] = {
-        "Configure Properties": (get_cmd("properties", "set"), {}),
-        "Configure Allowlist": (get_cmd("allowlist", "add"), {}),
-        "Configure Permissions": (get_cmd("permissions", "set"), {}),
-        "Configure Ban List": _bans_menu,
-    }
-    maintenance_map: Dict[str, Tuple[Optional[click.Command], Dict[str, Any]]] = {
-        "Update Server": (get_cmd("server", "update"), {}),
-        "Delete Server": (get_cmd("server", "delete"), {}),
-    }
-    system_map: Dict[str, Tuple[Optional[click.Command], Dict[str, Any]]] = {
-        "Configure Settings": (get_cmd("system", "settings"), {}),
-        "Monitor Resource Usage": (get_cmd("system", "monitor"), {}),
-    }
-
-    # ---- Combine all maps for easy lookup ----
-    full_menu_map = {
-        **control_map,
-        **management_map,
-        **config_map,
-        **system_map,
-        **maintenance_map,
-        "Back to Main Menu": "back",
-    }
-
-    # ---- Build the final choices list for questionary ----
-    menu_choices = [
-        Separator("--- Server Control ---"),
-        *control_map.keys(),
-        Separator("--- Management ---"),
-        *management_map.keys(),
-        Separator("--- Configuration ---"),
-        *config_map.keys(),
+    access = {"Allowlist": "allowlist", "Permissions": "permissions", "Bans": "bans"}
+    choices = [
+        "Monitor",
+        Separator("Lifecycle"),
+        "Start",
+        "Stop",
+        "Restart",
+        "Send command",
+        Separator("Configuration"),
+        "Settings",
+        "Properties",
+        *access,
+        Separator("Backups"),
+        "Create backup",
+        "Restore backup",
+        "Prune backups",
+        Separator("World and addons"),
+        "Install world",
+        "Export world",
+        "Reset world",
+        "Install addon",
+        "Manage addons",
+        Separator("Maintenance"),
+        "Update",
+        "Delete",
+        "Back",
     ]
-
-    if system_map:
-        menu_choices.extend(
-            [Separator("--- System & Monitoring ---"), *system_map.keys()]
-        )
-
-    menu_choices.extend(
-        [
-            Separator("--- Maintenance ---"),
-            *maintenance_map.keys(),
-            Separator("--------------------"),
-            "Back to Main Menu",
-        ]
-    )
-
     while True:
         click.clear()
-        click.secho(f"--- Managing Server: {server_name} ---", fg="magenta", bold=True)
-        await ctx.invoke(list_servers, server_name=server_name)  # type: ignore
-
-        choice = await questionary.select(
-            f"\nSelect an action for '{server_name}':",
-            choices=menu_choices,  # type: ignore
-            use_indicator=True,
-        ).ask_async()
-
-        if choice is None or choice == "Back to Main Menu":
+        await _invoke(ctx, list_servers, server_name=server_name)
+        choice = await questionary.select(server_name, choices=choices).ask_async()
+        if choice is None or choice == "Back":
             return
-
-        action = full_menu_map.get(choice)
-        if not action:
-            continue
-
         try:
-            if callable(action) and not hasattr(action, "commands"):
-                await action(ctx, server_name)
-            elif isinstance(action, tuple):
-                command_obj, defaults = action
-                kwargs = dict(defaults)
-                if not command_obj:
+            if choice in access:
+                await command_menu(
+                    ctx,
+                    ctx.obj["cli"].commands[access[choice]],
+                    values={"server_name": server_name},
+                )
+                continue
+            kwargs = {"server_name": server_name}
+            if choice == "Send command":
+                value = await questionary.text("Server command").ask_async()
+                if not value:
                     continue
-                if hasattr(command_obj, "name") and command_obj.name == "send-command":
-                    cmd_str = await questionary.text(
-                        "Enter command to send:"
-                    ).ask_async()
-                    if cmd_str:
-                        kwargs["command_parts"] = cmd_str.split()
-                    else:
-                        continue
-                kwargs["server_name"] = server_name
-                result = ctx.invoke(command_obj, **kwargs)
-                if inspect.isawaitable(result):
-                    await result
-                if hasattr(command_obj, "name") and command_obj.name == "delete":
-                    click.echo("\nServer has been deleted. Returning to main menu.")
-                    click.pause()
-                    return
-            elif hasattr(action, "commands"):
-                result = ctx.invoke(action, server_name=server_name)  # type: ignore
-                if inspect.isawaitable(result):
-                    await result
+                kwargs["command_parts"] = (value,)
+            await _invoke(ctx, _command(ctx, *actions[choice]), **kwargs)
+            click.pause("Press any key to return to the server...")
+            if await _deleted_server(ctx, choice, server_name):
+                return
+        except (click.Abort, KeyboardInterrupt):
+            click.echo("Returned to server.")
+        except Exception as error:
+            click.secho(f"Action failed: {error}", fg="red")
+            click.pause("Press any key to return to the server...")
 
-            click.pause("\nPress any key to return to the server menu...")
 
-        except Exception as e:
-            click.secho(f"An error occurred while executing '{choice}': {e}", fg="red")
-            click.pause()
+async def _deleted_server(ctx, choice, server_name):
+    if choice != "Delete":
+        return False
+    # A cancelled delete leaves the server registered.
+    fleet = await get_client(ctx).async_get_servers()
+    return not any(item.name == server_name for item in fleet.servers or [])
