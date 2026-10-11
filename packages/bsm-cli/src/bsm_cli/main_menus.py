@@ -7,6 +7,7 @@ import questionary
 from questionary import Choice, Separator
 
 from bsm_api_client.exceptions import CannotConnectError
+from bsm_cli.interaction import menu_action
 from bsm_cli.menu_registry import command_menu, plugin_api_menu
 from bsm_cli.output import CliConnectionError, get_client
 from bsm_cli.plugins import interactive_plugin_workflow
@@ -15,7 +16,7 @@ from bsm_cli.server import _print_server_table, list_servers
 
 async def _invoke(ctx, command, **kwargs):
     result = ctx.invoke(command, **kwargs)
-    return await result if inspect.isawaitable(result) else result
+    return await menu_action(result) if inspect.isawaitable(result) else result
 
 
 def _command(ctx, group, name):
@@ -137,7 +138,7 @@ async def main_menu(ctx):
             ).ask_async()
             if choice is None or choice == "Exit":
                 return
-            await _open_destination(ctx, choice, routes, groups)
+            await menu_action(_open_destination(ctx, choice, routes, groups))
         except (click.Abort, KeyboardInterrupt):
             click.echo("Returned home.")
         except Exception as error:

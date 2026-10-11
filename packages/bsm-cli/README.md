@@ -185,6 +185,10 @@ Application commands use their direct paths (`overview`, `monitor`, `settings`,
 under `server`; the duplicate `manager` and `system` groups have been removed.
 Use `bsm-cli server monitor --server survival` for a single server.
 
+Overview, monitoring, and operation lists use structured terminal tables. In an
+interactive menu, Ctrl+C stops the active live view and returns to its menu;
+standalone live commands still exit normally on Ctrl+C.
+
 Live views reconnect automatically and reconcile WebSocket updates with HTTP
 snapshots. Revision checks prevent older snapshots from replacing newer state.
 Application monitoring separates app and system metrics and shows recent CPU

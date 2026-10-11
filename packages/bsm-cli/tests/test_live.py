@@ -104,6 +104,6 @@ def test_monitor_renders_backend_server_metrics_and_both_ram_values(capsys):
     )
     render_metrics(response, "auto")
     output = capsys.readouterr().out
-    assert "alpha: CPU 0.8% | Memory 156.25 MB" in output
-    assert "Ram: 8.00 GB" in output
-    assert "Ram usage: 90.7%" in output
+    assert "alpha" in output and "0.8%" in output and "156.25 MB" in output
+    assert "Ram" in output and "8.00 GB" in output
+    assert "Ram usage" in output and "90.7%" in output

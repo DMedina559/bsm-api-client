@@ -3,6 +3,7 @@
 import click
 
 from bsm_cli.output import get_client
+from bsm_cli.presentation import table
 
 
 def memory(mb, unit="auto"):
@@ -39,16 +40,32 @@ async def overview(client, unit):
     click.echo(
         f"Connection: Connected | Health: {health.health} | Lifecycle: {health.lifecycle}"
     )
-    click.echo(
-        f"App: CPU {metrics.app_cpu_percent}% | Memory {memory(metrics.app_ram_mb, unit)} | Background operations {metrics.background_task_count}"
+    table(
+        "Resources",
+        ("Scope", "CPU", "Memory", "Background operations"),
+        [
+            (
+                "Application",
+                f"{metrics.app_cpu_percent}%",
+                memory(metrics.app_ram_mb, unit),
+                metrics.background_task_count,
+            ),
+            (
+                "System",
+                f"{metrics.sys_cpu_percent}%",
+                f"{memory(metrics.sys_ram_mb, unit)} / {memory(metrics.sys_ram_total_mb, unit)}",
+                "—",
+            ),
+        ],
     )
-    click.echo(
-        f"System: CPU {metrics.sys_cpu_percent}% | Memory {memory(metrics.sys_ram_mb, unit)} / {memory(metrics.sys_ram_total_mb, unit)}"
+    table(
+        "Servers",
+        ("Server", "Status", "Bedrock version", "Players"),
+        [
+            (server.name, server.status, server.version, server.player_count)
+            for server in fleet.servers or []
+        ],
     )
-    for server in fleet.servers or []:
-        click.echo(
-            f"{server.name}: {server.status} | Bedrock {server.version} | Players {server.player_count}"
-        )
 
 
 @manager.command("overview")
@@ -148,14 +165,25 @@ def render_metrics(response, unit):  # noqa: C901
             label = label.removesuffix(" seconds")
         groups[group][label] = value
     for name, rows in groups.items():
-        click.secho(name, bold=True)
-        for label, value in rows.items():
-            click.echo(f"  {label.capitalize()}: {value}")
+        table(
+            name,
+            ("Metric", "Value"),
+            [(label.capitalize(), value) for label, value in rows.items()],
+        )
         if comfortable():
             click.echo()
-    for server in response.latest.servers or []:
-        click.echo(
-            f"{server.server_name}: CPU {server.cpu_percent}% | Memory {memory(server.memory_mb, unit)}"
+    if response.latest.servers:
+        table(
+            "Running servers",
+            ("Server", "CPU", "Memory"),
+            [
+                (
+                    server.server_name,
+                    f"{server.cpu_percent}%",
+                    memory(server.memory_mb, unit),
+                )
+                for server in response.latest.servers
+            ],
         )
     for label, key in (
         ("App CPU", "app_cpu_percent"),
@@ -182,8 +210,12 @@ def tasks():
 @tasks.command("list")
 @click.pass_context
 async def list_tasks(ctx):
-    for task in await get_client(ctx).async_list_tasks():
-        click.echo(f"{task.id} | {task.status} | {task.message}")
+    operations = await get_client(ctx).async_list_tasks()
+    table(
+        "Operations",
+        ("ID", "Status", "Message"),
+        [(task.id, task.status, task.message) for task in operations],
+    )
 
 
 @tasks.command("show")
