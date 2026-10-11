@@ -316,7 +316,10 @@ class ServerActionMethodsMixin(GeneratedOperationMethods):
             parameters={"server_name": server_name},
             authenticated=True,
         )
-        return parse_response(GetServerBansResponse, response).model_dump(mode="json")
+        return cast(
+            dict[str, Any],
+            parse_response(GetServerBansResponse, response).model_dump(mode="json"),
+        )
 
     async def async_add_server_ban(
         self, server_name: str, payload: "BanAddRequest"
@@ -336,7 +339,10 @@ class ServerActionMethodsMixin(GeneratedOperationMethods):
             body=payload.model_dump(),
             authenticated=True,
         )
-        return parse_response(AddServerBanResponse, response).model_dump(mode="json")
+        return cast(
+            dict[str, Any],
+            parse_response(AddServerBanResponse, response).model_dump(mode="json"),
+        )
 
     async def async_remove_server_ban(
         self, server_name: str, payload: "BanRemoveRequest"
@@ -356,4 +362,7 @@ class ServerActionMethodsMixin(GeneratedOperationMethods):
             body=payload.model_dump(),
             authenticated=True,
         )
-        return parse_response(RemoveServerBanResponse, response).model_dump(mode="json")
+        return cast(
+            dict[str, Any],
+            parse_response(RemoveServerBanResponse, response).model_dump(mode="json"),
+        )
