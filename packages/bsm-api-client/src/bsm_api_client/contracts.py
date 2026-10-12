@@ -1,4 +1,4 @@
-# Generated from bundled OpenAPI by tools/generate_models.py.
+# Generated from bundled OpenAPI by scripts/generate_models.py.
 from __future__ import annotations
 
 from typing import Annotated, Any, Literal

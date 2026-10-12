@@ -122,7 +122,7 @@ def generate(source: Path) -> str:  # noqa: C901
             ),
         )
         return (
-            "# Generated from bundled OpenAPI by tools/generate_models.py.\n"
+            "# Generated from bundled OpenAPI by scripts/generate_models.py.\n"
             + ast.unparse(ast.fix_missing_locations(tree))
             + "\n"
         )
@@ -150,7 +150,7 @@ def main():
     if args.check:
         if OUTPUT.read_text() != value:
             raise SystemExit(
-                "Public contracts drift. Run python tools/generate_models.py"
+                "Public contracts drift. Run python scripts/generate_models.py"
             )
     else:
         OUTPUT.write_text(value)

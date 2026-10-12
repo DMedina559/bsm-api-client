@@ -39,4 +39,4 @@ pip install bsm-cli
 
 ## OpenAPI contract
 
-In a separate contract-tooling environment, install `bedrock-server-manager[contract]` from the target backend checkout. Export with `python tools/export_bsm_openapi.py --output packages/bsm-api-client/src/bsm_api_client/generated/openapi.json`, then run `python tools/generate_models.py` and `python tools/generate_client.py packages/bsm-api-client/src/bsm_api_client/generated/openapi.json`. CI compares the complete document with backend `dev` using the backend-owned exporter and pinned schema tooling.
+In a separate contract-tooling environment, install `bedrock-server-manager[contract]` from the target backend checkout. Export with `python scripts/export_bsm_openapi.py --output packages/bsm-api-client/src/bsm_api_client/generated/openapi.json`, then run `python scripts/generate_models.py` and `python scripts/generate_client.py packages/bsm-api-client/src/bsm_api_client/generated/openapi.json`. CI compares the complete document with backend `dev` using the backend-owned exporter and pinned schema tooling.

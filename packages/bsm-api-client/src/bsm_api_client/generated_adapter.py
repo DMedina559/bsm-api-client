@@ -135,7 +135,7 @@ def _operation_registry() -> dict[str, str]:
         )
     except FileNotFoundError as exc:
         raise InvalidInputError(
-            "Generated client is unavailable; run tools/generate_client.py."
+            "Generated client is unavailable; run scripts/generate_client.py."
         ) from exc
 
 

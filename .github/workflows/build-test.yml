@@ -6,7 +6,7 @@ on:
       - 'main'
     paths:
       - 'packages/**'
-      - 'tools/**'
+      - 'scripts/**'
       - '.github/workflows/build-test.yml'
       - '.pre-commit-config.yaml'
       - '.gitignore'
@@ -48,12 +48,12 @@ jobs:
       - name: Check fresh-checkout client and distributions
         run: |
           python -m pytest --ignore=packages/bsm-api-client/tests/integration
-          python tools/generate_client.py packages/bsm-api-client/src/bsm_api_client/generated/openapi.json --check
+          python scripts/generate_client.py packages/bsm-api-client/src/bsm_api_client/generated/openapi.json --check
           python -m build packages/bsm-api-client
           python -m build packages/bsm-cli
-          python tools/check_distributions.py packages/bsm-api-client/dist/*
+          python scripts/check_distributions.py packages/bsm-api-client/dist/*
           python -m pip wheel --no-deps --wheel-dir "$RUNNER_TEMP/bsm-sdist-wheels" packages/bsm-api-client/dist/*.tar.gz
-          python tools/check_distributions.py "$RUNNER_TEMP"/bsm-sdist-wheels/*.whl
+          python scripts/check_distributions.py "$RUNNER_TEMP"/bsm-sdist-wheels/*.whl
 
       - name: Test installed wheels
         run: |
@@ -64,7 +64,7 @@ jobs:
           "$RUNNER_TEMP/bsm-wheel-smoke/bin/python" -m pytest -c /dev/null --import-mode=importlib "$GITHUB_WORKSPACE/packages/bsm-cli/tests/test_cli_commands.py"
 
       - name: Verify generated public models
-        run: python tools/generate_models.py --check
+        run: python scripts/generate_models.py --check
 
       - name: Run Pytest
         run: python -m pytest
