@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import importlib
 import json
 from functools import lru_cache
@@ -62,11 +63,11 @@ async def call_generated(
         and operation_id not in owner.operations
     ):
         raise NotFoundError(f"Operation is unavailable on this server: {operation_id}")
-    module = operation_module(operation_id)
+    module = await asyncio.to_thread(operation_module, operation_id)
     kwargs = dict(parameters or {})
     try:
         if body is not None:
-            body = validate_generated_body(operation_id, body)
+            body = await asyncio.to_thread(validate_generated_body, operation_id, body)
             kwargs["body"] = generated_body(module, body)
         import inspect
 
@@ -123,17 +124,25 @@ def response_value(response: Any) -> Any:
         ) from exc
 
 
-@lru_cache(maxsize=128)
-def operation_module(operation_id: str) -> Any:
+@lru_cache(maxsize=1)
+def _operation_registry() -> dict[str, str]:
+    """Load shipped operation metadata once, outside asynchronous callers."""
     root = files("bsm_api_client").joinpath("generated")
     try:
-        registry = json.loads(
-            root.joinpath("operations.json").read_text(encoding="utf-8")
+        return cast(
+            dict[str, str],
+            json.loads(root.joinpath("operations.json").read_text(encoding="utf-8")),
         )
     except FileNotFoundError as exc:
         raise InvalidInputError(
             "Generated client is unavailable; run tools/generate_client.py."
         ) from exc
+
+
+@lru_cache(maxsize=128)
+def operation_module(operation_id: str) -> Any:
+    """Resolve a generated module; async callers must use an executor."""
+    registry = _operation_registry()
     if operation_id not in registry:
         raise NotFoundError(f"Operation is not generated: {operation_id}")
     return importlib.import_module(f"bsm_api_client.generated.{registry[operation_id]}")

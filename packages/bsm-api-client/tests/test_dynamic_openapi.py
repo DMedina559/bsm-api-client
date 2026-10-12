@@ -1,6 +1,8 @@
 """Tests for runtime OpenAPI discovery."""
 
 import sys
+import threading
+from pathlib import Path
 from types import ModuleType
 from unittest.mock import AsyncMock, MagicMock
 
@@ -16,6 +18,25 @@ class DummyClient(DynamicOpenAPIMixin):
         self._server_root_url = "http://localhost"
         self._request_timeout = 90
         self._session = MagicMock()
+
+
+@pytest.mark.asyncio
+async def test_discovery_reads_shipped_schema_outside_event_loop(monkeypatch):
+    client = DummyClient()
+    client._fetch_openapi_schema = AsyncMock(return_value={"paths": {}})
+    loop_thread = threading.get_ident()
+    original = Path.read_text
+    reads = []
+
+    def read_text(path, *args, **kwargs):
+        if path.name == "openapi.json":
+            assert threading.get_ident() != loop_thread
+            reads.append(path.name)
+        return original(path, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "read_text", read_text)
+    await client.async_discover_api()
+    assert reads == ["openapi.json"]
 
 
 def test_indexes_core_and_plugin_operations():

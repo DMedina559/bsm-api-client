@@ -1,6 +1,8 @@
 """Exercise real generated serialization against a local HTTP server."""
 
 import gzip
+import threading
+from pathlib import Path
 
 import pytest
 import pytest_asyncio
@@ -9,6 +11,34 @@ from aiohttp import web
 from bsm_api_client import BedrockServerManagerApi
 from bsm_api_client.exceptions import InvalidInputError
 from bsm_api_client.models import AllowlistRemovePayload
+
+
+@pytest.mark.asyncio
+async def test_generated_metadata_reads_run_outside_event_loop(local_api, monkeypatch):
+    """Cold endpoint resolution and body validation never read JSON on the loop."""
+    from bsm_api_client.generated_adapter import _operation_registry, operation_module
+
+    _operation_registry.cache_clear()
+    operation_module.cache_clear()
+    loop_thread = threading.get_ident()
+    reads = []
+    original = Path.read_text
+
+    def read_text(path, *args, **kwargs):
+        if path.name in {"operations.json", "openapi.json"}:
+            assert threading.get_ident() != loop_thread
+            reads.append(path.name)
+        return original(path, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "read_text", read_text)
+    client, _ = local_api
+    await client.rest.start_server("example")
+    await client.servers.async_remove_server_allowlist_players(
+        "example", AllowlistRemovePayload(players=["Alex"])
+    )
+    assert "operations.json" in reads
+    assert "openapi.json" in reads
+    assert reads.count("operations.json") == 1
 
 
 @pytest_asyncio.fixture

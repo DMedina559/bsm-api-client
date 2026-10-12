@@ -179,7 +179,9 @@ class DynamicOpenAPIMixin(GeneratedOperationMethods):
                 return self.operations
             schema = await self._fetch_openapi_schema()
             try:
-                generated_ids = set(index_operations(generated_schema()))
+                generated_ids = set(
+                    index_operations(await asyncio.to_thread(generated_schema))
+                )
             except InvalidInputError:
                 generated_ids = set()
             operations = index_operations(schema, generated_ids)
