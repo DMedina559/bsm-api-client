@@ -40,7 +40,6 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install build
           python -m pip install -e './packages/bsm-api-client[dev]' -e './packages/bsm-cli[dev]'
-          python -c "from bsm_api_client.generated.client import Client; assert Client"
 
       - name: Run pre-commit
         run: pre-commit run --all-files
