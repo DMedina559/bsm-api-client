@@ -147,6 +147,7 @@ CASES = [
     ("permissions", "list", "-s", "test"),
     ("permissions", "set", "-s", "test", "-p", "Test Player", "-l", "operator"),
     ("properties", "get", "-s", "test"),
+    ("properties", "raw", "-s", "test"),
     ("properties", "get", "-s", "test", "-p", "server-name"),
     ("properties", "set", "-s", "test", "-p", "server-name=Test Server"),
     ("backup", "create", "-s", "test", "-t", "all"),

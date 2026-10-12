@@ -1156,6 +1156,37 @@
         "title": "GetPropertiesResponse",
         "type": "object"
       },
+      "GetRawPropertiesResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          },
+          "raw_content": {
+            "title": "Raw Content",
+            "type": "string"
+          },
+          "status": {
+            "const": "success",
+            "default": "success",
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "raw_content"
+        ],
+        "title": "GetRawPropertiesResponse",
+        "type": "object"
+      },
       "GetServerBansResponse": {
         "additionalProperties": false,
         "properties": {
@@ -3461,7 +3492,7 @@
                 }
               }
             },
-            "description": "Unprocessable Entity"
+            "description": "Unprocessable Content"
           },
           "500": {
             "content": {
@@ -3571,7 +3602,7 @@
                 }
               }
             },
-            "description": "Unprocessable Entity"
+            "description": "Unprocessable Content"
           },
           "500": {
             "content": {
@@ -3681,7 +3712,7 @@
                 }
               }
             },
-            "description": "Unprocessable Entity"
+            "description": "Unprocessable Content"
           },
           "500": {
             "content": {
@@ -3791,7 +3822,7 @@
                 }
               }
             },
-            "description": "Unprocessable Entity"
+            "description": "Unprocessable Content"
           },
           "500": {
             "content": {
@@ -3891,7 +3922,7 @@
                 }
               }
             },
-            "description": "Unprocessable Entity"
+            "description": "Unprocessable Content"
           },
           "500": {
             "content": {
@@ -3991,7 +4022,7 @@
                 }
               }
             },
-            "description": "Unprocessable Entity"
+            "description": "Unprocessable Content"
           },
           "500": {
             "content": {
@@ -4090,7 +4121,7 @@
                 }
               }
             },
-            "description": "Unprocessable Entity"
+            "description": "Unprocessable Content"
           },
           "500": {
             "content": {
@@ -4200,7 +4231,7 @@
                 }
               }
             },
-            "description": "Unprocessable Entity"
+            "description": "Unprocessable Content"
           },
           "500": {
             "content": {
@@ -4300,7 +4331,7 @@
                 }
               }
             },
-            "description": "Unprocessable Entity"
+            "description": "Unprocessable Content"
           },
           "500": {
             "content": {
@@ -4400,7 +4431,7 @@
                 }
               }
             },
-            "description": "Unprocessable Entity"
+            "description": "Unprocessable Content"
           },
           "500": {
             "content": {
@@ -4492,7 +4523,7 @@
                 }
               }
             },
-            "description": "Unprocessable Entity"
+            "description": "Unprocessable Content"
           },
           "500": {
             "content": {
@@ -4630,7 +4661,7 @@
                 }
               }
             },
-            "description": "Unprocessable Entity"
+            "description": "Unprocessable Content"
           },
           "500": {
             "content": {
@@ -4730,7 +4761,7 @@
                 }
               }
             },
-            "description": "Unprocessable Entity"
+            "description": "Unprocessable Content"
           },
           "500": {
             "content": {
@@ -4759,7 +4790,7 @@
     },
     "/api/panorama": {
       "get": {
-        "description": "Serves a custom `panorama.jpeg` background image if available, otherwise a default.\n\nThis endpoint attempts to locate a `panorama.jpeg` file in the application's\nconfiguration directory. If found, it's served. If not, or if the config\ndirectory isn't set, it falls back to serving a default panorama image\nfrom the static assets.",
+        "description": "Serves a custom panorama background image if available, otherwise a default.\n\nThis endpoint attempts to locate a `panorama.(jpeg|jpg|png|webp)` file in the application's\nconfiguration directory. If found, it's served. If not, or if the config\ndirectory isn't set, it falls back to serving a default panorama image\nfrom the static assets.",
         "operationId": "get_panorama",
         "responses": {
           "200": {
@@ -4823,7 +4854,7 @@
                 }
               }
             },
-            "description": "Unprocessable Entity"
+            "description": "Unprocessable Content"
           },
           "500": {
             "content": {
@@ -4925,7 +4956,7 @@
                 }
               }
             },
-            "description": "Unprocessable Entity"
+            "description": "Unprocessable Content"
           },
           "500": {
             "content": {
@@ -5025,7 +5056,7 @@
                 }
               }
             },
-            "description": "Unprocessable Entity"
+            "description": "Unprocessable Content"
           },
           "500": {
             "content": {
@@ -5125,7 +5156,7 @@
                 }
               }
             },
-            "description": "Unprocessable Entity"
+            "description": "Unprocessable Content"
           },
           "500": {
             "content": {
@@ -5225,7 +5256,7 @@
                 }
               }
             },
-            "description": "Unprocessable Entity"
+            "description": "Unprocessable Content"
           },
           "500": {
             "content": {
@@ -5325,7 +5356,7 @@
                 }
               }
             },
-            "description": "Unprocessable Entity"
+            "description": "Unprocessable Content"
           },
           "500": {
             "content": {
@@ -5425,7 +5456,7 @@
                 }
               }
             },
-            "description": "Unprocessable Entity"
+            "description": "Unprocessable Content"
           },
           "500": {
             "content": {
@@ -5535,7 +5566,7 @@
                 }
               }
             },
-            "description": "Unprocessable Entity"
+            "description": "Unprocessable Content"
           },
           "500": {
             "content": {
@@ -5656,7 +5687,7 @@
                 }
               }
             },
-            "description": "Unprocessable Entity"
+            "description": "Unprocessable Content"
           },
           "500": {
             "content": {
@@ -5767,7 +5798,7 @@
                 }
               }
             },
-            "description": "Unprocessable Entity"
+            "description": "Unprocessable Content"
           },
           "500": {
             "content": {
@@ -5877,7 +5908,7 @@
                 }
               }
             },
-            "description": "Unprocessable Entity"
+            "description": "Unprocessable Content"
           },
           "500": {
             "content": {
@@ -5995,7 +6026,7 @@
                 }
               }
             },
-            "description": "Unprocessable Entity"
+            "description": "Unprocessable Content"
           },
           "500": {
             "content": {
@@ -6105,7 +6136,7 @@
                 }
               }
             },
-            "description": "Unprocessable Entity"
+            "description": "Unprocessable Content"
           },
           "500": {
             "content": {
@@ -6214,7 +6245,7 @@
                 }
               }
             },
-            "description": "Unprocessable Entity"
+            "description": "Unprocessable Content"
           },
           "500": {
             "content": {
@@ -6325,7 +6356,7 @@
                 }
               }
             },
-            "description": "Unprocessable Entity"
+            "description": "Unprocessable Content"
           },
           "500": {
             "content": {
@@ -6434,7 +6465,7 @@
                 }
               }
             },
-            "description": "Unprocessable Entity"
+            "description": "Unprocessable Content"
           },
           "500": {
             "content": {
@@ -6556,7 +6587,7 @@
                 }
               }
             },
-            "description": "Unprocessable Entity"
+            "description": "Unprocessable Content"
           },
           "500": {
             "content": {
@@ -6678,7 +6709,7 @@
                 }
               }
             },
-            "description": "Unprocessable Entity"
+            "description": "Unprocessable Content"
           },
           "500": {
             "content": {
@@ -6806,7 +6837,7 @@
                 }
               }
             },
-            "description": "Unprocessable Entity"
+            "description": "Unprocessable Content"
           },
           "500": {
             "content": {
@@ -6920,7 +6951,7 @@
                 }
               }
             },
-            "description": "Unprocessable Entity"
+            "description": "Unprocessable Content"
           },
           "500": {
             "content": {
@@ -7042,7 +7073,7 @@
                 }
               }
             },
-            "description": "Unprocessable Entity"
+            "description": "Unprocessable Content"
           },
           "500": {
             "content": {
@@ -7164,7 +7195,7 @@
                 }
               }
             },
-            "description": "Unprocessable Entity"
+            "description": "Unprocessable Content"
           },
           "500": {
             "content": {
@@ -7286,7 +7317,7 @@
                 }
               }
             },
-            "description": "Unprocessable Entity"
+            "description": "Unprocessable Content"
           },
           "500": {
             "content": {
@@ -7398,7 +7429,7 @@
                 }
               }
             },
-            "description": "Unprocessable Entity"
+            "description": "Unprocessable Content"
           },
           "500": {
             "content": {
@@ -7519,7 +7550,7 @@
                 }
               }
             },
-            "description": "Unprocessable Entity"
+            "description": "Unprocessable Content"
           },
           "500": {
             "content": {
@@ -7630,7 +7661,7 @@
                 }
               }
             },
-            "description": "Unprocessable Entity"
+            "description": "Unprocessable Content"
           },
           "500": {
             "content": {
@@ -7751,7 +7782,7 @@
                 }
               }
             },
-            "description": "Unprocessable Entity"
+            "description": "Unprocessable Content"
           },
           "500": {
             "content": {
@@ -7873,7 +7904,7 @@
                 }
               }
             },
-            "description": "Unprocessable Entity"
+            "description": "Unprocessable Content"
           },
           "500": {
             "content": {
@@ -7994,7 +8025,7 @@
                 }
               }
             },
-            "description": "Unprocessable Entity"
+            "description": "Unprocessable Content"
           },
           "500": {
             "content": {
@@ -8106,7 +8137,7 @@
                 }
               }
             },
-            "description": "Unprocessable Entity"
+            "description": "Unprocessable Content"
           },
           "500": {
             "content": {
@@ -8228,7 +8259,7 @@
                 }
               }
             },
-            "description": "Unprocessable Entity"
+            "description": "Unprocessable Content"
           },
           "500": {
             "content": {
@@ -8340,7 +8371,7 @@
                 }
               }
             },
-            "description": "Unprocessable Entity"
+            "description": "Unprocessable Content"
           },
           "500": {
             "content": {
@@ -8462,7 +8493,7 @@
                 }
               }
             },
-            "description": "Unprocessable Entity"
+            "description": "Unprocessable Content"
           },
           "500": {
             "content": {
@@ -8574,7 +8605,7 @@
                 }
               }
             },
-            "description": "Unprocessable Entity"
+            "description": "Unprocessable Content"
           },
           "500": {
             "content": {
@@ -8685,7 +8716,7 @@
                 }
               }
             },
-            "description": "Unprocessable Entity"
+            "description": "Unprocessable Content"
           },
           "500": {
             "content": {
@@ -8806,7 +8837,7 @@
                 }
               }
             },
-            "description": "Unprocessable Entity"
+            "description": "Unprocessable Content"
           },
           "500": {
             "content": {
@@ -8918,7 +8949,7 @@
                 }
               }
             },
-            "description": "Unprocessable Entity"
+            "description": "Unprocessable Content"
           },
           "500": {
             "content": {
@@ -9029,7 +9060,7 @@
                 }
               }
             },
-            "description": "Unprocessable Entity"
+            "description": "Unprocessable Content"
           },
           "500": {
             "content": {
@@ -9053,6 +9084,118 @@
         "summary": "Get Properties",
         "tags": [
           "Server Properties"
+        ]
+      }
+    },
+    "/api/server/{server_name}/properties/raw": {
+      "get": {
+        "description": "Return the raw document using the same access policy as structured properties.",
+        "operationId": "get_raw_properties",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "server_name",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "title": "The name of the server",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetRawPropertiesResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          },
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "summary": "Get Raw Properties",
+        "tags": [
+          "Server Raw Properties"
         ]
       }
     },
@@ -9150,7 +9293,7 @@
                 }
               }
             },
-            "description": "Unprocessable Entity"
+            "description": "Unprocessable Content"
           },
           "500": {
             "content": {
@@ -9262,7 +9405,7 @@
                 }
               }
             },
-            "description": "Unprocessable Entity"
+            "description": "Unprocessable Content"
           },
           "500": {
             "content": {
@@ -9384,7 +9527,7 @@
                 }
               }
             },
-            "description": "Unprocessable Entity"
+            "description": "Unprocessable Content"
           },
           "500": {
             "content": {
@@ -9506,7 +9649,7 @@
                 }
               }
             },
-            "description": "Unprocessable Entity"
+            "description": "Unprocessable Content"
           },
           "500": {
             "content": {
@@ -9618,7 +9761,7 @@
                 }
               }
             },
-            "description": "Unprocessable Entity"
+            "description": "Unprocessable Content"
           },
           "500": {
             "content": {
@@ -9740,7 +9883,7 @@
                 }
               }
             },
-            "description": "Unprocessable Entity"
+            "description": "Unprocessable Content"
           },
           "500": {
             "content": {
@@ -9852,7 +9995,7 @@
                 }
               }
             },
-            "description": "Unprocessable Entity"
+            "description": "Unprocessable Content"
           },
           "500": {
             "content": {
@@ -9964,7 +10107,7 @@
                 }
               }
             },
-            "description": "Unprocessable Entity"
+            "description": "Unprocessable Content"
           },
           "500": {
             "content": {
@@ -10076,7 +10219,7 @@
                 }
               }
             },
-            "description": "Unprocessable Entity"
+            "description": "Unprocessable Content"
           },
           "500": {
             "content": {
@@ -10188,7 +10331,7 @@
                 }
               }
             },
-            "description": "Unprocessable Entity"
+            "description": "Unprocessable Content"
           },
           "500": {
             "content": {
@@ -10300,7 +10443,7 @@
                 }
               }
             },
-            "description": "Unprocessable Entity"
+            "description": "Unprocessable Content"
           },
           "500": {
             "content": {
@@ -10411,7 +10554,7 @@
                 }
               }
             },
-            "description": "Unprocessable Entity"
+            "description": "Unprocessable Content"
           },
           "500": {
             "content": {
@@ -10523,7 +10666,7 @@
                 }
               }
             },
-            "description": "Unprocessable Entity"
+            "description": "Unprocessable Content"
           },
           "500": {
             "content": {
@@ -10628,7 +10771,7 @@
                 }
               }
             },
-            "description": "Unprocessable Entity"
+            "description": "Unprocessable Content"
           },
           "500": {
             "content": {
@@ -10742,7 +10885,7 @@
                 }
               }
             },
-            "description": "Unprocessable Entity"
+            "description": "Unprocessable Content"
           },
           "500": {
             "content": {
@@ -10854,7 +10997,7 @@
                 }
               }
             },
-            "description": "Unprocessable Entity"
+            "description": "Unprocessable Content"
           },
           "500": {
             "content": {
@@ -10954,7 +11097,7 @@
                 }
               }
             },
-            "description": "Unprocessable Entity"
+            "description": "Unprocessable Content"
           },
           "500": {
             "content": {
@@ -11054,7 +11197,7 @@
                 }
               }
             },
-            "description": "Unprocessable Entity"
+            "description": "Unprocessable Content"
           },
           "500": {
             "content": {
@@ -11154,7 +11297,7 @@
                 }
               }
             },
-            "description": "Unprocessable Entity"
+            "description": "Unprocessable Content"
           },
           "500": {
             "content": {
@@ -11264,7 +11407,7 @@
                 }
               }
             },
-            "description": "Unprocessable Entity"
+            "description": "Unprocessable Content"
           },
           "500": {
             "content": {
@@ -11374,7 +11517,7 @@
                 }
               }
             },
-            "description": "Unprocessable Entity"
+            "description": "Unprocessable Content"
           },
           "500": {
             "content": {
@@ -11466,7 +11609,7 @@
                 }
               }
             },
-            "description": "Unprocessable Entity"
+            "description": "Unprocessable Content"
           },
           "500": {
             "content": {
@@ -11562,7 +11705,7 @@
                 }
               }
             },
-            "description": "Unprocessable Entity"
+            "description": "Unprocessable Content"
           },
           "500": {
             "content": {
@@ -11673,7 +11816,7 @@
                 }
               }
             },
-            "description": "Unprocessable Entity"
+            "description": "Unprocessable Content"
           },
           "500": {
             "content": {
@@ -11777,7 +11920,7 @@
                 }
               }
             },
-            "description": "Unprocessable Entity"
+            "description": "Unprocessable Content"
           },
           "500": {
             "content": {
@@ -11888,7 +12031,7 @@
                 }
               }
             },
-            "description": "Unprocessable Entity"
+            "description": "Unprocessable Content"
           },
           "500": {
             "content": {
@@ -11998,7 +12141,7 @@
                 }
               }
             },
-            "description": "Unprocessable Entity"
+            "description": "Unprocessable Content"
           },
           "500": {
             "content": {
@@ -12108,7 +12251,7 @@
                 }
               }
             },
-            "description": "Unprocessable Entity"
+            "description": "Unprocessable Content"
           },
           "500": {
             "content": {
@@ -12228,7 +12371,7 @@
                 }
               }
             },
-            "description": "Unprocessable Entity"
+            "description": "Unprocessable Content"
           },
           "500": {
             "content": {
@@ -12332,7 +12475,7 @@
                 }
               }
             },
-            "description": "Unprocessable Entity"
+            "description": "Unprocessable Content"
           },
           "500": {
             "content": {
@@ -12430,7 +12573,7 @@
                 }
               }
             },
-            "description": "Unprocessable Entity"
+            "description": "Unprocessable Content"
           },
           "500": {
             "content": {
@@ -12548,7 +12691,7 @@
                 }
               }
             },
-            "description": "Unprocessable Entity"
+            "description": "Unprocessable Content"
           },
           "500": {
             "content": {
@@ -12658,7 +12801,7 @@
                 }
               }
             },
-            "description": "Unprocessable Entity"
+            "description": "Unprocessable Content"
           },
           "500": {
             "content": {

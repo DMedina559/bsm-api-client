@@ -14,6 +14,7 @@ from ..models import (
     GetAllowlistResponse,
     GetPermissionsResponse,
     GetPropertiesResponse,
+    GetRawPropertiesResponse,
     GetServerBansResponse,
     InstallServerPayload,
     InstallServerResponse,
@@ -212,7 +213,22 @@ class ServersService(Service):
             typed=True,
         )
         return cast(
-            GetPropertiesResponse, parse_response(GetPropertiesResponse, response)
+            GetPropertiesResponse,
+            parse_response(GetPropertiesResponse, response),
+        )
+
+    async def async_get_raw_server_properties(
+        self, server_name: str
+    ) -> GetRawPropertiesResponse:
+        """Return the complete read-only properties document, including Mojang comments."""
+        response = await self.async_call_generated(
+            "get_raw_properties",
+            parameters={"server_name": server_name},
+            authenticated=True,
+            typed=True,
+        )
+        return cast(
+            GetRawPropertiesResponse, parse_response(GetRawPropertiesResponse, response)
         )
 
     async def async_get_server_permissions_data(

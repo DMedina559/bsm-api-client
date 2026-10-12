@@ -31,6 +31,7 @@ from .models.get_application_metrics_response import GetApplicationMetricsRespon
 from .models.get_permissions_response import GetPermissionsResponse
 from .models.get_plugin_settings_response import GetPluginSettingsResponse
 from .models.get_properties_response import GetPropertiesResponse
+from .models.get_raw_properties_response import GetRawPropertiesResponse
 from .models.get_server_bans_response import GetServerBansResponse
 from .models.install_confirmation_response import InstallConfirmationResponse
 from .models.install_server_payload import InstallServerPayload
@@ -276,6 +277,14 @@ class RestClient:
     async def get_properties_detailed(self, server_name: str) -> Response[ErrorEnvelope | GetPropertiesResponse]:
         """Generated get_properties operation."""
         return cast(Response[ErrorEnvelope | GetPropertiesResponse], await self._owner.async_call_generated('get_properties', parameters={'server_name': server_name}, body=None, authenticated=True, detailed=True))
+
+    async def get_raw_properties(self, server_name: str) -> ErrorEnvelope | GetRawPropertiesResponse | None:
+        """Generated get_raw_properties operation."""
+        return cast(ErrorEnvelope | GetRawPropertiesResponse | None, await self._owner.async_call_generated('get_raw_properties', parameters={'server_name': server_name}, body=None, authenticated=True, typed=True))
+
+    async def get_raw_properties_detailed(self, server_name: str) -> Response[ErrorEnvelope | GetRawPropertiesResponse]:
+        """Generated get_raw_properties operation."""
+        return cast(Response[ErrorEnvelope | GetRawPropertiesResponse], await self._owner.async_call_generated('get_raw_properties', parameters={'server_name': server_name}, body=None, authenticated=True, detailed=True))
 
     async def get_server_addon_icon(self, server_name: str, *, pack_type: str, uuid: str) -> Any | ErrorEnvelope | None:
         """Generated get_server_addon_icon operation."""

@@ -244,6 +244,13 @@ class GetPropertiesResponse(ContractModel):
     status: Literal["success"] = Field("success", title="Status")
 
 
+class GetRawPropertiesResponse(ContractModel):
+    model_config = ConfigDict(extra="forbid")
+    message: str | None = Field(None, title="Message")
+    raw_content: str = Field(..., title="Raw Content")
+    status: Literal["success"] = Field("success", title="Status")
+
+
 class GetServerBansResponse(ContractModel):
     model_config = ConfigDict(extra="forbid")
     bans: list[BanInfo] = Field(..., title="Bans")

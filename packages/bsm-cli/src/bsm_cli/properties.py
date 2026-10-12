@@ -47,6 +47,24 @@ async def get_props(ctx, server_name: str, property_name: str):
         click.secho(f"Failed to get properties: {response.message}", fg="red")
 
 
+@properties.command("raw")
+@click.option(
+    "-s",
+    "--server",
+    "server_name",
+    required=True,
+    help="The target server.",
+    shell_complete=complete_server,
+)
+@click.pass_context
+async def raw_props(ctx, server_name: str):
+    """Display the complete file, including Mojang comments and hidden properties."""
+    response = await get_client(ctx).servers.async_get_raw_server_properties(
+        server_name
+    )
+    click.echo(response.raw_content, nl=False)
+
+
 @properties.command("set")
 @click.option(
     "-s",

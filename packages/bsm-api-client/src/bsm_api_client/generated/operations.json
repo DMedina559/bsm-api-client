@@ -23,6 +23,7 @@
   "get_plugin_pages": "api.plugin_management.get_plugin_pages",
   "get_plugin_settings": "api.plugin_management.get_plugin_settings",
   "get_properties": "api.server_properties.get_properties",
+  "get_raw_properties": "api.server_raw_properties.get_raw_properties",
   "get_server_addon_icon": "api.addon_management.get_server_addon_icon",
   "get_server_bans": "api.server_access.get_server_bans",
   "get_server_process_info": "api.server_processes.get_server_process_info",

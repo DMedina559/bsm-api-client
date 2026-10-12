@@ -218,3 +218,20 @@ async def test_get_server_allowlist(client):
             typed=True,
         )
         assert result.players == []
+
+
+@pytest.mark.asyncio
+async def test_get_raw_properties_preserves_comments(client):
+    raw = "# Mojang type hints\nhidden-property=value\n"
+    with patch.object(
+        client, "async_call_generated", new_callable=AsyncMock
+    ) as request:
+        request.return_value = {"status": "success", "raw_content": raw}
+        response = await client.servers.async_get_raw_server_properties("server1")
+        assert response.raw_content == raw
+        request.assert_awaited_once_with(
+            "get_raw_properties",
+            parameters={"server_name": "server1"},
+            authenticated=True,
+            typed=True,
+        )
