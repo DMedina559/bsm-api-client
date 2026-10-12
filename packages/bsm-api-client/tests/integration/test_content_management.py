@@ -29,7 +29,7 @@ async def content_files(server, server_data_dir):
         addon.unlink(missing_ok=True)
 
 
-async def wait_for_action(client, response):
+async def wait_for_action(client, response, *, allow_skipped=False):
     """Require background content operations to finish before the next action."""
     assert response.status in {"success", "pending", "accepted"}, response
     if not response.task_id:
@@ -40,7 +40,9 @@ async def wait_for_action(client, response):
         if task["status"] in {"success", "completed"}:
             result = task.get("result")
             if isinstance(result, dict):
-                assert result.get("status") not in {"error", "failed", "skipped"}, task
+                assert result.get("status") in (
+                    {"success", "skipped"} if allow_skipped else {"success"}
+                ), task
             return
         await asyncio.sleep(1)
     pytest.fail(f"Content task {response.task_id} did not complete in time.")
@@ -181,6 +183,6 @@ class TestContentManagement:
         await client.servers.async_stop_server(server_name)
         await wait_for_server_status(client, server_name, is_running=False, timeout=90)
         prune_result = await client.content.async_prune_server_backups(server_name)
-        await wait_for_action(client, prune_result)
+        await wait_for_action(client, prune_result, allow_skipped=True)
         reset_result = await client.content.async_reset_server_world(server_name)
         await wait_for_action(client, reset_result)

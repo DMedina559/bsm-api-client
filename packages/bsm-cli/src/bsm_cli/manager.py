@@ -62,7 +62,16 @@ async def overview(client, unit):
         "Servers",
         ("Server", "Status", "Bedrock version", "Players"),
         [
-            (server.name, server.status, server.version, server.player_count)
+            (
+                server.name,
+                server.status,
+                server.version,
+                (
+                    "Unavailable"
+                    if server.players_available is False
+                    else server.player_count
+                ),
+            )
             for server in fleet.servers or []
         ],
     )

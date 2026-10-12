@@ -8,9 +8,9 @@ from ...client import AuthenticatedClient, Client
 from ...types import Response, UNSET
 from ... import errors
 
-from ...models.base_api_response import BaseApiResponse
 from ...models.error_envelope import ErrorEnvelope
 from ...models.properties_payload import PropertiesPayload
+from ...models.set_properties_response import SetPropertiesResponse
 from typing import cast
 
 
@@ -42,9 +42,9 @@ def _get_kwargs(
 
 
 
-def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> BaseApiResponse | ErrorEnvelope | None:
+def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> ErrorEnvelope | SetPropertiesResponse | None:
     if response.status_code == 200:
-        response_200 = BaseApiResponse.from_dict(response.json())
+        response_200 = SetPropertiesResponse.from_dict(response.json())
 
 
 
@@ -99,13 +99,20 @@ def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Res
 
         return response_500
 
+    if response.status_code == 503:
+        response_503 = ErrorEnvelope.from_dict(response.json())
+
+
+
+        return response_503
+
     if client.raise_on_unexpected_status:
         raise errors.UnexpectedStatus(response.status_code, response.content)
     else:
         return None
 
 
-def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[BaseApiResponse | ErrorEnvelope]:
+def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[ErrorEnvelope | SetPropertiesResponse]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -120,7 +127,7 @@ def sync_detailed(
     client: AuthenticatedClient,
     body: PropertiesPayload,
 
-) -> Response[BaseApiResponse | ErrorEnvelope]:
+) -> Response[ErrorEnvelope | SetPropertiesResponse]:
     """ Post Properties Set
 
     Args:
@@ -132,7 +139,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[BaseApiResponse | ErrorEnvelope]
+        Response[ErrorEnvelope | SetPropertiesResponse]
      """
 
 
@@ -154,7 +161,7 @@ def sync(
     client: AuthenticatedClient,
     body: PropertiesPayload,
 
-) -> BaseApiResponse | ErrorEnvelope | None:
+) -> ErrorEnvelope | SetPropertiesResponse | None:
     """ Post Properties Set
 
     Args:
@@ -166,7 +173,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        BaseApiResponse | ErrorEnvelope
+        ErrorEnvelope | SetPropertiesResponse
      """
 
 
@@ -183,7 +190,7 @@ async def asyncio_detailed(
     client: AuthenticatedClient,
     body: PropertiesPayload,
 
-) -> Response[BaseApiResponse | ErrorEnvelope]:
+) -> Response[ErrorEnvelope | SetPropertiesResponse]:
     """ Post Properties Set
 
     Args:
@@ -195,7 +202,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[BaseApiResponse | ErrorEnvelope]
+        Response[ErrorEnvelope | SetPropertiesResponse]
      """
 
 
@@ -217,7 +224,7 @@ async def asyncio(
     client: AuthenticatedClient,
     body: PropertiesPayload,
 
-) -> BaseApiResponse | ErrorEnvelope | None:
+) -> ErrorEnvelope | SetPropertiesResponse | None:
     """ Post Properties Set
 
     Args:
@@ -229,7 +236,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        BaseApiResponse | ErrorEnvelope
+        ErrorEnvelope | SetPropertiesResponse
      """
 
 

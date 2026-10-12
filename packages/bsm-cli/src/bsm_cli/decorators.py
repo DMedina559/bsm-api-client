@@ -81,11 +81,17 @@ class AsyncGroup(click.Group):
         except Exception as error:
             if json_output:
                 normalized = normalize_error(error)
-                echo_json(
-                    {"error": str(error), "exit_code": normalized.exit_code}, err=True
-                )
+                echo_json(_error_payload(error, normalized.exit_code), err=True)
                 raise click.exceptions.Exit(normalized.exit_code) from error
             fail(error)
+
+
+def _error_payload(error, exit_code):
+    payload = {"error": str(error), "exit_code": exit_code}
+    response_data = getattr(error, "response_data", None)
+    if response_data:
+        payload["response"] = response_data
+    return payload
 
 
 def _structured_result(result, recorder):
@@ -197,6 +203,23 @@ def _task_finished(data, success_message, failure_message):
             detail = error.get("message", detail)
         raise OperationFailedError(f"{failure_message}: {detail}", response_data=data)
     if status in {"success", "completed"}:
+        outcome_status = result.get("status") if isinstance(result, dict) else None
+        if outcome_status == "partial":
+            from bsm_cli.manager import outcome
+
+            outcome(result)
+            raise OperationFailedError(
+                f"Operation partially completed: {result.get('message', message)}",
+                response_data=data,
+            )
+        if outcome_status == "skipped":
+            click.secho(
+                f"Operation skipped: {result.get('message', message)}", fg="yellow"
+            )
+            from bsm_cli.manager import outcome
+
+            outcome(result)
+            return True
         click.secho(f"{success_message}: {message}", fg="green")
         if result is not None:
             from bsm_cli.manager import outcome

@@ -4,6 +4,7 @@ from .models.action_response import ActionResponse
 from .models.add_players_payload import AddPlayersPayload
 from .models.add_players_response import AddPlayersResponse
 from .models.add_server_ban_response import AddServerBanResponse
+from .models.add_to_allowlist_response import AddToAllowlistResponse
 from .models.addon_action_payload import AddonActionPayload
 from .models.addon_list_response import AddonListResponse
 from .models.addon_reorder_payload import AddonReorderPayload
@@ -50,9 +51,11 @@ from .models.properties_payload import PropertiesPayload
 from .models.prune_downloads_payload import PruneDownloadsPayload
 from .models.prune_downloads_response import PruneDownloadsResponse
 from .models.registration_response import RegistrationResponse
+from .models.remove_from_allowlist_response import RemoveFromAllowlistResponse
 from .models.remove_server_ban_response import RemoveServerBanResponse
 from .models.restart_server_response import RestartServerResponse
 from .models.restore_action_payload import RestoreActionPayload
+from .models.send_command_response import SendCommandResponse
 from .models.server_process_info_response import ServerProcessInfoResponse
 from .models.server_running_status_response import ServerRunningStatusResponse
 from .models.server_setting_item_payload import ServerSettingItemPayload
@@ -60,6 +63,7 @@ from .models.server_settings_response import ServerSettingsResponse
 from .models.server_summary import ServerSummary
 from .models.servers_list_response import ServersListResponse
 from .models.set_plugin_setting_response import SetPluginSettingResponse
+from .models.set_properties_response import SetPropertiesResponse
 from .models.setting_item_response import SettingItemResponse
 from .models.settings_response import SettingsResponse
 from .models.setup_account_response import SetupAccountResponse
@@ -86,13 +90,13 @@ class RestClient:
     def __init__(self, owner: Any):
         self._owner = owner
 
-    async def add_allowlist_players(self, server_name: str, *, body: AllowlistAddPayload) -> BaseApiResponse | ErrorEnvelope | None:
+    async def add_allowlist_players(self, server_name: str, *, body: AllowlistAddPayload) -> AddToAllowlistResponse | ErrorEnvelope | None:
         """Generated add_allowlist_players operation."""
-        return cast(BaseApiResponse | ErrorEnvelope | None, await self._owner.async_call_generated('add_allowlist_players', parameters={'server_name': server_name}, body=body, authenticated=True, typed=True))
+        return cast(AddToAllowlistResponse | ErrorEnvelope | None, await self._owner.async_call_generated('add_allowlist_players', parameters={'server_name': server_name}, body=body, authenticated=True, typed=True))
 
-    async def add_allowlist_players_detailed(self, server_name: str, *, body: AllowlistAddPayload) -> Response[BaseApiResponse | ErrorEnvelope]:
+    async def add_allowlist_players_detailed(self, server_name: str, *, body: AllowlistAddPayload) -> Response[AddToAllowlistResponse | ErrorEnvelope]:
         """Generated add_allowlist_players operation."""
-        return cast(Response[BaseApiResponse | ErrorEnvelope], await self._owner.async_call_generated('add_allowlist_players', parameters={'server_name': server_name}, body=body, authenticated=True, detailed=True))
+        return cast(Response[AddToAllowlistResponse | ErrorEnvelope], await self._owner.async_call_generated('add_allowlist_players', parameters={'server_name': server_name}, body=body, authenticated=True, detailed=True))
 
     async def add_players(self, *, body: AddPlayersPayload) -> AddPlayersResponse | ErrorEnvelope | None:
         """Generated add_players operation."""
@@ -566,13 +570,13 @@ class RestClient:
         """Generated reload_settings operation."""
         return cast(Response[ErrorEnvelope | SettingsResponse], await self._owner.async_call_generated('reload_settings', parameters={}, body=None, authenticated=True, detailed=True))
 
-    async def remove_allowlist_players(self, server_name: str, *, body: AllowlistRemovePayload) -> BaseApiResponse | ErrorEnvelope | None:
+    async def remove_allowlist_players(self, server_name: str, *, body: AllowlistRemovePayload) -> ErrorEnvelope | RemoveFromAllowlistResponse | None:
         """Generated remove_allowlist_players operation."""
-        return cast(BaseApiResponse | ErrorEnvelope | None, await self._owner.async_call_generated('remove_allowlist_players', parameters={'server_name': server_name}, body=body, authenticated=True, typed=True))
+        return cast(ErrorEnvelope | RemoveFromAllowlistResponse | None, await self._owner.async_call_generated('remove_allowlist_players', parameters={'server_name': server_name}, body=body, authenticated=True, typed=True))
 
-    async def remove_allowlist_players_detailed(self, server_name: str, *, body: AllowlistRemovePayload) -> Response[BaseApiResponse | ErrorEnvelope]:
+    async def remove_allowlist_players_detailed(self, server_name: str, *, body: AllowlistRemovePayload) -> Response[ErrorEnvelope | RemoveFromAllowlistResponse]:
         """Generated remove_allowlist_players operation."""
-        return cast(Response[BaseApiResponse | ErrorEnvelope], await self._owner.async_call_generated('remove_allowlist_players', parameters={'server_name': server_name}, body=body, authenticated=True, detailed=True))
+        return cast(Response[ErrorEnvelope | RemoveFromAllowlistResponse], await self._owner.async_call_generated('remove_allowlist_players', parameters={'server_name': server_name}, body=body, authenticated=True, detailed=True))
 
     async def remove_server_ban(self, server_name: str, *, body: BanRemoveRequest) -> ErrorEnvelope | RemoveServerBanResponse | None:
         """Generated remove_server_ban operation."""
@@ -622,13 +626,13 @@ class RestClient:
         """Generated scan_players operation."""
         return cast(Response[AddPlayersResponse | ErrorEnvelope], await self._owner.async_call_generated('scan_players', parameters={}, body=None, authenticated=True, detailed=True))
 
-    async def send_command(self, server_name: str, *, body: CommandPayload) -> ActionResponse | ErrorEnvelope | None:
+    async def send_command(self, server_name: str, *, body: CommandPayload) -> ErrorEnvelope | SendCommandResponse | None:
         """Generated send_command operation."""
-        return cast(ActionResponse | ErrorEnvelope | None, await self._owner.async_call_generated('send_command', parameters={'server_name': server_name}, body=body, authenticated=True, typed=True))
+        return cast(ErrorEnvelope | SendCommandResponse | None, await self._owner.async_call_generated('send_command', parameters={'server_name': server_name}, body=body, authenticated=True, typed=True))
 
-    async def send_command_detailed(self, server_name: str, *, body: CommandPayload) -> Response[ActionResponse | ErrorEnvelope]:
+    async def send_command_detailed(self, server_name: str, *, body: CommandPayload) -> Response[ErrorEnvelope | SendCommandResponse]:
         """Generated send_command operation."""
-        return cast(Response[ActionResponse | ErrorEnvelope], await self._owner.async_call_generated('send_command', parameters={'server_name': server_name}, body=body, authenticated=True, detailed=True))
+        return cast(Response[ErrorEnvelope | SendCommandResponse], await self._owner.async_call_generated('send_command', parameters={'server_name': server_name}, body=body, authenticated=True, detailed=True))
 
     async def set_permissions(self, server_name: str, *, body: PermissionsSetPayload) -> ErrorEnvelope | PermissionsUpdateResponse | None:
         """Generated set_permissions operation."""
@@ -646,13 +650,13 @@ class RestClient:
         """Generated set_plugin_status operation."""
         return cast(Response[ActionResponse | ErrorEnvelope], await self._owner.async_call_generated('set_plugin_status', parameters={'plugin_name': plugin_name}, body=body, authenticated=True, detailed=True))
 
-    async def set_properties(self, server_name: str, *, body: PropertiesPayload) -> BaseApiResponse | ErrorEnvelope | None:
+    async def set_properties(self, server_name: str, *, body: PropertiesPayload) -> ErrorEnvelope | SetPropertiesResponse | None:
         """Generated set_properties operation."""
-        return cast(BaseApiResponse | ErrorEnvelope | None, await self._owner.async_call_generated('set_properties', parameters={'server_name': server_name}, body=body, authenticated=True, typed=True))
+        return cast(ErrorEnvelope | SetPropertiesResponse | None, await self._owner.async_call_generated('set_properties', parameters={'server_name': server_name}, body=body, authenticated=True, typed=True))
 
-    async def set_properties_detailed(self, server_name: str, *, body: PropertiesPayload) -> Response[BaseApiResponse | ErrorEnvelope]:
+    async def set_properties_detailed(self, server_name: str, *, body: PropertiesPayload) -> Response[ErrorEnvelope | SetPropertiesResponse]:
         """Generated set_properties operation."""
-        return cast(Response[BaseApiResponse | ErrorEnvelope], await self._owner.async_call_generated('set_properties', parameters={'server_name': server_name}, body=body, authenticated=True, detailed=True))
+        return cast(Response[ErrorEnvelope | SetPropertiesResponse], await self._owner.async_call_generated('set_properties', parameters={'server_name': server_name}, body=body, authenticated=True, detailed=True))
 
     async def set_server_setting(self, server_name: str, *, body: ServerSettingItemPayload) -> ErrorEnvelope | ServerSettingsResponse | None:
         """Generated set_server_setting operation."""

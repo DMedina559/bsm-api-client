@@ -56,7 +56,13 @@ async def local_api():
         body = await request.json() if request.can_read_body else None
         seen.append((request.method, request.match_info["server_name"], body))
         if request.method == "DELETE":
-            return web.json_response({"status": "success", "message": "done"})
+            return web.json_response(
+                {
+                    "status": "success",
+                    "message": "done",
+                    "details": {"removed": body["players"], "not_found": []},
+                }
+            )
         return web.json_response(
             {
                 "status": "success",
@@ -437,3 +443,98 @@ async def test_login_and_reauthentication_preserve_remember_me(local_api, rememb
     logins = [entry[1] for entry in seen if entry[0] == "login"]
     assert len(logins) == 2
     assert all(data["remember_me"] == str(remember_me).lower() for data in logins)
+
+
+@pytest.mark.asyncio
+async def test_password_change_preserves_secret_values_on_the_wire():
+    import httpx
+
+    from bsm_api_client.models import ChangePasswordPayload
+
+    payload = ChangePasswordPayload(
+        current_password="old-secret", new_password="new-secret"
+    )
+    assert "old-secret" not in repr(payload)
+    assert "new-secret" not in payload.model_dump_json()
+
+    async def respond(request):
+        import json
+
+        assert json.loads(request.content) == {
+            "current_password": "old-secret",
+            "new_password": "new-secret",
+        }
+        return httpx.Response(
+            200, json={"status": "success", "message": "Password changed."}
+        )
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(respond)) as transport:
+        async with BedrockServerManagerApi(
+            "http://localhost", jwt_token="token", http_client=transport
+        ) as client:
+            response = await client.account.async_change_password(payload)
+            assert response.status == "success"
+
+
+def test_incomplete_account_error_preserves_committed_outcome():
+    from bsm_api_client import APIServerSideError
+
+    result = {"committed": True, "action": "change_password", "resource": "account"}
+    error = APIServerSideError(
+        "Operation incomplete.",
+        status_code=500,
+        response_data={
+            "error": {
+                "code": "operation_incomplete",
+                "message": "Operation incomplete.",
+                "details": {"result": result},
+            }
+        },
+    )
+    assert error.operation_result == result
+    assert error.committed is True
+    assert "change was saved" in str(error)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "status,code,committed",
+    [(503, "unavailable", False), (500, "operation_incomplete", True)],
+)
+async def test_generated_transport_preserves_structured_failures_without_retries(
+    status, code, committed
+):
+    import httpx
+
+    from bsm_api_client import APIServerSideError
+
+    calls = []
+    result = (
+        {"committed": True, "action": "update_account", "resource": "account"}
+        if committed
+        else None
+    )
+
+    async def respond(request):
+        calls.append(request)
+        return httpx.Response(
+            status,
+            json={
+                "error": {
+                    "code": code,
+                    "message": "Operation unavailable or incomplete.",
+                    "details": {"result": result} if result else {},
+                }
+            },
+        )
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(respond)) as transport:
+        async with BedrockServerManagerApi(
+            "http://localhost", jwt_token="token", http_client=transport
+        ) as client:
+            with pytest.raises(APIServerSideError) as error:
+                await client.rest.get_settings()
+            assert error.value.api_code == code
+            assert error.value.operation_result == result
+            assert error.value.committed is committed
+    assert len(calls) == 1

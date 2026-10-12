@@ -251,3 +251,30 @@ async def test_task_poll_reports_unknown_outcome_on_disconnect(
     with pytest.raises(CannotConnectError, match="Task task-123 was submitted"):
         await monitor_task(mock_client, "task-123", "Installed", "Failed")
     assert mock_client.tasks.async_get_task_status.await_count == 3
+
+
+@pytest.mark.parametrize("status", ["partial", "skipped"])
+def test_completed_task_reports_operation_outcome(status, capsys):
+    from bsm_api_client.exceptions import OperationFailedError
+    from bsm_cli.decorators import _task_finished
+
+    task = {
+        "status": "completed",
+        "message": "Task finished",
+        "result": {
+            "status": status,
+            "message": "One item could not be restored",
+            "details": {
+                "properties": {"outcome": "skipped", "reason": "Missing backup"}
+            },
+        },
+    }
+    if status == "partial":
+        with pytest.raises(OperationFailedError) as error:
+            _task_finished(task, "Restore successful", "Restore failed")
+        assert error.value.response_data == task
+    else:
+        assert _task_finished(task, "Restore successful", "Restore failed")
+    output = capsys.readouterr().out
+    assert "Restore successful" not in output
+    assert "Missing backup" in output

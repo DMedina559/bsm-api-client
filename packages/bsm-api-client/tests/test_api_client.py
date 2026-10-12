@@ -119,6 +119,7 @@ async def test_update_server_properties(client):
         payload = PropertiesPayload(properties=properties)
         mock_request.return_value = {
             "status": "success",
+            "server_name": "test_server",
             "message": "Properties updated.",
         }
         result = await client.servers.async_update_server_properties(

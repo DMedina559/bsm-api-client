@@ -8,9 +8,9 @@ from ...client import AuthenticatedClient, Client
 from ...types import Response, UNSET
 from ... import errors
 
-from ...models.action_response import ActionResponse
 from ...models.command_payload import CommandPayload
 from ...models.error_envelope import ErrorEnvelope
+from ...models.send_command_response import SendCommandResponse
 from typing import cast
 
 
@@ -42,9 +42,9 @@ def _get_kwargs(
 
 
 
-def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> ActionResponse | ErrorEnvelope | None:
+def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> ErrorEnvelope | SendCommandResponse | None:
     if response.status_code == 200:
-        response_200 = ActionResponse.from_dict(response.json())
+        response_200 = SendCommandResponse.from_dict(response.json())
 
 
 
@@ -99,13 +99,20 @@ def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Res
 
         return response_500
 
+    if response.status_code == 503:
+        response_503 = ErrorEnvelope.from_dict(response.json())
+
+
+
+        return response_503
+
     if client.raise_on_unexpected_status:
         raise errors.UnexpectedStatus(response.status_code, response.content)
     else:
         return None
 
 
-def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[ActionResponse | ErrorEnvelope]:
+def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[ErrorEnvelope | SendCommandResponse]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -120,7 +127,7 @@ def sync_detailed(
     client: AuthenticatedClient,
     body: CommandPayload,
 
-) -> Response[ActionResponse | ErrorEnvelope]:
+) -> Response[ErrorEnvelope | SendCommandResponse]:
     """ Post Send Command
 
      Sends a command to a specific running Bedrock server instance.
@@ -134,7 +141,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[ActionResponse | ErrorEnvelope]
+        Response[ErrorEnvelope | SendCommandResponse]
      """
 
 
@@ -156,7 +163,7 @@ def sync(
     client: AuthenticatedClient,
     body: CommandPayload,
 
-) -> ActionResponse | ErrorEnvelope | None:
+) -> ErrorEnvelope | SendCommandResponse | None:
     """ Post Send Command
 
      Sends a command to a specific running Bedrock server instance.
@@ -170,7 +177,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        ActionResponse | ErrorEnvelope
+        ErrorEnvelope | SendCommandResponse
      """
 
 
@@ -187,7 +194,7 @@ async def asyncio_detailed(
     client: AuthenticatedClient,
     body: CommandPayload,
 
-) -> Response[ActionResponse | ErrorEnvelope]:
+) -> Response[ErrorEnvelope | SendCommandResponse]:
     """ Post Send Command
 
      Sends a command to a specific running Bedrock server instance.
@@ -201,7 +208,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[ActionResponse | ErrorEnvelope]
+        Response[ErrorEnvelope | SendCommandResponse]
      """
 
 
@@ -223,7 +230,7 @@ async def asyncio(
     client: AuthenticatedClient,
     body: CommandPayload,
 
-) -> ActionResponse | ErrorEnvelope | None:
+) -> ErrorEnvelope | SendCommandResponse | None:
     """ Post Send Command
 
      Sends a command to a specific running Bedrock server instance.
@@ -237,7 +244,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        ActionResponse | ErrorEnvelope
+        ErrorEnvelope | SendCommandResponse
      """
 
 

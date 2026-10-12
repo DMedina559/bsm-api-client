@@ -1,7 +1,7 @@
 # Generated from bundled OpenAPI by scripts/generate_models.py.
 from __future__ import annotations
 
-from typing import Annotated, Any, Literal
+from typing import Annotated, Literal
 
 from pydantic import AwareDatetime, ConfigDict, Field, JsonValue, SecretStr
 
@@ -11,22 +11,49 @@ from bsm_api_client.contract_base import ContractModel
 class ActionResponse(ContractModel):
     model_config = ConfigDict(extra="forbid")
     message: str = Field(..., title="Message")
-    status: Literal["success", "skipped"] | None = Field("success", title="Status")
+    status: Literal["success", "skipped", "partial"] | None = Field(
+        "success", title="Status"
+    )
+
+
+Player = Annotated[str, Field(min_length=1, pattern=".*\\S.*")]
 
 
 class AddPlayersPayload(ContractModel):
     model_config = ConfigDict(extra="forbid")
-    players: list[str] = Field(
+    players: list[Player] = Field(
         ...,
         description='List of player strings, e.g., ["PlayerOne:123xuid", "PlayerTwo:456xuid"]',
+        min_length=1,
         title="Players",
     )
+
+
+ParsedCount = Annotated[int, Field(ge=0, title="Parsed Count")]
+SubmittedCount = Annotated[int, Field(ge=0, title="Submitted Count")]
+UniqueCount = Annotated[int, Field(ge=0, title="Unique Count")]
 
 
 class AddServerBanResponse(ContractModel):
     model_config = ConfigDict(extra="forbid")
     message: str = Field(..., title="Message")
-    status: Literal["success", "skipped"] | None = Field("success", title="Status")
+    server_name: str = Field(
+        ...,
+        examples=["example"],
+        min_length=1,
+        pattern="^[a-zA-Z0-9_-]+$",
+        title="Server Name",
+    )
+    status: Literal["success", "skipped", "partial"] | None = Field(
+        "success", title="Status"
+    )
+
+
+class AddToAllowlistResponse(ContractModel):
+    model_config = ConfigDict(extra="forbid")
+    added_count: int = Field(..., ge=0, title="Added Count")
+    message: str | None = Field(None, title="Message")
+    status: Literal["success"] = Field("success", title="Status")
 
 
 class AddonActionPayload(ContractModel):
@@ -104,26 +131,17 @@ class AllowlistPlayer(ContractModel):
     xuid: str | None = Field(None, title="Xuid")
 
 
+class AllowlistRemovalDetails(ContractModel):
+    model_config = ConfigDict(extra="forbid")
+    not_found: list[str] = Field(..., title="Not Found")
+    removed: list[str] = Field(..., title="Removed")
+
+
 class AllowlistRemovePayload(ContractModel):
     model_config = ConfigDict(extra="forbid")
     players: list[str] = Field(
         ..., description="List of player gamertags to remove.", title="Players"
     )
-
-
-class AppInfoResponse(ContractModel):
-    model_config = ConfigDict(extra="forbid")
-    info: dict[str, Any] | None = Field(None, title="Info")
-    message: str | None = Field(None, title="Message")
-    status: Literal["success", "skipped"] = Field(..., title="Status")
-
-
-class AuditLogResponse(ContractModel):
-    action: str = Field(..., title="Action")
-    details: dict[str, Any] | None = Field(None, title="Details")
-    id: int = Field(..., title="Id")
-    timestamp: AwareDatetime = Field(..., title="Timestamp")
-    user_id: int = Field(..., title="User Id")
 
 
 class BackupActionPayload(ContractModel):
@@ -170,7 +188,7 @@ class BanRemoveRequest(ContractModel):
 class BaseApiResponse(ContractModel):
     model_config = ConfigDict(extra="forbid")
     message: str | None = Field(None, title="Message")
-    status: Literal["success", "skipped"] = Field(..., title="Status")
+    status: Literal["success", "skipped", "partial"] = Field(..., title="Status")
 
 
 GrantType = Annotated[str, Field(pattern="^password$", title="Grant Type")]
@@ -188,8 +206,8 @@ class BodyLogin(ContractModel):
 
 class ChangePasswordPayload(ContractModel):
     model_config = ConfigDict(extra="forbid")
-    current_password: str = Field(..., title="Current Password")
-    new_password: str = Field(..., title="New Password")
+    current_password: SecretStr = Field(..., min_length=1, title="Current Password")
+    new_password: SecretStr = Field(..., min_length=1, title="New Password")
 
 
 class CommandPayload(ContractModel):
@@ -202,23 +220,31 @@ class CommandPayload(ContractModel):
     )
 
 
+class CompletedItem(ContractModel):
+    model_config = ConfigDict(extra="forbid")
+    error: None = Field(None, title="Error")
+    outcome: Literal["completed"] = Field("completed", title="Outcome")
+    path: str | None = Field(None, title="Path")
+    reason: None = Field(None, title="Reason")
+
+
 class ContentListResponse(ContractModel):
     model_config = ConfigDict(extra="forbid")
     files: list[str] | None = Field(None, title="Files")
     message: str | None = Field(None, title="Message")
-    status: Literal["success", "skipped"] = Field(..., title="Status")
+    status: Literal["success", "skipped", "partial"] = Field(..., title="Status")
 
 
 class CustomZipsResponse(ContractModel):
     model_config = ConfigDict(extra="forbid")
     custom_zips: list[str] = Field(..., title="Custom Zips")
     message: str | None = Field(None, title="Message")
-    status: Literal["success", "skipped"] = Field(..., title="Status")
+    status: Literal["success", "skipped", "partial"] = Field(..., title="Status")
 
 
 class FileNamePayload(ContractModel):
     model_config = ConfigDict(extra="forbid")
-    filename: str = Field(..., title="Filename")
+    filename: str = Field(..., min_length=1, pattern=".*\\S.*", title="Filename")
 
 
 class GenerateTokenPayload(ContractModel):
@@ -337,13 +363,6 @@ ThreadCount = Annotated[int, Field(ge=0, title="Thread Count")]
 UptimeSeconds = Annotated[float, Field(ge=0.0, title="Uptime Seconds")]
 
 
-class PermissionsUpdateResponse(ContractModel):
-    model_config = ConfigDict(extra="forbid")
-    errors: dict[str, str] | None = Field(None, title="Errors")
-    message: str | None = Field(None, title="Message")
-    status: Literal["success", "skipped"] = Field(..., title="Status")
-
-
 class PlayerInfo(ContractModel):
     model_config = ConfigDict(extra="forbid")
     name: str = Field(..., title="Name")
@@ -354,7 +373,7 @@ class PlayerListResponse(ContractModel):
     model_config = ConfigDict(extra="forbid")
     message: str | None = Field(None, title="Message")
     players: list[PlayerInfo] | None = Field(None, title="Players")
-    status: Literal["success", "skipped"] = Field(..., title="Status")
+    status: Literal["success", "skipped", "partial"] = Field(..., title="Status")
 
 
 class PlayerPermission(ContractModel):
@@ -373,12 +392,6 @@ class PlayerPermissionPayload(ContractModel):
     xuid: str = Field(..., title="Xuid")
 
 
-class PlayerScanError(ContractModel):
-    model_config = ConfigDict(extra="forbid")
-    error: str = Field(..., title="Error")
-    server: str = Field(..., title="Server")
-
-
 class PluginInfo(ContractModel):
     model_config = ConfigDict(extra="forbid")
     author: str | None = Field("", title="Author")
@@ -392,8 +405,8 @@ class PluginInfo(ContractModel):
 class PluginPagesResponse(ContractModel):
     model_config = ConfigDict(extra="forbid")
     message: str | None = Field(None, title="Message")
-    pages: list[dict[str, Any]] | None = Field(None, title="Pages")
-    status: Literal["success", "skipped"] = Field(..., title="Status")
+    pages: list[dict[str, JsonValue]] | None = Field(None, title="Pages")
+    status: Literal["success", "skipped", "partial"] = Field(..., title="Status")
 
 
 class PluginSettingsPayload(ContractModel):
@@ -414,7 +427,7 @@ class PluginStatusesResponse(ContractModel):
     model_config = ConfigDict(extra="forbid")
     message: str | None = Field(None, title="Message")
     plugins: dict[str, PluginInfo] | None = Field(None, title="Plugins")
-    status: Literal["success", "skipped"] = Field(..., title="Status")
+    status: Literal["success", "skipped", "partial"] = Field(..., title="Status")
 
 
 class ProcessInfo(ContractModel):
@@ -463,14 +476,6 @@ class PruneDownloadsPayload(ContractModel):
     )
 
 
-class PruneDownloadsResponse(ContractModel):
-    model_config = ConfigDict(extra="forbid")
-    files_deleted: int | None = Field(None, title="Files Deleted")
-    files_kept: int | None = Field(None, title="Files Kept")
-    message: str | None = Field(None, title="Message")
-    status: Literal["success", "skipped"] = Field(..., title="Status")
-
-
 class RegistrationResponse(ContractModel):
     model_config = ConfigDict(extra="forbid")
     message: str | None = Field(None, title="Message")
@@ -478,10 +483,26 @@ class RegistrationResponse(ContractModel):
     status: Literal["success"] = Field("success", title="Status")
 
 
+class RemoveFromAllowlistResponse(ContractModel):
+    model_config = ConfigDict(extra="forbid")
+    details: AllowlistRemovalDetails
+    message: str | None = Field(None, title="Message")
+    status: Literal["success"] = Field("success", title="Status")
+
+
 class RemoveServerBanResponse(ContractModel):
     model_config = ConfigDict(extra="forbid")
     message: str = Field(..., title="Message")
-    status: Literal["success", "skipped"] | None = Field("success", title="Status")
+    server_name: str = Field(
+        ...,
+        examples=["example"],
+        min_length=1,
+        pattern="^[a-zA-Z0-9_-]+$",
+        title="Server Name",
+    )
+    status: Literal["success", "skipped", "partial"] | None = Field(
+        "success", title="Status"
+    )
 
 
 class RestartServerResponse(ContractModel):
@@ -512,6 +533,21 @@ class RestoreActionPayload(ContractModel):
     )
 
 
+class SendCommandResponse(ContractModel):
+    model_config = ConfigDict(extra="forbid")
+    message: str = Field(..., title="Message")
+    server_name: str = Field(
+        ...,
+        examples=["example"],
+        min_length=1,
+        pattern="^[a-zA-Z0-9_-]+$",
+        title="Server Name",
+    )
+    status: Literal["success", "skipped", "partial"] | None = Field(
+        "success", title="Status"
+    )
+
+
 CpuPercent = Annotated[float, Field(ge=0.0, title="Cpu Percent")]
 MemoryMb = Annotated[float, Field(ge=0.0, title="Memory Mb")]
 Pid = Annotated[int, Field(gt=0, title="Pid")]
@@ -531,7 +567,7 @@ class ServerProcessInfoResponse(ContractModel):
     message: str | None = Field(None, title="Message")
     process_info: ProcessInfo | None = None
     revision: Revision | None = Field(None, title="Revision")
-    status: Literal["success", "skipped"] = Field(..., title="Status")
+    status: Literal["success", "skipped", "partial"] = Field(..., title="Status")
 
 
 class ServerRunningStatusResponse(ContractModel):
@@ -540,7 +576,7 @@ class ServerRunningStatusResponse(ContractModel):
     message: str | None = Field(None, title="Message")
     revision: Revision | None = Field(None, title="Revision")
     running: bool | None = Field(None, title="Running")
-    status: Literal["success", "skipped"] = Field(..., title="Status")
+    status: Literal["success", "skipped", "partial"] = Field(..., title="Status")
 
 
 class ServerSettingItemPayload(ContractModel):
@@ -548,6 +584,8 @@ class ServerSettingItemPayload(ContractModel):
     key: str = Field(
         ...,
         description="The dot-notation key of the setting (e.g., 'settings.autoupdate').",
+        min_length=1,
+        pattern=".*\\S.*",
         title="Key",
     )
     value: JsonValue = Field(..., description="The new value for the setting.")
@@ -557,8 +595,8 @@ class ServerSettingsResponse(ContractModel):
     model_config = ConfigDict(extra="forbid")
     message: str | None = Field(None, title="Message")
     setting: ServerSettingItemPayload | None = None
-    settings: dict[str, Any] | None = Field(None, title="Settings")
-    status: Literal["success", "skipped"] = Field(..., title="Status")
+    settings: dict[str, JsonValue] | None = Field(None, title="Settings")
+    status: Literal["success", "skipped", "partial"] = Field(..., title="Status")
 
 
 class ServerSummary(ContractModel):
@@ -567,24 +605,33 @@ class ServerSummary(ContractModel):
     name: str = Field(..., title="Name")
     player_count: int | None = Field(0, ge=0, title="Player Count")
     players: list[PlayerInfo] | None = Field(None, title="Players")
+    players_available: bool | None = Field(True, title="Players Available")
     revision: Revision | None = Field(None, title="Revision")
     status: str = Field(..., title="Status")
     version: str = Field(..., title="Version")
 
 
-class ServersListResponse(ContractModel):
-    model_config = ConfigDict(extra="forbid")
-    epoch: str | None = Field(None, title="Epoch")
-    message: str | None = Field(None, title="Message")
-    revision: Revision | None = Field(None, title="Revision")
-    servers: list[ServerSummary] | None = Field(None, title="Servers")
-    status: Literal["success", "skipped"] = Field(..., title="Status")
-
-
 class SetPluginSettingResponse(ContractModel):
     model_config = ConfigDict(extra="forbid")
     message: str = Field(..., title="Message")
-    status: Literal["success", "skipped"] | None = Field("success", title="Status")
+    status: Literal["success", "skipped", "partial"] | None = Field(
+        "success", title="Status"
+    )
+
+
+class SetPropertiesResponse(ContractModel):
+    model_config = ConfigDict(extra="forbid")
+    message: str = Field(..., title="Message")
+    server_name: str = Field(
+        ...,
+        examples=["example"],
+        min_length=1,
+        pattern="^[a-zA-Z0-9_-]+$",
+        title="Server Name",
+    )
+    status: Literal["success", "skipped", "partial"] | None = Field(
+        "success", title="Status"
+    )
 
 
 class SettingItemResponse(ContractModel):
@@ -592,6 +639,8 @@ class SettingItemResponse(ContractModel):
     key: str = Field(
         ...,
         description="The dot-notation key of the setting (e.g., 'web.port').",
+        min_length=1,
+        pattern=".*\\S.*",
         title="Key",
     )
     value: JsonValue = Field(..., description="The new value for the setting.")
@@ -601,19 +650,29 @@ class SettingsResponse(ContractModel):
     model_config = ConfigDict(extra="forbid")
     message: str | None = Field(None, title="Message")
     setting: SettingItemResponse | None = None
-    settings: dict[str, Any] | None = Field(None, title="Settings")
-    status: Literal["success", "skipped"] = Field(..., title="Status")
+    settings: dict[str, JsonValue] | None = Field(None, title="Settings")
+    status: Literal["success", "skipped", "partial"] = Field(..., title="Status")
 
 
 class SetupAccountResponse(ContractModel):
+    model_config = ConfigDict(extra="forbid")
     access_token: str = Field(..., title="Access Token")
     message: str = Field(..., title="Message")
     status: Literal["success"] = Field("success", title="Status")
-    token_type: str = Field(..., title="Token Type")
+    token_type: Literal["bearer"] = Field("bearer", title="Token Type")
 
 
 class SetupStatusResponse(ContractModel):
+    model_config = ConfigDict(extra="forbid")
     needs_setup: bool = Field(..., title="Needs Setup")
+
+
+class SkippedItem(ContractModel):
+    model_config = ConfigDict(extra="forbid")
+    error: None = Field(None, title="Error")
+    outcome: Literal["skipped"] = Field("skipped", title="Outcome")
+    path: None = Field(None, title="Path")
+    reason: str = Field(..., title="Reason")
 
 
 class StartServerResponse(ContractModel):
@@ -661,7 +720,7 @@ class TaskAcceptedResponse(ContractModel):
 class ThemeListResponse(ContractModel):
     model_config = ConfigDict(extra="forbid")
     message: str | None = Field(None, title="Message")
-    status: Literal["success", "skipped"] = Field(..., title="Status")
+    status: Literal["success", "skipped", "partial"] = Field(..., title="Status")
     themes: list[str] | None = Field(None, title="Themes")
 
 
@@ -671,9 +730,10 @@ class ThemeUpdatePayload(ContractModel):
 
 
 class TokenResponse(ContractModel):
+    model_config = ConfigDict(extra="forbid")
     access_token: str = Field(..., title="Access Token")
     message: str | None = Field(None, title="Message")
-    token_type: str = Field(..., title="Token Type")
+    token_type: Literal["bearer"] = Field("bearer", title="Token Type")
 
 
 class TriggerEventPayload(ContractModel):
@@ -691,9 +751,9 @@ class TriggerEventPayload(ContractModel):
 
 class TriggerEventResponse(ContractModel):
     model_config = ConfigDict(extra="forbid")
-    details: dict[str, Any] | None = Field(None, title="Details")
+    details: dict[str, JsonValue] | None = Field(None, title="Details")
     message: str | None = Field(None, title="Message")
-    status: Literal["success", "skipped"] = Field(..., title="Status")
+    status: Literal["success", "skipped", "partial"] = Field(..., title="Status")
 
 
 class UpdateUserRolePayload(ContractModel):
@@ -703,12 +763,13 @@ class UpdateUserRolePayload(ContractModel):
 
 class UserLoginPayload(ContractModel):
     model_config = ConfigDict(extra="forbid")
-    password: str = Field(..., min_length=1, title="Password")
+    password: SecretStr = Field(..., min_length=1, title="Password")
     remember_me: bool | None = Field(False, title="Remember Me")
     username: str = Field(..., max_length=80, min_length=1, title="Username")
 
 
 class UserResponse(ContractModel):
+    model_config = ConfigDict(extra="forbid")
     id: int = Field(..., title="Id")
     identity_type: str | None = Field(None, title="Identity Type")
     is_active: bool = Field(..., title="Is Active")
@@ -733,14 +794,65 @@ class APIErrorResponse(ContractModel):
         "server_error",
         "application_error",
         "internal_error",
+        "unavailable",
+        "operation_incomplete",
+        "file_error",
+        "storage_error",
+        "configuration_error",
+        "network_error",
+        "system_error",
     ] = Field(..., title="Code")
     details: dict[str, JsonValue] | None = Field(None, title="Details")
     message: str = Field(..., title="Message")
 
 
+class AppInfoResponse(ContractModel):
+    model_config = ConfigDict(extra="forbid")
+    info: dict[str, JsonValue] | None = Field(None, title="Info")
+    message: str | None = Field(None, title="Message")
+    status: Literal["success", "skipped", "partial"] = Field(..., title="Status")
+
+
+class AuditLogResponse(ContractModel):
+    model_config = ConfigDict(extra="forbid")
+    action: str = Field(..., title="Action")
+    details: dict[str, JsonValue] | None = Field(None, title="Details")
+    id: int = Field(..., title="Id")
+    timestamp: AwareDatetime = Field(..., title="Timestamp")
+    user_id: int = Field(..., title="User Id")
+
+
 class ErrorEnvelope(ContractModel):
     model_config = ConfigDict(extra="forbid")
     error: APIErrorResponse
+
+
+class FailureInfo(ContractModel):
+    model_config = ConfigDict(extra="forbid")
+    code: Literal[
+        "validation_error",
+        "not_found",
+        "conflict",
+        "forbidden",
+        "unauthorized",
+        "http_error",
+        "operation_canceled",
+        "invalid_server_name",
+        "server_start_failed",
+        "server_stop_failed",
+        "server_error",
+        "application_error",
+        "internal_error",
+        "unavailable",
+        "operation_incomplete",
+        "file_error",
+        "storage_error",
+        "configuration_error",
+        "network_error",
+        "system_error",
+    ] = Field(..., title="Code")
+    details: dict[str, JsonValue] | None = Field(None, title="Details")
+    message: str = Field(..., title="Message")
 
 
 class GetApplicationHealthResponse(ContractModel):
@@ -818,16 +930,35 @@ class PermissionsSetPayload(ContractModel):
     )
 
 
-class PlayerScanDetails(ContractModel):
+class PlayerScanError(ContractModel):
     model_config = ConfigDict(extra="forbid")
-    actually_saved_or_updated_in_db: int = Field(
-        ..., ge=0, title="Actually Saved Or Updated In Db"
-    )
-    scan_errors: list[PlayerScanError] = Field(..., title="Scan Errors")
-    total_entries_in_logs: int = Field(..., ge=0, title="Total Entries In Logs")
-    unique_players_submitted_for_saving: int = Field(
-        ..., ge=0, title="Unique Players Submitted For Saving"
-    )
+    error: FailureInfo
+    server: str = Field(..., title="Server")
+
+
+class PruneDownloadsResponse(ContractModel):
+    model_config = ConfigDict(extra="forbid")
+    failures: dict[str, FailureInfo] | None = Field(None, title="Failures")
+    files_deleted: int | None = Field(None, title="Files Deleted")
+    files_kept: int | None = Field(None, title="Files Kept")
+    message: str | None = Field(None, title="Message")
+    status: Literal["success", "skipped", "partial"] = Field(..., title="Status")
+
+
+class ResourceFailure(ContractModel):
+    model_config = ConfigDict(extra="forbid")
+    error: FailureInfo
+    resource: str = Field(..., title="Resource")
+
+
+class ServersListResponse(ContractModel):
+    model_config = ConfigDict(extra="forbid")
+    epoch: str | None = Field(None, title="Epoch")
+    errors: list[ResourceFailure] | None = Field(None, title="Errors")
+    message: str | None = Field(None, title="Message")
+    revision: Revision | None = Field(None, title="Revision")
+    servers: list[ServerSummary] | None = Field(None, title="Servers")
+    status: Literal["success", "skipped", "partial"] = Field(..., title="Status")
 
 
 class TaskSnapshot(ContractModel):
@@ -843,19 +974,19 @@ class TaskSnapshot(ContractModel):
     ] = Field(..., title="Status")
 
 
-class AddPlayersResponse(ContractModel):
-    model_config = ConfigDict(extra="forbid")
-    count: int | None = Field(None, title="Count")
-    details: PlayerScanDetails | None = None
-    message: str | None = Field(None, title="Message")
-    status: Literal["success", "skipped"] = Field(..., title="Status")
-
-
 class AddonListResponse(ContractModel):
     model_config = ConfigDict(extra="forbid")
     addons: InstalledAddons | None = None
     message: str | None = Field(None, title="Message")
-    status: Literal["success", "skipped"] = Field(..., title="Status")
+    status: Literal["success", "skipped", "partial"] = Field(..., title="Status")
+
+
+class FailedItem(ContractModel):
+    model_config = ConfigDict(extra="forbid")
+    error: FailureInfo
+    outcome: Literal["failed"] = Field("failed", title="Outcome")
+    path: None = Field(None, title="Path")
+    reason: str | None = Field(None, title="Reason")
 
 
 class GetApplicationMetricsResponse(ContractModel):
@@ -868,3 +999,37 @@ class GetApplicationMetricsResponse(ContractModel):
     message: str | None = Field(None, title="Message")
     revision: Revision | None = Field(None, title="Revision")
     status: Literal["success"] = Field("success", title="Status")
+
+
+class PermissionsUpdateResponse(ContractModel):
+    model_config = ConfigDict(extra="forbid")
+    errors: dict[str, str] | None = Field(None, title="Errors")
+    message: str | None = Field(None, title="Message")
+    outcomes: dict[str, CompletedItem | SkippedItem | FailedItem] | None = Field(
+        None, title="Outcomes"
+    )
+    status: Literal["success", "skipped", "partial"] = Field(..., title="Status")
+    updated: int | None = Field(0, ge=0, title="Updated")
+
+
+class PlayerScanDetails(ContractModel):
+    model_config = ConfigDict(extra="forbid")
+    actually_saved_or_updated_in_db: int = Field(
+        ..., ge=0, title="Actually Saved Or Updated In Db"
+    )
+    scan_errors: list[PlayerScanError] | None = Field(None, title="Scan Errors")
+    total_entries_in_logs: int = Field(..., ge=0, title="Total Entries In Logs")
+    unique_players_submitted_for_saving: int = Field(
+        ..., ge=0, title="Unique Players Submitted For Saving"
+    )
+
+
+class AddPlayersResponse(ContractModel):
+    model_config = ConfigDict(extra="forbid")
+    count: int | None = Field(None, title="Count")
+    details: PlayerScanDetails | None = None
+    message: str | None = Field(None, title="Message")
+    parsed_count: ParsedCount | None = Field(None, title="Parsed Count")
+    status: Literal["success", "skipped", "partial"] = Field(..., title="Status")
+    submitted_count: SubmittedCount | None = Field(None, title="Submitted Count")
+    unique_count: UniqueCount | None = Field(None, title="Unique Count")

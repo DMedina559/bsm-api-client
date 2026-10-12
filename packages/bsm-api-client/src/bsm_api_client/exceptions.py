@@ -25,10 +25,15 @@ class APIError(Exception):
         if isinstance(envelope, dict):
             self.api_code: Optional[str] = envelope.get("code")
             self.api_message = envelope.get("message", self.api_message)
-            self.api_details: Dict[str, Any] = envelope.get("details", {})
+            self.api_details: Dict[str, Any] = envelope.get("details") or {}
         else:
             self.api_code = None
             self.api_details = {}
+        self.operation_result = self.api_details.get("result")
+        self.committed = (
+            isinstance(self.operation_result, dict)
+            and self.operation_result.get("committed") is True
+        )
 
     def __str__(self):
         base_str = super().__str__()
@@ -41,6 +46,11 @@ class APIError(Exception):
 
         if self.api_errors:
             base_str += f" (API Errors: {self.api_errors})"
+        if self.committed:
+            base_str += (
+                " The change was saved, but follow-up work failed. "
+                "Refresh before trying again."
+            )
         return base_str
 
 

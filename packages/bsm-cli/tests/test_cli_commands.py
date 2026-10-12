@@ -63,7 +63,7 @@ def shape(document, spec, values):
             result[key] = "test-task"
     if "task_id" in result:
         result["status"] = "accepted"
-    if "details" in result:
+    if "details" in result and "details" not in spec.get("required", []):
         result["details"] = None
     if "players" in result:
         result["players"] = [{"name": "Test Player", "xuid": "123"}]
@@ -73,6 +73,7 @@ def shape(document, spec, values):
 SUCCESS = {
     "status": "success",
     "message": "Done",
+    "added_count": 1,
     "server_name": "test",
     "outcome": "started",
     "servers": [
@@ -435,3 +436,56 @@ async def test_registry_blank_property_name(command_client, monkeypatch, capsys)
         assert "server-name = Test Server" in capsys.readouterr().out
     finally:
         await client.close()
+
+
+@pytest.mark.parametrize("machine", [False, True], ids=["human", "json"])
+def test_partial_player_scan_preserves_details_and_fails(command_client, machine):
+    clients = command_client
+    # Replace the transport after construction while keeping generated response parsing.
+    original_create = __import__(
+        "bsm_cli.__main__", fromlist=["BedrockServerManagerApi"]
+    ).BedrockServerManagerApi
+    from unittest.mock import patch
+
+    body = {
+        "status": "partial",
+        "message": "One server could not be scanned.",
+        "details": {
+            "total_entries_in_logs": 1,
+            "unique_players_submitted_for_saving": 1,
+            "actually_saved_or_updated_in_db": 1,
+            "scan_errors": [
+                {
+                    "server": "test",
+                    "error": {
+                        "code": "file_error",
+                        "message": "Log unavailable",
+                        "details": {},
+                    },
+                }
+            ],
+        },
+    }
+
+    def create(**kwargs):
+        client = original_create(**kwargs)
+        client._dynamic_request = AsyncMock(return_value=httpx.Response(200, json=body))
+        return client
+
+    with patch("bsm_cli.__main__.BedrockServerManagerApi", create):
+        result = CliRunner().invoke(
+            cli, (["--json"] if machine else []) + ["player", "scan"]
+        )
+    assert result.exit_code == 1
+    assert "successfully" not in result.output
+    if machine:
+        assert not result.stdout
+        assert (
+            json.loads(result.stderr)["response"]["details"]["scan_errors"][0]["error"][
+                "code"
+            ]
+            == "file_error"
+        )
+    else:
+        assert "Log unavailable" in result.stdout
+    assert clients[0]._dynamic_request.await_count == 1
