@@ -1,40 +1,50 @@
-name: Backend OpenAPI contract
+name: Backend OpenAPI Contract
 
 on:
   workflow_dispatch:
+    inputs:
+      backend_ref:
+        description: Backend commit or branch to check
+        default: dev
+        required: true
+        type: string
   schedule:
     - cron: '23 8 * * *'
   push:
+    branches-ignore:
+      - 'main'
     paths:
       - 'packages/bsm-api-client/src/bsm_api_client/generated/openapi.json'
-      - 'tools/export_bsm_openapi.py'
+      - 'tools/**'
       - '.github/workflows/openapi-contract.yml'
 
 permissions:
   contents: read
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  compare-dev:
+  backend-contract:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.11', '3.14']
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-python@v6
+      - uses: actions/checkout@v7
         with:
-          python-version: '3.14'
-      - name: Install backend dev
-        run: python -m pip install 'bedrock-server-manager @ git+https://github.com/DMedina559/bedrock-server-manager.git@dev'
-      - name: Export current backend contract
-        run: python tools/export_bsm_openapi.py --output /tmp/backend-openapi.json
-      - name: Compare bundled contract with dev
-        run: |
-          python - <<'PYTHON'
-          import json
-          from pathlib import Path
-          bundled = json.loads(Path('packages/bsm-api-client/src/bsm_api_client/generated/openapi.json').read_text())
-          backend = json.loads(Path('/tmp/backend-openapi.json').read_text())
-          def operations(schema):
-              return {operation['operationId'] for path in schema['paths'].values() for operation in path.values() if isinstance(operation, dict) and 'operationId' in operation}
-          print('Added operations:', sorted(operations(backend) - operations(bundled)))
-          print('Removed operations:', sorted(operations(bundled) - operations(backend)))
-          assert bundled == backend, 'Backend contract drift. Regenerate and review the bundled schema and client.'
-          PYTHON
+          repository: DMedina559/bedrock-server-manager
+          ref: ${{ inputs.backend_ref || 'dev' }}
+          path: backend-contract
+      - uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install backend-owned contract tooling
+        run: python -m pip install './backend-contract[contract]'
+      - name: Verify backend snapshot
+        run: python -m bedrock_server_manager.web.contract --check backend-contract/contracts/openapi.json
+      - name: Compare client contract with backend dev
+        run: python -m bedrock_server_manager.web.contract --output /tmp/backend-openapi.json --check packages/bsm-api-client/src/bsm_api_client/generated/openapi.json
