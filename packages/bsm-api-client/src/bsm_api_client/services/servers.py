@@ -3,13 +3,12 @@ from typing import List, cast
 
 from ..exceptions import APIError, ServerNotFoundError
 from ..models import (
-    ActionResponse,
     AddServerBanResponse,
+    AddToAllowlistResponse,
     AllowlistAddPayload,
     AllowlistRemovePayload,
     BanAddRequest,
     BanRemoveRequest,
-    BaseApiResponse,
     CommandPayload,
     GetAllowlistResponse,
     GetPermissionsResponse,
@@ -21,14 +20,17 @@ from ..models import (
     PermissionsSetPayload,
     PermissionsUpdateResponse,
     PropertiesPayload,
+    RemoveFromAllowlistResponse,
     RemoveServerBanResponse,
     RestartServerResponse,
+    SendCommandResponse,
     ServerProcessInfoResponse,
     ServerRunningStatusResponse,
     ServerSettingItemPayload,
     ServerSettingsResponse,
     ServersListResponse,
     ServerSummary,
+    SetPropertiesResponse,
     StartServerResponse,
     StopServerResponse,
     TaskAcceptedResponse,
@@ -386,14 +388,14 @@ class ServersService(Service):
 
     async def async_send_server_command(
         self, server_name: str, command: CommandPayload
-    ) -> ActionResponse:
+    ) -> SendCommandResponse:
         """Sends a command to the specified server's console.
 
         :param server_name: The unique name of the target server instance.
 
         :param command: A `CommandPayload` object containing the command to send.
 
-        :returns: `ActionResponse`.
+        :returns: `SendCommandResponse`.
 
         .. code-block:: python
 
@@ -407,7 +409,7 @@ class ServersService(Service):
             authenticated=True,
             typed=True,
         )
-        return cast(ActionResponse, parse_response(ActionResponse, response))
+        return cast(SendCommandResponse, parse_response(SendCommandResponse, response))
 
     async def async_update_server(self, server_name: str) -> TaskAcceptedResponse:
         """Checks for and applies updates to the specified server instance.
@@ -433,14 +435,14 @@ class ServersService(Service):
 
     async def async_add_server_allowlist(
         self, server_name: str, payload: AllowlistAddPayload
-    ) -> BaseApiResponse:
+    ) -> AddToAllowlistResponse:
         """Adds players to the server's allowlist.
 
         :param server_name: The name of the server.
 
         :param payload: An `AllowlistAddPayload` object with the players to add.
 
-        :returns: `BaseApiResponse`.
+        :returns: `AddToAllowlistResponse`.
 
         .. code-block:: python
 
@@ -459,18 +461,20 @@ class ServersService(Service):
             authenticated=True,
             typed=True,
         )
-        return cast(BaseApiResponse, parse_response(BaseApiResponse, response))
+        return cast(
+            AddToAllowlistResponse, parse_response(AddToAllowlistResponse, response)
+        )
 
     async def async_remove_server_allowlist_players(
         self, server_name: str, payload: AllowlistRemovePayload
-    ) -> BaseApiResponse:
+    ) -> RemoveFromAllowlistResponse:
         """Removes players from the server's allowlist.
 
         :param server_name: The name of the server.
 
         :param payload: An `AllowlistRemovePayload` object with the players to remove.
 
-        :returns: `BaseApiResponse`.
+        :returns: `RemoveFromAllowlistResponse`.
 
         .. code-block:: python
 
@@ -489,7 +493,10 @@ class ServersService(Service):
             authenticated=True,
             typed=True,
         )
-        return cast(BaseApiResponse, parse_response(BaseApiResponse, response))
+        return cast(
+            RemoveFromAllowlistResponse,
+            parse_response(RemoveFromAllowlistResponse, response),
+        )
 
     async def async_set_server_permissions(
         self, server_name: str, payload: PermissionsSetPayload
@@ -523,14 +530,14 @@ class ServersService(Service):
 
     async def async_update_server_properties(
         self, server_name: str, payload: PropertiesPayload
-    ) -> BaseApiResponse:
+    ) -> SetPropertiesResponse:
         """Updates key-value pairs in the server's properties file.
 
         :param server_name: The name of the server.
 
         :param payload: A `PropertiesPayload` object with the properties to update.
 
-        :returns: `BaseApiResponse`.
+        :returns: `SetPropertiesResponse`.
 
         .. code-block:: python
 
@@ -546,7 +553,9 @@ class ServersService(Service):
             authenticated=True,
             typed=True,
         )
-        return cast(BaseApiResponse, parse_response(BaseApiResponse, response))
+        return cast(
+            SetPropertiesResponse, parse_response(SetPropertiesResponse, response)
+        )
 
     async def async_delete_server(self, server_name: str) -> TaskAcceptedResponse:
         """Permanently deletes a server instance.

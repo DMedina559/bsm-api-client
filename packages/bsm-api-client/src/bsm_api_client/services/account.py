@@ -89,6 +89,6 @@ class AccountService(Service):
         """
         _LOGGER.info("Changing password")
         response = await self.async_call_generated(
-            "change_password", body=payload.model_dump(), authenticated=True, typed=True
+            "change_password", body=payload.to_dict(), authenticated=True, typed=True
         )
         return cast(BaseApiResponse, parse_response(BaseApiResponse, response))

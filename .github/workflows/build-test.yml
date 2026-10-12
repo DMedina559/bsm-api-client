@@ -30,6 +30,13 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Checkout backend under test
+        uses: actions/checkout@v7
+        with:
+          repository: DMedina559/bedrock-server-manager
+          ref: dev
+          path: backend-under-test
+
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v7
         with:
@@ -40,6 +47,7 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install build
           python -m pip install -e './packages/bsm-api-client[dev]' -e './packages/bsm-cli[dev]'
+          python -m pip install -e './backend-under-test'
 
       - name: Run pre-commit
         run: pre-commit run --all-files

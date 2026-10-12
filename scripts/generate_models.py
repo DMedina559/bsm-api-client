@@ -109,6 +109,17 @@ def generate(source: Path) -> str:  # noqa: C901
         for node in tree.body:
             if isinstance(node, ast.ImportFrom) and node.module == "pydantic":
                 node.names = [item for item in node.names if item.name != "RootModel"]
+        if not any(
+            isinstance(node, ast.Name) and node.id == "Any" for node in ast.walk(tree)
+        ):
+            for node in tree.body:
+                if isinstance(node, ast.ImportFrom) and node.module == "typing":
+                    node.names = [item for item in node.names if item.name != "Any"]
+        tree.body = [
+            node
+            for node in tree.body
+            if not isinstance(node, ast.ImportFrom) or node.names
+        ]
         tree.body.insert(
             1,
             ast.ImportFrom(

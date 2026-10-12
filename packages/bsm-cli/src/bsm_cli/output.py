@@ -19,6 +19,8 @@ from bsm_api_client.exceptions import (
 class CliError(click.ClickException):
     """CLI failure with a conventional nonzero exit status."""
 
+    response_data: Any = None
+
 
 class CliInputError(CliError):
     exit_code = 2
@@ -56,7 +58,9 @@ def normalize_error(error: Exception) -> click.ClickException:
             )
         )
     )
-    return error_class(str(error))
+    normalized = error_class(str(error))
+    normalized.response_data = getattr(error, "response_data", None)
+    return normalized
 
 
 def fail(error: Exception) -> None:
@@ -152,7 +156,15 @@ class RecordingClient:
                 else getattr(result, "status", None)
             )
             error = result.get("error") if isinstance(result, dict) else None
-            if status in {"error", "failed", "cancelled"} or isinstance(error, dict):
+            if status in {"error", "failed", "cancelled", "partial"} or isinstance(
+                error, dict
+            ):
+                if status == "partial":
+                    from bsm_cli.manager import outcome
+
+                    outcome(
+                        result if isinstance(result, dict) else serializable(result)
+                    )
                 raise OperationFailedError(
                     (
                         (error or result).get("message", "Operation failed")

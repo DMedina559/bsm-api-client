@@ -9,8 +9,8 @@ from ...types import Response, UNSET
 from ... import errors
 
 from ...models.allowlist_remove_payload import AllowlistRemovePayload
-from ...models.base_api_response import BaseApiResponse
 from ...models.error_envelope import ErrorEnvelope
+from ...models.remove_from_allowlist_response import RemoveFromAllowlistResponse
 from typing import cast
 
 
@@ -42,9 +42,9 @@ def _get_kwargs(
 
 
 
-def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> BaseApiResponse | ErrorEnvelope | None:
+def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> ErrorEnvelope | RemoveFromAllowlistResponse | None:
     if response.status_code == 200:
-        response_200 = BaseApiResponse.from_dict(response.json())
+        response_200 = RemoveFromAllowlistResponse.from_dict(response.json())
 
 
 
@@ -99,13 +99,20 @@ def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Res
 
         return response_500
 
+    if response.status_code == 503:
+        response_503 = ErrorEnvelope.from_dict(response.json())
+
+
+
+        return response_503
+
     if client.raise_on_unexpected_status:
         raise errors.UnexpectedStatus(response.status_code, response.content)
     else:
         return None
 
 
-def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[BaseApiResponse | ErrorEnvelope]:
+def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[ErrorEnvelope | RemoveFromAllowlistResponse]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -120,7 +127,7 @@ def sync_detailed(
     client: AuthenticatedClient,
     body: AllowlistRemovePayload,
 
-) -> Response[BaseApiResponse | ErrorEnvelope]:
+) -> Response[ErrorEnvelope | RemoveFromAllowlistResponse]:
     """ Delete Allowlist
 
     Args:
@@ -132,7 +139,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[BaseApiResponse | ErrorEnvelope]
+        Response[ErrorEnvelope | RemoveFromAllowlistResponse]
      """
 
 
@@ -154,7 +161,7 @@ def sync(
     client: AuthenticatedClient,
     body: AllowlistRemovePayload,
 
-) -> BaseApiResponse | ErrorEnvelope | None:
+) -> ErrorEnvelope | RemoveFromAllowlistResponse | None:
     """ Delete Allowlist
 
     Args:
@@ -166,7 +173,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        BaseApiResponse | ErrorEnvelope
+        ErrorEnvelope | RemoveFromAllowlistResponse
      """
 
 
@@ -183,7 +190,7 @@ async def asyncio_detailed(
     client: AuthenticatedClient,
     body: AllowlistRemovePayload,
 
-) -> Response[BaseApiResponse | ErrorEnvelope]:
+) -> Response[ErrorEnvelope | RemoveFromAllowlistResponse]:
     """ Delete Allowlist
 
     Args:
@@ -195,7 +202,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[BaseApiResponse | ErrorEnvelope]
+        Response[ErrorEnvelope | RemoveFromAllowlistResponse]
      """
 
 
@@ -217,7 +224,7 @@ async def asyncio(
     client: AuthenticatedClient,
     body: AllowlistRemovePayload,
 
-) -> BaseApiResponse | ErrorEnvelope | None:
+) -> ErrorEnvelope | RemoveFromAllowlistResponse | None:
     """ Delete Allowlist
 
     Args:
@@ -229,7 +236,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        BaseApiResponse | ErrorEnvelope
+        ErrorEnvelope | RemoveFromAllowlistResponse
      """
 
 

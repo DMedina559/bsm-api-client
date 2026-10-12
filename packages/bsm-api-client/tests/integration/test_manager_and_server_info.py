@@ -37,7 +37,9 @@ class TestManagerAndServerInfo:
         try:
             payload = PruneDownloadsPayload(directory="stable", keep=1)
             res = await client.application.async_prune_downloads(payload)
-            assert res.status == "success"
+            assert res.status == "skipped"
+            assert res.files_deleted == 0
+            assert not res.failures
         finally:
             await client.close()
 
