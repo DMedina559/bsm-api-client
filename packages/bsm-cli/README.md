@@ -219,3 +219,13 @@ Use `bsm-cli auth login --remember-me` to request the backend-configured longer
 token lifetime. Interactive login also offers this choice, defaulting to off.
 The CLI saves the issued token without storing your password; the flag cannot
 extend the lifetime of an existing token supplied with `--token`.
+
+### Support reports
+
+On a backend with diagnostic endpoints, an administrator can save a sanitized report:
+
+```console
+bsm-cli diagnostics report --output bsm-support-report.json
+```
+
+The command discovers the live `get_diagnostic_report` operation and uses your configured authentication. The destination is published only after the response completes. Use `--force` to replace an existing file. Reports contain subsystem metadata and bounded history; inspect them before sharing. Older backends report that the operation is unavailable.

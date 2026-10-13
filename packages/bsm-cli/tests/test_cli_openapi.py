@@ -458,3 +458,52 @@ def test_operation_filters_and_detailed_compatibility(client, tmp_path):
     result = run("--json", "api", "diff", "--against", str(output))
     assert result.exit_code == 2
     assert json.loads(result.stderr)["exit_code"] == 2
+
+
+@pytest.mark.parametrize("existing", [False, True])
+def test_diagnostic_report_uses_live_discovery_and_preserves_existing_file(
+    client, tmp_path, existing
+):
+    from contextlib import asynccontextmanager
+
+    import httpx
+
+    schema = json.loads(json.dumps(SCHEMA))
+    schema["paths"]["/api/diagnostics/report"] = {
+        "get": {"operationId": "get_diagnostic_report", "tags": ["Diagnostics"]}
+    }
+    client._fetch_openapi_schema.return_value = schema
+    calls = []
+
+    @asynccontextmanager
+    async def stream(operation_id, **kwargs):
+        calls.append(operation_id)
+        yield httpx.Response(
+            200, json={"report_id": "probe", "history": {"records": []}}
+        )
+
+    client.async_stream_operation = stream
+    output = tmp_path / "support.json"
+    if existing:
+        output.write_text("keep", encoding="utf-8")
+        refused = run("diagnostics", "report", "--output", str(output))
+        assert refused.exit_code == 2 and output.read_text() == "keep" and not calls
+    result = run(
+        "--json",
+        "diagnostics",
+        "report",
+        "--output",
+        str(output),
+        *(["--force"] if existing else []),
+    )
+    assert result.exit_code == 0, result.output
+    assert calls == ["get_diagnostic_report"]
+    assert json.loads(output.read_text())["report_id"] == "probe"
+    assert json.loads(result.output)["output"] == str(output)
+    assert not list(tmp_path.glob(".bsm-download-*"))
+
+
+def test_diagnostic_report_missing_operation_does_not_create_file(client, tmp_path):
+    output = tmp_path / "support.json"
+    result = run("diagnostics", "report", "--output", str(output))
+    assert result.exit_code != 0 and not output.exists()

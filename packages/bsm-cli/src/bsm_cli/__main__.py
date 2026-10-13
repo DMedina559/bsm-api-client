@@ -22,6 +22,7 @@ from bsm_cli.bans import bans
 from bsm_cli.config import Config
 from bsm_cli.content import content
 from bsm_cli.decorators import AsyncGroup
+from bsm_cli.diagnostics import diagnostics
 from bsm_cli.main_menus import main_menu
 from bsm_cli.manager import manager
 from bsm_cli.permissions import permissions
@@ -81,6 +82,7 @@ async def cli_context(ctx):
 
 cli.add_command(appearance)
 cli.add_command(api)
+cli.add_command(diagnostics)
 register_plugin_commands(plugin)
 cli.add_command(auth)
 cli.add_command(server)
