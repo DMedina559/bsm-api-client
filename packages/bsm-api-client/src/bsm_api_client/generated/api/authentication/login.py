@@ -127,7 +127,7 @@ def sync_detailed(
 ) -> Response[ErrorEnvelope | TokenResponse]:
     """ Api Login For Access Token
 
-     Handles API user login and returns a JWT access token.
+     Handle API user login and return a JWT access token.
 
     Args:
         body (BodyLogin):
@@ -160,7 +160,7 @@ def sync(
 ) -> ErrorEnvelope | TokenResponse | None:
     """ Api Login For Access Token
 
-     Handles API user login and returns a JWT access token.
+     Handle API user login and return a JWT access token.
 
     Args:
         body (BodyLogin):
@@ -188,7 +188,7 @@ async def asyncio_detailed(
 ) -> Response[ErrorEnvelope | TokenResponse]:
     """ Api Login For Access Token
 
-     Handles API user login and returns a JWT access token.
+     Handle API user login and return a JWT access token.
 
     Args:
         body (BodyLogin):
@@ -221,7 +221,7 @@ async def asyncio(
 ) -> ErrorEnvelope | TokenResponse | None:
     """ Api Login For Access Token
 
-     Handles API user login and returns a JWT access token.
+     Handle API user login and return a JWT access token.
 
     Args:
         body (BodyLogin):

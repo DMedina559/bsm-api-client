@@ -119,7 +119,7 @@ def sync_detailed(
 ) -> Response[ErrorEnvelope | PluginStatusesResponse]:
     """ Get Plugins Status
 
-     Retrieves the statuses and metadata of all discovered plugins.
+     Return the statuses and metadata of all discovered plugins.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -147,7 +147,7 @@ def sync(
 ) -> ErrorEnvelope | PluginStatusesResponse | None:
     """ Get Plugins Status
 
-     Retrieves the statuses and metadata of all discovered plugins.
+     Return the statuses and metadata of all discovered plugins.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -170,7 +170,7 @@ async def asyncio_detailed(
 ) -> Response[ErrorEnvelope | PluginStatusesResponse]:
     """ Get Plugins Status
 
-     Retrieves the statuses and metadata of all discovered plugins.
+     Return the statuses and metadata of all discovered plugins.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -198,7 +198,7 @@ async def asyncio(
 ) -> ErrorEnvelope | PluginStatusesResponse | None:
     """ Get Plugins Status
 
-     Retrieves the statuses and metadata of all discovered plugins.
+     Return the statuses and metadata of all discovered plugins.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.

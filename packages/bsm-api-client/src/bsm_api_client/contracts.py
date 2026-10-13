@@ -242,6 +242,15 @@ class CustomZipsResponse(ContractModel):
     status: Literal["success", "skipped", "partial"] = Field(..., title="Status")
 
 
+class EventDelivery(ContractModel):
+    model_config = ConfigDict(extra="forbid")
+    failed: int | None = Field(0, ge=0, title="Failed")
+    owner: str = Field(..., title="Owner")
+    sent: int | None = Field(0, ge=0, title="Sent")
+    targeted: int | None = Field(0, ge=0, title="Targeted")
+    unavailable: int | None = Field(0, ge=0, title="Unavailable")
+
+
 class FileNamePayload(ContractModel):
     model_config = ConfigDict(extra="forbid")
     filename: str = Field(..., min_length=1, pattern=".*\\S.*", title="Filename")
@@ -339,6 +348,31 @@ class ListAvailableAddonsResponse(ContractModel):
     files: list[str] = Field(..., title="Files")
     message: str | None = Field(None, title="Message")
     status: Literal["success"] = Field("success", title="Status")
+
+
+class ListenerFailure(ContractModel):
+    model_config = ConfigDict(extra="forbid")
+    code: Literal[
+        "event_listener_failed",
+        "event_listener_timeout",
+        "event_depth_limit",
+        "event_capacity",
+    ] = Field(..., title="Code")
+    error_type: str = Field(..., title="Error Type")
+    owner: str = Field(..., title="Owner")
+
+
+class ListenerRecord(ContractModel):
+    model_config = ConfigDict(extra="forbid")
+    duration_ms: float | None = Field(0, ge=0.0, title="Duration Ms")
+    failure: ListenerFailure | None = None
+    listener_name: str = Field(..., title="Listener Name")
+    observer: bool = Field(..., title="Observer")
+    owner: str = Field(..., title="Owner")
+    status: (
+        Literal["running", "completed", "failed", "timed_out", "cancelled"] | None
+    ) = Field("running", title="Status")
+    subscription_id: str = Field(..., title="Subscription Id")
 
 
 class LogHistoryPage(ContractModel):
@@ -533,6 +567,19 @@ class RestoreActionPayload(ContractModel):
     )
 
 
+class RuntimeStatus(ContractModel):
+    model_config = ConfigDict(extra="forbid")
+    instance_id: str = Field(..., title="Instance Id")
+    phase: Literal["starting", "ready", "stopping", "stopped", "failed"] = Field(
+        ..., title="LifecyclePhase"
+    )
+    pid: int = Field(..., title="Pid")
+    shutdown_reason: (
+        Literal["administrator", "local_cli", "service", "signal"] | None
+    ) = Field(None, title="Shutdown Reason")
+    shutdown_requested: bool = Field(..., title="Shutdown Requested")
+
+
 class SendCommandResponse(ContractModel):
     model_config = ConfigDict(extra="forbid")
     message: str = Field(..., title="Message")
@@ -665,6 +712,25 @@ class SetupAccountResponse(ContractModel):
 class SetupStatusResponse(ContractModel):
     model_config = ConfigDict(extra="forbid")
     needs_setup: bool = Field(..., title="Needs Setup")
+
+
+class ShutdownRequest(ContractModel):
+    pass
+    model_config = ConfigDict(extra="forbid")
+
+
+class ShutdownResponse(ContractModel):
+    model_config = ConfigDict(extra="forbid")
+    instance_id: str = Field(..., title="Instance Id")
+    phase: Literal["starting", "ready", "stopping", "stopped", "failed"] = Field(
+        ..., title="LifecyclePhase"
+    )
+    pid: int = Field(..., title="Pid")
+    shutdown_reason: (
+        Literal["administrator", "local_cli", "service", "signal"] | None
+    ) = Field(None, title="Shutdown Reason")
+    shutdown_requested: bool = Field(..., title="Shutdown Requested")
+    status: Literal["accepted"] = Field("accepted", title="Status")
 
 
 class SkippedItem(ContractModel):
@@ -827,6 +893,47 @@ class ErrorEnvelope(ContractModel):
     error: APIErrorResponse
 
 
+class EventDefinition(ContractModel):
+    model_config = ConfigDict(extra="forbid")
+    description: str | None = Field("", title="Description")
+    identity_keys: list[str] | None = Field([], title="Identity Keys")
+    name: str = Field(
+        ...,
+        max_length=160,
+        min_length=1,
+        pattern="^[a-zA-Z0-9_][a-zA-Z0-9_.:-]*$",
+        title="Name",
+    )
+    owner: str | None = Field("application", title="Owner")
+    payload_schema: dict[str, JsonValue] | None = Field(None, title="Payload Schema")
+    phase: Literal["before", "after", "custom", "lifecycle"] | None = Field(
+        "custom", title="Phase"
+    )
+    public: bool | None = Field(True, title="Public")
+
+
+class EventRecord(ContractModel):
+    model_config = ConfigDict(extra="forbid")
+    cancellation_reason: str | None = Field(None, title="Cancellation Reason")
+    correlation_id: str = Field(..., title="Correlation Id")
+    deliveries: list[EventDelivery] | None = Field(None, title="Deliveries")
+    duration_ms: float | None = Field(0, title="Duration Ms")
+    event_id: str = Field(..., title="Event Id")
+    failures: list[ListenerFailure] | None = Field(None, title="Failures")
+    listeners: list[ListenerRecord] | None = Field(None, title="Listeners")
+    listeners_called: int | None = Field(0, title="Listeners Called")
+    name: str = Field(..., title="Name")
+    parent_event_id: str | None = Field(None, title="Parent Event Id")
+    rejection_reason: (
+        Literal["recursion", "depth_limit", "capacity", "shutdown"] | None
+    ) = Field(None, title="Rejection Reason")
+    source: str = Field(..., title="Source")
+    status: Literal[
+        "dispatching", "completed", "partial", "cancelled", "suppressed"
+    ] = Field(..., title="Status")
+    timestamp: float = Field(..., title="Timestamp")
+
+
 class FailureInfo(ContractModel):
     model_config = ConfigDict(extra="forbid")
     code: Literal[
@@ -979,6 +1086,29 @@ class AddonListResponse(ContractModel):
     addons: InstalledAddons | None = None
     message: str | None = Field(None, title="Message")
     status: Literal["success", "skipped", "partial"] = Field(..., title="Status")
+
+
+class EventCatalog(ContractModel):
+    model_config = ConfigDict(extra="forbid")
+    events: list[EventDefinition] = Field(..., title="Events")
+
+
+class EventDiagnostics(ContractModel):
+    model_config = ConfigDict(extra="forbid")
+    accepting: bool = Field(..., title="Accepting")
+    active: list[EventRecord] = Field(..., title="Active")
+    emitted: int = Field(..., title="Emitted")
+    failed_listeners: int = Field(..., title="Failed Listeners")
+    pending_waits: int | None = Field(0, title="Pending Waits")
+    pending_workers: int | None = Field(0, title="Pending Workers")
+    recent: list[EventRecord] = Field(..., title="Recent")
+    rejections_by_reason: dict[str, int] | None = Field(
+        None, title="Rejections By Reason"
+    )
+    subscriptions: int = Field(..., title="Subscriptions")
+    suppressed: int = Field(..., title="Suppressed")
+    timeouts_by_owner: dict[str, int] | None = Field(None, title="Timeouts By Owner")
+    workers_by_owner: dict[str, int] | None = Field(None, title="Workers By Owner")
 
 
 class FailedItem(ContractModel):

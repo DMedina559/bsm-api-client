@@ -11,6 +11,7 @@ from .services.account import AccountService
 from .services.application import ApplicationService
 from .services.content import ContentService
 from .services.discovery import DiscoveryService
+from .services.events import EventService
 from .services.players import PlayersService
 from .services.plugins import PluginsService
 from .services.servers import ServersService
@@ -31,6 +32,7 @@ class BedrockServerManagerApi(DynamicOpenAPIMixin, ClientBase):
     """
 
     rest: "RestClient"
+    events: EventService
     discovery: DiscoveryService
     application: ApplicationService
     servers: ServersService
@@ -80,6 +82,7 @@ class BedrockServerManagerApi(DynamicOpenAPIMixin, ClientBase):
 
         self.rest = RestClient(self)
         self.discovery = DiscoveryService(self)
+        self.events = EventService(self)
         self.application = ApplicationService(self)
         self.servers = ServersService(self)
         self.players = PlayersService(self)

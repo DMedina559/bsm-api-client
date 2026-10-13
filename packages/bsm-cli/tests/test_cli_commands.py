@@ -71,6 +71,18 @@ def shape(document, spec, values):
 
 
 SUCCESS = {
+    "instance_id": "test-instance",
+    "pid": 123,
+    "phase": "ready",
+    "shutdown_requested": False,
+    "events": [],
+    "accepting": True,
+    "emitted": 0,
+    "suppressed": 0,
+    "failed_listeners": 0,
+    "subscriptions": 0,
+    "active": [],
+    "recent": [],
     "status": "success",
     "message": "Done",
     "added_count": 1,
@@ -102,6 +114,10 @@ SUCCESS = {
 # Every curated noninteractive command goes through request serialization and
 # response validation, rather than mocking its facade method.
 CASES = [
+    ("runtime",),
+    ("shutdown", "--yes"),
+    ("events", "catalog"),
+    ("events", "activity", "--limit", "5", "--status", "partial"),
     ("server", "list"),
     ("server", "list", "--server-name", "test"),
     ("server", "start", "-s", "test"),
@@ -185,6 +201,12 @@ def command_client(monkeypatch, tmp_path):
                 body["outcome"] = "restarted"
             elif "stop" in path:
                 body["outcome"] = "stopped"
+            if path == "/api/runtime/shutdown":
+                body.update(
+                    phase="stopping",
+                    shutdown_requested=True,
+                    shutdown_reason="administrator",
+                )
             if path.startswith("/api/tasks/"):
                 body = {
                     "id": "test-task",

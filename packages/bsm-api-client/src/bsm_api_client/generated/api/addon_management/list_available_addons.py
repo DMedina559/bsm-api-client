@@ -119,7 +119,7 @@ def sync_detailed(
 ) -> Response[ErrorEnvelope | ListAvailableAddonsResponse]:
     """ Get Addons
 
-     Retrieves a list of available .mcaddon or .mcpack template files.
+     Return a list of available .mcaddon or .mcpack template files.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -147,7 +147,7 @@ def sync(
 ) -> ErrorEnvelope | ListAvailableAddonsResponse | None:
     """ Get Addons
 
-     Retrieves a list of available .mcaddon or .mcpack template files.
+     Return a list of available .mcaddon or .mcpack template files.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -170,7 +170,7 @@ async def asyncio_detailed(
 ) -> Response[ErrorEnvelope | ListAvailableAddonsResponse]:
     """ Get Addons
 
-     Retrieves a list of available .mcaddon or .mcpack template files.
+     Return a list of available .mcaddon or .mcpack template files.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -198,7 +198,7 @@ async def asyncio(
 ) -> ErrorEnvelope | ListAvailableAddonsResponse | None:
     """ Get Addons
 
-     Retrieves a list of available .mcaddon or .mcpack template files.
+     Return a list of available .mcaddon or .mcpack template files.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.

@@ -132,3 +132,22 @@ class TestManagerAndServerInfo:
 
         finally:
             await client.close()
+
+
+@pytest.mark.asyncio
+async def test_standalone_event_and_web_runtime_contracts_against_backend(server):
+    from bsm_api_client.exceptions import InvalidInputError
+
+    async with BedrockServerManagerApi(server, "admin", "password") as client:
+        runtime = await client.application.async_get_web_runtime()
+        assert runtime.phase == "ready" and not runtime.shutdown_requested
+        catalog = await client.events.async_list_application_events()
+        assert any(event.name == "before_server_start" for event in catalog.events)
+        activity = await client.events.async_get_event_activity(
+            owner="application", limit=5
+        )
+        assert activity.accepting
+        assert len(activity.recent) <= 5
+        assert all("data" not in event.model_dump() for event in activity.recent)
+        with pytest.raises(InvalidInputError):
+            await client.events.async_get_event_activity(limit=0)

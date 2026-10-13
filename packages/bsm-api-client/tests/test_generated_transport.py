@@ -41,6 +41,57 @@ async def test_generated_metadata_reads_run_outside_event_loop(local_api, monkey
     assert reads.count("operations.json") == 1
 
 
+def _add_runtime_routes(app, seen):
+    async def runtime(request):
+        seen.append(("runtime", request.headers.get("Authorization")))
+        return web.json_response(
+            {
+                "instance_id": "test-instance",
+                "pid": 123,
+                "phase": "ready",
+                "shutdown_requested": False,
+            }
+        )
+
+    async def shutdown(request):
+        body = await request.json()
+        seen.append(("shutdown", body, request.headers.get("X-BSM-Shutdown-Token")))
+        return web.json_response(
+            {
+                "instance_id": "test-instance",
+                "pid": 123,
+                "phase": "stopping",
+                "shutdown_requested": True,
+                "shutdown_reason": "administrator",
+                "status": "accepted",
+            },
+            status=202,
+        )
+
+    async def events(request):
+        return web.json_response({"events": []})
+
+    async def activity(request):
+        seen.append(("activity", dict(request.query)))
+        return web.json_response(
+            {
+                "accepting": True,
+                "emitted": 2,
+                "suppressed": 0,
+                "failed_listeners": 0,
+                "subscriptions": 1,
+                "active": [],
+                "recent": [],
+                "pending_workers": 0,
+            }
+        )
+
+    app.router.add_get("/api/runtime", runtime)
+    app.router.add_post("/api/runtime/shutdown", shutdown)
+    app.router.add_get("/api/events", events)
+    app.router.add_get("/api/events/activity", activity)
+
+
 @pytest_asyncio.fixture
 async def local_api():
     seen = []
@@ -93,6 +144,7 @@ async def local_api():
         return web.json_response(dict(request.query))
 
     app = web.Application()
+    _add_runtime_routes(app, seen)
     app.router.add_post("/auth/token", login)
     app.router.add_post("/api/server/{server_name}/start", action)
     app.router.add_delete("/api/server/{server_name}/allowlist/remove", action)
@@ -538,3 +590,37 @@ async def test_generated_transport_preserves_structured_failures_without_retries
             assert error.value.operation_result == result
             assert error.value.committed is committed
     assert len(calls) == 1
+
+
+@pytest.mark.asyncio
+async def test_event_catalog_filters_and_shutdown_receipt_use_generated_contracts(
+    local_api,
+):
+    from bsm_api_client.models import (
+        EventCatalog,
+        EventDiagnostics,
+        RuntimeStatus,
+        ShutdownResponse,
+    )
+
+    client, seen = local_api
+    assert isinstance(await client.events.async_list_application_events(), EventCatalog)
+    activity = await client.events.async_get_event_activity(
+        owner="plugin:example", correlation_id="operation-1", status="partial", limit=5
+    )
+    assert isinstance(activity, EventDiagnostics)
+    assert (
+        "activity",
+        {
+            "owner": "plugin:example",
+            "correlation_id": "operation-1",
+            "status": "partial",
+            "limit": "5",
+        },
+    ) in seen
+    assert isinstance(await client.application.async_get_web_runtime(), RuntimeStatus)
+    receipt = await client.application.async_shutdown_web_runtime()
+    assert isinstance(receipt, ShutdownResponse)
+    assert receipt.status == "accepted" and receipt.phase == "stopping"
+    assert ("shutdown", {}, None) in seen
+    assert not hasattr(receipt, "task_id")

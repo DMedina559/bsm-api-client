@@ -132,7 +132,7 @@ def sync_detailed(
 
      Initiates a background task to perform a backup action for a specific server.
 
-    Valid backup types are "world", "config" (requires `file_to_backup` in payload),
+    Valid backup types are "world", "config" (requires ``file_to_backup`` in payload),
     and "all".
 
     Args:
@@ -171,7 +171,7 @@ def sync(
 
      Initiates a background task to perform a backup action for a specific server.
 
-    Valid backup types are "world", "config" (requires `file_to_backup` in payload),
+    Valid backup types are "world", "config" (requires ``file_to_backup`` in payload),
     and "all".
 
     Args:
@@ -205,7 +205,7 @@ async def asyncio_detailed(
 
      Initiates a background task to perform a backup action for a specific server.
 
-    Valid backup types are "world", "config" (requires `file_to_backup` in payload),
+    Valid backup types are "world", "config" (requires ``file_to_backup`` in payload),
     and "all".
 
     Args:
@@ -244,7 +244,7 @@ async def asyncio(
 
      Initiates a background task to perform a backup action for a specific server.
 
-    Valid backup types are "world", "config" (requires `file_to_backup` in payload),
+    Valid backup types are "world", "config" (requires ``file_to_backup`` in payload),
     and "all".
 
     Args:

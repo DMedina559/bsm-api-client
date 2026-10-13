@@ -121,7 +121,7 @@ def sync_detailed(
 ) -> Response[BaseApiResponse | ErrorEnvelope]:
     """ Delete User
 
-     Deletes a user.
+     Delete a user.
 
     Args:
         user_id (int):
@@ -154,7 +154,7 @@ def sync(
 ) -> BaseApiResponse | ErrorEnvelope | None:
     """ Delete User
 
-     Deletes a user.
+     Delete a user.
 
     Args:
         user_id (int):
@@ -182,7 +182,7 @@ async def asyncio_detailed(
 ) -> Response[BaseApiResponse | ErrorEnvelope]:
     """ Delete User
 
-     Deletes a user.
+     Delete a user.
 
     Args:
         user_id (int):
@@ -215,7 +215,7 @@ async def asyncio(
 ) -> BaseApiResponse | ErrorEnvelope | None:
     """ Delete User
 
-     Deletes a user.
+     Delete a user.
 
     Args:
         user_id (int):

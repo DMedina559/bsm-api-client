@@ -124,7 +124,7 @@ def sync_detailed(
 ) -> Response[ErrorEnvelope | list[AuditLogResponse]]:
     """ List Audit Logs Api
 
-     Retrieves audit logs as JSON.
+     Return audit logs as JSON.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -152,7 +152,7 @@ def sync(
 ) -> ErrorEnvelope | list[AuditLogResponse] | None:
     """ List Audit Logs Api
 
-     Retrieves audit logs as JSON.
+     Return audit logs as JSON.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -175,7 +175,7 @@ async def asyncio_detailed(
 ) -> Response[ErrorEnvelope | list[AuditLogResponse]]:
     """ List Audit Logs Api
 
-     Retrieves audit logs as JSON.
+     Return audit logs as JSON.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -203,7 +203,7 @@ async def asyncio(
 ) -> ErrorEnvelope | list[AuditLogResponse] | None:
     """ List Audit Logs Api
 
-     Retrieves audit logs as JSON.
+     Return audit logs as JSON.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.

@@ -121,7 +121,7 @@ def sync_detailed(
 ) -> Response[ErrorEnvelope | TaskSnapshot]:
     """ Get Task Status
 
-     Retrieves the status of a background task.
+     Return the status of a background task.
 
     Args:
         task_id (str):
@@ -154,7 +154,7 @@ def sync(
 ) -> ErrorEnvelope | TaskSnapshot | None:
     """ Get Task Status
 
-     Retrieves the status of a background task.
+     Return the status of a background task.
 
     Args:
         task_id (str):
@@ -182,7 +182,7 @@ async def asyncio_detailed(
 ) -> Response[ErrorEnvelope | TaskSnapshot]:
     """ Get Task Status
 
-     Retrieves the status of a background task.
+     Return the status of a background task.
 
     Args:
         task_id (str):
@@ -215,7 +215,7 @@ async def asyncio(
 ) -> ErrorEnvelope | TaskSnapshot | None:
     """ Get Task Status
 
-     Retrieves the status of a background task.
+     Return the status of a background task.
 
     Args:
         task_id (str):

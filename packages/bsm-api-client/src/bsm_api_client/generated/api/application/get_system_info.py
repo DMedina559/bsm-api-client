@@ -119,7 +119,7 @@ def sync_detailed(
 ) -> Response[AppInfoResponse | ErrorEnvelope]:
     """ Get System Info
 
-     Retrieves general system and application information.
+     Return general system and application information.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -147,7 +147,7 @@ def sync(
 ) -> AppInfoResponse | ErrorEnvelope | None:
     """ Get System Info
 
-     Retrieves general system and application information.
+     Return general system and application information.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -170,7 +170,7 @@ async def asyncio_detailed(
 ) -> Response[AppInfoResponse | ErrorEnvelope]:
     """ Get System Info
 
-     Retrieves general system and application information.
+     Return general system and application information.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -198,7 +198,7 @@ async def asyncio(
 ) -> AppInfoResponse | ErrorEnvelope | None:
     """ Get System Info
 
-     Retrieves general system and application information.
+     Return general system and application information.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.

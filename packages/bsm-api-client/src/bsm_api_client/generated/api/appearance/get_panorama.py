@@ -117,10 +117,10 @@ def sync_detailed(
 
      Serves a custom panorama background image if available, otherwise a default.
 
-    This endpoint attempts to locate a `panorama.(jpeg|jpg|png|webp)` file in the application's
-    configuration directory. If found, it's served. If not, or if the config
-    directory isn't set, it falls back to serving a default panorama image
-    from the static assets.
+    This endpoint attempts to locate a ``panorama.(jpeg|jpg|png|webp)`` file in the
+    application's configuration directory. If found, it's served. If not, or if the
+    config directory isn't set, it falls back to serving a default panorama image from
+    the static assets.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -150,10 +150,10 @@ def sync(
 
      Serves a custom panorama background image if available, otherwise a default.
 
-    This endpoint attempts to locate a `panorama.(jpeg|jpg|png|webp)` file in the application's
-    configuration directory. If found, it's served. If not, or if the config
-    directory isn't set, it falls back to serving a default panorama image
-    from the static assets.
+    This endpoint attempts to locate a ``panorama.(jpeg|jpg|png|webp)`` file in the
+    application's configuration directory. If found, it's served. If not, or if the
+    config directory isn't set, it falls back to serving a default panorama image from
+    the static assets.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -178,10 +178,10 @@ async def asyncio_detailed(
 
      Serves a custom panorama background image if available, otherwise a default.
 
-    This endpoint attempts to locate a `panorama.(jpeg|jpg|png|webp)` file in the application's
-    configuration directory. If found, it's served. If not, or if the config
-    directory isn't set, it falls back to serving a default panorama image
-    from the static assets.
+    This endpoint attempts to locate a ``panorama.(jpeg|jpg|png|webp)`` file in the
+    application's configuration directory. If found, it's served. If not, or if the
+    config directory isn't set, it falls back to serving a default panorama image from
+    the static assets.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -211,10 +211,10 @@ async def asyncio(
 
      Serves a custom panorama background image if available, otherwise a default.
 
-    This endpoint attempts to locate a `panorama.(jpeg|jpg|png|webp)` file in the application's
-    configuration directory. If found, it's served. If not, or if the config
-    directory isn't set, it falls back to serving a default panorama image
-    from the static assets.
+    This endpoint attempts to locate a ``panorama.(jpeg|jpg|png|webp)`` file in the
+    application's configuration directory. If found, it's served. If not, or if the
+    config directory isn't set, it falls back to serving a default panorama image from
+    the static assets.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.

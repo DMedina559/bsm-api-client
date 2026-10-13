@@ -24,11 +24,14 @@ from .models.command_payload import CommandPayload
 from .models.content_list_response import ContentListResponse
 from .models.custom_zips_response import CustomZipsResponse
 from .models.error_envelope import ErrorEnvelope
+from .models.event_catalog import EventCatalog
+from .models.event_diagnostics import EventDiagnostics
 from .models.file_name_payload import FileNamePayload
 from .models.generate_token_payload import GenerateTokenPayload
 from .models.get_allowlist_response import GetAllowlistResponse
 from .models.get_application_health_response import GetApplicationHealthResponse
 from .models.get_application_metrics_response import GetApplicationMetricsResponse
+from .models.get_event_activity_status_type_0 import GetEventActivityStatusType0
 from .models.get_permissions_response import GetPermissionsResponse
 from .models.get_plugin_settings_response import GetPluginSettingsResponse
 from .models.get_properties_response import GetPropertiesResponse
@@ -55,6 +58,7 @@ from .models.remove_from_allowlist_response import RemoveFromAllowlistResponse
 from .models.remove_server_ban_response import RemoveServerBanResponse
 from .models.restart_server_response import RestartServerResponse
 from .models.restore_action_payload import RestoreActionPayload
+from .models.runtime_status import RuntimeStatus
 from .models.send_command_response import SendCommandResponse
 from .models.server_process_info_response import ServerProcessInfoResponse
 from .models.server_running_status_response import ServerRunningStatusResponse
@@ -68,6 +72,8 @@ from .models.setting_item_response import SettingItemResponse
 from .models.settings_response import SettingsResponse
 from .models.setup_account_response import SetupAccountResponse
 from .models.setup_status_response import SetupStatusResponse
+from .models.shutdown_request import ShutdownRequest
+from .models.shutdown_response import ShutdownResponse
 from .models.start_server_response import StartServerResponse
 from .models.stop_server_response import StopServerResponse
 from .models.task_accepted_response import TaskAcceptedResponse
@@ -234,6 +240,14 @@ class RestClient:
         """Generated get_application_metrics operation."""
         return cast(Response[ErrorEnvelope | GetApplicationMetricsResponse], await self._owner.async_call_generated('get_application_metrics', parameters={}, body=None, authenticated=True, detailed=True))
 
+    async def get_event_activity(self, *, name: None | str | Unset=UNSET, owner: None | str | Unset=UNSET, correlation_id: None | str | Unset=UNSET, status: GetEventActivityStatusType0 | None | Unset=UNSET, limit: int | Unset=200) -> ErrorEnvelope | EventDiagnostics | None:
+        """Generated get_event_activity operation."""
+        return cast(ErrorEnvelope | EventDiagnostics | None, await self._owner.async_call_generated('get_event_activity', parameters={'name': name, 'owner': owner, 'correlation_id': correlation_id, 'status': status, 'limit': limit}, body=None, authenticated=True, typed=True))
+
+    async def get_event_activity_detailed(self, *, name: None | str | Unset=UNSET, owner: None | str | Unset=UNSET, correlation_id: None | str | Unset=UNSET, status: GetEventActivityStatusType0 | None | Unset=UNSET, limit: int | Unset=200) -> Response[ErrorEnvelope | EventDiagnostics]:
+        """Generated get_event_activity operation."""
+        return cast(Response[ErrorEnvelope | EventDiagnostics], await self._owner.async_call_generated('get_event_activity', parameters={'name': name, 'owner': owner, 'correlation_id': correlation_id, 'status': status, 'limit': limit}, body=None, authenticated=True, detailed=True))
+
     async def get_log_history(self, *, topic: str, before: int | None | Unset=UNSET, file_id: None | str | Unset=UNSET) -> ErrorEnvelope | LogHistoryPage | None:
         """Generated get_log_history operation."""
         return cast(ErrorEnvelope | LogHistoryPage | None, await self._owner.async_call_generated('get_log_history', parameters={'topic': topic, 'before': before, 'file_id': file_id}, body=None, authenticated=True, typed=True))
@@ -370,6 +384,14 @@ class RestClient:
         """Generated get_task_status operation."""
         return cast(Response[ErrorEnvelope | TaskSnapshot], await self._owner.async_call_generated('get_task_status', parameters={'task_id': task_id}, body=None, authenticated=True, detailed=True))
 
+    async def get_web_runtime(self) -> ErrorEnvelope | RuntimeStatus | None:
+        """Generated get_web_runtime operation."""
+        return cast(ErrorEnvelope | RuntimeStatus | None, await self._owner.async_call_generated('get_web_runtime', parameters={}, body=None, authenticated=True, typed=True))
+
+    async def get_web_runtime_detailed(self) -> Response[ErrorEnvelope | RuntimeStatus]:
+        """Generated get_web_runtime operation."""
+        return cast(Response[ErrorEnvelope | RuntimeStatus], await self._owner.async_call_generated('get_web_runtime', parameters={}, body=None, authenticated=True, detailed=True))
+
     async def get_world_icon(self, server_name: str) -> Any | ErrorEnvelope | None:
         """Generated get_world_icon operation."""
         return cast(Any | ErrorEnvelope | None, await self._owner.async_call_generated('get_world_icon', parameters={'server_name': server_name}, body=None, authenticated=False, typed=True))
@@ -401,6 +423,14 @@ class RestClient:
     async def install_world_detailed(self, server_name: str, *, body: FileNamePayload) -> Response[ErrorEnvelope | TaskAcceptedResponse]:
         """Generated install_world operation."""
         return cast(Response[ErrorEnvelope | TaskAcceptedResponse], await self._owner.async_call_generated('install_world', parameters={'server_name': server_name}, body=body, authenticated=True, detailed=True))
+
+    async def list_application_events(self) -> ErrorEnvelope | EventCatalog | None:
+        """Generated list_application_events operation."""
+        return cast(ErrorEnvelope | EventCatalog | None, await self._owner.async_call_generated('list_application_events', parameters={}, body=None, authenticated=True, typed=True))
+
+    async def list_application_events_detailed(self) -> Response[ErrorEnvelope | EventCatalog]:
+        """Generated list_application_events operation."""
+        return cast(Response[ErrorEnvelope | EventCatalog], await self._owner.async_call_generated('list_application_events', parameters={}, body=None, authenticated=True, detailed=True))
 
     async def list_audit_logs(self) -> ErrorEnvelope | list[AuditLogResponse] | None:
         """Generated list_audit_logs operation."""
@@ -673,6 +703,14 @@ class RestClient:
     async def set_setting_detailed(self, *, body: SettingItemResponse) -> Response[ErrorEnvelope | SettingsResponse]:
         """Generated set_setting operation."""
         return cast(Response[ErrorEnvelope | SettingsResponse], await self._owner.async_call_generated('set_setting', parameters={}, body=body, authenticated=True, detailed=True))
+
+    async def shutdown_web_runtime(self, *, body: ShutdownRequest) -> ErrorEnvelope | ShutdownResponse | None:
+        """Generated shutdown_web_runtime operation."""
+        return cast(ErrorEnvelope | ShutdownResponse | None, await self._owner.async_call_generated('shutdown_web_runtime', parameters={}, body=body, authenticated=True, typed=True))
+
+    async def shutdown_web_runtime_detailed(self, *, body: ShutdownRequest) -> Response[ErrorEnvelope | ShutdownResponse]:
+        """Generated shutdown_web_runtime operation."""
+        return cast(Response[ErrorEnvelope | ShutdownResponse], await self._owner.async_call_generated('shutdown_web_runtime', parameters={}, body=body, authenticated=True, detailed=True))
 
     async def start_server(self, server_name: str) -> ErrorEnvelope | StartServerResponse | None:
         """Generated start_server operation."""

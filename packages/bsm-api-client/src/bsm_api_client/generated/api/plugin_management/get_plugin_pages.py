@@ -119,7 +119,7 @@ def sync_detailed(
 ) -> Response[ErrorEnvelope | PluginPagesResponse]:
     """ Get Plugin Pages
 
-     Retrieves a list of custom native UI pages registered by plugins.
+     Return a list of custom native UI pages registered by plugins.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -147,7 +147,7 @@ def sync(
 ) -> ErrorEnvelope | PluginPagesResponse | None:
     """ Get Plugin Pages
 
-     Retrieves a list of custom native UI pages registered by plugins.
+     Return a list of custom native UI pages registered by plugins.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -170,7 +170,7 @@ async def asyncio_detailed(
 ) -> Response[ErrorEnvelope | PluginPagesResponse]:
     """ Get Plugin Pages
 
-     Retrieves a list of custom native UI pages registered by plugins.
+     Return a list of custom native UI pages registered by plugins.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -198,7 +198,7 @@ async def asyncio(
 ) -> ErrorEnvelope | PluginPagesResponse | None:
     """ Get Plugin Pages
 
-     Retrieves a list of custom native UI pages registered by plugins.
+     Return a list of custom native UI pages registered by plugins.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.

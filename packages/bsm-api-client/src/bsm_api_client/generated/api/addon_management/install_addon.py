@@ -136,8 +136,7 @@ def sync_detailed(
         server_name (str):
         body (FileNamePayload): Payload for file-based operations.
 
-            Attributes:
-                filename (str): The name of the file to operate on.
+            :ivar filename: The name of the file to operate on.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -175,8 +174,7 @@ def sync(
         server_name (str):
         body (FileNamePayload): Payload for file-based operations.
 
-            Attributes:
-                filename (str): The name of the file to operate on.
+            :ivar filename: The name of the file to operate on.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -209,8 +207,7 @@ async def asyncio_detailed(
         server_name (str):
         body (FileNamePayload): Payload for file-based operations.
 
-            Attributes:
-                filename (str): The name of the file to operate on.
+            :ivar filename: The name of the file to operate on.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -248,8 +245,7 @@ async def asyncio(
         server_name (str):
         body (FileNamePayload): Payload for file-based operations.
 
-            Attributes:
-                filename (str): The name of the file to operate on.
+            :ivar filename: The name of the file to operate on.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
