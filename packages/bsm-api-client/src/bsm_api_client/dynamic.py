@@ -74,31 +74,38 @@ class DynamicOpenAPIMixin(GeneratedOperationMethods):
 
     @property
     def schema(self) -> Optional[Mapping[str, Any]]:
+        """Return the last validated OpenAPI snapshot, or None before discovery."""
         return self._openapi_schema
 
     @property
     def schema_fingerprint(self) -> Optional[str]:
+        """Return the fingerprint of the last validated schema."""
         return self._openapi_fingerprint
 
     @property
     def operations(self) -> Mapping[str, DiscoveredOperation]:
+        """Return discovered operations indexed by operation ID."""
         return getattr(self, "_discovered_operations", {})
 
     @property
     def discovered_operations(self) -> Mapping[str, DiscoveredOperation]:
+        """Return the current discovered operation metadata."""
         return self.operations
 
     @property
     def capabilities(self) -> ApiCapabilities:
+        """Describe capabilities from the current discovered contract."""
         return ApiCapabilities(self.operations)
 
     @property
     def plugin_operations(self) -> Mapping[str, tuple[DiscoveredOperation, ...]]:
+        """Return discovered operations grouped by plugin identity."""
         return self.capabilities.plugins
 
     def api_diff(
         self, against: Optional[Mapping[str, Any]] = None
     ) -> Dict[str, list[str]]:
+        """Compare the discovered and supplied OpenAPI contracts."""
         if self.schema is None:
             raise InvalidInputError("Discover the API before comparing schemas.")
         try:

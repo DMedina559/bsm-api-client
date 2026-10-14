@@ -128,25 +128,21 @@ def sync_detailed(
     body: RestoreActionPayload,
 
 ) -> Response[ErrorEnvelope | TaskAcceptedResponse]:
-    """ Post Restore Action
-
+    """Post Restore Action
+    
      Initiates a background task to perform a restore action for a specific server.
-
-    Valid restore types include "all", "world", "properties", "allowlist",
-    and "permissions". If not restoring "all", a `backup_file` (basename)
-    must be provided in the payload.
-
-    Args:
-        server_name (str):
-        body (RestoreActionPayload): Request model for triggering a restore action.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Response[ErrorEnvelope | TaskAcceptedResponse]
-     """
+    
+    Valid restore types include "all", "world", "properties", "allowlist", and
+    "permissions". If not restoring "all", a ``backup_file`` (basename) must be
+    provided in the payload.
+    
+    :param server_name: Value supplied to the operation.
+    :param body: Request model for triggering a restore action.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: The parsed response."""
 
 
     kwargs = _get_kwargs(
@@ -168,25 +164,21 @@ def sync(
     body: RestoreActionPayload,
 
 ) -> ErrorEnvelope | TaskAcceptedResponse | None:
-    """ Post Restore Action
-
+    """Post Restore Action
+    
      Initiates a background task to perform a restore action for a specific server.
-
-    Valid restore types include "all", "world", "properties", "allowlist",
-    and "permissions". If not restoring "all", a `backup_file` (basename)
-    must be provided in the payload.
-
-    Args:
-        server_name (str):
-        body (RestoreActionPayload): Request model for triggering a restore action.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        ErrorEnvelope | TaskAcceptedResponse
-     """
+    
+    Valid restore types include "all", "world", "properties", "allowlist", and
+    "permissions". If not restoring "all", a ``backup_file`` (basename) must be
+    provided in the payload.
+    
+    :param server_name: Value supplied to the operation.
+    :param body: Request model for triggering a restore action.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: ErrorEnvelope | TaskAcceptedResponse"""
 
 
     return sync_detailed(
@@ -203,25 +195,21 @@ async def asyncio_detailed(
     body: RestoreActionPayload,
 
 ) -> Response[ErrorEnvelope | TaskAcceptedResponse]:
-    """ Post Restore Action
-
+    """Post Restore Action
+    
      Initiates a background task to perform a restore action for a specific server.
-
-    Valid restore types include "all", "world", "properties", "allowlist",
-    and "permissions". If not restoring "all", a `backup_file` (basename)
-    must be provided in the payload.
-
-    Args:
-        server_name (str):
-        body (RestoreActionPayload): Request model for triggering a restore action.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Response[ErrorEnvelope | TaskAcceptedResponse]
-     """
+    
+    Valid restore types include "all", "world", "properties", "allowlist", and
+    "permissions". If not restoring "all", a ``backup_file`` (basename) must be
+    provided in the payload.
+    
+    :param server_name: Value supplied to the operation.
+    :param body: Request model for triggering a restore action.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: The parsed response."""
 
 
     kwargs = _get_kwargs(
@@ -243,25 +231,21 @@ async def asyncio(
     body: RestoreActionPayload,
 
 ) -> ErrorEnvelope | TaskAcceptedResponse | None:
-    """ Post Restore Action
-
+    """Post Restore Action
+    
      Initiates a background task to perform a restore action for a specific server.
-
-    Valid restore types include "all", "world", "properties", "allowlist",
-    and "permissions". If not restoring "all", a `backup_file` (basename)
-    must be provided in the payload.
-
-    Args:
-        server_name (str):
-        body (RestoreActionPayload): Request model for triggering a restore action.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        ErrorEnvelope | TaskAcceptedResponse
-     """
+    
+    Valid restore types include "all", "world", "properties", "allowlist", and
+    "permissions". If not restoring "all", a ``backup_file`` (basename) must be
+    provided in the payload.
+    
+    :param server_name: Value supplied to the operation.
+    :param body: Request model for triggering a restore action.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: ErrorEnvelope | TaskAcceptedResponse"""
 
 
     return (await asyncio_detailed(

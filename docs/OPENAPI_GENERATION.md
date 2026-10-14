@@ -45,3 +45,8 @@ not implement the native live save-query protocol.
 Generator post-processing hooks are explicitly disabled so regeneration produces
 the same files regardless of whether Ruff is available on `PATH`. Generated
 source is checked by regeneration; handwritten code follows the normal lint hooks.
+
+Generated endpoint docstrings are normalized to native Sphinx fields by
+`scripts/sphinx_docstrings.py`; regeneration preserves that format. Public model
+descriptions come from OpenAPI or a concise contract summary. Build the developer
+reference using [the documentation guide](source/contributing.md).

@@ -115,20 +115,16 @@ def sync_detailed(
     client: AuthenticatedClient | Client,
 
 ) -> Response[Any | ErrorEnvelope]:
-    """ Validate Token
-
-     Checks if a registration token is valid.
-
-    Args:
-        token (str):
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Response[Any | ErrorEnvelope]
-     """
+    """Validate Token
+    
+     Check if a registration token is valid.
+    
+    :param token: Value supplied to the operation.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: The parsed response."""
 
 
     kwargs = _get_kwargs(
@@ -148,20 +144,16 @@ def sync(
     client: AuthenticatedClient | Client,
 
 ) -> Any | ErrorEnvelope | None:
-    """ Validate Token
-
-     Checks if a registration token is valid.
-
-    Args:
-        token (str):
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Any | ErrorEnvelope
-     """
+    """Validate Token
+    
+     Check if a registration token is valid.
+    
+    :param token: Value supplied to the operation.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: Any | ErrorEnvelope"""
 
 
     return sync_detailed(
@@ -176,20 +168,16 @@ async def asyncio_detailed(
     client: AuthenticatedClient | Client,
 
 ) -> Response[Any | ErrorEnvelope]:
-    """ Validate Token
-
-     Checks if a registration token is valid.
-
-    Args:
-        token (str):
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Response[Any | ErrorEnvelope]
-     """
+    """Validate Token
+    
+     Check if a registration token is valid.
+    
+    :param token: Value supplied to the operation.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: The parsed response."""
 
 
     kwargs = _get_kwargs(
@@ -209,20 +197,16 @@ async def asyncio(
     client: AuthenticatedClient | Client,
 
 ) -> Any | ErrorEnvelope | None:
-    """ Validate Token
-
-     Checks if a registration token is valid.
-
-    Args:
-        token (str):
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Any | ErrorEnvelope
-     """
+    """Validate Token
+    
+     Check if a registration token is valid.
+    
+    :param token: Value supplied to the operation.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: Any | ErrorEnvelope"""
 
 
     return (await asyncio_detailed(

@@ -128,19 +128,15 @@ def sync_detailed(
     body: AllowlistRemovePayload,
 
 ) -> Response[ErrorEnvelope | RemoveFromAllowlistResponse]:
-    """ Delete Allowlist
-
-    Args:
-        server_name (str):
-        body (AllowlistRemovePayload): Request model for removing players from the allowlist.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Response[ErrorEnvelope | RemoveFromAllowlistResponse]
-     """
+    """Delete Allowlist
+    
+    :param server_name: Value supplied to the operation.
+    :param body: Request model for removing players from the allowlist.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: The parsed response."""
 
 
     kwargs = _get_kwargs(
@@ -162,19 +158,15 @@ def sync(
     body: AllowlistRemovePayload,
 
 ) -> ErrorEnvelope | RemoveFromAllowlistResponse | None:
-    """ Delete Allowlist
-
-    Args:
-        server_name (str):
-        body (AllowlistRemovePayload): Request model for removing players from the allowlist.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        ErrorEnvelope | RemoveFromAllowlistResponse
-     """
+    """Delete Allowlist
+    
+    :param server_name: Value supplied to the operation.
+    :param body: Request model for removing players from the allowlist.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: ErrorEnvelope | RemoveFromAllowlistResponse"""
 
 
     return sync_detailed(
@@ -191,19 +183,15 @@ async def asyncio_detailed(
     body: AllowlistRemovePayload,
 
 ) -> Response[ErrorEnvelope | RemoveFromAllowlistResponse]:
-    """ Delete Allowlist
-
-    Args:
-        server_name (str):
-        body (AllowlistRemovePayload): Request model for removing players from the allowlist.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Response[ErrorEnvelope | RemoveFromAllowlistResponse]
-     """
+    """Delete Allowlist
+    
+    :param server_name: Value supplied to the operation.
+    :param body: Request model for removing players from the allowlist.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: The parsed response."""
 
 
     kwargs = _get_kwargs(
@@ -225,19 +213,15 @@ async def asyncio(
     body: AllowlistRemovePayload,
 
 ) -> ErrorEnvelope | RemoveFromAllowlistResponse | None:
-    """ Delete Allowlist
-
-    Args:
-        server_name (str):
-        body (AllowlistRemovePayload): Request model for removing players from the allowlist.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        ErrorEnvelope | RemoveFromAllowlistResponse
-     """
+    """Delete Allowlist
+    
+    :param server_name: Value supplied to the operation.
+    :param body: Request model for removing players from the allowlist.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: ErrorEnvelope | RemoveFromAllowlistResponse"""
 
 
     return (await asyncio_detailed(

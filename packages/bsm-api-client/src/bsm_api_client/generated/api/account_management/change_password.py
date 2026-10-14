@@ -126,24 +126,16 @@ def sync_detailed(
     body: ChangePasswordPayload,
 
 ) -> Response[BaseApiResponse | ErrorEnvelope]:
-    """ Post Change Password
-
+    """Post Change Password
+    
      Changes the current user's password.
-
-    Args:
-        body (ChangePasswordPayload): Request payload for changing the user's password.
-
-            Attributes:
-                current_password (str): The current password for verification.
-                new_password (str): The new password.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Response[BaseApiResponse | ErrorEnvelope]
-     """
+    
+    :param body: Request payload for changing the user's password. :ivar current_password: The current password for verification. :ivar new_password: The new password.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: The parsed response."""
 
 
     kwargs = _get_kwargs(
@@ -163,24 +155,16 @@ def sync(
     body: ChangePasswordPayload,
 
 ) -> BaseApiResponse | ErrorEnvelope | None:
-    """ Post Change Password
-
+    """Post Change Password
+    
      Changes the current user's password.
-
-    Args:
-        body (ChangePasswordPayload): Request payload for changing the user's password.
-
-            Attributes:
-                current_password (str): The current password for verification.
-                new_password (str): The new password.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        BaseApiResponse | ErrorEnvelope
-     """
+    
+    :param body: Request payload for changing the user's password. :ivar current_password: The current password for verification. :ivar new_password: The new password.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: BaseApiResponse | ErrorEnvelope"""
 
 
     return sync_detailed(
@@ -195,24 +179,16 @@ async def asyncio_detailed(
     body: ChangePasswordPayload,
 
 ) -> Response[BaseApiResponse | ErrorEnvelope]:
-    """ Post Change Password
-
+    """Post Change Password
+    
      Changes the current user's password.
-
-    Args:
-        body (ChangePasswordPayload): Request payload for changing the user's password.
-
-            Attributes:
-                current_password (str): The current password for verification.
-                new_password (str): The new password.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Response[BaseApiResponse | ErrorEnvelope]
-     """
+    
+    :param body: Request payload for changing the user's password. :ivar current_password: The current password for verification. :ivar new_password: The new password.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: The parsed response."""
 
 
     kwargs = _get_kwargs(
@@ -232,24 +208,16 @@ async def asyncio(
     body: ChangePasswordPayload,
 
 ) -> BaseApiResponse | ErrorEnvelope | None:
-    """ Post Change Password
-
+    """Post Change Password
+    
      Changes the current user's password.
-
-    Args:
-        body (ChangePasswordPayload): Request payload for changing the user's password.
-
-            Attributes:
-                current_password (str): The current password for verification.
-                new_password (str): The new password.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        BaseApiResponse | ErrorEnvelope
-     """
+    
+    :param body: Request payload for changing the user's password. :ivar current_password: The current password for verification. :ivar new_password: The new password.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: BaseApiResponse | ErrorEnvelope"""
 
 
     return (await asyncio_detailed(

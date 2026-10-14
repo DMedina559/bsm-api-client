@@ -21,14 +21,25 @@ from .models.base_api_response import BaseApiResponse
 from .models.body_login import BodyLogin
 from .models.change_password_payload import ChangePasswordPayload
 from .models.command_payload import CommandPayload
+from .models.compare_diagnostic_snapshots_request import CompareDiagnosticSnapshotsRequest
 from .models.content_list_response import ContentListResponse
 from .models.custom_zips_response import CustomZipsResponse
+from .models.diagnostic_comparison import DiagnosticComparison
+from .models.diagnostic_history import DiagnosticHistory
+from .models.diagnostic_report import DiagnosticReport
+from .models.diagnostic_runs import DiagnosticRuns
+from .models.diagnostic_snapshot import DiagnosticSnapshot
+from .models.diagnostic_trace import DiagnosticTrace
 from .models.error_envelope import ErrorEnvelope
+from .models.event_catalog import EventCatalog
+from .models.event_diagnostics import EventDiagnostics
 from .models.file_name_payload import FileNamePayload
 from .models.generate_token_payload import GenerateTokenPayload
 from .models.get_allowlist_response import GetAllowlistResponse
 from .models.get_application_health_response import GetApplicationHealthResponse
 from .models.get_application_metrics_response import GetApplicationMetricsResponse
+from .models.get_diagnostic_history_outcome_type_0 import GetDiagnosticHistoryOutcomeType0
+from .models.get_event_activity_status_type_0 import GetEventActivityStatusType0
 from .models.get_permissions_response import GetPermissionsResponse
 from .models.get_plugin_settings_response import GetPluginSettingsResponse
 from .models.get_properties_response import GetPropertiesResponse
@@ -55,6 +66,7 @@ from .models.remove_from_allowlist_response import RemoveFromAllowlistResponse
 from .models.remove_server_ban_response import RemoveServerBanResponse
 from .models.restart_server_response import RestartServerResponse
 from .models.restore_action_payload import RestoreActionPayload
+from .models.runtime_status import RuntimeStatus
 from .models.send_command_response import SendCommandResponse
 from .models.server_process_info_response import ServerProcessInfoResponse
 from .models.server_running_status_response import ServerRunningStatusResponse
@@ -68,6 +80,8 @@ from .models.setting_item_response import SettingItemResponse
 from .models.settings_response import SettingsResponse
 from .models.setup_account_response import SetupAccountResponse
 from .models.setup_status_response import SetupStatusResponse
+from .models.shutdown_request import ShutdownRequest
+from .models.shutdown_response import ShutdownResponse
 from .models.start_server_response import StartServerResponse
 from .models.stop_server_response import StopServerResponse
 from .models.task_accepted_response import TaskAcceptedResponse
@@ -121,6 +135,14 @@ class RestClient:
     async def change_password_detailed(self, *, body: ChangePasswordPayload) -> Response[BaseApiResponse | ErrorEnvelope]:
         """Generated change_password operation."""
         return cast(Response[BaseApiResponse | ErrorEnvelope], await self._owner.async_call_generated('change_password', parameters={}, body=body, authenticated=True, detailed=True))
+
+    async def compare_diagnostic_snapshots(self, *, body: CompareDiagnosticSnapshotsRequest) -> DiagnosticComparison | ErrorEnvelope | None:
+        """Generated compare_diagnostic_snapshots operation."""
+        return cast(DiagnosticComparison | ErrorEnvelope | None, await self._owner.async_call_generated('compare_diagnostic_snapshots', parameters={}, body=body, authenticated=True, typed=True))
+
+    async def compare_diagnostic_snapshots_detailed(self, *, body: CompareDiagnosticSnapshotsRequest) -> Response[DiagnosticComparison | ErrorEnvelope]:
+        """Generated compare_diagnostic_snapshots operation."""
+        return cast(Response[DiagnosticComparison | ErrorEnvelope], await self._owner.async_call_generated('compare_diagnostic_snapshots', parameters={}, body=body, authenticated=True, detailed=True))
 
     async def create_backup(self, server_name: str, *, body: BackupActionPayload) -> ErrorEnvelope | TaskAcceptedResponse | None:
         """Generated create_backup operation."""
@@ -218,6 +240,14 @@ class RestClient:
         """Generated get_allowlist operation."""
         return cast(Response[ErrorEnvelope | GetAllowlistResponse], await self._owner.async_call_generated('get_allowlist', parameters={'server_name': server_name}, body=None, authenticated=True, detailed=True))
 
+    async def get_application_diagnostics(self) -> DiagnosticSnapshot | ErrorEnvelope | None:
+        """Generated get_application_diagnostics operation."""
+        return cast(DiagnosticSnapshot | ErrorEnvelope | None, await self._owner.async_call_generated('get_application_diagnostics', parameters={}, body=None, authenticated=True, typed=True))
+
+    async def get_application_diagnostics_detailed(self) -> Response[DiagnosticSnapshot | ErrorEnvelope]:
+        """Generated get_application_diagnostics operation."""
+        return cast(Response[DiagnosticSnapshot | ErrorEnvelope], await self._owner.async_call_generated('get_application_diagnostics', parameters={}, body=None, authenticated=True, detailed=True))
+
     async def get_application_health(self) -> ErrorEnvelope | GetApplicationHealthResponse | None:
         """Generated get_application_health operation."""
         return cast(ErrorEnvelope | GetApplicationHealthResponse | None, await self._owner.async_call_generated('get_application_health', parameters={}, body=None, authenticated=True, typed=True))
@@ -233,6 +263,46 @@ class RestClient:
     async def get_application_metrics_detailed(self) -> Response[ErrorEnvelope | GetApplicationMetricsResponse]:
         """Generated get_application_metrics operation."""
         return cast(Response[ErrorEnvelope | GetApplicationMetricsResponse], await self._owner.async_call_generated('get_application_metrics', parameters={}, body=None, authenticated=True, detailed=True))
+
+    async def get_diagnostic_history(self, *, limit: int | Unset=100, subsystem: None | str | Unset=UNSET, instance_id: None | str | Unset=UNSET, correlation_id: None | str | Unset=UNSET, cursor: None | str | Unset=UNSET, owner: None | str | Unset=UNSET, code: None | str | Unset=UNSET, outcome: GetDiagnosticHistoryOutcomeType0 | None | Unset=UNSET, operation_id: None | str | Unset=UNSET) -> DiagnosticHistory | ErrorEnvelope | None:
+        """Generated get_diagnostic_history operation."""
+        return cast(DiagnosticHistory | ErrorEnvelope | None, await self._owner.async_call_generated('get_diagnostic_history', parameters={'limit': limit, 'subsystem': subsystem, 'instance_id': instance_id, 'correlation_id': correlation_id, 'cursor': cursor, 'owner': owner, 'code': code, 'outcome': outcome, 'operation_id': operation_id}, body=None, authenticated=True, typed=True))
+
+    async def get_diagnostic_history_detailed(self, *, limit: int | Unset=100, subsystem: None | str | Unset=UNSET, instance_id: None | str | Unset=UNSET, correlation_id: None | str | Unset=UNSET, cursor: None | str | Unset=UNSET, owner: None | str | Unset=UNSET, code: None | str | Unset=UNSET, outcome: GetDiagnosticHistoryOutcomeType0 | None | Unset=UNSET, operation_id: None | str | Unset=UNSET) -> Response[DiagnosticHistory | ErrorEnvelope]:
+        """Generated get_diagnostic_history operation."""
+        return cast(Response[DiagnosticHistory | ErrorEnvelope], await self._owner.async_call_generated('get_diagnostic_history', parameters={'limit': limit, 'subsystem': subsystem, 'instance_id': instance_id, 'correlation_id': correlation_id, 'cursor': cursor, 'owner': owner, 'code': code, 'outcome': outcome, 'operation_id': operation_id}, body=None, authenticated=True, detailed=True))
+
+    async def get_diagnostic_report(self) -> DiagnosticReport | ErrorEnvelope | None:
+        """Generated get_diagnostic_report operation."""
+        return cast(DiagnosticReport | ErrorEnvelope | None, await self._owner.async_call_generated('get_diagnostic_report', parameters={}, body=None, authenticated=True, typed=True))
+
+    async def get_diagnostic_report_detailed(self) -> Response[DiagnosticReport | ErrorEnvelope]:
+        """Generated get_diagnostic_report operation."""
+        return cast(Response[DiagnosticReport | ErrorEnvelope], await self._owner.async_call_generated('get_diagnostic_report', parameters={}, body=None, authenticated=True, detailed=True))
+
+    async def get_diagnostic_runs(self, *, limit: int | Unset=20) -> DiagnosticRuns | ErrorEnvelope | None:
+        """Generated get_diagnostic_runs operation."""
+        return cast(DiagnosticRuns | ErrorEnvelope | None, await self._owner.async_call_generated('get_diagnostic_runs', parameters={'limit': limit}, body=None, authenticated=True, typed=True))
+
+    async def get_diagnostic_runs_detailed(self, *, limit: int | Unset=20) -> Response[DiagnosticRuns | ErrorEnvelope]:
+        """Generated get_diagnostic_runs operation."""
+        return cast(Response[DiagnosticRuns | ErrorEnvelope], await self._owner.async_call_generated('get_diagnostic_runs', parameters={'limit': limit}, body=None, authenticated=True, detailed=True))
+
+    async def get_diagnostic_trace(self, correlation_id: str, *, limit: int | Unset=100, cursor: None | str | Unset=UNSET) -> DiagnosticTrace | ErrorEnvelope | None:
+        """Generated get_diagnostic_trace operation."""
+        return cast(DiagnosticTrace | ErrorEnvelope | None, await self._owner.async_call_generated('get_diagnostic_trace', parameters={'correlation_id': correlation_id, 'limit': limit, 'cursor': cursor}, body=None, authenticated=True, typed=True))
+
+    async def get_diagnostic_trace_detailed(self, correlation_id: str, *, limit: int | Unset=100, cursor: None | str | Unset=UNSET) -> Response[DiagnosticTrace | ErrorEnvelope]:
+        """Generated get_diagnostic_trace operation."""
+        return cast(Response[DiagnosticTrace | ErrorEnvelope], await self._owner.async_call_generated('get_diagnostic_trace', parameters={'correlation_id': correlation_id, 'limit': limit, 'cursor': cursor}, body=None, authenticated=True, detailed=True))
+
+    async def get_event_activity(self, *, name: None | str | Unset=UNSET, owner: None | str | Unset=UNSET, correlation_id: None | str | Unset=UNSET, status: GetEventActivityStatusType0 | None | Unset=UNSET, limit: int | Unset=200) -> ErrorEnvelope | EventDiagnostics | None:
+        """Generated get_event_activity operation."""
+        return cast(ErrorEnvelope | EventDiagnostics | None, await self._owner.async_call_generated('get_event_activity', parameters={'name': name, 'owner': owner, 'correlation_id': correlation_id, 'status': status, 'limit': limit}, body=None, authenticated=True, typed=True))
+
+    async def get_event_activity_detailed(self, *, name: None | str | Unset=UNSET, owner: None | str | Unset=UNSET, correlation_id: None | str | Unset=UNSET, status: GetEventActivityStatusType0 | None | Unset=UNSET, limit: int | Unset=200) -> Response[ErrorEnvelope | EventDiagnostics]:
+        """Generated get_event_activity operation."""
+        return cast(Response[ErrorEnvelope | EventDiagnostics], await self._owner.async_call_generated('get_event_activity', parameters={'name': name, 'owner': owner, 'correlation_id': correlation_id, 'status': status, 'limit': limit}, body=None, authenticated=True, detailed=True))
 
     async def get_log_history(self, *, topic: str, before: int | None | Unset=UNSET, file_id: None | str | Unset=UNSET) -> ErrorEnvelope | LogHistoryPage | None:
         """Generated get_log_history operation."""
@@ -354,6 +424,14 @@ class RestClient:
         """Generated get_setup_status operation."""
         return cast(Response[ErrorEnvelope | SetupStatusResponse], await self._owner.async_call_generated('get_setup_status', parameters={}, body=None, authenticated=False, detailed=True))
 
+    async def get_subsystem_diagnostics(self, subsystem: str) -> DiagnosticSnapshot | ErrorEnvelope | None:
+        """Generated get_subsystem_diagnostics operation."""
+        return cast(DiagnosticSnapshot | ErrorEnvelope | None, await self._owner.async_call_generated('get_subsystem_diagnostics', parameters={'subsystem': subsystem}, body=None, authenticated=True, typed=True))
+
+    async def get_subsystem_diagnostics_detailed(self, subsystem: str) -> Response[DiagnosticSnapshot | ErrorEnvelope]:
+        """Generated get_subsystem_diagnostics operation."""
+        return cast(Response[DiagnosticSnapshot | ErrorEnvelope], await self._owner.async_call_generated('get_subsystem_diagnostics', parameters={'subsystem': subsystem}, body=None, authenticated=True, detailed=True))
+
     async def get_system_info(self) -> AppInfoResponse | ErrorEnvelope | None:
         """Generated get_system_info operation."""
         return cast(AppInfoResponse | ErrorEnvelope | None, await self._owner.async_call_generated('get_system_info', parameters={}, body=None, authenticated=False, typed=True))
@@ -369,6 +447,14 @@ class RestClient:
     async def get_task_status_detailed(self, task_id: str) -> Response[ErrorEnvelope | TaskSnapshot]:
         """Generated get_task_status operation."""
         return cast(Response[ErrorEnvelope | TaskSnapshot], await self._owner.async_call_generated('get_task_status', parameters={'task_id': task_id}, body=None, authenticated=True, detailed=True))
+
+    async def get_web_runtime(self) -> ErrorEnvelope | RuntimeStatus | None:
+        """Generated get_web_runtime operation."""
+        return cast(ErrorEnvelope | RuntimeStatus | None, await self._owner.async_call_generated('get_web_runtime', parameters={}, body=None, authenticated=True, typed=True))
+
+    async def get_web_runtime_detailed(self) -> Response[ErrorEnvelope | RuntimeStatus]:
+        """Generated get_web_runtime operation."""
+        return cast(Response[ErrorEnvelope | RuntimeStatus], await self._owner.async_call_generated('get_web_runtime', parameters={}, body=None, authenticated=True, detailed=True))
 
     async def get_world_icon(self, server_name: str) -> Any | ErrorEnvelope | None:
         """Generated get_world_icon operation."""
@@ -401,6 +487,14 @@ class RestClient:
     async def install_world_detailed(self, server_name: str, *, body: FileNamePayload) -> Response[ErrorEnvelope | TaskAcceptedResponse]:
         """Generated install_world operation."""
         return cast(Response[ErrorEnvelope | TaskAcceptedResponse], await self._owner.async_call_generated('install_world', parameters={'server_name': server_name}, body=body, authenticated=True, detailed=True))
+
+    async def list_application_events(self) -> ErrorEnvelope | EventCatalog | None:
+        """Generated list_application_events operation."""
+        return cast(ErrorEnvelope | EventCatalog | None, await self._owner.async_call_generated('list_application_events', parameters={}, body=None, authenticated=True, typed=True))
+
+    async def list_application_events_detailed(self) -> Response[ErrorEnvelope | EventCatalog]:
+        """Generated list_application_events operation."""
+        return cast(Response[ErrorEnvelope | EventCatalog], await self._owner.async_call_generated('list_application_events', parameters={}, body=None, authenticated=True, detailed=True))
 
     async def list_audit_logs(self) -> ErrorEnvelope | list[AuditLogResponse] | None:
         """Generated list_audit_logs operation."""
@@ -673,6 +767,14 @@ class RestClient:
     async def set_setting_detailed(self, *, body: SettingItemResponse) -> Response[ErrorEnvelope | SettingsResponse]:
         """Generated set_setting operation."""
         return cast(Response[ErrorEnvelope | SettingsResponse], await self._owner.async_call_generated('set_setting', parameters={}, body=body, authenticated=True, detailed=True))
+
+    async def shutdown_web_runtime(self, *, body: ShutdownRequest) -> ErrorEnvelope | ShutdownResponse | None:
+        """Generated shutdown_web_runtime operation."""
+        return cast(ErrorEnvelope | ShutdownResponse | None, await self._owner.async_call_generated('shutdown_web_runtime', parameters={}, body=body, authenticated=True, typed=True))
+
+    async def shutdown_web_runtime_detailed(self, *, body: ShutdownRequest) -> Response[ErrorEnvelope | ShutdownResponse]:
+        """Generated shutdown_web_runtime operation."""
+        return cast(Response[ErrorEnvelope | ShutdownResponse], await self._owner.async_call_generated('shutdown_web_runtime', parameters={}, body=body, authenticated=True, detailed=True))
 
     async def start_server(self, server_name: str) -> ErrorEnvelope | StartServerResponse | None:
         """Generated start_server operation."""

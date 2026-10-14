@@ -91,6 +91,7 @@ async def main_menu(ctx):
         "Content": "content",
         "Appearance": "appearance",
         "Advanced API": "api",
+        "Diagnostics": "diagnostics",
     }
     while True:
         try:

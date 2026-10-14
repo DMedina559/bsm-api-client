@@ -125,20 +125,16 @@ def sync_detailed(
     body: BodyLogin,
 
 ) -> Response[ErrorEnvelope | TokenResponse]:
-    """ Api Login For Access Token
-
-     Handles API user login and returns a JWT access token.
-
-    Args:
-        body (BodyLogin):
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Response[ErrorEnvelope | TokenResponse]
-     """
+    """Api Login For Access Token
+    
+     Handle API user login and return a JWT access token.
+    
+    :param body: Value supplied to the operation.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: The parsed response."""
 
 
     kwargs = _get_kwargs(
@@ -158,20 +154,16 @@ def sync(
     body: BodyLogin,
 
 ) -> ErrorEnvelope | TokenResponse | None:
-    """ Api Login For Access Token
-
-     Handles API user login and returns a JWT access token.
-
-    Args:
-        body (BodyLogin):
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        ErrorEnvelope | TokenResponse
-     """
+    """Api Login For Access Token
+    
+     Handle API user login and return a JWT access token.
+    
+    :param body: Value supplied to the operation.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: ErrorEnvelope | TokenResponse"""
 
 
     return sync_detailed(
@@ -186,20 +178,16 @@ async def asyncio_detailed(
     body: BodyLogin,
 
 ) -> Response[ErrorEnvelope | TokenResponse]:
-    """ Api Login For Access Token
-
-     Handles API user login and returns a JWT access token.
-
-    Args:
-        body (BodyLogin):
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Response[ErrorEnvelope | TokenResponse]
-     """
+    """Api Login For Access Token
+    
+     Handle API user login and return a JWT access token.
+    
+    :param body: Value supplied to the operation.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: The parsed response."""
 
 
     kwargs = _get_kwargs(
@@ -219,20 +207,16 @@ async def asyncio(
     body: BodyLogin,
 
 ) -> ErrorEnvelope | TokenResponse | None:
-    """ Api Login For Access Token
-
-     Handles API user login and returns a JWT access token.
-
-    Args:
-        body (BodyLogin):
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        ErrorEnvelope | TokenResponse
-     """
+    """Api Login For Access Token
+    
+     Handle API user login and return a JWT access token.
+    
+    :param body: Value supplied to the operation.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: ErrorEnvelope | TokenResponse"""
 
 
     return (await asyncio_detailed(

@@ -119,20 +119,16 @@ def sync_detailed(
     client: AuthenticatedClient,
 
 ) -> Response[ErrorEnvelope | StartServerResponse]:
-    """ Post Start Server
-
+    """Post Start Server
+    
      Await server start and return its completed operation result.
-
-    Args:
-        server_name (str):
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Response[ErrorEnvelope | StartServerResponse]
-     """
+    
+    :param server_name: Value supplied to the operation.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: The parsed response."""
 
 
     kwargs = _get_kwargs(
@@ -152,20 +148,16 @@ def sync(
     client: AuthenticatedClient,
 
 ) -> ErrorEnvelope | StartServerResponse | None:
-    """ Post Start Server
-
+    """Post Start Server
+    
      Await server start and return its completed operation result.
-
-    Args:
-        server_name (str):
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        ErrorEnvelope | StartServerResponse
-     """
+    
+    :param server_name: Value supplied to the operation.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: ErrorEnvelope | StartServerResponse"""
 
 
     return sync_detailed(
@@ -180,20 +172,16 @@ async def asyncio_detailed(
     client: AuthenticatedClient,
 
 ) -> Response[ErrorEnvelope | StartServerResponse]:
-    """ Post Start Server
-
+    """Post Start Server
+    
      Await server start and return its completed operation result.
-
-    Args:
-        server_name (str):
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Response[ErrorEnvelope | StartServerResponse]
-     """
+    
+    :param server_name: Value supplied to the operation.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: The parsed response."""
 
 
     kwargs = _get_kwargs(
@@ -213,20 +201,16 @@ async def asyncio(
     client: AuthenticatedClient,
 
 ) -> ErrorEnvelope | StartServerResponse | None:
-    """ Post Start Server
-
+    """Post Start Server
+    
      Await server start and return its completed operation result.
-
-    Args:
-        server_name (str):
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        ErrorEnvelope | StartServerResponse
-     """
+    
+    :param server_name: Value supplied to the operation.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: ErrorEnvelope | StartServerResponse"""
 
 
     return (await asyncio_detailed(

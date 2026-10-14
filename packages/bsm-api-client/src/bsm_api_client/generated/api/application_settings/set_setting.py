@@ -126,20 +126,16 @@ def sync_detailed(
     body: SettingItemResponse,
 
 ) -> Response[ErrorEnvelope | SettingsResponse]:
-    """ Post Set Setting
-
-     Sets a specific global application setting.
-
-    Args:
-        body (SettingItemResponse): Request model for a single setting key-value pair.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Response[ErrorEnvelope | SettingsResponse]
-     """
+    """Post Set Setting
+    
+     Set a specific global application setting.
+    
+    :param body: Request model for a single setting key-value pair.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: The parsed response."""
 
 
     kwargs = _get_kwargs(
@@ -159,20 +155,16 @@ def sync(
     body: SettingItemResponse,
 
 ) -> ErrorEnvelope | SettingsResponse | None:
-    """ Post Set Setting
-
-     Sets a specific global application setting.
-
-    Args:
-        body (SettingItemResponse): Request model for a single setting key-value pair.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        ErrorEnvelope | SettingsResponse
-     """
+    """Post Set Setting
+    
+     Set a specific global application setting.
+    
+    :param body: Request model for a single setting key-value pair.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: ErrorEnvelope | SettingsResponse"""
 
 
     return sync_detailed(
@@ -187,20 +179,16 @@ async def asyncio_detailed(
     body: SettingItemResponse,
 
 ) -> Response[ErrorEnvelope | SettingsResponse]:
-    """ Post Set Setting
-
-     Sets a specific global application setting.
-
-    Args:
-        body (SettingItemResponse): Request model for a single setting key-value pair.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Response[ErrorEnvelope | SettingsResponse]
-     """
+    """Post Set Setting
+    
+     Set a specific global application setting.
+    
+    :param body: Request model for a single setting key-value pair.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: The parsed response."""
 
 
     kwargs = _get_kwargs(
@@ -220,20 +208,16 @@ async def asyncio(
     body: SettingItemResponse,
 
 ) -> ErrorEnvelope | SettingsResponse | None:
-    """ Post Set Setting
-
-     Sets a specific global application setting.
-
-    Args:
-        body (SettingItemResponse): Request model for a single setting key-value pair.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        ErrorEnvelope | SettingsResponse
-     """
+    """Post Set Setting
+    
+     Set a specific global application setting.
+    
+    :param body: Request model for a single setting key-value pair.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: ErrorEnvelope | SettingsResponse"""
 
 
     return (await asyncio_detailed(

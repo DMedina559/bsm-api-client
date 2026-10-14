@@ -121,21 +121,17 @@ def sync_detailed(
     client: AuthenticatedClient,
 
 ) -> Response[BackupFilesResponse | ErrorEnvelope]:
-    """ Get List Server Backups
-
+    """Get List Server Backups
+    
      Lists available backup files for a specific server and backup type.
-
-    Args:
-        server_name (str):
-        backup_type (str):
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Response[BackupFilesResponse | ErrorEnvelope]
-     """
+    
+    :param server_name: Value supplied to the operation.
+    :param backup_type: Value supplied to the operation.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: The parsed response."""
 
 
     kwargs = _get_kwargs(
@@ -157,21 +153,17 @@ def sync(
     client: AuthenticatedClient,
 
 ) -> BackupFilesResponse | ErrorEnvelope | None:
-    """ Get List Server Backups
-
+    """Get List Server Backups
+    
      Lists available backup files for a specific server and backup type.
-
-    Args:
-        server_name (str):
-        backup_type (str):
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        BackupFilesResponse | ErrorEnvelope
-     """
+    
+    :param server_name: Value supplied to the operation.
+    :param backup_type: Value supplied to the operation.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: BackupFilesResponse | ErrorEnvelope"""
 
 
     return sync_detailed(
@@ -188,21 +180,17 @@ async def asyncio_detailed(
     client: AuthenticatedClient,
 
 ) -> Response[BackupFilesResponse | ErrorEnvelope]:
-    """ Get List Server Backups
-
+    """Get List Server Backups
+    
      Lists available backup files for a specific server and backup type.
-
-    Args:
-        server_name (str):
-        backup_type (str):
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Response[BackupFilesResponse | ErrorEnvelope]
-     """
+    
+    :param server_name: Value supplied to the operation.
+    :param backup_type: Value supplied to the operation.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: The parsed response."""
 
 
     kwargs = _get_kwargs(
@@ -224,21 +212,17 @@ async def asyncio(
     client: AuthenticatedClient,
 
 ) -> BackupFilesResponse | ErrorEnvelope | None:
-    """ Get List Server Backups
-
+    """Get List Server Backups
+    
      Lists available backup files for a specific server and backup type.
-
-    Args:
-        server_name (str):
-        backup_type (str):
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        BackupFilesResponse | ErrorEnvelope
-     """
+    
+    :param server_name: Value supplied to the operation.
+    :param backup_type: Value supplied to the operation.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: BackupFilesResponse | ErrorEnvelope"""
 
 
     return (await asyncio_detailed(

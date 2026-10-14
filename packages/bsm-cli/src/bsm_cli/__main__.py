@@ -22,6 +22,7 @@ from bsm_cli.bans import bans
 from bsm_cli.config import Config
 from bsm_cli.content import content
 from bsm_cli.decorators import AsyncGroup
+from bsm_cli.diagnostics import diagnostics
 from bsm_cli.main_menus import main_menu
 from bsm_cli.manager import manager
 from bsm_cli.permissions import permissions
@@ -80,6 +81,7 @@ async def cli_context(ctx):
 
 
 cli.add_command(appearance)
+cli.add_command(diagnostics)
 cli.add_command(api)
 register_plugin_commands(plugin)
 cli.add_command(auth)
@@ -98,7 +100,17 @@ cli.add_command(content)
 cli.add_command(users)
 
 # Register each workflow at its canonical command path.
-for name in ("overview", "monitor", "settings", "health", "audit", "logs"):
+for name in (
+    "overview",
+    "monitor",
+    "settings",
+    "health",
+    "audit",
+    "logs",
+    "runtime",
+    "shutdown",
+    "events",
+):
     cli.add_command(manager.commands[name], name=name)
 cli.add_command(manager.commands["tasks"], name="operations")
 server.add_command(system.commands["monitor"], name="monitor")

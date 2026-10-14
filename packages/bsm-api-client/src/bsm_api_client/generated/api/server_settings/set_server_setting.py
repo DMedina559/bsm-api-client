@@ -128,21 +128,17 @@ def sync_detailed(
     body: ServerSettingItemPayload,
 
 ) -> Response[ErrorEnvelope | ServerSettingsResponse]:
-    """ Post Set Server Setting
-
-     Sets a specific setting for a server.
-
-    Args:
-        server_name (str):
-        body (ServerSettingItemPayload): Request model for a single server setting key-value pair.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Response[ErrorEnvelope | ServerSettingsResponse]
-     """
+    """Post Set Server Setting
+    
+     Set a specific setting for a server.
+    
+    :param server_name: Value supplied to the operation.
+    :param body: Request model for a single server setting key-value pair.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: The parsed response."""
 
 
     kwargs = _get_kwargs(
@@ -164,21 +160,17 @@ def sync(
     body: ServerSettingItemPayload,
 
 ) -> ErrorEnvelope | ServerSettingsResponse | None:
-    """ Post Set Server Setting
-
-     Sets a specific setting for a server.
-
-    Args:
-        server_name (str):
-        body (ServerSettingItemPayload): Request model for a single server setting key-value pair.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        ErrorEnvelope | ServerSettingsResponse
-     """
+    """Post Set Server Setting
+    
+     Set a specific setting for a server.
+    
+    :param server_name: Value supplied to the operation.
+    :param body: Request model for a single server setting key-value pair.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: ErrorEnvelope | ServerSettingsResponse"""
 
 
     return sync_detailed(
@@ -195,21 +187,17 @@ async def asyncio_detailed(
     body: ServerSettingItemPayload,
 
 ) -> Response[ErrorEnvelope | ServerSettingsResponse]:
-    """ Post Set Server Setting
-
-     Sets a specific setting for a server.
-
-    Args:
-        server_name (str):
-        body (ServerSettingItemPayload): Request model for a single server setting key-value pair.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Response[ErrorEnvelope | ServerSettingsResponse]
-     """
+    """Post Set Server Setting
+    
+     Set a specific setting for a server.
+    
+    :param server_name: Value supplied to the operation.
+    :param body: Request model for a single server setting key-value pair.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: The parsed response."""
 
 
     kwargs = _get_kwargs(
@@ -231,21 +219,17 @@ async def asyncio(
     body: ServerSettingItemPayload,
 
 ) -> ErrorEnvelope | ServerSettingsResponse | None:
-    """ Post Set Server Setting
-
-     Sets a specific setting for a server.
-
-    Args:
-        server_name (str):
-        body (ServerSettingItemPayload): Request model for a single server setting key-value pair.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        ErrorEnvelope | ServerSettingsResponse
-     """
+    """Post Set Server Setting
+    
+     Set a specific setting for a server.
+    
+    :param server_name: Value supplied to the operation.
+    :param body: Request model for a single server setting key-value pair.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: ErrorEnvelope | ServerSettingsResponse"""
 
 
     return (await asyncio_detailed(

@@ -128,21 +128,17 @@ def sync_detailed(
     body: CommandPayload,
 
 ) -> Response[ErrorEnvelope | SendCommandResponse]:
-    """ Post Send Command
-
+    """Post Send Command
+    
      Sends a command to a specific running Bedrock server instance.
-
-    Args:
-        server_name (str):
-        body (CommandPayload): Request model for sending a command to a server.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Response[ErrorEnvelope | SendCommandResponse]
-     """
+    
+    :param server_name: Value supplied to the operation.
+    :param body: Request model for sending a command to a server.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: The parsed response."""
 
 
     kwargs = _get_kwargs(
@@ -164,21 +160,17 @@ def sync(
     body: CommandPayload,
 
 ) -> ErrorEnvelope | SendCommandResponse | None:
-    """ Post Send Command
-
+    """Post Send Command
+    
      Sends a command to a specific running Bedrock server instance.
-
-    Args:
-        server_name (str):
-        body (CommandPayload): Request model for sending a command to a server.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        ErrorEnvelope | SendCommandResponse
-     """
+    
+    :param server_name: Value supplied to the operation.
+    :param body: Request model for sending a command to a server.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: ErrorEnvelope | SendCommandResponse"""
 
 
     return sync_detailed(
@@ -195,21 +187,17 @@ async def asyncio_detailed(
     body: CommandPayload,
 
 ) -> Response[ErrorEnvelope | SendCommandResponse]:
-    """ Post Send Command
-
+    """Post Send Command
+    
      Sends a command to a specific running Bedrock server instance.
-
-    Args:
-        server_name (str):
-        body (CommandPayload): Request model for sending a command to a server.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Response[ErrorEnvelope | SendCommandResponse]
-     """
+    
+    :param server_name: Value supplied to the operation.
+    :param body: Request model for sending a command to a server.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: The parsed response."""
 
 
     kwargs = _get_kwargs(
@@ -231,21 +219,17 @@ async def asyncio(
     body: CommandPayload,
 
 ) -> ErrorEnvelope | SendCommandResponse | None:
-    """ Post Send Command
-
+    """Post Send Command
+    
      Sends a command to a specific running Bedrock server instance.
-
-    Args:
-        server_name (str):
-        body (CommandPayload): Request model for sending a command to a server.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        ErrorEnvelope | SendCommandResponse
-     """
+    
+    :param server_name: Value supplied to the operation.
+    :param body: Request model for sending a command to a server.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: ErrorEnvelope | SendCommandResponse"""
 
 
     return (await asyncio_detailed(

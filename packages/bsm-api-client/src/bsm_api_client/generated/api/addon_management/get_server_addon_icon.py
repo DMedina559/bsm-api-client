@@ -129,22 +129,18 @@ def sync_detailed(
     uuid: str,
 
 ) -> Response[Any | ErrorEnvelope]:
-    """ Get Server Addon Icon
-
+    """Get Server Addon Icon
+    
      Serves the pack_icon.png image file for a specified addon, or a default icon if not found.
-
-    Args:
-        server_name (str):
-        pack_type (str):
-        uuid (str):
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Response[Any | ErrorEnvelope]
-     """
+    
+    :param server_name: Value supplied to the operation.
+    :param pack_type: Value supplied to the operation.
+    :param uuid: Value supplied to the operation.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: The parsed response."""
 
 
     kwargs = _get_kwargs(
@@ -168,22 +164,18 @@ def sync(
     uuid: str,
 
 ) -> Any | ErrorEnvelope | None:
-    """ Get Server Addon Icon
-
+    """Get Server Addon Icon
+    
      Serves the pack_icon.png image file for a specified addon, or a default icon if not found.
-
-    Args:
-        server_name (str):
-        pack_type (str):
-        uuid (str):
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Any | ErrorEnvelope
-     """
+    
+    :param server_name: Value supplied to the operation.
+    :param pack_type: Value supplied to the operation.
+    :param uuid: Value supplied to the operation.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: Any | ErrorEnvelope"""
 
 
     return sync_detailed(
@@ -202,22 +194,18 @@ async def asyncio_detailed(
     uuid: str,
 
 ) -> Response[Any | ErrorEnvelope]:
-    """ Get Server Addon Icon
-
+    """Get Server Addon Icon
+    
      Serves the pack_icon.png image file for a specified addon, or a default icon if not found.
-
-    Args:
-        server_name (str):
-        pack_type (str):
-        uuid (str):
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Response[Any | ErrorEnvelope]
-     """
+    
+    :param server_name: Value supplied to the operation.
+    :param pack_type: Value supplied to the operation.
+    :param uuid: Value supplied to the operation.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: The parsed response."""
 
 
     kwargs = _get_kwargs(
@@ -241,22 +229,18 @@ async def asyncio(
     uuid: str,
 
 ) -> Any | ErrorEnvelope | None:
-    """ Get Server Addon Icon
-
+    """Get Server Addon Icon
+    
      Serves the pack_icon.png image file for a specified addon, or a default icon if not found.
-
-    Args:
-        server_name (str):
-        pack_type (str):
-        uuid (str):
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Any | ErrorEnvelope
-     """
+    
+    :param server_name: Value supplied to the operation.
+    :param pack_type: Value supplied to the operation.
+    :param uuid: Value supplied to the operation.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: Any | ErrorEnvelope"""
 
 
     return (await asyncio_detailed(

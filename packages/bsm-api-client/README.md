@@ -187,3 +187,29 @@ returns `TaskSnapshot`. Use `.model_dump(mode="json")` when a dictionary is need
 Pass `remember_me=True` when creating the SDK to request the backend-configured
 longer token lifetime on login and reauthentication. The default is `False`.
 This option does not extend an existing JWT supplied through `jwt_token`.
+
+
+## Administrative diagnostics
+
+`client.diagnostics` exposes typed snapshot, subsystem, filtered history, retained-run, correlated-trace, support-report and comparison operations. Models are available from `bsm_api_client.models`; the generated `client.rest` also exposes all seven operation IDs directly.
+
+```python
+from bsm_api_client.models import CompareDiagnosticSnapshotsRequest
+
+before = await client.diagnostics.async_get_application_diagnostics()
+page = await client.diagnostics.async_get_diagnostic_history(limit=50, outcome="failed")
+trace = await client.diagnostics.async_get_diagnostic_trace("correlation-id", limit=50)
+after = await client.diagnostics.async_get_application_diagnostics()
+comparison = await client.diagnostics.async_compare_diagnostic_snapshots(
+    CompareDiagnosticSnapshotsRequest(before=before, after=after)
+)
+report = await client.diagnostics.async_get_diagnostic_report()
+```
+
+Subsystem reads return a filtered `DiagnosticSnapshot`, preserving collection and health metadata. Continue history with `page.next_cursor`; trace and history source availability are independent. Missing readings and unresolved plugin states remain unchanged. Generated calls validate supplied query/path arguments and JSON request bodies against the bundled contract before sending. Administrator failures propagate through the normal SDK exception policy; snapshots and reports are not persisted by the SDK.
+
+## Developer documentation
+
+Sphinx guides and Python references live in [docs/source](../../docs/source/index.rst).
+See [setup and validation](../../docs/source/contributing.md) to build them locally.
+The root Read the Docs configuration is ready for project connection and hosting.

@@ -117,17 +117,14 @@ def sync_detailed(
     client: AuthenticatedClient,
 
 ) -> Response[ActionResponse | ErrorEnvelope]:
-    """ Put Reload Plugins
-
+    """Put Reload Plugins
+    
      Triggers a full reload of the plugin system.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Response[ActionResponse | ErrorEnvelope]
-     """
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: The parsed response."""
 
 
     kwargs = _get_kwargs(
@@ -145,17 +142,14 @@ def sync(
     client: AuthenticatedClient,
 
 ) -> ActionResponse | ErrorEnvelope | None:
-    """ Put Reload Plugins
-
+    """Put Reload Plugins
+    
      Triggers a full reload of the plugin system.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        ActionResponse | ErrorEnvelope
-     """
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: ActionResponse | ErrorEnvelope"""
 
 
     return sync_detailed(
@@ -168,17 +162,14 @@ async def asyncio_detailed(
     client: AuthenticatedClient,
 
 ) -> Response[ActionResponse | ErrorEnvelope]:
-    """ Put Reload Plugins
-
+    """Put Reload Plugins
+    
      Triggers a full reload of the plugin system.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Response[ActionResponse | ErrorEnvelope]
-     """
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: The parsed response."""
 
 
     kwargs = _get_kwargs(
@@ -196,17 +187,14 @@ async def asyncio(
     client: AuthenticatedClient,
 
 ) -> ActionResponse | ErrorEnvelope | None:
-    """ Put Reload Plugins
-
+    """Put Reload Plugins
+    
      Triggers a full reload of the plugin system.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        ActionResponse | ErrorEnvelope
-     """
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: ActionResponse | ErrorEnvelope"""
 
 
     return (await asyncio_detailed(

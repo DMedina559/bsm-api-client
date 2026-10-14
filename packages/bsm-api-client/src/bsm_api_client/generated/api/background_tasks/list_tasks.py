@@ -122,17 +122,14 @@ def sync_detailed(
     client: AuthenticatedClient,
 
 ) -> Response[ErrorEnvelope | list[TaskSnapshot]]:
-    """ List Tasks
-
-     Retrieves all background tasks.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Response[ErrorEnvelope | list[TaskSnapshot]]
-     """
+    """List Tasks
+    
+     Return all background tasks.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: The parsed response."""
 
 
     kwargs = _get_kwargs(
@@ -150,17 +147,14 @@ def sync(
     client: AuthenticatedClient,
 
 ) -> ErrorEnvelope | list[TaskSnapshot] | None:
-    """ List Tasks
-
-     Retrieves all background tasks.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        ErrorEnvelope | list[TaskSnapshot]
-     """
+    """List Tasks
+    
+     Return all background tasks.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: ErrorEnvelope | list[TaskSnapshot]"""
 
 
     return sync_detailed(
@@ -173,17 +167,14 @@ async def asyncio_detailed(
     client: AuthenticatedClient,
 
 ) -> Response[ErrorEnvelope | list[TaskSnapshot]]:
-    """ List Tasks
-
-     Retrieves all background tasks.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Response[ErrorEnvelope | list[TaskSnapshot]]
-     """
+    """List Tasks
+    
+     Return all background tasks.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: The parsed response."""
 
 
     kwargs = _get_kwargs(
@@ -201,17 +192,14 @@ async def asyncio(
     client: AuthenticatedClient,
 
 ) -> ErrorEnvelope | list[TaskSnapshot] | None:
-    """ List Tasks
-
-     Retrieves all background tasks.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        ErrorEnvelope | list[TaskSnapshot]
-     """
+    """List Tasks
+    
+     Return all background tasks.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: ErrorEnvelope | list[TaskSnapshot]"""
 
 
     return (await asyncio_detailed(

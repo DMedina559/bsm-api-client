@@ -126,20 +126,16 @@ def sync_detailed(
     body: UserLoginPayload,
 
 ) -> Response[ErrorEnvelope | SetupAccountResponse]:
-    """ Create First User
-
-     Creates the first user (admin) in the database.
-
-    Args:
-        body (UserLoginPayload): Request model for user login credentials.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Response[ErrorEnvelope | SetupAccountResponse]
-     """
+    """Create First User
+    
+     Create the first user (admin) in the database.
+    
+    :param body: Request model for user login credentials.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: The parsed response."""
 
 
     kwargs = _get_kwargs(
@@ -159,20 +155,16 @@ def sync(
     body: UserLoginPayload,
 
 ) -> ErrorEnvelope | SetupAccountResponse | None:
-    """ Create First User
-
-     Creates the first user (admin) in the database.
-
-    Args:
-        body (UserLoginPayload): Request model for user login credentials.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        ErrorEnvelope | SetupAccountResponse
-     """
+    """Create First User
+    
+     Create the first user (admin) in the database.
+    
+    :param body: Request model for user login credentials.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: ErrorEnvelope | SetupAccountResponse"""
 
 
     return sync_detailed(
@@ -187,20 +179,16 @@ async def asyncio_detailed(
     body: UserLoginPayload,
 
 ) -> Response[ErrorEnvelope | SetupAccountResponse]:
-    """ Create First User
-
-     Creates the first user (admin) in the database.
-
-    Args:
-        body (UserLoginPayload): Request model for user login credentials.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Response[ErrorEnvelope | SetupAccountResponse]
-     """
+    """Create First User
+    
+     Create the first user (admin) in the database.
+    
+    :param body: Request model for user login credentials.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: The parsed response."""
 
 
     kwargs = _get_kwargs(
@@ -220,20 +208,16 @@ async def asyncio(
     body: UserLoginPayload,
 
 ) -> ErrorEnvelope | SetupAccountResponse | None:
-    """ Create First User
-
-     Creates the first user (admin) in the database.
-
-    Args:
-        body (UserLoginPayload): Request model for user login credentials.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        ErrorEnvelope | SetupAccountResponse
-     """
+    """Create First User
+    
+     Create the first user (admin) in the database.
+    
+    :param body: Request model for user login credentials.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: ErrorEnvelope | SetupAccountResponse"""
 
 
     return (await asyncio_detailed(

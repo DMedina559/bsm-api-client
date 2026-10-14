@@ -128,24 +128,17 @@ def sync_detailed(
     body: FileNamePayload,
 
 ) -> Response[ErrorEnvelope | TaskAcceptedResponse]:
-    """ Post World Install
-
+    """Post World Install
+    
      Initiates a background task to install a world from a .mcworld file to a server.
-
-    Args:
-        server_name (str):
-        body (FileNamePayload): Payload for file-based operations.
-
-            Attributes:
-                filename (str): The name of the file to operate on.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Response[ErrorEnvelope | TaskAcceptedResponse]
-     """
+    
+    :param server_name: Value supplied to the operation.
+    :param body: Payload for file-based operations. :ivar filename: The name of the file to operate on.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: The parsed response."""
 
 
     kwargs = _get_kwargs(
@@ -167,24 +160,17 @@ def sync(
     body: FileNamePayload,
 
 ) -> ErrorEnvelope | TaskAcceptedResponse | None:
-    """ Post World Install
-
+    """Post World Install
+    
      Initiates a background task to install a world from a .mcworld file to a server.
-
-    Args:
-        server_name (str):
-        body (FileNamePayload): Payload for file-based operations.
-
-            Attributes:
-                filename (str): The name of the file to operate on.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        ErrorEnvelope | TaskAcceptedResponse
-     """
+    
+    :param server_name: Value supplied to the operation.
+    :param body: Payload for file-based operations. :ivar filename: The name of the file to operate on.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: ErrorEnvelope | TaskAcceptedResponse"""
 
 
     return sync_detailed(
@@ -201,24 +187,17 @@ async def asyncio_detailed(
     body: FileNamePayload,
 
 ) -> Response[ErrorEnvelope | TaskAcceptedResponse]:
-    """ Post World Install
-
+    """Post World Install
+    
      Initiates a background task to install a world from a .mcworld file to a server.
-
-    Args:
-        server_name (str):
-        body (FileNamePayload): Payload for file-based operations.
-
-            Attributes:
-                filename (str): The name of the file to operate on.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Response[ErrorEnvelope | TaskAcceptedResponse]
-     """
+    
+    :param server_name: Value supplied to the operation.
+    :param body: Payload for file-based operations. :ivar filename: The name of the file to operate on.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: The parsed response."""
 
 
     kwargs = _get_kwargs(
@@ -240,24 +219,17 @@ async def asyncio(
     body: FileNamePayload,
 
 ) -> ErrorEnvelope | TaskAcceptedResponse | None:
-    """ Post World Install
-
+    """Post World Install
+    
      Initiates a background task to install a world from a .mcworld file to a server.
-
-    Args:
-        server_name (str):
-        body (FileNamePayload): Payload for file-based operations.
-
-            Attributes:
-                filename (str): The name of the file to operate on.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        ErrorEnvelope | TaskAcceptedResponse
-     """
+    
+    :param server_name: Value supplied to the operation.
+    :param body: Payload for file-based operations. :ivar filename: The name of the file to operate on.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: ErrorEnvelope | TaskAcceptedResponse"""
 
 
     return (await asyncio_detailed(

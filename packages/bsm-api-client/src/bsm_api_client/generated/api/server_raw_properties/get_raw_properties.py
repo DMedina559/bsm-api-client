@@ -119,20 +119,16 @@ def sync_detailed(
     client: AuthenticatedClient,
 
 ) -> Response[ErrorEnvelope | GetRawPropertiesResponse]:
-    """ Get Raw Properties
-
+    """Get Raw Properties
+    
      Return the raw document using the same access policy as structured properties.
-
-    Args:
-        server_name (str):
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Response[ErrorEnvelope | GetRawPropertiesResponse]
-     """
+    
+    :param server_name: Value supplied to the operation.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: The parsed response."""
 
 
     kwargs = _get_kwargs(
@@ -152,20 +148,16 @@ def sync(
     client: AuthenticatedClient,
 
 ) -> ErrorEnvelope | GetRawPropertiesResponse | None:
-    """ Get Raw Properties
-
+    """Get Raw Properties
+    
      Return the raw document using the same access policy as structured properties.
-
-    Args:
-        server_name (str):
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        ErrorEnvelope | GetRawPropertiesResponse
-     """
+    
+    :param server_name: Value supplied to the operation.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: ErrorEnvelope | GetRawPropertiesResponse"""
 
 
     return sync_detailed(
@@ -180,20 +172,16 @@ async def asyncio_detailed(
     client: AuthenticatedClient,
 
 ) -> Response[ErrorEnvelope | GetRawPropertiesResponse]:
-    """ Get Raw Properties
-
+    """Get Raw Properties
+    
      Return the raw document using the same access policy as structured properties.
-
-    Args:
-        server_name (str):
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Response[ErrorEnvelope | GetRawPropertiesResponse]
-     """
+    
+    :param server_name: Value supplied to the operation.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: The parsed response."""
 
 
     kwargs = _get_kwargs(
@@ -213,20 +201,16 @@ async def asyncio(
     client: AuthenticatedClient,
 
 ) -> ErrorEnvelope | GetRawPropertiesResponse | None:
-    """ Get Raw Properties
-
+    """Get Raw Properties
+    
      Return the raw document using the same access policy as structured properties.
-
-    Args:
-        server_name (str):
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        ErrorEnvelope | GetRawPropertiesResponse
-     """
+    
+    :param server_name: Value supplied to the operation.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: ErrorEnvelope | GetRawPropertiesResponse"""
 
 
     return (await asyncio_detailed(

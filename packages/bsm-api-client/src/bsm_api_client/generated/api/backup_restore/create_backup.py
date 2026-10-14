@@ -128,24 +128,20 @@ def sync_detailed(
     body: BackupActionPayload,
 
 ) -> Response[ErrorEnvelope | TaskAcceptedResponse]:
-    """ Post Backup Action
-
+    """Post Backup Action
+    
      Initiates a background task to perform a backup action for a specific server.
-
-    Valid backup types are "world", "config" (requires `file_to_backup` in payload),
+    
+    Valid backup types are "world", "config" (requires ``file_to_backup`` in payload),
     and "all".
-
-    Args:
-        server_name (str):
-        body (BackupActionPayload): Request model for triggering a backup action.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Response[ErrorEnvelope | TaskAcceptedResponse]
-     """
+    
+    :param server_name: Value supplied to the operation.
+    :param body: Request model for triggering a backup action.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: The parsed response."""
 
 
     kwargs = _get_kwargs(
@@ -167,24 +163,20 @@ def sync(
     body: BackupActionPayload,
 
 ) -> ErrorEnvelope | TaskAcceptedResponse | None:
-    """ Post Backup Action
-
+    """Post Backup Action
+    
      Initiates a background task to perform a backup action for a specific server.
-
-    Valid backup types are "world", "config" (requires `file_to_backup` in payload),
+    
+    Valid backup types are "world", "config" (requires ``file_to_backup`` in payload),
     and "all".
-
-    Args:
-        server_name (str):
-        body (BackupActionPayload): Request model for triggering a backup action.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        ErrorEnvelope | TaskAcceptedResponse
-     """
+    
+    :param server_name: Value supplied to the operation.
+    :param body: Request model for triggering a backup action.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: ErrorEnvelope | TaskAcceptedResponse"""
 
 
     return sync_detailed(
@@ -201,24 +193,20 @@ async def asyncio_detailed(
     body: BackupActionPayload,
 
 ) -> Response[ErrorEnvelope | TaskAcceptedResponse]:
-    """ Post Backup Action
-
+    """Post Backup Action
+    
      Initiates a background task to perform a backup action for a specific server.
-
-    Valid backup types are "world", "config" (requires `file_to_backup` in payload),
+    
+    Valid backup types are "world", "config" (requires ``file_to_backup`` in payload),
     and "all".
-
-    Args:
-        server_name (str):
-        body (BackupActionPayload): Request model for triggering a backup action.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Response[ErrorEnvelope | TaskAcceptedResponse]
-     """
+    
+    :param server_name: Value supplied to the operation.
+    :param body: Request model for triggering a backup action.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: The parsed response."""
 
 
     kwargs = _get_kwargs(
@@ -240,24 +228,20 @@ async def asyncio(
     body: BackupActionPayload,
 
 ) -> ErrorEnvelope | TaskAcceptedResponse | None:
-    """ Post Backup Action
-
+    """Post Backup Action
+    
      Initiates a background task to perform a backup action for a specific server.
-
-    Valid backup types are "world", "config" (requires `file_to_backup` in payload),
+    
+    Valid backup types are "world", "config" (requires ``file_to_backup`` in payload),
     and "all".
-
-    Args:
-        server_name (str):
-        body (BackupActionPayload): Request model for triggering a backup action.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        ErrorEnvelope | TaskAcceptedResponse
-     """
+    
+    :param server_name: Value supplied to the operation.
+    :param body: Request model for triggering a backup action.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: ErrorEnvelope | TaskAcceptedResponse"""
 
 
     return (await asyncio_detailed(

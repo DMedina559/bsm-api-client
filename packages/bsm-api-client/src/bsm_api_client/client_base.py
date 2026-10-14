@@ -32,19 +32,9 @@ _LOGGER = logging.getLogger(__name__.split(".")[0] + ".client.base")
 
 
 class ClientBase:
-    """Base class containing core API client logic.
+    """Share authentication, transport ownership and error handling across services.
 
-    This class manages the HTTP session, authentication state, and provides
-    shared authentication and error handling for REST and WebSocket clients. It is not intended to be
-    used directly by end-users, but rather extended by the main API client class.
-
-    Attributes:
-        _host: The hostname of the Bedrock Server Manager.
-        _port: The port of the Bedrock Server Manager.
-        _username: The username for authentication.
-        _password: The password for authentication.
-        _session: The optional `aiohttp.ClientSession` used for WebSockets.
-        _jwt_token: The JWT token used for authentication.
+    Use BedrockServerManagerApi rather than constructing this base directly.
     """
 
     async def async_call_generated(
@@ -418,17 +408,14 @@ class ClientBase:
             self._jwt_token = None
 
     async def websocket_connect(self) -> WebSocketClient:
-        """
-        Connects to the WebSocket endpoint.
+        """Connects to the WebSocket endpoint.
 
         :returns: A WebSocketClient instance.
-
 
         .. rubric:: Example:
         .. code-block:: python
 
-            response = await client.websocket_connect()
-        """
+            response = await client.websocket_connect()"""
         # Ensure we have a token or try to authenticate
         async with self._auth_lock:
             if not self._jwt_token:

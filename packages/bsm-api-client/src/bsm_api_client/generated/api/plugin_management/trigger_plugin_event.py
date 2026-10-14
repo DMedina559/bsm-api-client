@@ -126,20 +126,16 @@ def sync_detailed(
     body: TriggerEventPayload,
 
 ) -> Response[ErrorEnvelope | TriggerEventResponse]:
-    """ Post Trigger Event
-
+    """Post Trigger Event
+    
      Allows an external source to trigger a custom plugin event within the system.
-
-    Args:
-        body (TriggerEventPayload): Request model for triggering a custom plugin event.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Response[ErrorEnvelope | TriggerEventResponse]
-     """
+    
+    :param body: Request model for triggering a custom plugin event.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: The parsed response."""
 
 
     kwargs = _get_kwargs(
@@ -159,20 +155,16 @@ def sync(
     body: TriggerEventPayload,
 
 ) -> ErrorEnvelope | TriggerEventResponse | None:
-    """ Post Trigger Event
-
+    """Post Trigger Event
+    
      Allows an external source to trigger a custom plugin event within the system.
-
-    Args:
-        body (TriggerEventPayload): Request model for triggering a custom plugin event.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        ErrorEnvelope | TriggerEventResponse
-     """
+    
+    :param body: Request model for triggering a custom plugin event.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: ErrorEnvelope | TriggerEventResponse"""
 
 
     return sync_detailed(
@@ -187,20 +179,16 @@ async def asyncio_detailed(
     body: TriggerEventPayload,
 
 ) -> Response[ErrorEnvelope | TriggerEventResponse]:
-    """ Post Trigger Event
-
+    """Post Trigger Event
+    
      Allows an external source to trigger a custom plugin event within the system.
-
-    Args:
-        body (TriggerEventPayload): Request model for triggering a custom plugin event.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Response[ErrorEnvelope | TriggerEventResponse]
-     """
+    
+    :param body: Request model for triggering a custom plugin event.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: The parsed response."""
 
 
     kwargs = _get_kwargs(
@@ -220,20 +208,16 @@ async def asyncio(
     body: TriggerEventPayload,
 
 ) -> ErrorEnvelope | TriggerEventResponse | None:
-    """ Post Trigger Event
-
+    """Post Trigger Event
+    
      Allows an external source to trigger a custom plugin event within the system.
-
-    Args:
-        body (TriggerEventPayload): Request model for triggering a custom plugin event.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        ErrorEnvelope | TriggerEventResponse
-     """
+    
+    :param body: Request model for triggering a custom plugin event.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: ErrorEnvelope | TriggerEventResponse"""
 
 
     return (await asyncio_detailed(

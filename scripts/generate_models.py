@@ -50,6 +50,12 @@ def generate(source: Path) -> str:  # noqa: C901
         for cls in tree.body:
             if not isinstance(cls, ast.ClassDef) or cls.name not in schemas:
                 continue
+            if not ast.get_docstring(cls):
+                description = (
+                    schemas[cls.name].get("description")
+                    or f"Validate and serialize the {cls.name} contract."
+                )
+                cls.body.insert(0, ast.Expr(value=ast.Constant(description)))
             for field in cls.body:
                 if isinstance(field, ast.AnnAssign) and isinstance(
                     field.target, ast.Name

@@ -128,21 +128,17 @@ def sync_detailed(
     body: AddonSubpackPayload,
 
 ) -> Response[ErrorEnvelope | TaskAcceptedResponse]:
-    """ Post Update Subpack
-
+    """Post Update Subpack
+    
      Initiates a background task to update an addon's active subpack.
-
-    Args:
-        server_name (str):
-        body (AddonSubpackPayload): Request model for changing the active subpack of an addon.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Response[ErrorEnvelope | TaskAcceptedResponse]
-     """
+    
+    :param server_name: Value supplied to the operation.
+    :param body: Request model for changing the active subpack of an addon.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: The parsed response."""
 
 
     kwargs = _get_kwargs(
@@ -164,21 +160,17 @@ def sync(
     body: AddonSubpackPayload,
 
 ) -> ErrorEnvelope | TaskAcceptedResponse | None:
-    """ Post Update Subpack
-
+    """Post Update Subpack
+    
      Initiates a background task to update an addon's active subpack.
-
-    Args:
-        server_name (str):
-        body (AddonSubpackPayload): Request model for changing the active subpack of an addon.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        ErrorEnvelope | TaskAcceptedResponse
-     """
+    
+    :param server_name: Value supplied to the operation.
+    :param body: Request model for changing the active subpack of an addon.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: ErrorEnvelope | TaskAcceptedResponse"""
 
 
     return sync_detailed(
@@ -195,21 +187,17 @@ async def asyncio_detailed(
     body: AddonSubpackPayload,
 
 ) -> Response[ErrorEnvelope | TaskAcceptedResponse]:
-    """ Post Update Subpack
-
+    """Post Update Subpack
+    
      Initiates a background task to update an addon's active subpack.
-
-    Args:
-        server_name (str):
-        body (AddonSubpackPayload): Request model for changing the active subpack of an addon.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Response[ErrorEnvelope | TaskAcceptedResponse]
-     """
+    
+    :param server_name: Value supplied to the operation.
+    :param body: Request model for changing the active subpack of an addon.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: The parsed response."""
 
 
     kwargs = _get_kwargs(
@@ -231,21 +219,17 @@ async def asyncio(
     body: AddonSubpackPayload,
 
 ) -> ErrorEnvelope | TaskAcceptedResponse | None:
-    """ Post Update Subpack
-
+    """Post Update Subpack
+    
      Initiates a background task to update an addon's active subpack.
-
-    Args:
-        server_name (str):
-        body (AddonSubpackPayload): Request model for changing the active subpack of an addon.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        ErrorEnvelope | TaskAcceptedResponse
-     """
+    
+    :param server_name: Value supplied to the operation.
+    :param body: Request model for changing the active subpack of an addon.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: ErrorEnvelope | TaskAcceptedResponse"""
 
 
     return (await asyncio_detailed(

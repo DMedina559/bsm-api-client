@@ -128,21 +128,17 @@ def sync_detailed(
     body: PluginStatusSetPayload,
 
 ) -> Response[ActionResponse | ErrorEnvelope]:
-    """ Post Set Plugin Status
-
-     Sets the enabled or disabled status for a specific plugin.
-
-    Args:
-        plugin_name (str):
-        body (PluginStatusSetPayload): Request model for setting a plugin's enabled status.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Response[ActionResponse | ErrorEnvelope]
-     """
+    """Post Set Plugin Status
+    
+     Set the enabled or disabled status for a specific plugin.
+    
+    :param plugin_name: Value supplied to the operation.
+    :param body: Request model for setting a plugin's enabled status.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: The parsed response."""
 
 
     kwargs = _get_kwargs(
@@ -164,21 +160,17 @@ def sync(
     body: PluginStatusSetPayload,
 
 ) -> ActionResponse | ErrorEnvelope | None:
-    """ Post Set Plugin Status
-
-     Sets the enabled or disabled status for a specific plugin.
-
-    Args:
-        plugin_name (str):
-        body (PluginStatusSetPayload): Request model for setting a plugin's enabled status.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        ActionResponse | ErrorEnvelope
-     """
+    """Post Set Plugin Status
+    
+     Set the enabled or disabled status for a specific plugin.
+    
+    :param plugin_name: Value supplied to the operation.
+    :param body: Request model for setting a plugin's enabled status.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: ActionResponse | ErrorEnvelope"""
 
 
     return sync_detailed(
@@ -195,21 +187,17 @@ async def asyncio_detailed(
     body: PluginStatusSetPayload,
 
 ) -> Response[ActionResponse | ErrorEnvelope]:
-    """ Post Set Plugin Status
-
-     Sets the enabled or disabled status for a specific plugin.
-
-    Args:
-        plugin_name (str):
-        body (PluginStatusSetPayload): Request model for setting a plugin's enabled status.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Response[ActionResponse | ErrorEnvelope]
-     """
+    """Post Set Plugin Status
+    
+     Set the enabled or disabled status for a specific plugin.
+    
+    :param plugin_name: Value supplied to the operation.
+    :param body: Request model for setting a plugin's enabled status.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: The parsed response."""
 
 
     kwargs = _get_kwargs(
@@ -231,21 +219,17 @@ async def asyncio(
     body: PluginStatusSetPayload,
 
 ) -> ActionResponse | ErrorEnvelope | None:
-    """ Post Set Plugin Status
-
-     Sets the enabled or disabled status for a specific plugin.
-
-    Args:
-        plugin_name (str):
-        body (PluginStatusSetPayload): Request model for setting a plugin's enabled status.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        ActionResponse | ErrorEnvelope
-     """
+    """Post Set Plugin Status
+    
+     Set the enabled or disabled status for a specific plugin.
+    
+    :param plugin_name: Value supplied to the operation.
+    :param body: Request model for setting a plugin's enabled status.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: ActionResponse | ErrorEnvelope"""
 
 
     return (await asyncio_detailed(
