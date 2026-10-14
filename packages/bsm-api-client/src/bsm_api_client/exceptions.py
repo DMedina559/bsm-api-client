@@ -21,6 +21,19 @@ class APIError(Exception):
         # Extract common fields from API response if available for convenience
         self.api_message: str = self.response_data.get("message", "")
         self.api_errors: Dict[str, Any] = self.response_data.get("errors", {})
+        envelope = self.response_data.get("error", {})
+        if isinstance(envelope, dict):
+            self.api_code: Optional[str] = envelope.get("code")
+            self.api_message = envelope.get("message", self.api_message)
+            self.api_details: Dict[str, Any] = envelope.get("details") or {}
+        else:
+            self.api_code = None
+            self.api_details = {}
+        self.operation_result = self.api_details.get("result")
+        self.committed = (
+            isinstance(self.operation_result, dict)
+            and self.operation_result.get("committed") is True
+        )
 
     def __str__(self):
         base_str = super().__str__()
@@ -33,6 +46,11 @@ class APIError(Exception):
 
         if self.api_errors:
             base_str += f" (API Errors: {self.api_errors})"
+        if self.committed:
+            base_str += (
+                " The change was saved, but follow-up work failed. "
+                "Refresh before trying again."
+            )
         return base_str
 
 
@@ -41,7 +59,7 @@ class CannotConnectError(
 ):  # Changed from Exception to APIError for consistency, but could be Exception
     """
     Raised when the client cannot connect to the Bedrock Server Manager API host.
-    This typically wraps a lower-level connection error from the HTTP client (e.g., requests.exceptions.ConnectionError).
+    This typically wraps a lower-level connection error from the HTTP client (for example, httpx.ConnectError or aiohttp.ClientError).
     """
 
     def __init__(self, message: str, original_exception: Optional[Exception] = None):
@@ -53,7 +71,7 @@ class CannotConnectError(
         # Call the parent's __str__ to get its formatting (without status_code part)
         base_str = Exception.__str__(self)  # Get the original message part directly
         if self.original_exception:
-            base_str += f" (Original error: {type(self.original_exception).__name__}: {str(self.original_exception)})"
+            base_str += f" (Original error: {type(self.original_exception).__name__})"
         return base_str
 
 
@@ -84,8 +102,8 @@ class ServerNotRunningError(APIError):
     pass
 
 
-class InvalidInputError(APIError):
-    """Client-side input validation error (e.g., 400 Bad Request)."""
+class InvalidInputError(APIError, ValueError):
+    """Input validation failed locally or remotely (HTTP 400 or 422)."""
 
     pass
 

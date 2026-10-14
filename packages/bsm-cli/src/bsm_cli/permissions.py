@@ -1,7 +1,12 @@
+from typing import Literal
+
 import click
 import questionary
 
+from bsm_api_client.exceptions import NotFoundError
 from bsm_api_client.models import PermissionsSetPayload, PlayerPermissionPayload
+from bsm_cli.completion import complete_server
+from bsm_cli.output import fail, get_client
 
 
 @click.group()
@@ -17,6 +22,7 @@ def permissions():
     "server_name",
     required=True,
     help="The name of the target server.",
+    shell_complete=complete_server,
 )
 @click.option(
     "-p",
@@ -31,12 +37,14 @@ def permissions():
     help="The permission level to grant. Skips interactive mode.",
 )
 @click.pass_context
-async def set_perm(ctx, server_name: str, player_name: str, level: str):
+async def set_perm(
+    ctx,
+    server_name: str,
+    player_name: str,
+    level: Literal["visitor", "member", "operator"],
+):
     """Sets a permission level for a player on a specific server."""
-    client = ctx.obj.get("client")
-    if not client:
-        click.secho("You are not logged in.", fg="red")
-        return
+    client = get_client(ctx)
 
     try:
         if not player_name or not level:
@@ -48,7 +56,7 @@ async def set_perm(ctx, server_name: str, player_name: str, level: str):
             return
 
         click.echo(f"Finding player '{player_name}' in global database...")
-        all_players_resp = await client.async_get_players()
+        all_players_resp = await client.players.async_get_players()
         player_data = next(
             (
                 p
@@ -59,11 +67,9 @@ async def set_perm(ctx, server_name: str, player_name: str, level: str):
         )
 
         if not player_data or not player_data.get("xuid"):
-            click.secho(
-                f"Error: Player '{player_name}' not found in the global player database.",
-                fg="red",
+            raise NotFoundError(
+                f"Player '{player_name}' not found in the global player database."
             )
-            return
 
         xuid = player_data["xuid"]
         click.echo(
@@ -77,7 +83,9 @@ async def set_perm(ctx, server_name: str, player_name: str, level: str):
                 )
             ]
         )
-        response = await client.async_set_server_permissions(server_name, payload)
+        response = await client.servers.async_set_server_permissions(
+            server_name, payload
+        )
 
         if response.status == "success":
             click.secho("Permission updated successfully.", fg="green")
@@ -85,22 +93,24 @@ async def set_perm(ctx, server_name: str, player_name: str, level: str):
             click.secho(f"Failed to set permission: {response.message}", fg="red")
 
     except Exception as e:
-        click.secho(f"An error occurred: {e}", fg="red")
+        fail(e)
 
 
 @permissions.command("list")
 @click.option(
-    "-s", "--server", "server_name", required=True, help="The name of the server."
+    "-s",
+    "--server",
+    "server_name",
+    required=True,
+    help="The name of the server.",
+    shell_complete=complete_server,
 )
 @click.pass_context
 async def list_perms(ctx, server_name: str):
     """Lists all configured player permissions for a specific server."""
-    client = ctx.obj.get("client")
-    if not client:
-        click.secho("You are not logged in.", fg="red")
-        return
+    client = get_client(ctx)
 
-    response = await client.async_get_server_permissions_data(server_name)
+    response = await client.servers.async_get_server_permissions_data(server_name)
 
     if response.status == "success":
         permissions = response.permissions
@@ -131,7 +141,7 @@ async def interactive_permissions_workflow(client, server_name: str):
     click.secho("\n--- Interactive Permission Configuration ---", bold=True)
 
     while True:
-        player_response = await client.async_get_players()
+        player_response = await client.players.async_get_players()
         all_players = player_response.players or []
 
         if not all_players:
@@ -172,7 +182,9 @@ async def interactive_permissions_workflow(client, server_name: str):
                 )
             ]
         )
-        perm_response = await client.async_set_server_permissions(server_name, payload)
+        perm_response = await client.servers.async_set_server_permissions(
+            server_name, payload
+        )
 
         if perm_response.status == "success":
             click.secho(

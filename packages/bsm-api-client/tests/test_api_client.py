@@ -23,14 +23,16 @@ async def client():
 @pytest.mark.asyncio
 async def test_get_custom_zips(client):
     """Test get_custom_zips method."""
-    with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
+    with patch.object(
+        client, "async_call_generated", new_callable=AsyncMock
+    ) as mock_request:
         mock_request.return_value = {
             "status": "success",
             "custom_zips": ["zip1.zip", "zip2.zip"],
         }
-        result = await client.async_get_custom_zips()
+        result = await client.application.async_get_custom_zips()
         mock_request.assert_called_once_with(
-            method="GET", path="/downloads/list", authenticated=True
+            "list_downloads", authenticated=True, typed=True
         )
         assert result.custom_zips == ["zip1.zip", "zip2.zip"]
 
@@ -38,14 +40,16 @@ async def test_get_custom_zips(client):
 @pytest.mark.asyncio
 async def test_get_themes(client):
     """Test get_themes method."""
-    with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
+    with patch.object(
+        client, "async_call_generated", new_callable=AsyncMock
+    ) as mock_request:
         mock_request.return_value = {
             "status": "success",
             "themes": ["dark"],
         }
-        result = await client.async_get_themes()
+        result = await client.application.async_get_themes()
         mock_request.assert_called_once_with(
-            method="GET", path="/info/themes", authenticated=True
+            "list_themes", authenticated=True, typed=True
         )
         assert result.status == "success"
         assert result.themes == ["dark"]
@@ -54,25 +58,31 @@ async def test_get_themes(client):
 @pytest.mark.asyncio
 async def test_prune_server_backups(client):
     """Test async_prune_server_backups method."""
-    with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
+    with patch.object(
+        client, "async_call_generated", new_callable=AsyncMock
+    ) as mock_request:
         mock_request.return_value = {
-            "status": "success",
+            "status": "accepted",
+            "task_id": "test-task",
             "message": "Pruning initiated.",
         }
-        result = await client.async_prune_server_backups("test-server")
+        result = await client.content.async_prune_server_backups("test-server")
         mock_request.assert_called_once_with(
-            "PUT",
-            "/server/test-server/backups/prune",
-            json_data=None,
+            "prune_backups",
+            parameters={"server_name": "test-server"},
+            body=None,
             authenticated=True,
+            typed=True,
         )
-        assert result.status == "success"
+        assert result.status == "accepted"
 
 
 @pytest.mark.asyncio
 async def test_set_server_permissions(client):
     """Test async_set_server_permissions method."""
-    with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
+    with patch.object(
+        client, "async_call_generated", new_callable=AsyncMock
+    ) as mock_request:
         permissions = [
             PlayerPermissionPayload(
                 name="Player1", xuid="123", permission_level="member"
@@ -86,12 +96,15 @@ async def test_set_server_permissions(client):
             "status": "success",
             "message": "Permissions updated.",
         }
-        result = await client.async_set_server_permissions("test-server", payload)
+        result = await client.servers.async_set_server_permissions(
+            "test-server", payload
+        )
         mock_request.assert_called_once_with(
-            "POST",
-            "/server/test-server/permissions/set",
-            json_data=payload.model_dump(),
+            "set_permissions",
+            parameters={"server_name": "test-server"},
+            body=payload.model_dump(),
             authenticated=True,
+            typed=True,
         )
         assert result.status == "success"
 
@@ -99,19 +112,25 @@ async def test_set_server_permissions(client):
 @pytest.mark.asyncio
 async def test_update_server_properties(client):
     """Test async_update_server_properties method."""
-    with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
+    with patch.object(
+        client, "async_call_generated", new_callable=AsyncMock
+    ) as mock_request:
         properties = {"level-name": "new-world", "gamemode": "survival"}
         payload = PropertiesPayload(properties=properties)
         mock_request.return_value = {
             "status": "success",
+            "server_name": "test_server",
             "message": "Properties updated.",
         }
-        result = await client.async_update_server_properties("test-server", payload)
+        result = await client.servers.async_update_server_properties(
+            "test-server", payload
+        )
         mock_request.assert_called_once_with(
-            "POST",
-            "/server/test-server/properties/set",
-            json_data=payload.model_dump(),
+            "set_properties",
+            parameters={"server_name": "test-server"},
+            body=payload.model_dump(),
             authenticated=True,
+            typed=True,
         )
         assert result.status == "success"
 
@@ -119,13 +138,56 @@ async def test_update_server_properties(client):
 @pytest.mark.asyncio
 async def test_reload_plugins(client):
     """Test async_reload_plugins method."""
-    with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
+    with patch.object(
+        client, "async_call_generated", new_callable=AsyncMock
+    ) as mock_request:
         mock_request.return_value = {
             "status": "success",
             "message": "Plugins reloaded.",
         }
-        result = await client.async_reload_plugins()
+        result = await client.plugins.async_reload_plugins()
         mock_request.assert_called_once_with(
-            method="PUT", path="/plugins/reload", authenticated=True
+            "reload_plugins", authenticated=True, typed=True
         )
         assert result.status == "success"
+
+
+@pytest.mark.asyncio
+async def test_facade_response_validation_uses_safe_api_errors(client):
+    from bsm_api_client.exceptions import APIError
+
+    with patch.object(
+        client, "async_call_generated", new_callable=AsyncMock
+    ) as operation:
+        operation.return_value = {"servers": "private-response-value"}
+        with pytest.raises(APIError) as error:
+            await client.servers.async_get_servers()
+    assert "ServersListResponse" in str(error.value)
+    assert error.value.response_data["validation_errors"]
+    assert "private-response-value" not in str(error.value.response_data)
+
+
+@pytest.mark.asyncio
+async def test_setting_and_plugin_diagnostics_exclude_payload_secrets(client, caplog):
+    import logging
+
+    from bsm_api_client.models import ServerSettingItemPayload, TriggerEventPayload
+
+    caplog.set_level(logging.DEBUG, logger="bsm_api_client")
+    with patch.object(
+        client, "async_call_generated", new_callable=AsyncMock
+    ) as operation:
+        operation.return_value = {"status": "success"}
+        await client.servers.async_set_server_setting(
+            "test",
+            ServerSettingItemPayload(
+                key="custom.secret", value="private-setting-value"
+            ),
+        )
+        await client.plugins.async_trigger_plugin_event(
+            TriggerEventPayload(
+                event_name="demo:update", payload={"token": "private-plugin-token"}
+            )
+        )
+    assert "private-setting-value" not in caplog.text
+    assert "private-plugin-token" not in caplog.text

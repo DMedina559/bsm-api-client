@@ -3,7 +3,14 @@ import json
 import click
 import questionary
 
-from bsm_api_client.models import PluginStatusSetPayload, TriggerEventPayload
+from bsm_api_client.models import (
+    PluginSettingsPayload,
+    PluginStatusSetPayload,
+    TriggerEventPayload,
+)
+from bsm_cli.output import fail, get_client
+from bsm_cli.presentation import screen_header
+from bsm_cli.settings_editor import edit_settings
 
 
 def _print_plugin_table(plugins):
@@ -44,7 +51,7 @@ def _print_plugin_table(plugins):
 async def interactive_plugin_workflow(client):  # noqa: C901
     """Guides the user through an interactive session to enable or disable plugins."""
     try:
-        response = await client.async_get_plugin_statuses()
+        response = await client.plugins.async_get_plugin_statuses()
         if response.status != "success":
             click.secho(
                 f"Failed to retrieve plugin statuses: {response.message}", fg="red"
@@ -60,10 +67,10 @@ async def interactive_plugin_workflow(client):  # noqa: C901
         click.echo()
 
         while True:
-            click.clear()
+            screen_header("Plugins")
             click.secho("--- Manage Plugins ---", fg="magenta", bold=True)
 
-            response = await client.async_get_plugin_statuses()
+            response = await client.plugins.async_get_plugin_statuses()
             if response.status != "success":
                 click.secho(
                     f"Failed to retrieve plugin statuses: {response.message}", fg="red"
@@ -75,6 +82,8 @@ async def interactive_plugin_workflow(client):  # noqa: C901
                 click.secho("No plugins found or configured to edit.", fg="yellow")
                 return
 
+            _print_plugin_table(plugins)
+            click.echo()
             menu_choices = []
             for name, config_dict in sorted(plugins.items()):
                 is_enabled = config_dict.get("enabled", False)
@@ -104,7 +113,7 @@ async def interactive_plugin_workflow(client):  # noqa: C901
             if choice == "RELOAD":
                 click.secho("Reloading plugins...", fg="cyan")
                 try:
-                    reload_response = await client.async_reload_plugins()
+                    reload_response = await client.plugins.async_reload_plugins()
                     if reload_response.status == "success":
                         click.secho(reload_response.message, fg="green")
                     else:
@@ -113,7 +122,7 @@ async def interactive_plugin_workflow(client):  # noqa: C901
                             fg="red",
                         )
                 except Exception as e_reload:
-                    click.secho(f"Error reloading plugins: {e_reload}", fg="red")
+                    fail(e_reload)
                 click.pause()
                 continue
 
@@ -131,6 +140,8 @@ async def interactive_plugin_workflow(client):  # noqa: C901
             else:
                 pack_menu.append("Enable")
 
+            if config_dict.get("has_settings", False):
+                pack_menu.append("Settings")
             pack_menu.append("Back")
 
             action_choice = await questionary.select(
@@ -140,9 +151,11 @@ async def interactive_plugin_workflow(client):  # noqa: C901
             if not action_choice or action_choice == "Back":
                 continue
 
-            if action_choice == "Enable":
+            if action_choice == "Settings":
+                await edit_plugin_settings(client, plugin_name)
+            elif action_choice == "Enable":
                 payload = PluginStatusSetPayload(enabled=True)
-                res = await client.async_set_plugin_status(plugin_name, payload)
+                res = await client.plugins.async_set_plugin_status(plugin_name, payload)
                 if res.status == "success":
                     click.secho(
                         f"Plugin '{plugin_name}' enabled successfully.", fg="green"
@@ -154,7 +167,7 @@ async def interactive_plugin_workflow(client):  # noqa: C901
                     )
             elif action_choice == "Disable":
                 payload = PluginStatusSetPayload(enabled=False)
-                res = await client.async_set_plugin_status(plugin_name, payload)
+                res = await client.plugins.async_set_plugin_status(plugin_name, payload)
                 if res.status == "success":
                     click.secho(
                         f"Plugin '{plugin_name}' disabled successfully.", fg="green"
@@ -168,32 +181,27 @@ async def interactive_plugin_workflow(client):  # noqa: C901
             click.pause()
 
     except Exception as e:
-        click.secho(f"An error occurred during plugin configuration: {e}", fg="red")
+        fail(e)
 
 
 @click.group(invoke_without_command=True)
 @click.pass_context
-async def plugin(ctx):
+def plugin(ctx):
     """Manages plugins."""
     if ctx.invoked_subcommand is None:
-        client = ctx.obj.get("client")
-        if not client:
-            click.secho("You are not logged in.", fg="red")
-            return
-        await interactive_plugin_workflow(client)
+        if ctx.obj.get("json_output"):
+            raise click.UsageError("Choose a subcommand with --json.")
+        return interactive_plugin_workflow(get_client(ctx))
 
 
 @plugin.command("list")
 @click.pass_context
 async def list_plugins(ctx):
     """Lists all discoverable plugins."""
-    client = ctx.obj.get("client")
-    if not client:
-        click.secho("You are not logged in.", fg="red")
-        return
+    client = get_client(ctx)
 
     try:
-        response = await client.async_get_plugin_statuses()
+        response = await client.plugins.async_get_plugin_statuses()
         if response.status == "success":
             plugins = response.plugins
             if not plugins:
@@ -204,7 +212,7 @@ async def list_plugins(ctx):
         else:
             click.secho(f"Failed to list plugins: {response.message}", fg="red")
     except Exception as e:
-        click.secho(f"An error occurred: {e}", fg="red")
+        fail(e)
 
 
 @plugin.command("enable")
@@ -212,20 +220,17 @@ async def list_plugins(ctx):
 @click.pass_context
 async def enable_plugin(ctx, plugin_name: str):
     """Enables a plugin."""
-    client = ctx.obj.get("client")
-    if not client:
-        click.secho("You are not logged in.", fg="red")
-        return
+    client = get_client(ctx)
 
     try:
         payload = PluginStatusSetPayload(enabled=True)
-        response = await client.async_set_plugin_status(plugin_name, payload)
+        response = await client.plugins.async_set_plugin_status(plugin_name, payload)
         if response.status == "success":
             click.secho(f"Plugin '{plugin_name}' enabled successfully.", fg="green")
         else:
             click.secho(f"Failed to enable plugin: {response.message}", fg="red")
     except Exception as e:
-        click.secho(f"An error occurred: {e}", fg="red")
+        fail(e)
 
 
 @plugin.command("disable")
@@ -233,39 +238,33 @@ async def enable_plugin(ctx, plugin_name: str):
 @click.pass_context
 async def disable_plugin(ctx, plugin_name: str):
     """Disables a plugin."""
-    client = ctx.obj.get("client")
-    if not client:
-        click.secho("You are not logged in.", fg="red")
-        return
+    client = get_client(ctx)
 
     try:
         payload = PluginStatusSetPayload(enabled=False)
-        response = await client.async_set_plugin_status(plugin_name, payload)
+        response = await client.plugins.async_set_plugin_status(plugin_name, payload)
         if response.status == "success":
             click.secho(f"Plugin '{plugin_name}' disabled successfully.", fg="green")
         else:
             click.secho(f"Failed to disable plugin: {response.message}", fg="red")
     except Exception as e:
-        click.secho(f"An error occurred: {e}", fg="red")
+        fail(e)
 
 
 @plugin.command("reload")
 @click.pass_context
 async def reload_plugins(ctx):
     """Reloads all plugins."""
-    client = ctx.obj.get("client")
-    if not client:
-        click.secho("You are not logged in.", fg="red")
-        return
+    client = get_client(ctx)
 
     try:
-        response = await client.async_reload_plugins()
+        response = await client.plugins.async_reload_plugins()
         if response.status == "success":
             click.secho("Plugins reloaded successfully.", fg="green")
         else:
             click.secho(f"Failed to reload plugins: {response.message}", fg="red")
     except Exception as e:
-        click.secho(f"An error occurred: {e}", fg="red")
+        fail(e)
 
 
 @plugin.command("trigger-event")
@@ -276,10 +275,7 @@ async def reload_plugins(ctx):
 @click.pass_context
 async def trigger_event(ctx, event_name: str, payload_json: str):
     """Triggers a custom plugin event."""
-    client = ctx.obj.get("client")
-    if not client:
-        click.secho("You are not logged in.", fg="red")
-        return
+    client = get_client(ctx)
 
     try:
         payload = None
@@ -287,10 +283,70 @@ async def trigger_event(ctx, event_name: str, payload_json: str):
             payload = json.loads(payload_json)
 
         event_payload = TriggerEventPayload(event_name=event_name, payload=payload)
-        response = await client.async_trigger_plugin_event(event_payload)
+        response = await client.plugins.async_trigger_plugin_event(event_payload)
         if response.status == "success":
             click.secho(f"Event '{event_name}' triggered successfully.", fg="green")
         else:
             click.secho(f"Failed to trigger event: {response.message}", fg="red")
     except Exception as e:
-        click.secho(f"An error occurred: {e}", fg="red")
+        fail(e)
+
+
+async def edit_plugin_settings(client, plugin_name):
+    response = await client.plugins.async_get_plugin_settings(plugin_name)
+    original = response.settings
+    draft = await edit_settings(original, response.settings_schema)
+    if draft is None:
+        return
+    latest = await client.plugins.async_get_plugin_settings(plugin_name)
+    if latest.settings != original:
+        raise click.ClickException(
+            "Settings changed in another session. Reopen the editor to review the current values."
+        )
+    result = await client.plugins.async_update_plugin_settings(
+        plugin_name, PluginSettingsPayload(settings=draft)
+    )
+    click.echo(result.message)
+
+
+@plugin.group("settings")
+def plugin_settings():
+    """View or edit settings for a plugin, including disabled plugins."""
+
+
+@plugin_settings.command("show")
+@click.argument("plugin_name")
+@click.pass_context
+async def show_settings(ctx, plugin_name):
+    response = await get_client(ctx).plugins.async_get_plugin_settings(plugin_name)
+    # The interactive editor masks credential fields; JSON is an explicit export.
+    from bsm_cli.settings_editor import display, fields
+
+    schema = response.settings_schema
+    if schema:
+        for path, spec, value in fields(schema, schema, response.settings):
+            click.echo(f"{'.'.join(path)}: {display(value, path, spec)}")
+    else:
+        click.echo("Use settings edit to inspect and configure these settings.")
+
+
+@plugin_settings.command("edit")
+@click.argument("plugin_name")
+@click.pass_context
+async def configure_settings(ctx, plugin_name):
+    if ctx.obj.get("json_output"):
+        raise click.UsageError("Use settings set with --json.")
+    await edit_plugin_settings(get_client(ctx), plugin_name)
+
+
+@plugin_settings.command("set")
+@click.argument("plugin_name")
+@click.argument("settings_file", type=click.File("r"))
+@click.pass_context
+async def set_settings(ctx, plugin_name, settings_file):
+    """Replace settings from a JSON object file."""
+    values = json.load(settings_file)
+    response = await get_client(ctx).plugins.async_update_plugin_settings(
+        plugin_name, PluginSettingsPayload(settings=values)
+    )
+    click.echo(response.message)

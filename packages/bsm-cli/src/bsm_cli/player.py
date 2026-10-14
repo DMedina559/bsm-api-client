@@ -1,5 +1,7 @@
 import click
 
+from bsm_cli.output import fail, get_client
+
 
 @click.group()
 def player():
@@ -11,20 +13,17 @@ def player():
 @click.pass_context
 async def scan_for_players(ctx):
     """Scans all server logs to discover player gamertags and XUIDs."""
-    client = ctx.obj.get("client")
-    if not client:
-        click.secho("You are not logged in.", fg="red")
-        return
+    client = get_client(ctx)
 
     try:
         click.echo("Scanning all server logs for player data...")
-        response = await client.async_scan_players()
+        response = await client.players.async_scan_players()
         if response.status == "success":
             click.secho("Player database updated successfully.", fg="green")
         else:
             click.secho(f"Failed to scan for players: {response.message}", fg="red")
     except Exception as e:
-        click.secho(f"An error occurred during scan: {e}", fg="red")
+        fail(e)
 
 
 @player.command("add")
@@ -39,10 +38,7 @@ async def scan_for_players(ctx):
 @click.pass_context
 async def add_players(ctx, players):
     """Manually adds or updates player entries in the central player database."""
-    client = ctx.obj.get("client")
-    if not client:
-        click.secho("You are not logged in.", fg="red")
-        return
+    client = get_client(ctx)
 
     try:
         from bsm_api_client.models import AddPlayersPayload
@@ -50,10 +46,10 @@ async def add_players(ctx, players):
         player_list = list(players)
         click.echo(f"Adding/updating {len(player_list)} player(s) in the database...")
         payload = AddPlayersPayload(players=player_list)
-        response = await client.async_add_players(payload)
+        response = await client.players.async_add_players(payload)
         if response.status == "success":
             click.secho("Players added/updated successfully.", fg="green")
         else:
             click.secho(f"Failed to add players: {response.message}", fg="red")
     except Exception as e:
-        click.secho(f"An error occurred while adding players: {e}", fg="red")
+        fail(e)

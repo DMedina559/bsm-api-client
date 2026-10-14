@@ -1,3 +1,5 @@
+exclude: ^packages/bsm-api-client/src/bsm_api_client/generated/
+
 ci:
   autofix_commit_msg: |
     [pre-commit.ci] auto fixes from pre-commit.com hooks
@@ -19,22 +21,23 @@ repos:
       - id: check-added-large-files
 
   - repo: https://github.com/psf/black-pre-commit-mirror
-    rev: 26.5.1
+    rev: 26.10.0
     hooks:
       - id: black
 
   - repo: https://github.com/PyCQA/isort
-    rev: 9.0.0b5
+    rev: 9.0.2
     hooks:
       - id: isort
 
   - repo: https://github.com/PyCQA/flake8
-    rev: 7.3.0
+    rev: 7.4.1
     hooks:
       - id: flake8
 
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v2.3.1
+    rev: v2.4.0
     hooks:
       - id: mypy
-        additional_dependencies: [types-requests, types-PyYAML]
+        additional_dependencies: [types-requests, types-PyYAML, attrs]
+        args: [--cache-dir=.mypy_cache_precommit]

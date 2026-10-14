@@ -10,12 +10,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class WebSocketClient:
-    """
-    A client for interacting with the Bedrock Server Manager WebSocket API.
-
-    This class handles connecting, authentication, subscribing/unsubscribing to topics,
-    and receiving messages.
-    """
+    """Authenticate, subscribe and receive messages on an explicit WebSocket."""
 
     def __init__(
         self,
@@ -23,26 +18,20 @@ class WebSocketClient:
         url: str,
         token: Optional[str] = None,
     ):
-        """
-        Initialize the WebSocketClient.
+        """Initialize the WebSocketClient.
 
-        Args:
-            session: The aiohttp ClientSession to use.
-            url: The WebSocket URL.
-            token: The JWT token for authentication.
-        """
+        :param session: The aiohttp ClientSession to use.
+        :param url: The WebSocket URL.
+        :param token: The JWT token for authentication."""
         self._session = session
         self._url = url
         self._token = token
         self._ws: Optional[aiohttp.ClientWebSocketResponse] = None
 
     async def connect(self) -> "WebSocketClient":
-        """
-        Connect to the WebSocket server.
+        """Connect to the WebSocket server.
 
-        Returns:
-            self
-        """
+        :returns: The connected client."""
         try:
             self._ws = await self._session.ws_connect(self._url)
             _LOGGER.info(f"Connected to WebSocket at {self._url}")
@@ -71,12 +60,9 @@ class WebSocketClient:
             _LOGGER.info("Disconnected from WebSocket")
 
     async def subscribe(self, topic: str):
-        """
-        Subscribe to a topic.
+        """Subscribe to a topic.
 
-        Args:
-            topic: The topic to subscribe to.
-        """
+        :param topic: The topic to subscribe to."""
         if not self._ws:
             raise APIError("WebSocket is not connected")
 
@@ -85,12 +71,9 @@ class WebSocketClient:
         _LOGGER.debug(f"Subscribed to {topic}")
 
     async def unsubscribe(self, topic: str):
-        """
-        Unsubscribe from a topic.
+        """Unsubscribe from a topic.
 
-        Args:
-            topic: The topic to unsubscribe from.
-        """
+        :param topic: The topic to unsubscribe from."""
         if not self._ws:
             raise APIError("WebSocket is not connected")
 
@@ -99,12 +82,9 @@ class WebSocketClient:
         _LOGGER.debug(f"Unsubscribed from {topic}")
 
     async def listen(self) -> AsyncGenerator[Dict[str, Any], None]:
-        """
-        Listen for incoming messages.
+        """Listen for incoming messages.
 
-        Yields:
-            Received messages as dictionaries.
-        """
+        :yields: Received messages as dictionaries."""
         if not self._ws:
             raise APIError("WebSocket is not connected")
 
