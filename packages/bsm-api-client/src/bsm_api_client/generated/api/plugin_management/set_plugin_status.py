@@ -130,7 +130,7 @@ def sync_detailed(
 ) -> Response[ActionResponse | ErrorEnvelope]:
     """ Post Set Plugin Status
 
-     Sets the enabled or disabled status for a specific plugin.
+     Set the enabled or disabled status for a specific plugin.
 
     Args:
         plugin_name (str):
@@ -166,7 +166,7 @@ def sync(
 ) -> ActionResponse | ErrorEnvelope | None:
     """ Post Set Plugin Status
 
-     Sets the enabled or disabled status for a specific plugin.
+     Set the enabled or disabled status for a specific plugin.
 
     Args:
         plugin_name (str):
@@ -197,7 +197,7 @@ async def asyncio_detailed(
 ) -> Response[ActionResponse | ErrorEnvelope]:
     """ Post Set Plugin Status
 
-     Sets the enabled or disabled status for a specific plugin.
+     Set the enabled or disabled status for a specific plugin.
 
     Args:
         plugin_name (str):
@@ -233,7 +233,7 @@ async def asyncio(
 ) -> ActionResponse | ErrorEnvelope | None:
     """ Post Set Plugin Status
 
-     Sets the enabled or disabled status for a specific plugin.
+     Set the enabled or disabled status for a specific plugin.
 
     Args:
         plugin_name (str):

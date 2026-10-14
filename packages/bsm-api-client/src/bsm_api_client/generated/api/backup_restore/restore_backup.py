@@ -132,9 +132,9 @@ def sync_detailed(
 
      Initiates a background task to perform a restore action for a specific server.
 
-    Valid restore types include "all", "world", "properties", "allowlist",
-    and "permissions". If not restoring "all", a `backup_file` (basename)
-    must be provided in the payload.
+    Valid restore types include "all", "world", "properties", "allowlist", and
+    "permissions". If not restoring "all", a ``backup_file`` (basename) must be
+    provided in the payload.
 
     Args:
         server_name (str):
@@ -172,9 +172,9 @@ def sync(
 
      Initiates a background task to perform a restore action for a specific server.
 
-    Valid restore types include "all", "world", "properties", "allowlist",
-    and "permissions". If not restoring "all", a `backup_file` (basename)
-    must be provided in the payload.
+    Valid restore types include "all", "world", "properties", "allowlist", and
+    "permissions". If not restoring "all", a ``backup_file`` (basename) must be
+    provided in the payload.
 
     Args:
         server_name (str):
@@ -207,9 +207,9 @@ async def asyncio_detailed(
 
      Initiates a background task to perform a restore action for a specific server.
 
-    Valid restore types include "all", "world", "properties", "allowlist",
-    and "permissions". If not restoring "all", a `backup_file` (basename)
-    must be provided in the payload.
+    Valid restore types include "all", "world", "properties", "allowlist", and
+    "permissions". If not restoring "all", a ``backup_file`` (basename) must be
+    provided in the payload.
 
     Args:
         server_name (str):
@@ -247,9 +247,9 @@ async def asyncio(
 
      Initiates a background task to perform a restore action for a specific server.
 
-    Valid restore types include "all", "world", "properties", "allowlist",
-    and "permissions". If not restoring "all", a `backup_file` (basename)
-    must be provided in the payload.
+    Valid restore types include "all", "world", "properties", "allowlist", and
+    "permissions". If not restoring "all", a ``backup_file`` (basename) must be
+    provided in the payload.
 
     Args:
         server_name (str):

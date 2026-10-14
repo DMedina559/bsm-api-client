@@ -126,7 +126,7 @@ def sync_detailed(
 ) -> Response[Any | ErrorEnvelope]:
     """ Register User
 
-     Creates a new user from a registration token.
+     Create a new user from a registration token.
 
     Args:
         token (str):
@@ -162,7 +162,7 @@ def sync(
 ) -> Any | ErrorEnvelope | None:
     """ Register User
 
-     Creates a new user from a registration token.
+     Create a new user from a registration token.
 
     Args:
         token (str):
@@ -193,7 +193,7 @@ async def asyncio_detailed(
 ) -> Response[Any | ErrorEnvelope]:
     """ Register User
 
-     Creates a new user from a registration token.
+     Create a new user from a registration token.
 
     Args:
         token (str):
@@ -229,7 +229,7 @@ async def asyncio(
 ) -> Any | ErrorEnvelope | None:
     """ Register User
 
-     Creates a new user from a registration token.
+     Create a new user from a registration token.
 
     Args:
         token (str):

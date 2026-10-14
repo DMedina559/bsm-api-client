@@ -133,9 +133,9 @@ def sync_detailed(
     Args:
         body (ProfileUpdatePayload): Request payload for updating user profile details.
 
-            Attributes:
-                full_name (str): The user's full name.
-                email (str): The user's email address.
+            :ivar full_name: The user's full name.
+
+            :ivar email: The user's email address.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -170,9 +170,9 @@ def sync(
     Args:
         body (ProfileUpdatePayload): Request payload for updating user profile details.
 
-            Attributes:
-                full_name (str): The user's full name.
-                email (str): The user's email address.
+            :ivar full_name: The user's full name.
+
+            :ivar email: The user's email address.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -202,9 +202,9 @@ async def asyncio_detailed(
     Args:
         body (ProfileUpdatePayload): Request payload for updating user profile details.
 
-            Attributes:
-                full_name (str): The user's full name.
-                email (str): The user's email address.
+            :ivar full_name: The user's full name.
+
+            :ivar email: The user's email address.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -239,9 +239,9 @@ async def asyncio(
     Args:
         body (ProfileUpdatePayload): Request payload for updating user profile details.
 
-            Attributes:
-                full_name (str): The user's full name.
-                email (str): The user's email address.
+            :ivar full_name: The user's full name.
+
+            :ivar email: The user's email address.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.

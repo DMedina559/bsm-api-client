@@ -119,7 +119,7 @@ def sync_detailed(
 ) -> Response[ErrorEnvelope | PlayerListResponse]:
     """ Get All Players
 
-     Retrieves the list of all known players from the central player database.
+     Return the list of all known players from the central player database.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -147,7 +147,7 @@ def sync(
 ) -> ErrorEnvelope | PlayerListResponse | None:
     """ Get All Players
 
-     Retrieves the list of all known players from the central player database.
+     Return the list of all known players from the central player database.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -170,7 +170,7 @@ async def asyncio_detailed(
 ) -> Response[ErrorEnvelope | PlayerListResponse]:
     """ Get All Players
 
-     Retrieves the list of all known players from the central player database.
+     Return the list of all known players from the central player database.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -198,7 +198,7 @@ async def asyncio(
 ) -> ErrorEnvelope | PlayerListResponse | None:
     """ Get All Players
 
-     Retrieves the list of all known players from the central player database.
+     Return the list of all known players from the central player database.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.

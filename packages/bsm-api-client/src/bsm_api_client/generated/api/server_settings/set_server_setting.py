@@ -130,7 +130,7 @@ def sync_detailed(
 ) -> Response[ErrorEnvelope | ServerSettingsResponse]:
     """ Post Set Server Setting
 
-     Sets a specific setting for a server.
+     Set a specific setting for a server.
 
     Args:
         server_name (str):
@@ -166,7 +166,7 @@ def sync(
 ) -> ErrorEnvelope | ServerSettingsResponse | None:
     """ Post Set Server Setting
 
-     Sets a specific setting for a server.
+     Set a specific setting for a server.
 
     Args:
         server_name (str):
@@ -197,7 +197,7 @@ async def asyncio_detailed(
 ) -> Response[ErrorEnvelope | ServerSettingsResponse]:
     """ Post Set Server Setting
 
-     Sets a specific setting for a server.
+     Set a specific setting for a server.
 
     Args:
         server_name (str):
@@ -233,7 +233,7 @@ async def asyncio(
 ) -> ErrorEnvelope | ServerSettingsResponse | None:
     """ Post Set Server Setting
 
-     Sets a specific setting for a server.
+     Set a specific setting for a server.
 
     Args:
         server_name (str):

@@ -121,7 +121,7 @@ def sync_detailed(
 ) -> Response[ErrorEnvelope | ServerSummary]:
     """ Get Server Summary
 
-     Retrieves the basic summary information for a specific server instance.
+     Return the basic summary information for a specific server instance.
 
     Args:
         server_name (str):
@@ -154,7 +154,7 @@ def sync(
 ) -> ErrorEnvelope | ServerSummary | None:
     """ Get Server Summary
 
-     Retrieves the basic summary information for a specific server instance.
+     Return the basic summary information for a specific server instance.
 
     Args:
         server_name (str):
@@ -182,7 +182,7 @@ async def asyncio_detailed(
 ) -> Response[ErrorEnvelope | ServerSummary]:
     """ Get Server Summary
 
-     Retrieves the basic summary information for a specific server instance.
+     Return the basic summary information for a specific server instance.
 
     Args:
         server_name (str):
@@ -215,7 +215,7 @@ async def asyncio(
 ) -> ErrorEnvelope | ServerSummary | None:
     """ Get Server Summary
 
-     Retrieves the basic summary information for a specific server instance.
+     Return the basic summary information for a specific server instance.
 
     Args:
         server_name (str):

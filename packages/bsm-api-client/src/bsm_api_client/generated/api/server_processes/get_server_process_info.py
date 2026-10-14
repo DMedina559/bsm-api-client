@@ -121,7 +121,7 @@ def sync_detailed(
 ) -> Response[ErrorEnvelope | ServerProcessInfoResponse]:
     """ Get Server Process Info
 
-     Retrieves resource usage information for a running server process.
+     Return resource usage information for a running server process.
 
     Args:
         server_name (str):
@@ -154,7 +154,7 @@ def sync(
 ) -> ErrorEnvelope | ServerProcessInfoResponse | None:
     """ Get Server Process Info
 
-     Retrieves resource usage information for a running server process.
+     Return resource usage information for a running server process.
 
     Args:
         server_name (str):
@@ -182,7 +182,7 @@ async def asyncio_detailed(
 ) -> Response[ErrorEnvelope | ServerProcessInfoResponse]:
     """ Get Server Process Info
 
-     Retrieves resource usage information for a running server process.
+     Return resource usage information for a running server process.
 
     Args:
         server_name (str):
@@ -215,7 +215,7 @@ async def asyncio(
 ) -> ErrorEnvelope | ServerProcessInfoResponse | None:
     """ Get Server Process Info
 
-     Retrieves resource usage information for a running server process.
+     Return resource usage information for a running server process.
 
     Args:
         server_name (str):

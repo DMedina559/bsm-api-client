@@ -117,7 +117,7 @@ def sync_detailed(
 ) -> Response[Any | ErrorEnvelope]:
     """ Get World Icon
 
-     Serves the `world_icon.jpeg` for a server, or a default icon if not found.
+     Serves the ``world_icon.jpeg`` for a server, or a default icon if not found.
 
     Args:
         server_name (str):
@@ -150,7 +150,7 @@ def sync(
 ) -> Any | ErrorEnvelope | None:
     """ Get World Icon
 
-     Serves the `world_icon.jpeg` for a server, or a default icon if not found.
+     Serves the ``world_icon.jpeg`` for a server, or a default icon if not found.
 
     Args:
         server_name (str):
@@ -178,7 +178,7 @@ async def asyncio_detailed(
 ) -> Response[Any | ErrorEnvelope]:
     """ Get World Icon
 
-     Serves the `world_icon.jpeg` for a server, or a default icon if not found.
+     Serves the ``world_icon.jpeg`` for a server, or a default icon if not found.
 
     Args:
         server_name (str):
@@ -211,7 +211,7 @@ async def asyncio(
 ) -> Any | ErrorEnvelope | None:
     """ Get World Icon
 
-     Serves the `world_icon.jpeg` for a server, or a default icon if not found.
+     Serves the ``world_icon.jpeg`` for a server, or a default icon if not found.
 
     Args:
         server_name (str):

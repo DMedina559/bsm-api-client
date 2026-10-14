@@ -133,8 +133,7 @@ def sync_detailed(
     Args:
         body (GenerateTokenPayload): Request payload for generating a registration token.
 
-            Attributes:
-                role (str): The role to assign to the user registering with this token.
+            :ivar role: The role to assign to the user registering with this token.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -169,8 +168,7 @@ def sync(
     Args:
         body (GenerateTokenPayload): Request payload for generating a registration token.
 
-            Attributes:
-                role (str): The role to assign to the user registering with this token.
+            :ivar role: The role to assign to the user registering with this token.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -200,8 +198,7 @@ async def asyncio_detailed(
     Args:
         body (GenerateTokenPayload): Request payload for generating a registration token.
 
-            Attributes:
-                role (str): The role to assign to the user registering with this token.
+            :ivar role: The role to assign to the user registering with this token.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -236,8 +233,7 @@ async def asyncio(
     Args:
         body (GenerateTokenPayload): Request payload for generating a registration token.
 
-            Attributes:
-                role (str): The role to assign to the user registering with this token.
+            :ivar role: The role to assign to the user registering with this token.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.

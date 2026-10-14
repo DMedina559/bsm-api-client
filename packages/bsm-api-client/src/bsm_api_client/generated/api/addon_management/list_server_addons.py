@@ -121,7 +121,7 @@ def sync_detailed(
 ) -> Response[AddonListResponse | ErrorEnvelope]:
     """ Get Server Addons
 
-     Retrieves a list of addons installed on a server's active world.
+     Return a list of addons installed on a server's active world.
 
     Args:
         server_name (str):
@@ -154,7 +154,7 @@ def sync(
 ) -> AddonListResponse | ErrorEnvelope | None:
     """ Get Server Addons
 
-     Retrieves a list of addons installed on a server's active world.
+     Return a list of addons installed on a server's active world.
 
     Args:
         server_name (str):
@@ -182,7 +182,7 @@ async def asyncio_detailed(
 ) -> Response[AddonListResponse | ErrorEnvelope]:
     """ Get Server Addons
 
-     Retrieves a list of addons installed on a server's active world.
+     Return a list of addons installed on a server's active world.
 
     Args:
         server_name (str):
@@ -215,7 +215,7 @@ async def asyncio(
 ) -> AddonListResponse | ErrorEnvelope | None:
     """ Get Server Addons
 
-     Retrieves a list of addons installed on a server's active world.
+     Return a list of addons installed on a server's active world.
 
     Args:
         server_name (str):

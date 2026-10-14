@@ -133,8 +133,7 @@ def sync_detailed(
     Args:
         body (ThemeUpdatePayload): Request payload for updating the user's theme.
 
-            Attributes:
-                theme (str): The new theme name.
+            :ivar theme: The new theme name.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -169,8 +168,7 @@ def sync(
     Args:
         body (ThemeUpdatePayload): Request payload for updating the user's theme.
 
-            Attributes:
-                theme (str): The new theme name.
+            :ivar theme: The new theme name.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -200,8 +198,7 @@ async def asyncio_detailed(
     Args:
         body (ThemeUpdatePayload): Request payload for updating the user's theme.
 
-            Attributes:
-                theme (str): The new theme name.
+            :ivar theme: The new theme name.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -236,8 +233,7 @@ async def asyncio(
     Args:
         body (ThemeUpdatePayload): Request payload for updating the user's theme.
 
-            Attributes:
-                theme (str): The new theme name.
+            :ivar theme: The new theme name.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.

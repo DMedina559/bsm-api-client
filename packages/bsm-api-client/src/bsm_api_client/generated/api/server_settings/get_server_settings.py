@@ -121,7 +121,7 @@ def sync_detailed(
 ) -> Response[ErrorEnvelope | ServerSettingsResponse]:
     """ Get Server Settings
 
-     Retrieves all settings for a specific server.
+     Return all settings for a specific server.
 
     Args:
         server_name (str):
@@ -154,7 +154,7 @@ def sync(
 ) -> ErrorEnvelope | ServerSettingsResponse | None:
     """ Get Server Settings
 
-     Retrieves all settings for a specific server.
+     Return all settings for a specific server.
 
     Args:
         server_name (str):
@@ -182,7 +182,7 @@ async def asyncio_detailed(
 ) -> Response[ErrorEnvelope | ServerSettingsResponse]:
     """ Get Server Settings
 
-     Retrieves all settings for a specific server.
+     Return all settings for a specific server.
 
     Args:
         server_name (str):
@@ -215,7 +215,7 @@ async def asyncio(
 ) -> ErrorEnvelope | ServerSettingsResponse | None:
     """ Get Server Settings
 
-     Retrieves all settings for a specific server.
+     Return all settings for a specific server.
 
     Args:
         server_name (str):

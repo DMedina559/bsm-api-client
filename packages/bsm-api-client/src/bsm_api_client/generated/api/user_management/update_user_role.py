@@ -134,8 +134,7 @@ def sync_detailed(
         user_id (int):
         body (UpdateUserRolePayload): Request payload for updating a user's role.
 
-            Attributes:
-                role (str): The new role.
+            :ivar role: The new role.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -171,8 +170,7 @@ def sync(
         user_id (int):
         body (UpdateUserRolePayload): Request payload for updating a user's role.
 
-            Attributes:
-                role (str): The new role.
+            :ivar role: The new role.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -203,8 +201,7 @@ async def asyncio_detailed(
         user_id (int):
         body (UpdateUserRolePayload): Request payload for updating a user's role.
 
-            Attributes:
-                role (str): The new role.
+            :ivar role: The new role.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -240,8 +237,7 @@ async def asyncio(
         user_id (int):
         body (UpdateUserRolePayload): Request payload for updating a user's role.
 
-            Attributes:
-                role (str): The new role.
+            :ivar role: The new role.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.

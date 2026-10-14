@@ -117,7 +117,7 @@ def sync_detailed(
 ) -> Response[Any | ErrorEnvelope]:
     """ Validate Token
 
-     Checks if a registration token is valid.
+     Check if a registration token is valid.
 
     Args:
         token (str):
@@ -150,7 +150,7 @@ def sync(
 ) -> Any | ErrorEnvelope | None:
     """ Validate Token
 
-     Checks if a registration token is valid.
+     Check if a registration token is valid.
 
     Args:
         token (str):
@@ -178,7 +178,7 @@ async def asyncio_detailed(
 ) -> Response[Any | ErrorEnvelope]:
     """ Validate Token
 
-     Checks if a registration token is valid.
+     Check if a registration token is valid.
 
     Args:
         token (str):
@@ -211,7 +211,7 @@ async def asyncio(
 ) -> Any | ErrorEnvelope | None:
     """ Validate Token
 
-     Checks if a registration token is valid.
+     Check if a registration token is valid.
 
     Args:
         token (str):

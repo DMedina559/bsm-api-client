@@ -71,6 +71,18 @@ def shape(document, spec, values):
 
 
 SUCCESS = {
+    "instance_id": "test-instance",
+    "pid": 123,
+    "phase": "ready",
+    "shutdown_requested": False,
+    "events": [],
+    "accepting": True,
+    "emitted": 0,
+    "suppressed": 0,
+    "failed_listeners": 0,
+    "subscriptions": 0,
+    "active": [],
+    "recent": [],
     "status": "success",
     "message": "Done",
     "added_count": 1,
@@ -99,9 +111,77 @@ SUCCESS = {
     "process_info": None,
 }
 
+SUCCESS.update(
+    {
+        "snapshot_id": "snapshot",
+        "instance_id": "a" * 32,
+        "collected_at": 100,
+        "sections": [],
+        "summary": {
+            "status": "ok",
+            "ready": True,
+            "counts_by_status": {},
+            "findings": [],
+        },
+        "registry": {
+            "registered": 9,
+            "pending": 0,
+            "max_providers": 128,
+            "max_providers_per_owner": 8,
+        },
+        "environment": {
+            "backend_version": "4.0",
+            "python_version": "3.14",
+            "operating_system": "Test",
+        },
+        "persistence": {
+            "queued": 0,
+            "queue_limit": 256,
+            "dropped": 0,
+            "write_failures": 0,
+            "accepting": True,
+            "history_limit": 1000,
+            "retention_days": 7,
+        },
+        "records": [],
+        "available": False,
+        "truncated": True,
+        "next_cursor": "next",
+        "runs": [],
+        "correlation_id": "trace",
+        "tasks": [],
+        "tasks_available": True,
+        "events_available": False,
+        "history": {"records": [], "available": False, "truncated": False},
+        "same_instance": False,
+        "before_snapshot_id": "before",
+        "after_snapshot_id": "after",
+        "elapsed_seconds": 1,
+        "changes": [],
+    }
+)
+
 # Every curated noninteractive command goes through request serialization and
 # response validation, rather than mocking its facade method.
 CASES = [
+    ("diagnostics", "snapshot"),
+    ("diagnostics", "snapshot", "--subsystem", "runtime"),
+    (
+        "diagnostics",
+        "history",
+        "--limit",
+        "2",
+        "--outcome",
+        "failed",
+        "--cursor",
+        "next",
+    ),
+    ("diagnostics", "runs", "--limit", "5"),
+    ("diagnostics", "trace", "trace", "--cursor", "next"),
+    ("runtime",),
+    ("shutdown", "--yes"),
+    ("events", "catalog"),
+    ("events", "activity", "--limit", "5", "--status", "partial"),
     ("server", "list"),
     ("server", "list", "--server-name", "test"),
     ("server", "start", "-s", "test"),
@@ -185,6 +265,16 @@ def command_client(monkeypatch, tmp_path):
                 body["outcome"] = "restarted"
             elif "stop" in path:
                 body["outcome"] = "stopped"
+            if path == "/api/runtime/shutdown":
+                body.update(
+                    phase="stopping",
+                    shutdown_requested=True,
+                    shutdown_reason="administrator",
+                )
+            if path.startswith("/api/diagnostics"):
+                body["recent"] = None
+            if path.startswith("/api/diagnostics/trace/"):
+                body["events"] = None
             if path.startswith("/api/tasks/"):
                 body = {
                     "id": "test-task",
@@ -489,3 +579,22 @@ def test_partial_player_scan_preserves_details_and_fails(command_client, machine
     else:
         assert "Log unavailable" in result.stdout
     assert clients[0]._dynamic_request.await_count == 1
+
+
+def test_diagnostic_compare_reads_snapshots_and_reports(command_client, tmp_path):
+    _, current = response_for("GET", "/api/diagnostics", {**SUCCESS, "recent": None})
+    before = tmp_path / "before.json"
+    after = tmp_path / "after.json"
+    before.write_text(json.dumps(current))
+    after.write_text(json.dumps({"snapshot": current}))
+    result = CliRunner().invoke(
+        cli, ["--json", "diagnostics", "compare", str(before), str(after)]
+    )
+    assert result.exit_code == 0, result.output
+    assert json.loads(result.stdout)["same_instance"] is False
+    request = command_client[0]._dynamic_request.call_args
+    assert request.args[:2] == ("POST", "/api/diagnostics/compare")
+    assert (
+        json.loads(request.kwargs["raw_request"].content)["after"]["snapshot_id"]
+        == "snapshot"
+    )

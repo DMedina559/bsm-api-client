@@ -119,7 +119,7 @@ def sync_detailed(
 ) -> Response[ErrorEnvelope | ServersListResponse]:
     """ Get Servers List
 
-     Retrieves a list of all detected server instances with their status and version.
+     Return a list of all detected server instances with their status and version.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -147,7 +147,7 @@ def sync(
 ) -> ErrorEnvelope | ServersListResponse | None:
     """ Get Servers List
 
-     Retrieves a list of all detected server instances with their status and version.
+     Return a list of all detected server instances with their status and version.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -170,7 +170,7 @@ async def asyncio_detailed(
 ) -> Response[ErrorEnvelope | ServersListResponse]:
     """ Get Servers List
 
-     Retrieves a list of all detected server instances with their status and version.
+     Return a list of all detected server instances with their status and version.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -198,7 +198,7 @@ async def asyncio(
 ) -> ErrorEnvelope | ServersListResponse | None:
     """ Get Servers List
 
-     Retrieves a list of all detected server instances with their status and version.
+     Return a list of all detected server instances with their status and version.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.

@@ -121,7 +121,7 @@ def sync_detailed(
 ) -> Response[ErrorEnvelope | ServerRunningStatusResponse]:
     """ Get Server Running Status
 
-     Checks if a specific server's process is currently running.
+     Check if a specific server's process is currently running.
 
     Args:
         server_name (str):
@@ -154,7 +154,7 @@ def sync(
 ) -> ErrorEnvelope | ServerRunningStatusResponse | None:
     """ Get Server Running Status
 
-     Checks if a specific server's process is currently running.
+     Check if a specific server's process is currently running.
 
     Args:
         server_name (str):
@@ -182,7 +182,7 @@ async def asyncio_detailed(
 ) -> Response[ErrorEnvelope | ServerRunningStatusResponse]:
     """ Get Server Running Status
 
-     Checks if a specific server's process is currently running.
+     Check if a specific server's process is currently running.
 
     Args:
         server_name (str):
@@ -215,7 +215,7 @@ async def asyncio(
 ) -> ErrorEnvelope | ServerRunningStatusResponse | None:
     """ Get Server Running Status
 
-     Checks if a specific server's process is currently running.
+     Check if a specific server's process is currently running.
 
     Args:
         server_name (str):

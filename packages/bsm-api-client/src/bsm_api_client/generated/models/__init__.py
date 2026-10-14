@@ -20,14 +20,25 @@ from .base_api_response import BaseApiResponse
 from .body_login import BodyLogin
 from .change_password_payload import ChangePasswordPayload
 from .command_payload import CommandPayload
+from .compare_diagnostic_snapshots_request import CompareDiagnosticSnapshotsRequest
 from .content_list_response import ContentListResponse
 from .custom_zips_response import CustomZipsResponse
+from .diagnostic_comparison import DiagnosticComparison
+from .diagnostic_history import DiagnosticHistory
+from .diagnostic_report import DiagnosticReport
+from .diagnostic_runs import DiagnosticRuns
+from .diagnostic_snapshot import DiagnosticSnapshot
+from .diagnostic_trace import DiagnosticTrace
 from .error_envelope import ErrorEnvelope
+from .event_catalog import EventCatalog
+from .event_diagnostics import EventDiagnostics
 from .file_name_payload import FileNamePayload
 from .generate_token_payload import GenerateTokenPayload
 from .get_allowlist_response import GetAllowlistResponse
 from .get_application_health_response import GetApplicationHealthResponse
 from .get_application_metrics_response import GetApplicationMetricsResponse
+from .get_diagnostic_history_outcome_type_0 import GetDiagnosticHistoryOutcomeType0
+from .get_event_activity_status_type_0 import GetEventActivityStatusType0
 from .get_permissions_response import GetPermissionsResponse
 from .get_plugin_settings_response import GetPluginSettingsResponse
 from .get_properties_response import GetPropertiesResponse
@@ -54,6 +65,7 @@ from .remove_from_allowlist_response import RemoveFromAllowlistResponse
 from .remove_server_ban_response import RemoveServerBanResponse
 from .restart_server_response import RestartServerResponse
 from .restore_action_payload import RestoreActionPayload
+from .runtime_status import RuntimeStatus
 from .send_command_response import SendCommandResponse
 from .server_process_info_response import ServerProcessInfoResponse
 from .server_running_status_response import ServerRunningStatusResponse
@@ -67,6 +79,8 @@ from .setting_item_response import SettingItemResponse
 from .settings_response import SettingsResponse
 from .setup_account_response import SetupAccountResponse
 from .setup_status_response import SetupStatusResponse
+from .shutdown_request import ShutdownRequest
+from .shutdown_response import ShutdownResponse
 from .start_server_response import StartServerResponse
 from .stop_server_response import StopServerResponse
 from .task_accepted_response import TaskAcceptedResponse
@@ -79,4 +93,4 @@ from .trigger_event_response import TriggerEventResponse
 from .update_user_role_payload import UpdateUserRolePayload
 from .user_login_payload import UserLoginPayload
 from .user_response import UserResponse
-__all__ = ['ActionResponse', 'AddPlayersPayload', 'AddPlayersResponse', 'AddServerBanResponse', 'AddToAllowlistResponse', 'AddonActionPayload', 'AddonListResponse', 'AddonReorderPayload', 'AddonSubpackPayload', 'AllowlistAddPayload', 'AllowlistRemovePayload', 'AppInfoResponse', 'AuditLogResponse', 'BackupActionPayload', 'BackupFilesResponse', 'BanAddRequest', 'BanRemoveRequest', 'BaseApiResponse', 'BodyLogin', 'ChangePasswordPayload', 'CommandPayload', 'ContentListResponse', 'CustomZipsResponse', 'ErrorEnvelope', 'FileNamePayload', 'GenerateTokenPayload', 'GetAllowlistResponse', 'GetApplicationHealthResponse', 'GetApplicationMetricsResponse', 'GetPermissionsResponse', 'GetPluginSettingsResponse', 'GetPropertiesResponse', 'GetRawPropertiesResponse', 'GetServerBansResponse', 'InstallConfirmationResponse', 'InstallServerPayload', 'InstallationAcceptedResponse', 'ListAvailableAddonsResponse', 'LogHistoryPage', 'PermissionsSetPayload', 'PermissionsUpdateResponse', 'PlayerListResponse', 'PluginPagesResponse', 'PluginSettingsPayload', 'PluginStatusSetPayload', 'PluginStatusesResponse', 'ProfileUpdatePayload', 'PropertiesPayload', 'PruneDownloadsPayload', 'PruneDownloadsResponse', 'RegistrationResponse', 'RemoveFromAllowlistResponse', 'RemoveServerBanResponse', 'RestartServerResponse', 'RestoreActionPayload', 'SendCommandResponse', 'ServerProcessInfoResponse', 'ServerRunningStatusResponse', 'ServerSettingItemPayload', 'ServerSettingsResponse', 'ServerSummary', 'ServersListResponse', 'SetPluginSettingResponse', 'SetPropertiesResponse', 'SettingItemResponse', 'SettingsResponse', 'SetupAccountResponse', 'SetupStatusResponse', 'StartServerResponse', 'StopServerResponse', 'TaskAcceptedResponse', 'TaskSnapshot', 'ThemeListResponse', 'ThemeUpdatePayload', 'TokenResponse', 'TriggerEventPayload', 'TriggerEventResponse', 'UpdateUserRolePayload', 'UserLoginPayload', 'UserResponse']
+__all__ = ['ActionResponse', 'AddPlayersPayload', 'AddPlayersResponse', 'AddServerBanResponse', 'AddToAllowlistResponse', 'AddonActionPayload', 'AddonListResponse', 'AddonReorderPayload', 'AddonSubpackPayload', 'AllowlistAddPayload', 'AllowlistRemovePayload', 'AppInfoResponse', 'AuditLogResponse', 'BackupActionPayload', 'BackupFilesResponse', 'BanAddRequest', 'BanRemoveRequest', 'BaseApiResponse', 'BodyLogin', 'ChangePasswordPayload', 'CommandPayload', 'CompareDiagnosticSnapshotsRequest', 'ContentListResponse', 'CustomZipsResponse', 'DiagnosticComparison', 'DiagnosticHistory', 'DiagnosticReport', 'DiagnosticRuns', 'DiagnosticSnapshot', 'DiagnosticTrace', 'ErrorEnvelope', 'EventCatalog', 'EventDiagnostics', 'FileNamePayload', 'GenerateTokenPayload', 'GetAllowlistResponse', 'GetApplicationHealthResponse', 'GetApplicationMetricsResponse', 'GetDiagnosticHistoryOutcomeType0', 'GetEventActivityStatusType0', 'GetPermissionsResponse', 'GetPluginSettingsResponse', 'GetPropertiesResponse', 'GetRawPropertiesResponse', 'GetServerBansResponse', 'InstallConfirmationResponse', 'InstallServerPayload', 'InstallationAcceptedResponse', 'ListAvailableAddonsResponse', 'LogHistoryPage', 'PermissionsSetPayload', 'PermissionsUpdateResponse', 'PlayerListResponse', 'PluginPagesResponse', 'PluginSettingsPayload', 'PluginStatusSetPayload', 'PluginStatusesResponse', 'ProfileUpdatePayload', 'PropertiesPayload', 'PruneDownloadsPayload', 'PruneDownloadsResponse', 'RegistrationResponse', 'RemoveFromAllowlistResponse', 'RemoveServerBanResponse', 'RestartServerResponse', 'RestoreActionPayload', 'RuntimeStatus', 'SendCommandResponse', 'ServerProcessInfoResponse', 'ServerRunningStatusResponse', 'ServerSettingItemPayload', 'ServerSettingsResponse', 'ServerSummary', 'ServersListResponse', 'SetPluginSettingResponse', 'SetPropertiesResponse', 'SettingItemResponse', 'SettingsResponse', 'SetupAccountResponse', 'SetupStatusResponse', 'ShutdownRequest', 'ShutdownResponse', 'StartServerResponse', 'StopServerResponse', 'TaskAcceptedResponse', 'TaskSnapshot', 'ThemeListResponse', 'ThemeUpdatePayload', 'TokenResponse', 'TriggerEventPayload', 'TriggerEventResponse', 'UpdateUserRolePayload', 'UserLoginPayload', 'UserResponse']

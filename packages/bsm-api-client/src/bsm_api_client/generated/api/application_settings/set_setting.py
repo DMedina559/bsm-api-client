@@ -128,7 +128,7 @@ def sync_detailed(
 ) -> Response[ErrorEnvelope | SettingsResponse]:
     """ Post Set Setting
 
-     Sets a specific global application setting.
+     Set a specific global application setting.
 
     Args:
         body (SettingItemResponse): Request model for a single setting key-value pair.
@@ -161,7 +161,7 @@ def sync(
 ) -> ErrorEnvelope | SettingsResponse | None:
     """ Post Set Setting
 
-     Sets a specific global application setting.
+     Set a specific global application setting.
 
     Args:
         body (SettingItemResponse): Request model for a single setting key-value pair.
@@ -189,7 +189,7 @@ async def asyncio_detailed(
 ) -> Response[ErrorEnvelope | SettingsResponse]:
     """ Post Set Setting
 
-     Sets a specific global application setting.
+     Set a specific global application setting.
 
     Args:
         body (SettingItemResponse): Request model for a single setting key-value pair.
@@ -222,7 +222,7 @@ async def asyncio(
 ) -> ErrorEnvelope | SettingsResponse | None:
     """ Post Set Setting
 
-     Sets a specific global application setting.
+     Set a specific global application setting.
 
     Args:
         body (SettingItemResponse): Request model for a single setting key-value pair.

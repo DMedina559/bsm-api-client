@@ -133,9 +133,9 @@ def sync_detailed(
     Args:
         body (ChangePasswordPayload): Request payload for changing the user's password.
 
-            Attributes:
-                current_password (str): The current password for verification.
-                new_password (str): The new password.
+            :ivar current_password: The current password for verification.
+
+            :ivar new_password: The new password.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -170,9 +170,9 @@ def sync(
     Args:
         body (ChangePasswordPayload): Request payload for changing the user's password.
 
-            Attributes:
-                current_password (str): The current password for verification.
-                new_password (str): The new password.
+            :ivar current_password: The current password for verification.
+
+            :ivar new_password: The new password.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -202,9 +202,9 @@ async def asyncio_detailed(
     Args:
         body (ChangePasswordPayload): Request payload for changing the user's password.
 
-            Attributes:
-                current_password (str): The current password for verification.
-                new_password (str): The new password.
+            :ivar current_password: The current password for verification.
+
+            :ivar new_password: The new password.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -239,9 +239,9 @@ async def asyncio(
     Args:
         body (ChangePasswordPayload): Request payload for changing the user's password.
 
-            Attributes:
-                current_password (str): The current password for verification.
-                new_password (str): The new password.
+            :ivar current_password: The current password for verification.
+
+            :ivar new_password: The new password.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.

@@ -8,10 +8,12 @@ from ..models import (
     GetApplicationMetricsResponse,
     PruneDownloadsPayload,
     PruneDownloadsResponse,
+    RuntimeStatus,
     SettingItemResponse,
     SettingsResponse,
     SetupAccountResponse,
     SetupStatusResponse,
+    ShutdownResponse,
     ThemeListResponse,
     UserLoginPayload,
 )
@@ -175,5 +177,23 @@ class ApplicationService(Service):
                 body=payload.model_dump(mode="json"),
                 authenticated=False,
                 typed=True,
+            ),
+        )
+
+    async def async_get_web_runtime(self) -> RuntimeStatus:
+        """Inspect the web host's phase and shutdown state as an administrator."""
+        return parse_response(
+            RuntimeStatus,
+            await self.async_call_generated(
+                "get_web_runtime", authenticated=True, typed=True
+            ),
+        )
+
+    async def async_shutdown_web_runtime(self) -> ShutdownResponse:
+        """Request graceful host shutdown; acceptance does not confirm completion."""
+        return parse_response(
+            ShutdownResponse,
+            await self.async_call_generated(
+                "shutdown_web_runtime", body={}, authenticated=True, typed=True
             ),
         )

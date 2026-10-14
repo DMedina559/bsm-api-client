@@ -128,7 +128,7 @@ def sync_detailed(
 ) -> Response[ErrorEnvelope | SetupAccountResponse]:
     """ Create First User
 
-     Creates the first user (admin) in the database.
+     Create the first user (admin) in the database.
 
     Args:
         body (UserLoginPayload): Request model for user login credentials.
@@ -161,7 +161,7 @@ def sync(
 ) -> ErrorEnvelope | SetupAccountResponse | None:
     """ Create First User
 
-     Creates the first user (admin) in the database.
+     Create the first user (admin) in the database.
 
     Args:
         body (UserLoginPayload): Request model for user login credentials.
@@ -189,7 +189,7 @@ async def asyncio_detailed(
 ) -> Response[ErrorEnvelope | SetupAccountResponse]:
     """ Create First User
 
-     Creates the first user (admin) in the database.
+     Create the first user (admin) in the database.
 
     Args:
         body (UserLoginPayload): Request model for user login credentials.
@@ -222,7 +222,7 @@ async def asyncio(
 ) -> ErrorEnvelope | SetupAccountResponse | None:
     """ Create First User
 
-     Creates the first user (admin) in the database.
+     Create the first user (admin) in the database.
 
     Args:
         body (UserLoginPayload): Request model for user login credentials.

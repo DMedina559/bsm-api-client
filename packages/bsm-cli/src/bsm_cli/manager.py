@@ -314,3 +314,71 @@ async def logs(ctx, topic, before, file_id):
         click.echo(
             f"\nOlder logs: --before {page['start']} --file-id {page['file_id']}"
         )
+
+
+@manager.command("runtime")
+@click.pass_context
+async def runtime(ctx):
+    """Inspect the web host phase; requires administrator access."""
+    result = await get_client(ctx).application.async_get_web_runtime()
+    if not ctx.obj.get("json_output"):
+        outcome(result.model_dump(mode="json"))
+    return result
+
+
+@manager.command("shutdown")
+@click.option("--yes", is_flag=True, help="Confirm shutdown without prompting.")
+@click.pass_context
+async def shutdown(ctx, yes):
+    """Request graceful manager shutdown, including its server cleanup."""
+    if not yes:
+        click.confirm("Shut down the manager and run server cleanup?", abort=True)
+    result = await get_client(ctx).application.async_shutdown_web_runtime()
+    if not ctx.obj.get("json_output"):
+        click.echo(
+            f"Shutdown accepted for instance {result.instance_id}; cleanup is still in progress."
+        )
+    return result
+
+
+@manager.group("events")
+def events():
+    """Inspect event declarations and delivery diagnostics as an administrator."""
+
+
+@events.command("catalog")
+@click.pass_context
+async def event_catalog(ctx):
+    result = await get_client(ctx).events.async_list_application_events()
+    if not ctx.obj.get("json_output"):
+        table(
+            "Application events",
+            ("Name", "Phase", "Owner"),
+            [(event.name, event.phase, event.owner) for event in result.events],
+        )
+    return result
+
+
+@events.command("activity")
+@click.option("--name")
+@click.option("--owner")
+@click.option("--correlation-id")
+@click.option(
+    "--status",
+    type=click.Choice(
+        ["dispatching", "completed", "partial", "cancelled", "suppressed"]
+    ),
+)
+@click.option("--limit", type=click.IntRange(1, 10000), default=20, show_default=True)
+@click.pass_context
+async def event_activity(ctx, name, owner, correlation_id, status, limit):
+    result = await get_client(ctx).events.async_get_event_activity(
+        name=name,
+        owner=owner,
+        correlation_id=correlation_id,
+        status=status,
+        limit=limit,
+    )
+    if not ctx.obj.get("json_output"):
+        outcome(result.model_dump(mode="json"))
+    return result

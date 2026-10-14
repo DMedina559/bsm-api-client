@@ -220,6 +220,23 @@ token lifetime. Interactive login also offers this choice, defaulting to off.
 The CLI saves the issued token without storing your password; the flag cannot
 extend the lifetime of an existing token supplied with `--token`.
 
+
+## Administrative diagnostics
+
+```bash
+bsm-cli diagnostics snapshot
+bsm-cli diagnostics snapshot --subsystem runtime
+bsm-cli diagnostics history --outcome failed --limit 50
+bsm-cli diagnostics history --cursor RETURNED_CURSOR
+bsm-cli diagnostics runs
+bsm-cli diagnostics trace CORRELATION_ID
+bsm-cli --json diagnostics snapshot > before.json
+bsm-cli --json diagnostics snapshot > after.json
+bsm-cli diagnostics compare before.json after.json
+```
+
+History supports subsystem, instance, owner, code, outcome, operation and correlation filters. Trace sources may be independently unavailable. Comparison accepts snapshots or the `snapshot` member of saved support reports; counter deltas are unavailable across instance changes. All commands support the existing `--json` output and administrator error policy. Requests are on demand; no new background polling is added.
+
 ### Support reports
 
 On a backend with diagnostic endpoints, an administrator can save a sanitized report:
