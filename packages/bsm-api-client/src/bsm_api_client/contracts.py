@@ -210,6 +210,32 @@ class ChangePasswordPayload(ContractModel):
     new_password: SecretStr = Field(..., min_length=1, title="New Password")
 
 
+class CollectionDiagnostics(ContractModel):
+    model_config = ConfigDict(extra="forbid")
+    active: bool | None = Field(False, title="Active")
+    cache_age_seconds: float | None = Field(None, title="Cache Age Seconds")
+    cache_hits: int | None = Field(0, title="Cache Hits")
+    collections: int | None = Field(0, title="Collections")
+    failures: int | None = Field(0, title="Failures")
+    last_duration_ms: float | None = Field(None, title="Last Duration Ms")
+    last_error_type: str | None = Field(None, title="Last Error Type")
+    last_periodic_error_type: str | None = Field(None, title="Last Periodic Error Type")
+    last_periodic_success_at: float | None = Field(
+        None, title="Last Periodic Success At"
+    )
+    last_success_at: float | None = Field(None, title="Last Success At")
+    periodic_cycles: int | None = Field(0, title="Periodic Cycles")
+    periodic_enabled: bool | None = Field(False, title="Periodic Enabled")
+    periodic_failures: int | None = Field(0, title="Periodic Failures")
+    periodic_status: (
+        Literal["disabled", "not_started", "running", "stopped", "failed"] | None
+    ) = Field("disabled", title="Periodic Status")
+    requests: int | None = Field(0, title="Requests")
+    status: Literal["ok", "degraded", "unavailable"] | None = Field(
+        "ok", title="Status"
+    )
+
+
 class CommandPayload(ContractModel):
     model_config = ConfigDict(extra="forbid")
     command: str = Field(
@@ -242,6 +268,114 @@ class CustomZipsResponse(ContractModel):
     status: Literal["success", "skipped", "partial"] = Field(..., title="Status")
 
 
+class DiagnosticChange(ContractModel):
+    model_config = ConfigDict(extra="forbid")
+    after: float | int | bool | str | None = Field(..., title="After")
+    before: float | int | bool | str | None = Field(..., title="Before")
+    counter_reset: bool | None = Field(False, title="Counter Reset")
+    delta: float | None = Field(None, title="Delta")
+    field: str = Field(..., title="Field")
+    subsystem: str = Field(..., title="Subsystem")
+
+
+class DiagnosticComparison(ContractModel):
+    model_config = ConfigDict(extra="forbid")
+    after_snapshot_id: str = Field(..., title="After Snapshot Id")
+    before_snapshot_id: str = Field(..., title="Before Snapshot Id")
+    changes: list[DiagnosticChange] | None = Field(
+        None, max_length=200, title="Changes"
+    )
+    elapsed_seconds: float | None = Field(..., title="Elapsed Seconds")
+    same_instance: bool = Field(..., title="Same Instance")
+    truncated: bool | None = Field(False, title="Truncated")
+
+
+class DiagnosticEnvironment(ContractModel):
+    model_config = ConfigDict(extra="forbid")
+    backend_version: str = Field(..., title="Backend Version")
+    database_dialect: str | None = Field(None, title="Database Dialect")
+    database_schema_revision: str | None = Field(None, title="Database Schema Revision")
+    frontend_version: str | None = Field(None, title="Frontend Version")
+    operating_system: str = Field(..., title="Operating System")
+    python_version: str = Field(..., title="Python Version")
+
+
+class DiagnosticHealthSample(ContractModel):
+    model_config = ConfigDict(extra="forbid")
+    ready: bool | None = Field(..., title="Ready")
+    sections: dict[str, Literal["ok", "degraded", "unavailable", "unknown"]] = Field(
+        ..., title="Sections"
+    )
+    status: Literal["ok", "degraded", "unavailable", "unknown"] = Field(
+        ..., title="Status"
+    )
+
+
+class DiagnosticIssue(ContractModel):
+    model_config = ConfigDict(extra="forbid")
+    action: (
+        Literal[
+            "inspect_logs",
+            "inspect_events",
+            "inspect_storage",
+            "inspect_plugins",
+            "wait_for_drain",
+            "check_configuration",
+        ]
+        | None
+    ) = Field(None, title="Action")
+    code: str = Field(..., title="Code")
+    message: str = Field(..., title="Message")
+    severity: Literal["warning", "error"] | None = Field("warning", title="Severity")
+
+
+CorrelationId = Annotated[str, Field(max_length=160, title="Correlation Id")]
+DurationMs = Annotated[float, Field(ge=0.0, title="Duration Ms")]
+ErrorType = Annotated[str, Field(max_length=80, title="Error Type")]
+OperationId = Annotated[str, Field(max_length=160, title="Operation Id")]
+Owner = Annotated[str, Field(max_length=160, title="Owner")]
+
+
+class DiagnosticRecord(ContractModel):
+    model_config = ConfigDict(extra="forbid")
+    backend_version: str | None = Field(None, title="Backend Version")
+    code: str = Field(..., max_length=80, title="Code")
+    correlation_id: CorrelationId | None = Field(None, title="Correlation Id")
+    duration_ms: DurationMs | None = Field(None, title="Duration Ms")
+    error_type: ErrorType | None = Field(None, title="Error Type")
+    health: DiagnosticHealthSample | None = None
+    id: str = Field(..., title="Id")
+    instance_id: str = Field(..., title="Instance Id")
+    operation: str = Field(..., max_length=160, title="Operation")
+    operation_id: OperationId | None = Field(None, title="Operation Id")
+    outcome: Literal["completed", "failed", "cancelled"] = Field(..., title="Outcome")
+    owner: Owner | None = Field(None, title="Owner")
+    phase: str | None = Field(None, title="Phase")
+    subsystem: str = Field(..., max_length=80, pattern="^[\\w.:-]+$", title="Subsystem")
+    timestamp: float = Field(..., title="Timestamp")
+
+
+class DiagnosticRun(ContractModel):
+    model_config = ConfigDict(extra="forbid")
+    backend_version: str | None = Field(None, title="Backend Version")
+    cancelled_records: int = Field(..., title="Cancelled Records")
+    current_instance: bool = Field(..., title="Current Instance")
+    failed_records: int = Field(..., title="Failed Records")
+    first_record_at: float = Field(..., title="First Record At")
+    instance_id: str = Field(..., title="Instance Id")
+    last_observed_phase: str | None = Field(None, title="Last Observed Phase")
+    last_record_at: float = Field(..., title="Last Record At")
+    recording_closed: bool | None = Field(None, title="Recording Closed")
+    retained_records: int = Field(..., title="Retained Records")
+
+
+class DiagnosticRuns(ContractModel):
+    model_config = ConfigDict(extra="forbid")
+    available: bool = Field(..., title="Available")
+    runs: list[DiagnosticRun] = Field(..., title="Runs")
+    truncated: bool = Field(..., title="Truncated")
+
+
 class EventDelivery(ContractModel):
     model_config = ConfigDict(extra="forbid")
     failed: int | None = Field(0, ge=0, title="Failed")
@@ -249,6 +383,29 @@ class EventDelivery(ContractModel):
     sent: int | None = Field(0, ge=0, title="Sent")
     targeted: int | None = Field(0, ge=0, title="Targeted")
     unavailable: int | None = Field(0, ge=0, title="Unavailable")
+
+
+MaxWorkers = Annotated[int, Field(ge=1, le=10000, title="Max Workers")]
+MaxWorkersPerOwner = Annotated[
+    int, Field(ge=1, le=10000, title="Max Workers Per Owner")
+]
+
+
+class EventOptions(ContractModel):
+    model_config = ConfigDict(extra="forbid")
+    history_limit: int | None = Field(200, ge=0, le=10000, title="History Limit")
+    hook_timeout_seconds: float | None = Field(
+        120, gt=0.0, le=3600.0, title="Hook Timeout Seconds"
+    )
+    listener_timeout_seconds: float | None = Field(
+        30, gt=0.0, le=3600.0, title="Listener Timeout Seconds"
+    )
+    max_active: int | None = Field(256, ge=1, le=10000, title="Max Active")
+    max_depth: int | None = Field(32, ge=1, le=128, title="Max Depth")
+    max_workers: MaxWorkers | None = Field(None, title="Max Workers")
+    max_workers_per_owner: MaxWorkersPerOwner | None = Field(
+        None, title="Max Workers Per Owner"
+    )
 
 
 class FileNamePayload(ContractModel):
@@ -383,6 +540,24 @@ class LogHistoryPage(ContractModel):
     start: int = Field(..., title="Start")
 
 
+class MetricsDiagnostics(ContractModel):
+    model_config = ConfigDict(extra="forbid")
+    attempts: int | None = Field(0, title="Attempts")
+    failures: int | None = Field(0, title="Failures")
+    interval_seconds: float | None = Field(None, title="Interval Seconds")
+    kind: Literal["metrics"] = Field("metrics", title="Kind")
+    last_duration_ms: float | None = Field(None, title="Last Duration Ms")
+    last_error_type: str | None = Field(None, title="Last Error Type")
+    last_sample_at: float | None = Field(None, title="Last Sample At")
+    missed_intervals: int | None = Field(0, title="Missed Intervals")
+    sample_age_seconds: float | None = Field(None, title="Sample Age Seconds")
+    successes: int | None = Field(0, title="Successes")
+    unavailable_measurements: list[str] | None = Field(
+        None, title="Unavailable Measurements"
+    )
+    warming_up: bool | None = Field(True, title="Warming Up")
+
+
 AppCpuPercent = Annotated[float, Field(ge=0.0, title="App Cpu Percent")]
 AppRamMb = Annotated[float, Field(ge=0.0, title="App Ram Mb")]
 DiskReadKibS = Annotated[float, Field(ge=0.0, title="Disk Read Kib S")]
@@ -395,6 +570,25 @@ SysRamPercent = Annotated[float, Field(ge=0.0, title="Sys Ram Percent")]
 SysRamTotalMb = Annotated[float, Field(ge=0.0, title="Sys Ram Total Mb")]
 ThreadCount = Annotated[int, Field(ge=0, title="Thread Count")]
 UptimeSeconds = Annotated[float, Field(ge=0.0, title="Uptime Seconds")]
+
+
+class PersistenceDiagnostics(ContractModel):
+    model_config = ConfigDict(extra="forbid")
+    accepting: bool = Field(..., title="Accepting")
+    dropped: int = Field(..., title="Dropped")
+    history_limit: int = Field(..., title="History Limit")
+    last_error_type: str | None = Field(None, title="Last Error Type")
+    last_read_error_type: str | None = Field(None, title="Last Read Error Type")
+    last_read_success_at: float | None = Field(None, title="Last Read Success At")
+    last_success_at: float | None = Field(None, title="Last Success At")
+    queue_limit: int = Field(..., title="Queue Limit")
+    queued: int = Field(..., title="Queued")
+    read_failures: int | None = Field(0, title="Read Failures")
+    retention_days: int = Field(..., title="Retention Days")
+    write_failures: int = Field(..., title="Write Failures")
+    writer_status: Literal["not_started", "running", "failed", "closed"] | None = Field(
+        "not_started", title="Writer Status"
+    )
 
 
 class PlayerInfo(ContractModel):
@@ -424,6 +618,24 @@ class PlayerPermissionPayload(ContractModel):
         ..., title="Permission Level"
     )
     xuid: str = Field(..., title="Xuid")
+
+
+class PluginDiagnostic(ContractModel):
+    model_config = ConfigDict(extra="forbid")
+    active_tasks: int = Field(..., title="Active Tasks")
+    diagnostic_providers: int | None = Field(0, title="Diagnostic Providers")
+    drain_failures: int | None = Field(0, title="Drain Failures")
+    draining: bool = Field(..., title="Draining")
+    generation: int = Field(..., title="Generation")
+    last_drain_duration_ms: float | None = Field(None, title="Last Drain Duration Ms")
+    last_transition_at: float | None = Field(None, title="Last Transition At")
+    listeners: int | None = Field(0, title="Listeners")
+    load_failures: int | None = Field(0, title="Load Failures")
+    managed_tasks: int | None = Field(0, title="Managed Tasks")
+    name: str = Field(..., title="Name")
+    status: str = Field(..., title="Status")
+    version: str | None = Field(None, title="Version")
+    workers: int | None = Field(0, title="Workers")
 
 
 class PluginInfo(ContractModel):
@@ -464,12 +676,55 @@ class PluginStatusesResponse(ContractModel):
     status: Literal["success", "skipped", "partial"] = Field(..., title="Status")
 
 
+class PluginValues(ContractModel):
+    model_config = ConfigDict(extra="forbid")
+    health: Literal["ok", "degraded", "unknown"] | None = Field(
+        "unknown", title="Health"
+    )
+    kind: Literal["plugin_values"] = Field("plugin_values", title="Kind")
+    units: (
+        dict[str, Literal["count", "seconds", "milliseconds", "bytes", "percent"]]
+        | None
+    ) = Field(None, title="Units")
+    values: dict[str, float | bool | None] = Field(..., title="Values")
+
+
+class PluginsDiagnostics(ContractModel):
+    model_config = ConfigDict(extra="forbid")
+    kind: Literal["plugins"] = Field("plugins", title="Kind")
+    plugins: list[PluginDiagnostic] | None = Field(None, title="Plugins")
+    total: int | None = Field(0, title="Total")
+    truncated: bool | None = Field(False, title="Truncated")
+
+
+class ProcessDiagnostic(ContractModel):
+    model_config = ConfigDict(extra="forbid")
+    expected_status: str = Field(..., title="Expected Status")
+    last_error_type: str | None = Field(None, title="Last Error Type")
+    observed_at: float | None = Field(None, title="Observed At")
+    observed_running: bool | None = Field(None, title="Observed Running")
+    pid: int | None = Field(None, title="Pid")
+    server_name: str = Field(..., title="Server Name")
+
+
 class ProcessInfo(ContractModel):
     model_config = ConfigDict(extra="forbid")
     cpu_percent: float = Field(..., title="Cpu Percent")
     memory_mb: float = Field(..., title="Memory Mb")
     pid: int = Field(..., title="Pid")
     uptime: str = Field(..., title="Uptime")
+
+
+class ProcessesDiagnostics(ContractModel):
+    model_config = ConfigDict(extra="forbid")
+    kind: Literal["processes"] = Field("processes", title="Kind")
+    last_monitor_at: float | None = Field(None, title="Last Monitor At")
+    monitor_failures: int | None = Field(None, title="Monitor Failures")
+    observation_available: bool = Field(..., title="Observation Available")
+    observed_running: int = Field(..., title="Observed Running")
+    processes: list[ProcessDiagnostic] | None = Field(None, title="Processes")
+    registered: int = Field(..., title="Registered")
+    truncated: bool | None = Field(False, title="Truncated")
 
 
 class ProfileUpdatePayload(ContractModel):
@@ -510,11 +765,49 @@ class PruneDownloadsPayload(ContractModel):
     )
 
 
+class RecentDiagnosticCounts(ContractModel):
+    model_config = ConfigDict(extra="forbid")
+    cancelled: int | None = Field(0, title="Cancelled")
+    failed: int | None = Field(0, title="Failed")
+    timeouts: int | None = Field(0, title="Timeouts")
+
+
+class RecentDiagnosticWindow(ContractModel):
+    model_config = ConfigDict(extra="forbid")
+    bucket_seconds: Literal[10] = Field(10, title="Bucket Seconds")
+    by_subsystem: dict[str, RecentDiagnosticCounts] | None = Field(
+        None, title="By Subsystem"
+    )
+    cancelled: int | None = Field(0, title="Cancelled")
+    failures: int | None = Field(0, title="Failures")
+    observed_since: float = Field(..., title="Observed Since")
+    timeouts: int | None = Field(0, title="Timeouts")
+    window_seconds: Literal[300] = Field(300, title="Window Seconds")
+
+
 class RegistrationResponse(ContractModel):
     model_config = ConfigDict(extra="forbid")
     message: str | None = Field(None, title="Message")
     registration_url: str = Field(..., title="Registration Url")
     status: Literal["success"] = Field("success", title="Status")
+
+
+class RegistryDiagnostics(ContractModel):
+    model_config = ConfigDict(extra="forbid")
+    failures: int | None = Field(0, title="Failures")
+    max_providers: int = Field(..., title="Max Providers")
+    max_providers_per_owner: int = Field(..., title="Max Providers Per Owner")
+    owner_limits_scope: Literal["plugins"] = Field(
+        "plugins", title="Owner Limits Scope"
+    )
+    pending: int = Field(..., title="Pending")
+    pending_by_owner: dict[str, int] | None = Field(None, title="Pending By Owner")
+    registered: int = Field(..., title="Registered")
+    registered_by_owner: dict[str, int] | None = Field(
+        None, title="Registered By Owner"
+    )
+    rejected: int | None = Field(0, title="Rejected")
+    timeouts: int | None = Field(0, title="Timeouts")
 
 
 class RemoveFromAllowlistResponse(ContractModel):
@@ -565,6 +858,23 @@ class RestoreActionPayload(ContractModel):
         description="Type of restore: 'world', 'properties', 'allowlist', 'permissions', or 'all'.",
         title="Restore Type",
     )
+
+
+class RuntimeDiagnostics(ContractModel):
+    model_config = ConfigDict(extra="forbid")
+    kind: Literal["runtime"] = Field("runtime", title="Kind")
+    phase: str = Field(..., title="Phase")
+    pid: int = Field(..., title="Pid")
+    python_version: str = Field(..., title="Python Version")
+    ready: bool | None = Field(False, title="Ready")
+    shutdown_reason: str | None = Field(None, title="Shutdown Reason")
+    shutdown_requested: bool | None = Field(None, title="Shutdown Requested")
+    stage: str | None = Field(None, title="Stage")
+    stage_elapsed_seconds: float | None = Field(None, title="Stage Elapsed Seconds")
+    stage_started_at: float | None = Field(None, title="Stage Started At")
+    stage_timeout_seconds: float | None = Field(None, title="Stage Timeout Seconds")
+    uptime_seconds: float = Field(..., title="Uptime Seconds")
+    version: str = Field(..., title="Version")
 
 
 class RuntimeStatus(ContractModel):
@@ -755,6 +1065,18 @@ class StartServerResponse(ContractModel):
     status: Literal["success"] = Field("success", title="Status")
 
 
+class StateDiagnostics(ContractModel):
+    model_config = ConfigDict(extra="forbid")
+    counts: dict[str, int] = Field(..., title="Counts")
+    epoch: str = Field(..., title="Epoch")
+    kind: Literal["state"] = Field("state", title="Kind")
+    observation_revision: int = Field(..., title="Observation Revision")
+    oldest_pending_age_seconds: float | None = Field(
+        None, title="Oldest Pending Age Seconds"
+    )
+    pending_changes: dict[str, int] = Field(..., title="Pending Changes")
+
+
 class StopServerResponse(ContractModel):
     model_config = ConfigDict(extra="forbid")
     message: str = Field(..., title="Message")
@@ -769,6 +1091,29 @@ class StopServerResponse(ContractModel):
     status: Literal["success"] = Field("success", title="Status")
 
 
+class StorageDiagnostics(ContractModel):
+    model_config = ConfigDict(extra="forbid")
+    active: int | None = Field(0, title="Active")
+    attempts: int | None = Field(0, title="Attempts")
+    failures: int | None = Field(0, title="Failures")
+    kind: Literal["storage"] = Field("storage", title="Kind")
+    last_duration_ms: float | None = Field(None, title="Last Duration Ms")
+    last_error_type: str | None = Field(None, title="Last Error Type")
+    last_reload_at: float | None = Field(None, title="Last Reload At")
+    last_reload_duration_ms: float | None = Field(None, title="Last Reload Duration Ms")
+    last_reload_error_type: str | None = Field(None, title="Last Reload Error Type")
+    last_success_at: float | None = Field(None, title="Last Success At")
+    lock_wait_ms: float | None = Field(None, title="Lock Wait Ms")
+    lock_waiters: int | None = Field(0, title="Lock Waiters")
+    max_lock_wait_ms: float | None = Field(0, title="Max Lock Wait Ms")
+    reload_active: bool | None = Field(False, title="Reload Active")
+    reload_attempts: int | None = Field(0, title="Reload Attempts")
+    reload_failures: int | None = Field(0, title="Reload Failures")
+    reload_successes: int | None = Field(0, title="Reload Successes")
+    successes: int | None = Field(0, title="Successes")
+    total_lock_wait_ms: float | None = Field(0, title="Total Lock Wait Ms")
+
+
 class Subpack(ContractModel):
     model_config = ConfigDict(extra="forbid")
     folder_name: str = Field(..., title="Folder Name")
@@ -781,6 +1126,33 @@ class TaskAcceptedResponse(ContractModel):
     message: str = Field(..., title="Message")
     status: Literal["accepted"] = Field("accepted", title="Status")
     task_id: str = Field(..., title="Task Id")
+
+
+ProgressPercent = Annotated[float, Field(ge=0.0, le=100.0, title="Progress Percent")]
+
+
+class TaskDiagnostic(ContractModel):
+    model_config = ConfigDict(extra="forbid")
+    cancellation_requested: bool | None = Field(False, title="Cancellation Requested")
+    correlation_id: str | None = Field(None, title="Correlation Id")
+    elapsed_seconds: float | None = Field(None, title="Elapsed Seconds")
+    error_code: str | None = Field(None, title="Error Code")
+    id: str = Field(..., title="Id")
+    name: str | None = Field("background_task", title="Name")
+    owner: str | None = Field(None, title="Owner")
+    progress_percent: ProgressPercent | None = Field(None, title="Progress Percent")
+    status: str = Field(..., title="Status")
+
+
+class TasksDiagnostics(ContractModel):
+    model_config = ConfigDict(extra="forbid")
+    accepting: bool = Field(..., title="Accepting")
+    active: int = Field(..., title="Active")
+    capacity: int | None = Field(100, title="Capacity")
+    counts_by_status: dict[str, int] = Field(..., title="Counts By Status")
+    kind: Literal["tasks"] = Field("tasks", title="Kind")
+    oldest_active_seconds: float | None = Field(None, title="Oldest Active Seconds")
+    tasks: list[TaskDiagnostic] | None = Field(None, title="Tasks")
 
 
 class ThemeListResponse(ContractModel):
@@ -800,6 +1172,30 @@ class TokenResponse(ContractModel):
     access_token: str = Field(..., title="Access Token")
     message: str | None = Field(None, title="Message")
     token_type: Literal["bearer"] = Field("bearer", title="Token Type")
+
+
+class TransportDiagnostics(ContractModel):
+    model_config = ConfigDict(extra="forbid")
+    accepting: bool | None = Field(True, title="Accepting")
+    active_sends: int | None = Field(0, title="Active Sends")
+    connected_clients: int = Field(..., title="Connected Clients")
+    delivery_mode: Literal["direct"] = Field("direct", title="Delivery Mode")
+    disconnects_by_reason: dict[str, int] | None = Field(
+        None, title="Disconnects By Reason"
+    )
+    dropped_messages: int | None = Field(0, title="Dropped Messages")
+    failed_sends: int | None = Field(0, title="Failed Sends")
+    high_water_mark: int | None = Field(0, title="High Water Mark")
+    kind: Literal["transport"] = Field("transport", title="Kind")
+    last_send_at: float | None = Field(None, title="Last Send At")
+    last_send_duration_ms: float | None = Field(None, title="Last Send Duration Ms")
+    max_pending_per_client: int | None = Field(0, title="Max Pending Per Client")
+    pending_sends: int | None = Field(0, title="Pending Sends")
+    queue_limit_per_client: int | None = Field(64, title="Queue Limit Per Client")
+    send_timeouts: int | None = Field(0, title="Send Timeouts")
+    subscriptions: int = Field(..., title="Subscriptions")
+    successful_sends: int | None = Field(0, title="Successful Sends")
+    topics: int = Field(..., title="Topics")
 
 
 class TriggerEventPayload(ContractModel):
@@ -888,6 +1284,34 @@ class AuditLogResponse(ContractModel):
     user_id: int = Field(..., title="User Id")
 
 
+class DiagnosticFinding(ContractModel):
+    model_config = ConfigDict(extra="forbid")
+    issue: DiagnosticIssue
+    owner: str = Field(..., title="Owner")
+    subsystem: str = Field(..., title="Subsystem")
+
+
+class DiagnosticHistory(ContractModel):
+    model_config = ConfigDict(extra="forbid")
+    available: bool = Field(..., title="Available")
+    next_cursor: str | None = Field(None, title="Next Cursor")
+    records: list[DiagnosticRecord] = Field(..., title="Records")
+    truncated: bool = Field(..., title="Truncated")
+
+
+class DiagnosticSummary(ContractModel):
+    model_config = ConfigDict(extra="forbid")
+    counts_by_status: dict[str, int] = Field(..., title="Counts By Status")
+    findings: list[DiagnosticFinding] | None = Field(
+        None, max_length=100, title="Findings"
+    )
+    ready: bool | None = Field(..., title="Ready")
+    status: Literal["ok", "degraded", "unavailable", "unknown"] = Field(
+        ..., title="Status"
+    )
+    truncated: bool | None = Field(False, title="Truncated")
+
+
 class ErrorEnvelope(ContractModel):
     model_config = ConfigDict(extra="forbid")
     error: APIErrorResponse
@@ -971,6 +1395,7 @@ class GetApplicationHealthResponse(ContractModel):
         ..., title="LifecyclePhase"
     )
     message: str | None = Field(None, title="Message")
+    ready: bool = Field(..., title="Ready")
     status: Literal["success"] = Field("success", title="Status")
 
 
@@ -1097,18 +1522,38 @@ class EventDiagnostics(ContractModel):
     model_config = ConfigDict(extra="forbid")
     accepting: bool = Field(..., title="Accepting")
     active: list[EventRecord] = Field(..., title="Active")
+    active_dispatches: int | None = Field(0, title="Active Dispatches")
+    active_listeners_by_owner: dict[str, int] | None = Field(
+        None, title="Active Listeners By Owner"
+    )
+    active_truncated: bool | None = Field(False, title="Active Truncated")
     emitted: int = Field(..., title="Emitted")
     failed_listeners: int = Field(..., title="Failed Listeners")
+    notification_delivery: Literal["inline"] = Field(
+        "inline", title="Notification Delivery"
+    )
     pending_waits: int | None = Field(0, title="Pending Waits")
     pending_workers: int | None = Field(0, title="Pending Workers")
     recent: list[EventRecord] = Field(..., title="Recent")
+    recent_truncated: bool | None = Field(False, title="Recent Truncated")
     rejections_by_reason: dict[str, int] | None = Field(
         None, title="Rejections By Reason"
     )
     subscriptions: int = Field(..., title="Subscriptions")
+    subscriptions_by_owner: dict[str, int] | None = Field(
+        None, title="Subscriptions By Owner"
+    )
     suppressed: int = Field(..., title="Suppressed")
     timeouts_by_owner: dict[str, int] | None = Field(None, title="Timeouts By Owner")
     workers_by_owner: dict[str, int] | None = Field(None, title="Workers By Owner")
+
+
+class EventsDiagnostics(ContractModel):
+    model_config = ConfigDict(extra="forbid")
+    activity: EventDiagnostics
+    capacity: EventOptions
+    kind: Literal["events"] = Field("events", title="Kind")
+    truncated: bool | None = Field(False, title="Truncated")
 
 
 class FailedItem(ContractModel):
@@ -1163,3 +1608,77 @@ class AddPlayersResponse(ContractModel):
     status: Literal["success", "skipped", "partial"] = Field(..., title="Status")
     submitted_count: SubmittedCount | None = Field(None, title="Submitted Count")
     unique_count: UniqueCount | None = Field(None, title="Unique Count")
+
+
+class DiagnosticSection(ContractModel):
+    model_config = ConfigDict(extra="forbid")
+    age_seconds: float | None = Field(None, title="Age Seconds")
+    collected_at: float = Field(..., title="Collected At")
+    data: (
+        RuntimeDiagnostics
+        | StateDiagnostics
+        | StorageDiagnostics
+        | EventsDiagnostics
+        | TransportDiagnostics
+        | PluginsDiagnostics
+        | TasksDiagnostics
+        | ProcessesDiagnostics
+        | MetricsDiagnostics
+        | PluginValues
+        | None
+    ) = Field(None, title="Data")
+    duration_ms: float | None = Field(0, title="Duration Ms")
+    issues: list[DiagnosticIssue] | None = Field(None, max_length=20, title="Issues")
+    last_success_at: float | None = Field(None, title="Last Success At")
+    name: str = Field(..., title="Name")
+    observed_at: float | None = Field(None, title="Observed At")
+    owner: str | None = Field("application", title="Owner")
+    stale: bool | None = Field(False, title="Stale")
+    status: Literal["ok", "degraded", "unavailable", "unknown"] | None = Field(
+        "unknown", title="Status"
+    )
+
+
+class DiagnosticSnapshot(ContractModel):
+    model_config = ConfigDict(extra="forbid")
+    collected_at: float = Field(..., title="Collected At")
+    collection: CollectionDiagnostics | None = None
+    counter_scope: Literal["current_instance"] = Field(
+        "current_instance", title="Counter Scope"
+    )
+    environment: DiagnosticEnvironment
+    instance_id: str = Field(..., title="Instance Id")
+    persistence: PersistenceDiagnostics
+    recent: RecentDiagnosticWindow | None = None
+    registry: RegistryDiagnostics
+    schema_version: Literal[1] = Field(1, title="Schema Version")
+    sections: list[DiagnosticSection] = Field(..., max_length=1000, title="Sections")
+    snapshot_id: str | None = Field(None, title="Snapshot Id")
+    summary: DiagnosticSummary
+
+
+class DiagnosticTrace(ContractModel):
+    model_config = ConfigDict(extra="forbid")
+    correlation_id: str = Field(..., title="Correlation Id")
+    events: EventDiagnostics | None = None
+    events_available: bool | None = Field(False, title="Events Available")
+    history: DiagnosticHistory
+    issues: list[DiagnosticIssue] | None = Field(None, max_length=3, title="Issues")
+    tasks: list[TaskDiagnostic] = Field(..., title="Tasks")
+    tasks_available: bool = Field(..., title="Tasks Available")
+    truncated: bool | None = Field(False, title="Truncated")
+
+
+class CompareDiagnosticSnapshotsRequest(ContractModel):
+    model_config = ConfigDict(extra="forbid")
+    after: DiagnosticSnapshot
+    before: DiagnosticSnapshot
+
+
+class DiagnosticReport(ContractModel):
+    model_config = ConfigDict(extra="forbid")
+    generated_at: float | None = Field(None, title="Generated At")
+    history: DiagnosticHistory
+    report_id: str | None = Field(None, title="Report Id")
+    runs: DiagnosticRuns | None = None
+    snapshot: DiagnosticSnapshot

@@ -141,6 +141,15 @@ async def test_standalone_event_and_web_runtime_contracts_against_backend(server
     async with BedrockServerManagerApi(server, "admin", "password") as client:
         runtime = await client.application.async_get_web_runtime()
         assert runtime.phase == "ready" and not runtime.shutdown_requested
+        snapshot = await client.diagnostics.async_get_application_diagnostics()
+        assert snapshot.summary.ready is True
+        assert {"runtime", "events", "plugins"} <= {
+            section.name for section in snapshot.sections
+        }
+        filtered = await client.diagnostics.async_get_subsystem_diagnostics("runtime")
+        assert [section.name for section in filtered.sections] == ["runtime"]
+        report = await client.diagnostics.async_get_diagnostic_report()
+        assert report.snapshot.instance_id == snapshot.instance_id
         catalog = await client.events.async_list_application_events()
         assert any(event.name == "before_server_start" for event in catalog.events)
         activity = await client.events.async_get_event_activity(

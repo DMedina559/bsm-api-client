@@ -66,6 +66,8 @@ async def call_generated(
     module = await asyncio.to_thread(operation_module, operation_id)
     kwargs = dict(parameters or {})
     try:
+        if kwargs:
+            await asyncio.to_thread(validate_generated_parameters, operation_id, kwargs)
         if body is not None:
             body = await asyncio.to_thread(validate_generated_body, operation_id, body)
             kwargs["body"] = generated_body(module, body)
@@ -90,6 +92,33 @@ async def call_generated(
         if detailed
         else (response.parsed if typed else response_value(response))
     )
+
+
+def validate_generated_parameters(
+    operation_id: str, parameters: dict[str, Any]
+) -> None:
+    """Validate supplied generated arguments against canonical parameter schemas."""
+    from enum import Enum
+
+    from .generated.types import Unset
+
+    document = generated_schema()
+    operation = index_operations(document)[operation_id]
+    for parameter in operation.parameters:
+        name = parameter["name"]
+        python_name = name.replace("-", "_").lower()
+        key = name if name in parameters else python_name
+        if key not in parameters or isinstance(parameters[key], Unset):
+            continue
+        value = parameters[key]
+        if isinstance(value, Enum):
+            value = value.value
+        validate_input(
+            document,
+            parameter.get("schema", {}),
+            value,
+            f"{parameter['in']} parameter {name}",
+        )
 
 
 def validate_generated_body(operation_id: str, body: Any) -> Any:
