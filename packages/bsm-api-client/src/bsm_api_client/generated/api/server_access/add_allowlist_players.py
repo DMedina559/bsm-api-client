@@ -128,19 +128,15 @@ def sync_detailed(
     body: AllowlistAddPayload,
 
 ) -> Response[AddToAllowlistResponse | ErrorEnvelope]:
-    """ Post Allowlist
-
-    Args:
-        server_name (str):
-        body (AllowlistAddPayload): Request model for adding players to the allowlist.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Response[AddToAllowlistResponse | ErrorEnvelope]
-     """
+    """Post Allowlist
+    
+    :param server_name: Value supplied to the operation.
+    :param body: Request model for adding players to the allowlist.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: The parsed response."""
 
 
     kwargs = _get_kwargs(
@@ -162,19 +158,15 @@ def sync(
     body: AllowlistAddPayload,
 
 ) -> AddToAllowlistResponse | ErrorEnvelope | None:
-    """ Post Allowlist
-
-    Args:
-        server_name (str):
-        body (AllowlistAddPayload): Request model for adding players to the allowlist.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        AddToAllowlistResponse | ErrorEnvelope
-     """
+    """Post Allowlist
+    
+    :param server_name: Value supplied to the operation.
+    :param body: Request model for adding players to the allowlist.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: AddToAllowlistResponse | ErrorEnvelope"""
 
 
     return sync_detailed(
@@ -191,19 +183,15 @@ async def asyncio_detailed(
     body: AllowlistAddPayload,
 
 ) -> Response[AddToAllowlistResponse | ErrorEnvelope]:
-    """ Post Allowlist
-
-    Args:
-        server_name (str):
-        body (AllowlistAddPayload): Request model for adding players to the allowlist.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Response[AddToAllowlistResponse | ErrorEnvelope]
-     """
+    """Post Allowlist
+    
+    :param server_name: Value supplied to the operation.
+    :param body: Request model for adding players to the allowlist.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: The parsed response."""
 
 
     kwargs = _get_kwargs(
@@ -225,19 +213,15 @@ async def asyncio(
     body: AllowlistAddPayload,
 
 ) -> AddToAllowlistResponse | ErrorEnvelope | None:
-    """ Post Allowlist
-
-    Args:
-        server_name (str):
-        body (AllowlistAddPayload): Request model for adding players to the allowlist.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        AddToAllowlistResponse | ErrorEnvelope
-     """
+    """Post Allowlist
+    
+    :param server_name: Value supplied to the operation.
+    :param body: Request model for adding players to the allowlist.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: AddToAllowlistResponse | ErrorEnvelope"""
 
 
     return (await asyncio_detailed(

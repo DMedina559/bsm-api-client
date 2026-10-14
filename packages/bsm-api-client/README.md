@@ -207,3 +207,9 @@ report = await client.diagnostics.async_get_diagnostic_report()
 ```
 
 Subsystem reads return a filtered `DiagnosticSnapshot`, preserving collection and health metadata. Continue history with `page.next_cursor`; trace and history source availability are independent. Missing readings and unresolved plugin states remain unchanged. Generated calls validate supplied query/path arguments and JSON request bodies against the bundled contract before sending. Administrator failures propagate through the normal SDK exception policy; snapshots and reports are not persisted by the SDK.
+
+## Developer documentation
+
+Sphinx guides and Python references live in [docs/source](../../docs/source/index.rst).
+See [setup and validation](../../docs/source/contributing.md) to build them locally.
+The root Read the Docs configuration is ready for project connection and hosting.

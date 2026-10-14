@@ -117,17 +117,14 @@ def sync_detailed(
     client: AuthenticatedClient,
 
 ) -> Response[ContentListResponse | ErrorEnvelope]:
-    """ Get Worlds List
-
+    """Get Worlds List
+    
      Return a list of available .mcworld template files.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Response[ContentListResponse | ErrorEnvelope]
-     """
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: The parsed response."""
 
 
     kwargs = _get_kwargs(
@@ -145,17 +142,14 @@ def sync(
     client: AuthenticatedClient,
 
 ) -> ContentListResponse | ErrorEnvelope | None:
-    """ Get Worlds List
-
+    """Get Worlds List
+    
      Return a list of available .mcworld template files.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        ContentListResponse | ErrorEnvelope
-     """
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: ContentListResponse | ErrorEnvelope"""
 
 
     return sync_detailed(
@@ -168,17 +162,14 @@ async def asyncio_detailed(
     client: AuthenticatedClient,
 
 ) -> Response[ContentListResponse | ErrorEnvelope]:
-    """ Get Worlds List
-
+    """Get Worlds List
+    
      Return a list of available .mcworld template files.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Response[ContentListResponse | ErrorEnvelope]
-     """
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: The parsed response."""
 
 
     kwargs = _get_kwargs(
@@ -196,17 +187,14 @@ async def asyncio(
     client: AuthenticatedClient,
 
 ) -> ContentListResponse | ErrorEnvelope | None:
-    """ Get Worlds List
-
+    """Get Worlds List
+    
      Return a list of available .mcworld template files.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        ContentListResponse | ErrorEnvelope
-     """
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: ContentListResponse | ErrorEnvelope"""
 
 
     return (await asyncio_detailed(

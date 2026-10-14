@@ -113,22 +113,19 @@ def sync_detailed(
     client: AuthenticatedClient | Client,
 
 ) -> Response[Any | ErrorEnvelope]:
-    """ Serve Custom Panorama Api
-
+    """Serve Custom Panorama Api
+    
      Serves a custom panorama background image if available, otherwise a default.
-
+    
     This endpoint attempts to locate a ``panorama.(jpeg|jpg|png|webp)`` file in the
     application's configuration directory. If found, it's served. If not, or if the
     config directory isn't set, it falls back to serving a default panorama image from
     the static assets.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Response[Any | ErrorEnvelope]
-     """
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: The parsed response."""
 
 
     kwargs = _get_kwargs(
@@ -146,22 +143,19 @@ def sync(
     client: AuthenticatedClient | Client,
 
 ) -> Any | ErrorEnvelope | None:
-    """ Serve Custom Panorama Api
-
+    """Serve Custom Panorama Api
+    
      Serves a custom panorama background image if available, otherwise a default.
-
+    
     This endpoint attempts to locate a ``panorama.(jpeg|jpg|png|webp)`` file in the
     application's configuration directory. If found, it's served. If not, or if the
     config directory isn't set, it falls back to serving a default panorama image from
     the static assets.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Any | ErrorEnvelope
-     """
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: Any | ErrorEnvelope"""
 
 
     return sync_detailed(
@@ -174,22 +168,19 @@ async def asyncio_detailed(
     client: AuthenticatedClient | Client,
 
 ) -> Response[Any | ErrorEnvelope]:
-    """ Serve Custom Panorama Api
-
+    """Serve Custom Panorama Api
+    
      Serves a custom panorama background image if available, otherwise a default.
-
+    
     This endpoint attempts to locate a ``panorama.(jpeg|jpg|png|webp)`` file in the
     application's configuration directory. If found, it's served. If not, or if the
     config directory isn't set, it falls back to serving a default panorama image from
     the static assets.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Response[Any | ErrorEnvelope]
-     """
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: The parsed response."""
 
 
     kwargs = _get_kwargs(
@@ -207,22 +198,19 @@ async def asyncio(
     client: AuthenticatedClient | Client,
 
 ) -> Any | ErrorEnvelope | None:
-    """ Serve Custom Panorama Api
-
+    """Serve Custom Panorama Api
+    
      Serves a custom panorama background image if available, otherwise a default.
-
+    
     This endpoint attempts to locate a ``panorama.(jpeg|jpg|png|webp)`` file in the
     application's configuration directory. If found, it's served. If not, or if the
     config directory isn't set, it falls back to serving a default panorama image from
     the static assets.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Any | ErrorEnvelope
-     """
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: Any | ErrorEnvelope"""
 
 
     return (await asyncio_detailed(

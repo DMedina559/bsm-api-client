@@ -126,24 +126,16 @@ def sync_detailed(
     body: ProfileUpdatePayload,
 
 ) -> Response[BaseApiResponse | ErrorEnvelope]:
-    """ Post Update Profile
-
+    """Post Update Profile
+    
      Updates the current user's profile information (name, email).
-
-    Args:
-        body (ProfileUpdatePayload): Request payload for updating user profile details.
-
-            :ivar full_name: The user's full name.
-
-            :ivar email: The user's email address.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Response[BaseApiResponse | ErrorEnvelope]
-     """
+    
+    :param body: Request payload for updating user profile details. :ivar full_name: The user's full name. :ivar email: The user's email address.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: The parsed response."""
 
 
     kwargs = _get_kwargs(
@@ -163,24 +155,16 @@ def sync(
     body: ProfileUpdatePayload,
 
 ) -> BaseApiResponse | ErrorEnvelope | None:
-    """ Post Update Profile
-
+    """Post Update Profile
+    
      Updates the current user's profile information (name, email).
-
-    Args:
-        body (ProfileUpdatePayload): Request payload for updating user profile details.
-
-            :ivar full_name: The user's full name.
-
-            :ivar email: The user's email address.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        BaseApiResponse | ErrorEnvelope
-     """
+    
+    :param body: Request payload for updating user profile details. :ivar full_name: The user's full name. :ivar email: The user's email address.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: BaseApiResponse | ErrorEnvelope"""
 
 
     return sync_detailed(
@@ -195,24 +179,16 @@ async def asyncio_detailed(
     body: ProfileUpdatePayload,
 
 ) -> Response[BaseApiResponse | ErrorEnvelope]:
-    """ Post Update Profile
-
+    """Post Update Profile
+    
      Updates the current user's profile information (name, email).
-
-    Args:
-        body (ProfileUpdatePayload): Request payload for updating user profile details.
-
-            :ivar full_name: The user's full name.
-
-            :ivar email: The user's email address.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Response[BaseApiResponse | ErrorEnvelope]
-     """
+    
+    :param body: Request payload for updating user profile details. :ivar full_name: The user's full name. :ivar email: The user's email address.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: The parsed response."""
 
 
     kwargs = _get_kwargs(
@@ -232,24 +208,16 @@ async def asyncio(
     body: ProfileUpdatePayload,
 
 ) -> BaseApiResponse | ErrorEnvelope | None:
-    """ Post Update Profile
-
+    """Post Update Profile
+    
      Updates the current user's profile information (name, email).
-
-    Args:
-        body (ProfileUpdatePayload): Request payload for updating user profile details.
-
-            :ivar full_name: The user's full name.
-
-            :ivar email: The user's email address.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        BaseApiResponse | ErrorEnvelope
-     """
+    
+    :param body: Request payload for updating user profile details. :ivar full_name: The user's full name. :ivar email: The user's email address.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: BaseApiResponse | ErrorEnvelope"""
 
 
     return (await asyncio_detailed(

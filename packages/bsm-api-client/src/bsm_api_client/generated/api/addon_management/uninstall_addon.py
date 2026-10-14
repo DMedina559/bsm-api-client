@@ -128,22 +128,17 @@ def sync_detailed(
     body: AddonActionPayload,
 
 ) -> Response[ErrorEnvelope | TaskAcceptedResponse]:
-    """ Delete Uninstall Addon
-
+    """Delete Uninstall Addon
+    
      Initiates a background task to uninstall an addon on a server.
-
-    Args:
-        server_name (str):
-        body (AddonActionPayload): Request model for modifying a specific addon (e.g. enable,
-            disable, uninstall).
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Response[ErrorEnvelope | TaskAcceptedResponse]
-     """
+    
+    :param server_name: Value supplied to the operation.
+    :param body: Request model for modifying a specific addon (e.g. enable, disable, uninstall).
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: The parsed response."""
 
 
     kwargs = _get_kwargs(
@@ -165,22 +160,17 @@ def sync(
     body: AddonActionPayload,
 
 ) -> ErrorEnvelope | TaskAcceptedResponse | None:
-    """ Delete Uninstall Addon
-
+    """Delete Uninstall Addon
+    
      Initiates a background task to uninstall an addon on a server.
-
-    Args:
-        server_name (str):
-        body (AddonActionPayload): Request model for modifying a specific addon (e.g. enable,
-            disable, uninstall).
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        ErrorEnvelope | TaskAcceptedResponse
-     """
+    
+    :param server_name: Value supplied to the operation.
+    :param body: Request model for modifying a specific addon (e.g. enable, disable, uninstall).
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: ErrorEnvelope | TaskAcceptedResponse"""
 
 
     return sync_detailed(
@@ -197,22 +187,17 @@ async def asyncio_detailed(
     body: AddonActionPayload,
 
 ) -> Response[ErrorEnvelope | TaskAcceptedResponse]:
-    """ Delete Uninstall Addon
-
+    """Delete Uninstall Addon
+    
      Initiates a background task to uninstall an addon on a server.
-
-    Args:
-        server_name (str):
-        body (AddonActionPayload): Request model for modifying a specific addon (e.g. enable,
-            disable, uninstall).
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Response[ErrorEnvelope | TaskAcceptedResponse]
-     """
+    
+    :param server_name: Value supplied to the operation.
+    :param body: Request model for modifying a specific addon (e.g. enable, disable, uninstall).
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: The parsed response."""
 
 
     kwargs = _get_kwargs(
@@ -234,22 +219,17 @@ async def asyncio(
     body: AddonActionPayload,
 
 ) -> ErrorEnvelope | TaskAcceptedResponse | None:
-    """ Delete Uninstall Addon
-
+    """Delete Uninstall Addon
+    
      Initiates a background task to uninstall an addon on a server.
-
-    Args:
-        server_name (str):
-        body (AddonActionPayload): Request model for modifying a specific addon (e.g. enable,
-            disable, uninstall).
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        ErrorEnvelope | TaskAcceptedResponse
-     """
+    
+    :param server_name: Value supplied to the operation.
+    :param body: Request model for modifying a specific addon (e.g. enable, disable, uninstall).
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: ErrorEnvelope | TaskAcceptedResponse"""
 
 
     return (await asyncio_detailed(

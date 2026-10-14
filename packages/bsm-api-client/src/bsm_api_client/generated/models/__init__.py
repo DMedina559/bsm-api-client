@@ -1,4 +1,4 @@
-""" Contains all the data models used in inputs/outputs """
+"""Contains all the data models used in inputs/outputs"""
 from .action_response import ActionResponse
 from .add_players_payload import AddPlayersPayload
 from .add_players_response import AddPlayersResponse

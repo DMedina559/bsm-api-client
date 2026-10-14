@@ -26,6 +26,7 @@ class SharedTransport(httpx.AsyncBaseTransport):
         self.authenticated = authenticated
 
     async def handle_async_request(self, request: httpx.Request) -> httpx.Response:
+        """Send a generated request through SDK authentication and error handling."""
         path = request.url.raw_path.decode("ascii").split("?", 1)[0]
         prefix = (
             httpx.URL(self.owner._server_root_url).raw_path.decode("ascii").rstrip("/")
@@ -122,6 +123,7 @@ def validate_generated_parameters(
 
 
 def validate_generated_body(operation_id: str, body: Any) -> Any:
+    """Validate a request body against its generated contract."""
     if isinstance(body, ContractModel):
         body = body.to_dict()
     elif isinstance(body, BaseModel):
@@ -136,6 +138,7 @@ def validate_generated_body(operation_id: str, body: Any) -> Any:
 
 
 def response_value(response: Any) -> Any:
+    """Extract a validated value from a generated response."""
     if not response.content:
         return None
     content_type = response.headers.get("content-type", "").split(";", 1)[0].lower()
@@ -178,6 +181,7 @@ def operation_module(operation_id: str) -> Any:
 
 
 def generated_body(module: Any, body: Any) -> Any:
+    """Convert a canonical request into its generated transport representation."""
     if isinstance(body, ContractModel):
         body = body.to_dict()
     elif isinstance(body, BaseModel):
@@ -201,6 +205,7 @@ class GeneratedOperationMethods:
         detailed: bool = False,
         typed: bool = False,
     ) -> Any:
+        """Invoke a bundled operation through the shared SDK transport."""
         return await call_generated(
             self,
             operation_id,

@@ -9,6 +9,7 @@ class ContractModel(BaseModel):
     """Canonical Pydantic fields with mapping access for SDK and CLI consumers."""
 
     def get(self, key: str, default: Any = None) -> Any:
+        """Read a model field by name, using the default when absent."""
         return getattr(self, key) if key in type(self).model_fields else default
 
     def __getitem__(self, key: str) -> Any:

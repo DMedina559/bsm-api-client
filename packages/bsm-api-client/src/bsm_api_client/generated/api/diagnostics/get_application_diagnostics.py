@@ -117,17 +117,14 @@ def sync_detailed(
     client: AuthenticatedClient,
 
 ) -> Response[DiagnosticSnapshot | ErrorEnvelope]:
-    """ Get Application Diagnostics
-
+    """Get Application Diagnostics
+    
      Collect bounded metadata without probing server processes or database health.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Response[DiagnosticSnapshot | ErrorEnvelope]
-     """
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: The parsed response."""
 
 
     kwargs = _get_kwargs(
@@ -145,17 +142,14 @@ def sync(
     client: AuthenticatedClient,
 
 ) -> DiagnosticSnapshot | ErrorEnvelope | None:
-    """ Get Application Diagnostics
-
+    """Get Application Diagnostics
+    
      Collect bounded metadata without probing server processes or database health.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        DiagnosticSnapshot | ErrorEnvelope
-     """
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: DiagnosticSnapshot | ErrorEnvelope"""
 
 
     return sync_detailed(
@@ -168,17 +162,14 @@ async def asyncio_detailed(
     client: AuthenticatedClient,
 
 ) -> Response[DiagnosticSnapshot | ErrorEnvelope]:
-    """ Get Application Diagnostics
-
+    """Get Application Diagnostics
+    
      Collect bounded metadata without probing server processes or database health.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Response[DiagnosticSnapshot | ErrorEnvelope]
-     """
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: The parsed response."""
 
 
     kwargs = _get_kwargs(
@@ -196,17 +187,14 @@ async def asyncio(
     client: AuthenticatedClient,
 
 ) -> DiagnosticSnapshot | ErrorEnvelope | None:
-    """ Get Application Diagnostics
-
+    """Get Application Diagnostics
+    
      Collect bounded metadata without probing server processes or database health.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        DiagnosticSnapshot | ErrorEnvelope
-     """
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: DiagnosticSnapshot | ErrorEnvelope"""
 
 
     return (await asyncio_detailed(

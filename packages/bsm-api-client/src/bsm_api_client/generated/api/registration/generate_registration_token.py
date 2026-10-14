@@ -126,22 +126,16 @@ def sync_detailed(
     body: GenerateTokenPayload,
 
 ) -> Response[ErrorEnvelope | RegistrationResponse]:
-    """ Generate Token
-
+    """Generate Token
+    
      Generates a new registration token.
-
-    Args:
-        body (GenerateTokenPayload): Request payload for generating a registration token.
-
-            :ivar role: The role to assign to the user registering with this token.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Response[ErrorEnvelope | RegistrationResponse]
-     """
+    
+    :param body: Request payload for generating a registration token. :ivar role: The role to assign to the user registering with this token.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: The parsed response."""
 
 
     kwargs = _get_kwargs(
@@ -161,22 +155,16 @@ def sync(
     body: GenerateTokenPayload,
 
 ) -> ErrorEnvelope | RegistrationResponse | None:
-    """ Generate Token
-
+    """Generate Token
+    
      Generates a new registration token.
-
-    Args:
-        body (GenerateTokenPayload): Request payload for generating a registration token.
-
-            :ivar role: The role to assign to the user registering with this token.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        ErrorEnvelope | RegistrationResponse
-     """
+    
+    :param body: Request payload for generating a registration token. :ivar role: The role to assign to the user registering with this token.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: ErrorEnvelope | RegistrationResponse"""
 
 
     return sync_detailed(
@@ -191,22 +179,16 @@ async def asyncio_detailed(
     body: GenerateTokenPayload,
 
 ) -> Response[ErrorEnvelope | RegistrationResponse]:
-    """ Generate Token
-
+    """Generate Token
+    
      Generates a new registration token.
-
-    Args:
-        body (GenerateTokenPayload): Request payload for generating a registration token.
-
-            :ivar role: The role to assign to the user registering with this token.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Response[ErrorEnvelope | RegistrationResponse]
-     """
+    
+    :param body: Request payload for generating a registration token. :ivar role: The role to assign to the user registering with this token.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: The parsed response."""
 
 
     kwargs = _get_kwargs(
@@ -226,22 +208,16 @@ async def asyncio(
     body: GenerateTokenPayload,
 
 ) -> ErrorEnvelope | RegistrationResponse | None:
-    """ Generate Token
-
+    """Generate Token
+    
      Generates a new registration token.
-
-    Args:
-        body (GenerateTokenPayload): Request payload for generating a registration token.
-
-            :ivar role: The role to assign to the user registering with this token.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        ErrorEnvelope | RegistrationResponse
-     """
+    
+    :param body: Request payload for generating a registration token. :ivar role: The role to assign to the user registering with this token.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: ErrorEnvelope | RegistrationResponse"""
 
 
     return (await asyncio_detailed(

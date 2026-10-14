@@ -117,17 +117,14 @@ def sync_detailed(
     client: AuthenticatedClient,
 
 ) -> Response[ErrorEnvelope | UserResponse]:
-    """ Get Account Api
-
+    """Get Account Api
+    
      Return the current user's account details.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Response[ErrorEnvelope | UserResponse]
-     """
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: The parsed response."""
 
 
     kwargs = _get_kwargs(
@@ -145,17 +142,14 @@ def sync(
     client: AuthenticatedClient,
 
 ) -> ErrorEnvelope | UserResponse | None:
-    """ Get Account Api
-
+    """Get Account Api
+    
      Return the current user's account details.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        ErrorEnvelope | UserResponse
-     """
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: ErrorEnvelope | UserResponse"""
 
 
     return sync_detailed(
@@ -168,17 +162,14 @@ async def asyncio_detailed(
     client: AuthenticatedClient,
 
 ) -> Response[ErrorEnvelope | UserResponse]:
-    """ Get Account Api
-
+    """Get Account Api
+    
      Return the current user's account details.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Response[ErrorEnvelope | UserResponse]
-     """
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: The parsed response."""
 
 
     kwargs = _get_kwargs(
@@ -196,17 +187,14 @@ async def asyncio(
     client: AuthenticatedClient,
 
 ) -> ErrorEnvelope | UserResponse | None:
-    """ Get Account Api
-
+    """Get Account Api
+    
      Return the current user's account details.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        ErrorEnvelope | UserResponse
-     """
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: ErrorEnvelope | UserResponse"""
 
 
     return (await asyncio_detailed(

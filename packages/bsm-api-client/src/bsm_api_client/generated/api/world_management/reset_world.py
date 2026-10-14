@@ -119,20 +119,16 @@ def sync_detailed(
     client: AuthenticatedClient,
 
 ) -> Response[ErrorEnvelope | TaskAcceptedResponse]:
-    """ Delete World Reset
-
+    """Delete World Reset
+    
      Initiates a background task to reset a server's world.
-
-    Args:
-        server_name (str):
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Response[ErrorEnvelope | TaskAcceptedResponse]
-     """
+    
+    :param server_name: Value supplied to the operation.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: The parsed response."""
 
 
     kwargs = _get_kwargs(
@@ -152,20 +148,16 @@ def sync(
     client: AuthenticatedClient,
 
 ) -> ErrorEnvelope | TaskAcceptedResponse | None:
-    """ Delete World Reset
-
+    """Delete World Reset
+    
      Initiates a background task to reset a server's world.
-
-    Args:
-        server_name (str):
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        ErrorEnvelope | TaskAcceptedResponse
-     """
+    
+    :param server_name: Value supplied to the operation.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: ErrorEnvelope | TaskAcceptedResponse"""
 
 
     return sync_detailed(
@@ -180,20 +172,16 @@ async def asyncio_detailed(
     client: AuthenticatedClient,
 
 ) -> Response[ErrorEnvelope | TaskAcceptedResponse]:
-    """ Delete World Reset
-
+    """Delete World Reset
+    
      Initiates a background task to reset a server's world.
-
-    Args:
-        server_name (str):
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Response[ErrorEnvelope | TaskAcceptedResponse]
-     """
+    
+    :param server_name: Value supplied to the operation.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: The parsed response."""
 
 
     kwargs = _get_kwargs(
@@ -213,20 +201,16 @@ async def asyncio(
     client: AuthenticatedClient,
 
 ) -> ErrorEnvelope | TaskAcceptedResponse | None:
-    """ Delete World Reset
-
+    """Delete World Reset
+    
      Initiates a background task to reset a server's world.
-
-    Args:
-        server_name (str):
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        ErrorEnvelope | TaskAcceptedResponse
-     """
+    
+    :param server_name: Value supplied to the operation.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: ErrorEnvelope | TaskAcceptedResponse"""
 
 
     return (await asyncio_detailed(

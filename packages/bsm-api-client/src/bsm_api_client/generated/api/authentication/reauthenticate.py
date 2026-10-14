@@ -133,21 +133,17 @@ def sync_detailed(
     remember_me: bool | None | Unset = UNSET,
 
 ) -> Response[ErrorEnvelope | TokenResponse]:
-    """ Reauth
-
+    """Reauth
+    
      Refreshes the JWT access token for an already authenticated user.
     Supports form data, JSON body, or query parameters.
-
-    Args:
-        remember_me (bool | None | Unset):
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Response[ErrorEnvelope | TokenResponse]
-     """
+    
+    :param remember_me: Value supplied to the operation.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: The parsed response."""
 
 
     kwargs = _get_kwargs(
@@ -167,21 +163,17 @@ def sync(
     remember_me: bool | None | Unset = UNSET,
 
 ) -> ErrorEnvelope | TokenResponse | None:
-    """ Reauth
-
+    """Reauth
+    
      Refreshes the JWT access token for an already authenticated user.
     Supports form data, JSON body, or query parameters.
-
-    Args:
-        remember_me (bool | None | Unset):
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        ErrorEnvelope | TokenResponse
-     """
+    
+    :param remember_me: Value supplied to the operation.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: ErrorEnvelope | TokenResponse"""
 
 
     return sync_detailed(
@@ -196,21 +188,17 @@ async def asyncio_detailed(
     remember_me: bool | None | Unset = UNSET,
 
 ) -> Response[ErrorEnvelope | TokenResponse]:
-    """ Reauth
-
+    """Reauth
+    
      Refreshes the JWT access token for an already authenticated user.
     Supports form data, JSON body, or query parameters.
-
-    Args:
-        remember_me (bool | None | Unset):
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Response[ErrorEnvelope | TokenResponse]
-     """
+    
+    :param remember_me: Value supplied to the operation.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: The parsed response."""
 
 
     kwargs = _get_kwargs(
@@ -230,21 +218,17 @@ async def asyncio(
     remember_me: bool | None | Unset = UNSET,
 
 ) -> ErrorEnvelope | TokenResponse | None:
-    """ Reauth
-
+    """Reauth
+    
      Refreshes the JWT access token for an already authenticated user.
     Supports form data, JSON body, or query parameters.
-
-    Args:
-        remember_me (bool | None | Unset):
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        ErrorEnvelope | TokenResponse
-     """
+    
+    :param remember_me: Value supplied to the operation.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: ErrorEnvelope | TokenResponse"""
 
 
     return (await asyncio_detailed(

@@ -128,21 +128,15 @@ def sync_detailed(
     body: UpdateUserRolePayload,
 
 ) -> Response[BaseApiResponse | ErrorEnvelope]:
-    """ Update User Role
-
-    Args:
-        user_id (int):
-        body (UpdateUserRolePayload): Request payload for updating a user's role.
-
-            :ivar role: The new role.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Response[BaseApiResponse | ErrorEnvelope]
-     """
+    """Update User Role
+    
+    :param user_id: Value supplied to the operation.
+    :param body: Request payload for updating a user's role. :ivar role: The new role.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: The parsed response."""
 
 
     kwargs = _get_kwargs(
@@ -164,21 +158,15 @@ def sync(
     body: UpdateUserRolePayload,
 
 ) -> BaseApiResponse | ErrorEnvelope | None:
-    """ Update User Role
-
-    Args:
-        user_id (int):
-        body (UpdateUserRolePayload): Request payload for updating a user's role.
-
-            :ivar role: The new role.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        BaseApiResponse | ErrorEnvelope
-     """
+    """Update User Role
+    
+    :param user_id: Value supplied to the operation.
+    :param body: Request payload for updating a user's role. :ivar role: The new role.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: BaseApiResponse | ErrorEnvelope"""
 
 
     return sync_detailed(
@@ -195,21 +183,15 @@ async def asyncio_detailed(
     body: UpdateUserRolePayload,
 
 ) -> Response[BaseApiResponse | ErrorEnvelope]:
-    """ Update User Role
-
-    Args:
-        user_id (int):
-        body (UpdateUserRolePayload): Request payload for updating a user's role.
-
-            :ivar role: The new role.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Response[BaseApiResponse | ErrorEnvelope]
-     """
+    """Update User Role
+    
+    :param user_id: Value supplied to the operation.
+    :param body: Request payload for updating a user's role. :ivar role: The new role.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: The parsed response."""
 
 
     kwargs = _get_kwargs(
@@ -231,21 +213,15 @@ async def asyncio(
     body: UpdateUserRolePayload,
 
 ) -> BaseApiResponse | ErrorEnvelope | None:
-    """ Update User Role
-
-    Args:
-        user_id (int):
-        body (UpdateUserRolePayload): Request payload for updating a user's role.
-
-            :ivar role: The new role.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        BaseApiResponse | ErrorEnvelope
-     """
+    """Update User Role
+    
+    :param user_id: Value supplied to the operation.
+    :param body: Request payload for updating a user's role. :ivar role: The new role.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: BaseApiResponse | ErrorEnvelope"""
 
 
     return (await asyncio_detailed(

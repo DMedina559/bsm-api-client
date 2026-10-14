@@ -128,21 +128,17 @@ def sync_detailed(
     body: AddonReorderPayload,
 
 ) -> Response[ErrorEnvelope | TaskAcceptedResponse]:
-    """ Post Reorder Addons
-
+    """Post Reorder Addons
+    
      Initiates a background task to reorder active addons on a server.
-
-    Args:
-        server_name (str):
-        body (AddonReorderPayload): Request model for reordering active addons.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Response[ErrorEnvelope | TaskAcceptedResponse]
-     """
+    
+    :param server_name: Value supplied to the operation.
+    :param body: Request model for reordering active addons.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: The parsed response."""
 
 
     kwargs = _get_kwargs(
@@ -164,21 +160,17 @@ def sync(
     body: AddonReorderPayload,
 
 ) -> ErrorEnvelope | TaskAcceptedResponse | None:
-    """ Post Reorder Addons
-
+    """Post Reorder Addons
+    
      Initiates a background task to reorder active addons on a server.
-
-    Args:
-        server_name (str):
-        body (AddonReorderPayload): Request model for reordering active addons.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        ErrorEnvelope | TaskAcceptedResponse
-     """
+    
+    :param server_name: Value supplied to the operation.
+    :param body: Request model for reordering active addons.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: ErrorEnvelope | TaskAcceptedResponse"""
 
 
     return sync_detailed(
@@ -195,21 +187,17 @@ async def asyncio_detailed(
     body: AddonReorderPayload,
 
 ) -> Response[ErrorEnvelope | TaskAcceptedResponse]:
-    """ Post Reorder Addons
-
+    """Post Reorder Addons
+    
      Initiates a background task to reorder active addons on a server.
-
-    Args:
-        server_name (str):
-        body (AddonReorderPayload): Request model for reordering active addons.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Response[ErrorEnvelope | TaskAcceptedResponse]
-     """
+    
+    :param server_name: Value supplied to the operation.
+    :param body: Request model for reordering active addons.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: The parsed response."""
 
 
     kwargs = _get_kwargs(
@@ -231,21 +219,17 @@ async def asyncio(
     body: AddonReorderPayload,
 
 ) -> ErrorEnvelope | TaskAcceptedResponse | None:
-    """ Post Reorder Addons
-
+    """Post Reorder Addons
+    
      Initiates a background task to reorder active addons on a server.
-
-    Args:
-        server_name (str):
-        body (AddonReorderPayload): Request model for reordering active addons.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        ErrorEnvelope | TaskAcceptedResponse
-     """
+    
+    :param server_name: Value supplied to the operation.
+    :param body: Request model for reordering active addons.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: ErrorEnvelope | TaskAcceptedResponse"""
 
 
     return (await asyncio_detailed(

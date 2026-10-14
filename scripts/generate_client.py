@@ -13,6 +13,9 @@ from pathlib import Path
 from typing import Any, cast
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "scripts"))
+from sphinx_docstrings import normalize_package  # noqa: E402
+
 DEFAULT_OUTPUT = (
     ROOT / "packages" / "bsm-api-client" / "src" / "bsm_api_client" / "generated"
 )
@@ -138,6 +141,7 @@ def generate(schema: dict[str, Any], output: Path) -> None:
             "from .rest import RestClient\n\n"
             '__all__ = ("AuthenticatedClient", "Client", "RestClient")\n'
         )
+        normalize_package(package)
         publish_package(package, output)
 
 

@@ -181,6 +181,8 @@ InstallServerResponse: TypeAlias = (
 
 
 class ValidationError(BaseModel):
+    """Describe one HTTP validation failure."""
+
     loc: list[str | int] = Field(..., title="Location")
     msg: str = Field(..., title="Message")
     type: str = Field(..., title="Error Type")
@@ -189,6 +191,8 @@ class ValidationError(BaseModel):
 
 
 class HTTPValidationError(BaseModel):
+    """Describe the validation failures returned by an HTTP endpoint."""
+
     detail: list[ValidationError] | None = Field(None, title="Detail")
 
 

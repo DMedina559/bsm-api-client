@@ -203,26 +203,22 @@ def sync_detailed(
     operation_id: None | str | Unset = UNSET,
 
 ) -> Response[DiagnosticHistory | ErrorEnvelope]:
-    """ Get Diagnostic History
-
-    Args:
-        limit (int | Unset):  Default: 100.
-        subsystem (None | str | Unset):
-        instance_id (None | str | Unset):
-        correlation_id (None | str | Unset):
-        cursor (None | str | Unset):
-        owner (None | str | Unset):
-        code (None | str | Unset):
-        outcome (GetDiagnosticHistoryOutcomeType0 | None | Unset):
-        operation_id (None | str | Unset):
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Response[DiagnosticHistory | ErrorEnvelope]
-     """
+    """Get Diagnostic History
+    
+    :param limit: Default: 100.
+    :param subsystem: Value supplied to the operation.
+    :param instance_id: Value supplied to the operation.
+    :param correlation_id: Value supplied to the operation.
+    :param cursor: Value supplied to the operation.
+    :param owner: Value supplied to the operation.
+    :param code: Value supplied to the operation.
+    :param outcome: Value supplied to the operation.
+    :param operation_id: Value supplied to the operation.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: The parsed response."""
 
 
     kwargs = _get_kwargs(
@@ -258,26 +254,22 @@ def sync(
     operation_id: None | str | Unset = UNSET,
 
 ) -> DiagnosticHistory | ErrorEnvelope | None:
-    """ Get Diagnostic History
-
-    Args:
-        limit (int | Unset):  Default: 100.
-        subsystem (None | str | Unset):
-        instance_id (None | str | Unset):
-        correlation_id (None | str | Unset):
-        cursor (None | str | Unset):
-        owner (None | str | Unset):
-        code (None | str | Unset):
-        outcome (GetDiagnosticHistoryOutcomeType0 | None | Unset):
-        operation_id (None | str | Unset):
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        DiagnosticHistory | ErrorEnvelope
-     """
+    """Get Diagnostic History
+    
+    :param limit: Default: 100.
+    :param subsystem: Value supplied to the operation.
+    :param instance_id: Value supplied to the operation.
+    :param correlation_id: Value supplied to the operation.
+    :param cursor: Value supplied to the operation.
+    :param owner: Value supplied to the operation.
+    :param code: Value supplied to the operation.
+    :param outcome: Value supplied to the operation.
+    :param operation_id: Value supplied to the operation.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: DiagnosticHistory | ErrorEnvelope"""
 
 
     return sync_detailed(
@@ -308,26 +300,22 @@ async def asyncio_detailed(
     operation_id: None | str | Unset = UNSET,
 
 ) -> Response[DiagnosticHistory | ErrorEnvelope]:
-    """ Get Diagnostic History
-
-    Args:
-        limit (int | Unset):  Default: 100.
-        subsystem (None | str | Unset):
-        instance_id (None | str | Unset):
-        correlation_id (None | str | Unset):
-        cursor (None | str | Unset):
-        owner (None | str | Unset):
-        code (None | str | Unset):
-        outcome (GetDiagnosticHistoryOutcomeType0 | None | Unset):
-        operation_id (None | str | Unset):
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Response[DiagnosticHistory | ErrorEnvelope]
-     """
+    """Get Diagnostic History
+    
+    :param limit: Default: 100.
+    :param subsystem: Value supplied to the operation.
+    :param instance_id: Value supplied to the operation.
+    :param correlation_id: Value supplied to the operation.
+    :param cursor: Value supplied to the operation.
+    :param owner: Value supplied to the operation.
+    :param code: Value supplied to the operation.
+    :param outcome: Value supplied to the operation.
+    :param operation_id: Value supplied to the operation.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: The parsed response."""
 
 
     kwargs = _get_kwargs(
@@ -363,26 +351,22 @@ async def asyncio(
     operation_id: None | str | Unset = UNSET,
 
 ) -> DiagnosticHistory | ErrorEnvelope | None:
-    """ Get Diagnostic History
-
-    Args:
-        limit (int | Unset):  Default: 100.
-        subsystem (None | str | Unset):
-        instance_id (None | str | Unset):
-        correlation_id (None | str | Unset):
-        cursor (None | str | Unset):
-        owner (None | str | Unset):
-        code (None | str | Unset):
-        outcome (GetDiagnosticHistoryOutcomeType0 | None | Unset):
-        operation_id (None | str | Unset):
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        DiagnosticHistory | ErrorEnvelope
-     """
+    """Get Diagnostic History
+    
+    :param limit: Default: 100.
+    :param subsystem: Value supplied to the operation.
+    :param instance_id: Value supplied to the operation.
+    :param correlation_id: Value supplied to the operation.
+    :param cursor: Value supplied to the operation.
+    :param owner: Value supplied to the operation.
+    :param code: Value supplied to the operation.
+    :param outcome: Value supplied to the operation.
+    :param operation_id: Value supplied to the operation.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: DiagnosticHistory | ErrorEnvelope"""
 
 
     return (await asyncio_detailed(

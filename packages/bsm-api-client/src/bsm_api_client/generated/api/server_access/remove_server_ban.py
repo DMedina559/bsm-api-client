@@ -128,21 +128,17 @@ def sync_detailed(
     body: BanRemoveRequest,
 
 ) -> Response[ErrorEnvelope | RemoveServerBanResponse]:
-    """ Delete Remove Server Ban
-
+    """Delete Remove Server Ban
+    
      Remove a player from the server ban list.
-
-    Args:
-        server_name (str):
-        body (BanRemoveRequest):
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Response[ErrorEnvelope | RemoveServerBanResponse]
-     """
+    
+    :param server_name: Value supplied to the operation.
+    :param body: Value supplied to the operation.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: The parsed response."""
 
 
     kwargs = _get_kwargs(
@@ -164,21 +160,17 @@ def sync(
     body: BanRemoveRequest,
 
 ) -> ErrorEnvelope | RemoveServerBanResponse | None:
-    """ Delete Remove Server Ban
-
+    """Delete Remove Server Ban
+    
      Remove a player from the server ban list.
-
-    Args:
-        server_name (str):
-        body (BanRemoveRequest):
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        ErrorEnvelope | RemoveServerBanResponse
-     """
+    
+    :param server_name: Value supplied to the operation.
+    :param body: Value supplied to the operation.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: ErrorEnvelope | RemoveServerBanResponse"""
 
 
     return sync_detailed(
@@ -195,21 +187,17 @@ async def asyncio_detailed(
     body: BanRemoveRequest,
 
 ) -> Response[ErrorEnvelope | RemoveServerBanResponse]:
-    """ Delete Remove Server Ban
-
+    """Delete Remove Server Ban
+    
      Remove a player from the server ban list.
-
-    Args:
-        server_name (str):
-        body (BanRemoveRequest):
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Response[ErrorEnvelope | RemoveServerBanResponse]
-     """
+    
+    :param server_name: Value supplied to the operation.
+    :param body: Value supplied to the operation.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: The parsed response."""
 
 
     kwargs = _get_kwargs(
@@ -231,21 +219,17 @@ async def asyncio(
     body: BanRemoveRequest,
 
 ) -> ErrorEnvelope | RemoveServerBanResponse | None:
-    """ Delete Remove Server Ban
-
+    """Delete Remove Server Ban
+    
      Remove a player from the server ban list.
-
-    Args:
-        server_name (str):
-        body (BanRemoveRequest):
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        ErrorEnvelope | RemoveServerBanResponse
-     """
+    
+    :param server_name: Value supplied to the operation.
+    :param body: Value supplied to the operation.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: ErrorEnvelope | RemoveServerBanResponse"""
 
 
     return (await asyncio_detailed(

@@ -117,15 +117,12 @@ def sync_detailed(
     client: AuthenticatedClient,
 
 ) -> Response[CustomZipsResponse | ErrorEnvelope]:
-    """ Get Custom Zips
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Response[CustomZipsResponse | ErrorEnvelope]
-     """
+    """Get Custom Zips
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: The parsed response."""
 
 
     kwargs = _get_kwargs(
@@ -143,15 +140,12 @@ def sync(
     client: AuthenticatedClient,
 
 ) -> CustomZipsResponse | ErrorEnvelope | None:
-    """ Get Custom Zips
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        CustomZipsResponse | ErrorEnvelope
-     """
+    """Get Custom Zips
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: CustomZipsResponse | ErrorEnvelope"""
 
 
     return sync_detailed(
@@ -164,15 +158,12 @@ async def asyncio_detailed(
     client: AuthenticatedClient,
 
 ) -> Response[CustomZipsResponse | ErrorEnvelope]:
-    """ Get Custom Zips
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Response[CustomZipsResponse | ErrorEnvelope]
-     """
+    """Get Custom Zips
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: The parsed response."""
 
 
     kwargs = _get_kwargs(
@@ -190,15 +181,12 @@ async def asyncio(
     client: AuthenticatedClient,
 
 ) -> CustomZipsResponse | ErrorEnvelope | None:
-    """ Get Custom Zips
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        CustomZipsResponse | ErrorEnvelope
-     """
+    """Get Custom Zips
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: CustomZipsResponse | ErrorEnvelope"""
 
 
     return (await asyncio_detailed(

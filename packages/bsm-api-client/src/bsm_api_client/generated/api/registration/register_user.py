@@ -124,21 +124,17 @@ def sync_detailed(
     body: UserLoginPayload,
 
 ) -> Response[Any | ErrorEnvelope]:
-    """ Register User
-
+    """Register User
+    
      Create a new user from a registration token.
-
-    Args:
-        token (str):
-        body (UserLoginPayload): Request model for user login credentials.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Response[Any | ErrorEnvelope]
-     """
+    
+    :param token: Value supplied to the operation.
+    :param body: Request model for user login credentials.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: The parsed response."""
 
 
     kwargs = _get_kwargs(
@@ -160,21 +156,17 @@ def sync(
     body: UserLoginPayload,
 
 ) -> Any | ErrorEnvelope | None:
-    """ Register User
-
+    """Register User
+    
      Create a new user from a registration token.
-
-    Args:
-        token (str):
-        body (UserLoginPayload): Request model for user login credentials.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Any | ErrorEnvelope
-     """
+    
+    :param token: Value supplied to the operation.
+    :param body: Request model for user login credentials.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: Any | ErrorEnvelope"""
 
 
     return sync_detailed(
@@ -191,21 +183,17 @@ async def asyncio_detailed(
     body: UserLoginPayload,
 
 ) -> Response[Any | ErrorEnvelope]:
-    """ Register User
-
+    """Register User
+    
      Create a new user from a registration token.
-
-    Args:
-        token (str):
-        body (UserLoginPayload): Request model for user login credentials.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Response[Any | ErrorEnvelope]
-     """
+    
+    :param token: Value supplied to the operation.
+    :param body: Request model for user login credentials.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: The parsed response."""
 
 
     kwargs = _get_kwargs(
@@ -227,21 +215,17 @@ async def asyncio(
     body: UserLoginPayload,
 
 ) -> Any | ErrorEnvelope | None:
-    """ Register User
-
+    """Register User
+    
      Create a new user from a registration token.
-
-    Args:
-        token (str):
-        body (UserLoginPayload): Request model for user login credentials.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Any | ErrorEnvelope
-     """
+    
+    :param token: Value supplied to the operation.
+    :param body: Request model for user login credentials.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: Any | ErrorEnvelope"""
 
 
     return (await asyncio_detailed(

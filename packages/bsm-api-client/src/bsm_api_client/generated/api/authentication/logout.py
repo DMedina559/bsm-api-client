@@ -113,19 +113,16 @@ def sync_detailed(
     client: AuthenticatedClient,
 
 ) -> Response[Any | ErrorEnvelope]:
-    """ Logout
-
+    """Logout
+    
      Logs the current user out.
     Since we are using Bearer tokens, the client is responsible for discarding the token.
     This endpoint serves as an explicit logout action for auditing purposes.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Response[Any | ErrorEnvelope]
-     """
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: The parsed response."""
 
 
     kwargs = _get_kwargs(
@@ -143,19 +140,16 @@ def sync(
     client: AuthenticatedClient,
 
 ) -> Any | ErrorEnvelope | None:
-    """ Logout
-
+    """Logout
+    
      Logs the current user out.
     Since we are using Bearer tokens, the client is responsible for discarding the token.
     This endpoint serves as an explicit logout action for auditing purposes.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Any | ErrorEnvelope
-     """
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: Any | ErrorEnvelope"""
 
 
     return sync_detailed(
@@ -168,19 +162,16 @@ async def asyncio_detailed(
     client: AuthenticatedClient,
 
 ) -> Response[Any | ErrorEnvelope]:
-    """ Logout
-
+    """Logout
+    
      Logs the current user out.
     Since we are using Bearer tokens, the client is responsible for discarding the token.
     This endpoint serves as an explicit logout action for auditing purposes.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Response[Any | ErrorEnvelope]
-     """
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: The parsed response."""
 
 
     kwargs = _get_kwargs(
@@ -198,19 +189,16 @@ async def asyncio(
     client: AuthenticatedClient,
 
 ) -> Any | ErrorEnvelope | None:
-    """ Logout
-
+    """Logout
+    
      Logs the current user out.
     Since we are using Bearer tokens, the client is responsible for discarding the token.
     This endpoint serves as an explicit logout action for auditing purposes.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Any | ErrorEnvelope
-     """
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: Any | ErrorEnvelope"""
 
 
     return (await asyncio_detailed(

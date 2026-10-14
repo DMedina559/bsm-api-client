@@ -144,18 +144,14 @@ def sync_detailed(
     body: InstallServerPayload,
 
 ) -> Response[ErrorEnvelope | InstallationAcceptedResponse | InstallConfirmationResponse]:
-    """ Post Install Server
-
-    Args:
-        body (InstallServerPayload): Request model for installing a new server.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Response[ErrorEnvelope | InstallationAcceptedResponse | InstallConfirmationResponse]
-     """
+    """Post Install Server
+    
+    :param body: Request model for installing a new server.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: The parsed response."""
 
 
     kwargs = _get_kwargs(
@@ -175,18 +171,14 @@ def sync(
     body: InstallServerPayload,
 
 ) -> ErrorEnvelope | InstallationAcceptedResponse | InstallConfirmationResponse | None:
-    """ Post Install Server
-
-    Args:
-        body (InstallServerPayload): Request model for installing a new server.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        ErrorEnvelope | InstallationAcceptedResponse | InstallConfirmationResponse
-     """
+    """Post Install Server
+    
+    :param body: Request model for installing a new server.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: ErrorEnvelope | InstallationAcceptedResponse | InstallConfirmationResponse"""
 
 
     return sync_detailed(
@@ -201,18 +193,14 @@ async def asyncio_detailed(
     body: InstallServerPayload,
 
 ) -> Response[ErrorEnvelope | InstallationAcceptedResponse | InstallConfirmationResponse]:
-    """ Post Install Server
-
-    Args:
-        body (InstallServerPayload): Request model for installing a new server.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Response[ErrorEnvelope | InstallationAcceptedResponse | InstallConfirmationResponse]
-     """
+    """Post Install Server
+    
+    :param body: Request model for installing a new server.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: The parsed response."""
 
 
     kwargs = _get_kwargs(
@@ -232,18 +220,14 @@ async def asyncio(
     body: InstallServerPayload,
 
 ) -> ErrorEnvelope | InstallationAcceptedResponse | InstallConfirmationResponse | None:
-    """ Post Install Server
-
-    Args:
-        body (InstallServerPayload): Request model for installing a new server.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        ErrorEnvelope | InstallationAcceptedResponse | InstallConfirmationResponse
-     """
+    """Post Install Server
+    
+    :param body: Request model for installing a new server.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: ErrorEnvelope | InstallationAcceptedResponse | InstallConfirmationResponse"""
 
 
     return (await asyncio_detailed(

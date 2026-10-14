@@ -126,22 +126,16 @@ def sync_detailed(
     body: ThemeUpdatePayload,
 
 ) -> Response[BaseApiResponse | ErrorEnvelope]:
-    """ Post Update Theme
-
+    """Post Update Theme
+    
      Updates the current user's preferred theme.
-
-    Args:
-        body (ThemeUpdatePayload): Request payload for updating the user's theme.
-
-            :ivar theme: The new theme name.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Response[BaseApiResponse | ErrorEnvelope]
-     """
+    
+    :param body: Request payload for updating the user's theme. :ivar theme: The new theme name.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: The parsed response."""
 
 
     kwargs = _get_kwargs(
@@ -161,22 +155,16 @@ def sync(
     body: ThemeUpdatePayload,
 
 ) -> BaseApiResponse | ErrorEnvelope | None:
-    """ Post Update Theme
-
+    """Post Update Theme
+    
      Updates the current user's preferred theme.
-
-    Args:
-        body (ThemeUpdatePayload): Request payload for updating the user's theme.
-
-            :ivar theme: The new theme name.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        BaseApiResponse | ErrorEnvelope
-     """
+    
+    :param body: Request payload for updating the user's theme. :ivar theme: The new theme name.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: BaseApiResponse | ErrorEnvelope"""
 
 
     return sync_detailed(
@@ -191,22 +179,16 @@ async def asyncio_detailed(
     body: ThemeUpdatePayload,
 
 ) -> Response[BaseApiResponse | ErrorEnvelope]:
-    """ Post Update Theme
-
+    """Post Update Theme
+    
      Updates the current user's preferred theme.
-
-    Args:
-        body (ThemeUpdatePayload): Request payload for updating the user's theme.
-
-            :ivar theme: The new theme name.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Response[BaseApiResponse | ErrorEnvelope]
-     """
+    
+    :param body: Request payload for updating the user's theme. :ivar theme: The new theme name.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: The parsed response."""
 
 
     kwargs = _get_kwargs(
@@ -226,22 +208,16 @@ async def asyncio(
     body: ThemeUpdatePayload,
 
 ) -> BaseApiResponse | ErrorEnvelope | None:
-    """ Post Update Theme
-
+    """Post Update Theme
+    
      Updates the current user's preferred theme.
-
-    Args:
-        body (ThemeUpdatePayload): Request payload for updating the user's theme.
-
-            :ivar theme: The new theme name.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        BaseApiResponse | ErrorEnvelope
-     """
+    
+    :param body: Request payload for updating the user's theme. :ivar theme: The new theme name.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: BaseApiResponse | ErrorEnvelope"""
 
 
     return (await asyncio_detailed(

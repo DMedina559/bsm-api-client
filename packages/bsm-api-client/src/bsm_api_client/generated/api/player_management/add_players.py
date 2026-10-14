@@ -126,22 +126,16 @@ def sync_detailed(
     body: AddPlayersPayload,
 
 ) -> Response[AddPlayersResponse | ErrorEnvelope]:
-    """ Post Add Players
-
+    """Post Add Players
+    
      Manually adds or updates player entries in the central player database.
-
-    Args:
-        body (AddPlayersPayload): Request model for manually adding players to the database.
-
-            Each string in the 'players' list should be in the format "gamertag:xuid".
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Response[AddPlayersResponse | ErrorEnvelope]
-     """
+    
+    :param body: Request model for manually adding players to the database. Each string in the 'players' list should be in the format "gamertag:xuid".
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: The parsed response."""
 
 
     kwargs = _get_kwargs(
@@ -161,22 +155,16 @@ def sync(
     body: AddPlayersPayload,
 
 ) -> AddPlayersResponse | ErrorEnvelope | None:
-    """ Post Add Players
-
+    """Post Add Players
+    
      Manually adds or updates player entries in the central player database.
-
-    Args:
-        body (AddPlayersPayload): Request model for manually adding players to the database.
-
-            Each string in the 'players' list should be in the format "gamertag:xuid".
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        AddPlayersResponse | ErrorEnvelope
-     """
+    
+    :param body: Request model for manually adding players to the database. Each string in the 'players' list should be in the format "gamertag:xuid".
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: AddPlayersResponse | ErrorEnvelope"""
 
 
     return sync_detailed(
@@ -191,22 +179,16 @@ async def asyncio_detailed(
     body: AddPlayersPayload,
 
 ) -> Response[AddPlayersResponse | ErrorEnvelope]:
-    """ Post Add Players
-
+    """Post Add Players
+    
      Manually adds or updates player entries in the central player database.
-
-    Args:
-        body (AddPlayersPayload): Request model for manually adding players to the database.
-
-            Each string in the 'players' list should be in the format "gamertag:xuid".
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Response[AddPlayersResponse | ErrorEnvelope]
-     """
+    
+    :param body: Request model for manually adding players to the database. Each string in the 'players' list should be in the format "gamertag:xuid".
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: The parsed response."""
 
 
     kwargs = _get_kwargs(
@@ -226,22 +208,16 @@ async def asyncio(
     body: AddPlayersPayload,
 
 ) -> AddPlayersResponse | ErrorEnvelope | None:
-    """ Post Add Players
-
+    """Post Add Players
+    
      Manually adds or updates player entries in the central player database.
-
-    Args:
-        body (AddPlayersPayload): Request model for manually adding players to the database.
-
-            Each string in the 'players' list should be in the format "gamertag:xuid".
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        AddPlayersResponse | ErrorEnvelope
-     """
+    
+    :param body: Request model for manually adding players to the database. Each string in the 'players' list should be in the format "gamertag:xuid".
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: AddPlayersResponse | ErrorEnvelope"""
 
 
     return (await asyncio_detailed(

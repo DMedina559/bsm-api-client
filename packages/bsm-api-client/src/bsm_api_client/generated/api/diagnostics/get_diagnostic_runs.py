@@ -128,18 +128,14 @@ def sync_detailed(
     limit: int | Unset = 20,
 
 ) -> Response[DiagnosticRuns | ErrorEnvelope]:
-    """ Get Diagnostic Runs
-
-    Args:
-        limit (int | Unset):  Default: 20.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Response[DiagnosticRuns | ErrorEnvelope]
-     """
+    """Get Diagnostic Runs
+    
+    :param limit: Default: 20.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: The parsed response."""
 
 
     kwargs = _get_kwargs(
@@ -159,18 +155,14 @@ def sync(
     limit: int | Unset = 20,
 
 ) -> DiagnosticRuns | ErrorEnvelope | None:
-    """ Get Diagnostic Runs
-
-    Args:
-        limit (int | Unset):  Default: 20.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        DiagnosticRuns | ErrorEnvelope
-     """
+    """Get Diagnostic Runs
+    
+    :param limit: Default: 20.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: DiagnosticRuns | ErrorEnvelope"""
 
 
     return sync_detailed(
@@ -185,18 +177,14 @@ async def asyncio_detailed(
     limit: int | Unset = 20,
 
 ) -> Response[DiagnosticRuns | ErrorEnvelope]:
-    """ Get Diagnostic Runs
-
-    Args:
-        limit (int | Unset):  Default: 20.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Response[DiagnosticRuns | ErrorEnvelope]
-     """
+    """Get Diagnostic Runs
+    
+    :param limit: Default: 20.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: The parsed response."""
 
 
     kwargs = _get_kwargs(
@@ -216,18 +204,14 @@ async def asyncio(
     limit: int | Unset = 20,
 
 ) -> DiagnosticRuns | ErrorEnvelope | None:
-    """ Get Diagnostic Runs
-
-    Args:
-        limit (int | Unset):  Default: 20.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        DiagnosticRuns | ErrorEnvelope
-     """
+    """Get Diagnostic Runs
+    
+    :param limit: Default: 20.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: DiagnosticRuns | ErrorEnvelope"""
 
 
     return (await asyncio_detailed(

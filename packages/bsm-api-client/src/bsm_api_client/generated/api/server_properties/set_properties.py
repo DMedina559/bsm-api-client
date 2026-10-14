@@ -128,19 +128,15 @@ def sync_detailed(
     body: PropertiesPayload,
 
 ) -> Response[ErrorEnvelope | SetPropertiesResponse]:
-    """ Post Properties Set
-
-    Args:
-        server_name (str):
-        body (PropertiesPayload): Request model for updating server.properties.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Response[ErrorEnvelope | SetPropertiesResponse]
-     """
+    """Post Properties Set
+    
+    :param server_name: Value supplied to the operation.
+    :param body: Request model for updating server.properties.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: The parsed response."""
 
 
     kwargs = _get_kwargs(
@@ -162,19 +158,15 @@ def sync(
     body: PropertiesPayload,
 
 ) -> ErrorEnvelope | SetPropertiesResponse | None:
-    """ Post Properties Set
-
-    Args:
-        server_name (str):
-        body (PropertiesPayload): Request model for updating server.properties.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        ErrorEnvelope | SetPropertiesResponse
-     """
+    """Post Properties Set
+    
+    :param server_name: Value supplied to the operation.
+    :param body: Request model for updating server.properties.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: ErrorEnvelope | SetPropertiesResponse"""
 
 
     return sync_detailed(
@@ -191,19 +183,15 @@ async def asyncio_detailed(
     body: PropertiesPayload,
 
 ) -> Response[ErrorEnvelope | SetPropertiesResponse]:
-    """ Post Properties Set
-
-    Args:
-        server_name (str):
-        body (PropertiesPayload): Request model for updating server.properties.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Response[ErrorEnvelope | SetPropertiesResponse]
-     """
+    """Post Properties Set
+    
+    :param server_name: Value supplied to the operation.
+    :param body: Request model for updating server.properties.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: The parsed response."""
 
 
     kwargs = _get_kwargs(
@@ -225,19 +213,15 @@ async def asyncio(
     body: PropertiesPayload,
 
 ) -> ErrorEnvelope | SetPropertiesResponse | None:
-    """ Post Properties Set
-
-    Args:
-        server_name (str):
-        body (PropertiesPayload): Request model for updating server.properties.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        ErrorEnvelope | SetPropertiesResponse
-     """
+    """Post Properties Set
+    
+    :param server_name: Value supplied to the operation.
+    :param body: Request model for updating server.properties.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: ErrorEnvelope | SetPropertiesResponse"""
 
 
     return (await asyncio_detailed(

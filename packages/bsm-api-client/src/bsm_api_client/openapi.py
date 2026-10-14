@@ -84,9 +84,11 @@ class ApiOperation:
 
     @property
     def namespace(self) -> str:
+        """Return the operation namespace used for grouping."""
         return self.tags[0] if self.tags else "default"
 
     def to_dict(self) -> dict[str, Any]:
+        """Serialize public operation metadata as a dictionary."""
         return asdict(self)
 
 
@@ -97,6 +99,7 @@ DiscoveredOperation = ApiOperation
 def index_operations(
     schema: Mapping[str, Any], generated_ids: set[str] | None = None
 ) -> dict[str, ApiOperation]:
+    """Index validated operations by operation ID and plugin owner."""
     validate_schema(schema)
     result = {}
     for path, raw_item in schema.get("paths", {}).items():
@@ -199,6 +202,7 @@ def diff_schemas(
     *,
     generated_ids: set[str] | None = None,
 ) -> dict[str, list[str]]:
+    """Compare OpenAPI snapshots and report contract changes."""
     old, new = index_operations(before or {"paths": {}}), index_operations(after)
     return {
         "added": sorted(new.keys() - old.keys()),
@@ -302,13 +306,17 @@ def compatibility_report(
 
 @dataclass(frozen=True)
 class ApiCapabilities:
+    """Describe operations advertised by the discovered backend."""
+
     operations: Mapping[str, ApiOperation]
 
     def has(self, operation_id: str) -> bool:
+        """Check whether the discovered contract contains an operation."""
         return operation_id in self.operations
 
     @property
     def plugins(self) -> Mapping[str, tuple[ApiOperation, ...]]:
+        """Return plugin operations from the discovered contract."""
         names = sorted({op.plugin for op in self.operations.values() if op.plugin})
         return {
             name: tuple(op for op in self.operations.values() if op.plugin == name)
@@ -317,6 +325,7 @@ class ApiCapabilities:
 
     @property
     def runtime_only(self) -> tuple[str, ...]:
+        """Identify operations absent from the bundled generated contract."""
         return tuple(sorted(k for k, op in self.operations.items() if not op.generated))
 
 
@@ -326,6 +335,7 @@ def plugin_owner(
     details: Mapping[str, Any],
     tags: tuple[str, ...],
 ) -> str | None:
+    """Return the plugin identity advertised for this operation."""
     explicit = details.get("x-bsm-plugin") or item.get("x-bsm-plugin")
     if explicit:
         return str(explicit)

@@ -128,19 +128,15 @@ def sync_detailed(
     body: PermissionsSetPayload,
 
 ) -> Response[ErrorEnvelope | PermissionsUpdateResponse]:
-    """ Post Permissions Set
-
-    Args:
-        server_name (str):
-        body (PermissionsSetPayload): Request model for setting multiple player permissions.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Response[ErrorEnvelope | PermissionsUpdateResponse]
-     """
+    """Post Permissions Set
+    
+    :param server_name: Value supplied to the operation.
+    :param body: Request model for setting multiple player permissions.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: The parsed response."""
 
 
     kwargs = _get_kwargs(
@@ -162,19 +158,15 @@ def sync(
     body: PermissionsSetPayload,
 
 ) -> ErrorEnvelope | PermissionsUpdateResponse | None:
-    """ Post Permissions Set
-
-    Args:
-        server_name (str):
-        body (PermissionsSetPayload): Request model for setting multiple player permissions.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        ErrorEnvelope | PermissionsUpdateResponse
-     """
+    """Post Permissions Set
+    
+    :param server_name: Value supplied to the operation.
+    :param body: Request model for setting multiple player permissions.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: ErrorEnvelope | PermissionsUpdateResponse"""
 
 
     return sync_detailed(
@@ -191,19 +183,15 @@ async def asyncio_detailed(
     body: PermissionsSetPayload,
 
 ) -> Response[ErrorEnvelope | PermissionsUpdateResponse]:
-    """ Post Permissions Set
-
-    Args:
-        server_name (str):
-        body (PermissionsSetPayload): Request model for setting multiple player permissions.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Response[ErrorEnvelope | PermissionsUpdateResponse]
-     """
+    """Post Permissions Set
+    
+    :param server_name: Value supplied to the operation.
+    :param body: Request model for setting multiple player permissions.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: The parsed response."""
 
 
     kwargs = _get_kwargs(
@@ -225,19 +213,15 @@ async def asyncio(
     body: PermissionsSetPayload,
 
 ) -> ErrorEnvelope | PermissionsUpdateResponse | None:
-    """ Post Permissions Set
-
-    Args:
-        server_name (str):
-        body (PermissionsSetPayload): Request model for setting multiple player permissions.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        ErrorEnvelope | PermissionsUpdateResponse
-     """
+    """Post Permissions Set
+    
+    :param server_name: Value supplied to the operation.
+    :param body: Request model for setting multiple player permissions.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: ErrorEnvelope | PermissionsUpdateResponse"""
 
 
     return (await asyncio_detailed(

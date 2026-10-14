@@ -167,22 +167,18 @@ def sync_detailed(
     limit: int | Unset = 200,
 
 ) -> Response[ErrorEnvelope | EventDiagnostics]:
-    """ Get Event Activity
-
-    Args:
-        name (None | str | Unset):
-        owner (None | str | Unset):
-        correlation_id (None | str | Unset):
-        status (GetEventActivityStatusType0 | None | Unset):
-        limit (int | Unset):  Default: 200.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Response[ErrorEnvelope | EventDiagnostics]
-     """
+    """Get Event Activity
+    
+    :param name: Value supplied to the operation.
+    :param owner: Value supplied to the operation.
+    :param correlation_id: Value supplied to the operation.
+    :param status: Value supplied to the operation.
+    :param limit: Default: 200.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: The parsed response."""
 
 
     kwargs = _get_kwargs(
@@ -210,22 +206,18 @@ def sync(
     limit: int | Unset = 200,
 
 ) -> ErrorEnvelope | EventDiagnostics | None:
-    """ Get Event Activity
-
-    Args:
-        name (None | str | Unset):
-        owner (None | str | Unset):
-        correlation_id (None | str | Unset):
-        status (GetEventActivityStatusType0 | None | Unset):
-        limit (int | Unset):  Default: 200.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        ErrorEnvelope | EventDiagnostics
-     """
+    """Get Event Activity
+    
+    :param name: Value supplied to the operation.
+    :param owner: Value supplied to the operation.
+    :param correlation_id: Value supplied to the operation.
+    :param status: Value supplied to the operation.
+    :param limit: Default: 200.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: ErrorEnvelope | EventDiagnostics"""
 
 
     return sync_detailed(
@@ -248,22 +240,18 @@ async def asyncio_detailed(
     limit: int | Unset = 200,
 
 ) -> Response[ErrorEnvelope | EventDiagnostics]:
-    """ Get Event Activity
-
-    Args:
-        name (None | str | Unset):
-        owner (None | str | Unset):
-        correlation_id (None | str | Unset):
-        status (GetEventActivityStatusType0 | None | Unset):
-        limit (int | Unset):  Default: 200.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Response[ErrorEnvelope | EventDiagnostics]
-     """
+    """Get Event Activity
+    
+    :param name: Value supplied to the operation.
+    :param owner: Value supplied to the operation.
+    :param correlation_id: Value supplied to the operation.
+    :param status: Value supplied to the operation.
+    :param limit: Default: 200.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: The parsed response."""
 
 
     kwargs = _get_kwargs(
@@ -291,22 +279,18 @@ async def asyncio(
     limit: int | Unset = 200,
 
 ) -> ErrorEnvelope | EventDiagnostics | None:
-    """ Get Event Activity
-
-    Args:
-        name (None | str | Unset):
-        owner (None | str | Unset):
-        correlation_id (None | str | Unset):
-        status (GetEventActivityStatusType0 | None | Unset):
-        limit (int | Unset):  Default: 200.
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        ErrorEnvelope | EventDiagnostics
-     """
+    """Get Event Activity
+    
+    :param name: Value supplied to the operation.
+    :param owner: Value supplied to the operation.
+    :param correlation_id: Value supplied to the operation.
+    :param status: Value supplied to the operation.
+    :param limit: Default: 200.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: ErrorEnvelope | EventDiagnostics"""
 
 
     return (await asyncio_detailed(

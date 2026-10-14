@@ -146,20 +146,16 @@ def sync_detailed(
     file_id: None | str | Unset = UNSET,
 
 ) -> Response[ErrorEnvelope | LogHistoryPage]:
-    """ Get Log History
-
-    Args:
-        topic (str):
-        before (int | None | Unset):
-        file_id (None | str | Unset):
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Response[ErrorEnvelope | LogHistoryPage]
-     """
+    """Get Log History
+    
+    :param topic: Value supplied to the operation.
+    :param before: Value supplied to the operation.
+    :param file_id: Value supplied to the operation.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: The parsed response."""
 
 
     kwargs = _get_kwargs(
@@ -183,20 +179,16 @@ def sync(
     file_id: None | str | Unset = UNSET,
 
 ) -> ErrorEnvelope | LogHistoryPage | None:
-    """ Get Log History
-
-    Args:
-        topic (str):
-        before (int | None | Unset):
-        file_id (None | str | Unset):
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        ErrorEnvelope | LogHistoryPage
-     """
+    """Get Log History
+    
+    :param topic: Value supplied to the operation.
+    :param before: Value supplied to the operation.
+    :param file_id: Value supplied to the operation.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: ErrorEnvelope | LogHistoryPage"""
 
 
     return sync_detailed(
@@ -215,20 +207,16 @@ async def asyncio_detailed(
     file_id: None | str | Unset = UNSET,
 
 ) -> Response[ErrorEnvelope | LogHistoryPage]:
-    """ Get Log History
-
-    Args:
-        topic (str):
-        before (int | None | Unset):
-        file_id (None | str | Unset):
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Response[ErrorEnvelope | LogHistoryPage]
-     """
+    """Get Log History
+    
+    :param topic: Value supplied to the operation.
+    :param before: Value supplied to the operation.
+    :param file_id: Value supplied to the operation.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: The parsed response."""
 
 
     kwargs = _get_kwargs(
@@ -252,20 +240,16 @@ async def asyncio(
     file_id: None | str | Unset = UNSET,
 
 ) -> ErrorEnvelope | LogHistoryPage | None:
-    """ Get Log History
-
-    Args:
-        topic (str):
-        before (int | None | Unset):
-        file_id (None | str | Unset):
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        ErrorEnvelope | LogHistoryPage
-     """
+    """Get Log History
+    
+    :param topic: Value supplied to the operation.
+    :param before: Value supplied to the operation.
+    :param file_id: Value supplied to the operation.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: ErrorEnvelope | LogHistoryPage"""
 
 
     return (await asyncio_detailed(

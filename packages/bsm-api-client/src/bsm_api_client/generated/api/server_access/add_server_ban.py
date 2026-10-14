@@ -128,21 +128,17 @@ def sync_detailed(
     body: BanAddRequest,
 
 ) -> Response[AddServerBanResponse | ErrorEnvelope]:
-    """ Post Add Server Ban
-
+    """Post Add Server Ban
+    
      Add a player to the server ban list.
-
-    Args:
-        server_name (str):
-        body (BanAddRequest):
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Response[AddServerBanResponse | ErrorEnvelope]
-     """
+    
+    :param server_name: Value supplied to the operation.
+    :param body: Value supplied to the operation.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: The parsed response."""
 
 
     kwargs = _get_kwargs(
@@ -164,21 +160,17 @@ def sync(
     body: BanAddRequest,
 
 ) -> AddServerBanResponse | ErrorEnvelope | None:
-    """ Post Add Server Ban
-
+    """Post Add Server Ban
+    
      Add a player to the server ban list.
-
-    Args:
-        server_name (str):
-        body (BanAddRequest):
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        AddServerBanResponse | ErrorEnvelope
-     """
+    
+    :param server_name: Value supplied to the operation.
+    :param body: Value supplied to the operation.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: AddServerBanResponse | ErrorEnvelope"""
 
 
     return sync_detailed(
@@ -195,21 +187,17 @@ async def asyncio_detailed(
     body: BanAddRequest,
 
 ) -> Response[AddServerBanResponse | ErrorEnvelope]:
-    """ Post Add Server Ban
-
+    """Post Add Server Ban
+    
      Add a player to the server ban list.
-
-    Args:
-        server_name (str):
-        body (BanAddRequest):
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Response[AddServerBanResponse | ErrorEnvelope]
-     """
+    
+    :param server_name: Value supplied to the operation.
+    :param body: Value supplied to the operation.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: The parsed response."""
 
 
     kwargs = _get_kwargs(
@@ -231,21 +219,17 @@ async def asyncio(
     body: BanAddRequest,
 
 ) -> AddServerBanResponse | ErrorEnvelope | None:
-    """ Post Add Server Ban
-
+    """Post Add Server Ban
+    
      Add a player to the server ban list.
-
-    Args:
-        server_name (str):
-        body (BanAddRequest):
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        AddServerBanResponse | ErrorEnvelope
-     """
+    
+    :param server_name: Value supplied to the operation.
+    :param body: Value supplied to the operation.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: AddServerBanResponse | ErrorEnvelope"""
 
 
     return (await asyncio_detailed(

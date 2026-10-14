@@ -139,20 +139,16 @@ def sync_detailed(
     cursor: None | str | Unset = UNSET,
 
 ) -> Response[DiagnosticTrace | ErrorEnvelope]:
-    """ Get Diagnostic Trace
-
-    Args:
-        correlation_id (str):
-        limit (int | Unset):  Default: 100.
-        cursor (None | str | Unset):
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Response[DiagnosticTrace | ErrorEnvelope]
-     """
+    """Get Diagnostic Trace
+    
+    :param correlation_id: Value supplied to the operation.
+    :param limit: Default: 100.
+    :param cursor: Value supplied to the operation.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: The parsed response."""
 
 
     kwargs = _get_kwargs(
@@ -176,20 +172,16 @@ def sync(
     cursor: None | str | Unset = UNSET,
 
 ) -> DiagnosticTrace | ErrorEnvelope | None:
-    """ Get Diagnostic Trace
-
-    Args:
-        correlation_id (str):
-        limit (int | Unset):  Default: 100.
-        cursor (None | str | Unset):
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        DiagnosticTrace | ErrorEnvelope
-     """
+    """Get Diagnostic Trace
+    
+    :param correlation_id: Value supplied to the operation.
+    :param limit: Default: 100.
+    :param cursor: Value supplied to the operation.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: DiagnosticTrace | ErrorEnvelope"""
 
 
     return sync_detailed(
@@ -208,20 +200,16 @@ async def asyncio_detailed(
     cursor: None | str | Unset = UNSET,
 
 ) -> Response[DiagnosticTrace | ErrorEnvelope]:
-    """ Get Diagnostic Trace
-
-    Args:
-        correlation_id (str):
-        limit (int | Unset):  Default: 100.
-        cursor (None | str | Unset):
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Response[DiagnosticTrace | ErrorEnvelope]
-     """
+    """Get Diagnostic Trace
+    
+    :param correlation_id: Value supplied to the operation.
+    :param limit: Default: 100.
+    :param cursor: Value supplied to the operation.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: The parsed response."""
 
 
     kwargs = _get_kwargs(
@@ -245,20 +233,16 @@ async def asyncio(
     cursor: None | str | Unset = UNSET,
 
 ) -> DiagnosticTrace | ErrorEnvelope | None:
-    """ Get Diagnostic Trace
-
-    Args:
-        correlation_id (str):
-        limit (int | Unset):  Default: 100.
-        cursor (None | str | Unset):
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        DiagnosticTrace | ErrorEnvelope
-     """
+    """Get Diagnostic Trace
+    
+    :param correlation_id: Value supplied to the operation.
+    :param limit: Default: 100.
+    :param cursor: Value supplied to the operation.
+    
+    :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+    :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
+    
+    :returns: DiagnosticTrace | ErrorEnvelope"""
 
 
     return (await asyncio_detailed(
