@@ -236,3 +236,13 @@ bsm-cli diagnostics compare before.json after.json
 ```
 
 History supports subsystem, instance, owner, code, outcome, operation and correlation filters. Trace sources may be independently unavailable. Comparison accepts snapshots or the `snapshot` member of saved support reports; counter deltas are unavailable across instance changes. All commands support the existing `--json` output and administrator error policy. Requests are on demand; no new background polling is added.
+
+### Support reports
+
+On a backend with diagnostic endpoints, an administrator can save a sanitized report:
+
+```console
+bsm-cli diagnostics report --output bsm-support-report.json
+```
+
+The command discovers the live `get_diagnostic_report` operation and uses your configured authentication. The destination is published only after the response completes. Use `--force` to replace an existing file. Reports contain subsystem metadata and bounded history; inspect them before sharing. Older backends report that the operation is unavailable.
