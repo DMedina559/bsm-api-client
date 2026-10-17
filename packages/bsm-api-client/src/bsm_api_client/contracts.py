@@ -1653,12 +1653,15 @@ class GetApplicationHealthResponse(ContractModel):
     checked_at: float = Field(..., gt=0.0, title="Checked At")
     checks: dict[str, HealthCheck] = Field(..., title="Checks")
     health: Literal["healthy", "degraded"] = Field(..., title="Health")
+    instance_id: str | None = Field(None, title="Instance Id")
     lifecycle: Literal["starting", "ready", "stopping", "stopped", "failed"] = Field(
         ..., title="LifecyclePhase"
     )
     message: str | None = Field(None, title="Message")
+    pid: int = Field(..., gt=0, title="Pid")
     ready: bool = Field(..., title="Ready")
     status: Literal["success"] = Field("success", title="Status")
+    version: str = Field(..., title="Version")
 
 
 class GetPermissionsResponse(ContractModel):
