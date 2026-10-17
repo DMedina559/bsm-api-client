@@ -624,3 +624,47 @@ async def test_event_catalog_filters_and_shutdown_receipt_use_generated_contract
     assert receipt.status == "accepted" and receipt.phase == "stopping"
     assert ("shutdown", {}, None) in seen
     assert not hasattr(receipt, "task_id")
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("interface", ["rest", "application"])
+@pytest.mark.parametrize("instance_id,ready", [("runtime-1", True), (None, False)])
+async def test_health_response_preserves_process_identity(
+    interface, instance_id, ready
+):
+    import httpx
+
+    from bsm_api_client.models import GetApplicationHealthResponse
+
+    payload = {
+        "pid": 123,
+        "instance_id": instance_id,
+        "version": "4.0.0b8",
+        "ready": ready,
+        "lifecycle": "ready" if ready else "stopping",
+        "health": "healthy" if ready else "degraded",
+        "checks": {"lifecycle": {"healthy": ready, "message": "Lifecycle check"}},
+        "checked_at": 1.0,
+    }
+
+    async def respond(request):
+        assert request.url.path == "/api/health"
+        assert request.headers["Authorization"] == "Bearer token"
+        assert "X-BSM-Readiness-Token" not in request.headers
+        return httpx.Response(200, json=payload)
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(respond)) as transport:
+        async with BedrockServerManagerApi(
+            "http://localhost", jwt_token="token", http_client=transport
+        ) as client:
+            response = (
+                await client.rest.get_application_health()
+                if interface == "rest"
+                else await client.application.async_get_application_health()
+            )
+            assert isinstance(response, GetApplicationHealthResponse)
+            assert response.pid == 123
+            assert response.instance_id == instance_id
+            assert response.version == "4.0.0b8"
+            assert response.ready is ready
+            assert response.checks["lifecycle"].healthy is ready

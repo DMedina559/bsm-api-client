@@ -24,16 +24,14 @@ packaging never run a generator or mutate source files. Wheels and source archiv
 contain the same generated endpoints, Pydantic model imports, typed `RestClient`,
 and operation registry. The pinned `openapi-python-client` release generates the
 endpoint serialization; the shared Pydantic contracts supply request validation
-and response parsing. Python 3.11–3.14 are supported; CI verifies regeneration
-and builds on the range's Python 3.11 and 3.14 endpoints.
+and response parsing. Python 3.11–3.14 are supported; CI runs tests on Python 3.11 and 3.14, and checks regeneration
+and builds packages once on Python 3.14.
 Generation validates complete operation coverage before replacing an existing
 package and restores the previous package if replacement fails.
 
 ```bash
 python -m build packages/bsm-api-client
 python -m build packages/bsm-cli
-python scripts/check_distributions.py packages/bsm-api-client/dist/*
-python -m pip wheel --no-deps --wheel-dir /tmp/bsm-wheels packages/bsm-api-client/dist/*.tar.gz
 ```
 
 The integration suite starts an isolated BSM process with a temporary database,

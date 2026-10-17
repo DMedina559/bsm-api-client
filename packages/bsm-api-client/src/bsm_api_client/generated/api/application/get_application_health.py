@@ -119,7 +119,7 @@ def sync_detailed(
 ) -> Response[ErrorEnvelope | GetApplicationHealthResponse]:
     """Get Application Health
     
-     Dependency readiness. A degraded response remains HTTP 200 for UI clients.
+     Return health and process identity for a user or local supervisor.
     
     :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
     :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
@@ -144,7 +144,7 @@ def sync(
 ) -> ErrorEnvelope | GetApplicationHealthResponse | None:
     """Get Application Health
     
-     Dependency readiness. A degraded response remains HTTP 200 for UI clients.
+     Return health and process identity for a user or local supervisor.
     
     :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
     :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
@@ -164,7 +164,7 @@ async def asyncio_detailed(
 ) -> Response[ErrorEnvelope | GetApplicationHealthResponse]:
     """Get Application Health
     
-     Dependency readiness. A degraded response remains HTTP 200 for UI clients.
+     Return health and process identity for a user or local supervisor.
     
     :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
     :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
@@ -189,7 +189,7 @@ async def asyncio(
 ) -> ErrorEnvelope | GetApplicationHealthResponse | None:
     """Get Application Health
     
-     Dependency readiness. A degraded response remains HTTP 200 for UI clients.
+     Return health and process identity for a user or local supervisor.
     
     :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
     :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
