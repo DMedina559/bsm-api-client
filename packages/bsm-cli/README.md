@@ -1,5 +1,5 @@
 <div style="text-align: center;">
-    <img src="https://raw.githubusercontent.com/DMedina559/bsm-frontend/main/frontend/public/image/icon/favicon.svg" alt="BSM Logo" width="150">
+    <img src="https://raw.githubusercontent.com/DMedina559/bsm-frontend/main/frontend/public/image/icon/web-app-manifest-512x512.png" alt="BSM Logo" width="150">
 </div>
 
 # bsm-cli
