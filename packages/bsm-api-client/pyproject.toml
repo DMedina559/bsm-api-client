@@ -36,7 +36,7 @@ keywords = ["minecraft", "bedrock", "server", "manager", "api", "client", "async
 docs = ["sphinx>=8.2,<9.2", "myst-parser>=4,<5.2", "sphinx-rtd-theme>=3,<3.2"]
 
 dev = [
-    "datamodel-code-generator >=0.39.0,<0.40",
+    "datamodel-code-generator >=0.39.0,<0.84",
     "bsm-test-utils >=1.0.0,<1.1",
     "pytest >=8.4.0,<9.2",
     "pytest-mock >=3.14.0,<3.17",
