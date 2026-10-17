@@ -366,7 +366,7 @@ class DiagnosticHealthSample(ContractModel):
     model_config = ConfigDict(extra="forbid")
     ready: bool | None = Field(..., title="Ready")
     sections: dict[str, Literal["ok", "degraded", "unavailable", "unknown"]] = Field(
-        ..., title="Sections"
+        ..., max_length=1000, title="Sections"
     )
     status: Literal["ok", "degraded", "unavailable", "unknown"] = Field(
         ..., title="Status"
@@ -817,8 +817,8 @@ class PluginValues(ContractModel):
     units: (
         dict[str, Literal["count", "seconds", "milliseconds", "bytes", "percent"]]
         | None
-    ) = Field(None, title="Units")
-    values: dict[str, float | bool | None] = Field(..., title="Values")
+    ) = Field(None, max_length=50, title="Units")
+    values: dict[str, float | bool | None] = Field(..., max_length=50, title="Values")
 
 
 class PluginsDiagnostics(ContractModel):
@@ -1223,7 +1223,6 @@ class SetupStatusResponse(ContractModel):
 class ShutdownRequest(ContractModel):
     """Validate and serialize the ShutdownRequest contract."""
 
-    pass
     model_config = ConfigDict(extra="forbid")
 
 
@@ -1971,7 +1970,7 @@ class DiagnosticTrace(ContractModel):
 
     model_config = ConfigDict(extra="forbid")
     correlation_id: str = Field(..., title="Correlation Id")
-    events: EventDiagnostics | None = None
+    events: EventDiagnostics | None
     events_available: bool | None = Field(False, title="Events Available")
     history: DiagnosticHistory
     issues: list[DiagnosticIssue] | None = Field(None, max_length=3, title="Issues")
