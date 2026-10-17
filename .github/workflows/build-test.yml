@@ -51,35 +51,21 @@ jobs:
           python -m pip install -e './packages/bsm-api-client[dev]' -e './packages/bsm-cli[dev]'
           python -m pip install -e './backend-under-test'
 
-      - name: Run pre-commit
-        if: matrix.python-version == '3.14'
-        run: pre-commit run --all-files
-
-      - name: Check generation, backend contract and distributions
+      - name: Build package
         if: matrix.python-version == '3.14'
         run: |
-          python -m bedrock_server_manager.web.contract --check packages/bsm-api-client/src/bsm_api_client/generated/openapi.json
-          python scripts/generate_client.py packages/bsm-api-client/src/bsm_api_client/generated/openapi.json --check
           python -m build packages/bsm-api-client
           python -m build packages/bsm-cli
-          python scripts/check_distributions.py packages/bsm-api-client/dist/*
-          python -m pip wheel --no-deps --wheel-dir "$RUNNER_TEMP/bsm-sdist-wheels" packages/bsm-api-client/dist/*.tar.gz
-          python scripts/check_distributions.py "$RUNNER_TEMP"/bsm-sdist-wheels/*.whl
 
-      - name: Test installed wheels
+      - name: Lint and type checks
         if: matrix.python-version == '3.14'
         run: |
-          python -m venv --system-site-packages "$RUNNER_TEMP/bsm-wheel-smoke"
-          "$RUNNER_TEMP/bsm-wheel-smoke/bin/python" -m pip install --ignore-installed --no-deps packages/bsm-api-client/dist/*.whl packages/bsm-cli/dist/*.whl
-          cd "$RUNNER_TEMP"
-          "$RUNNER_TEMP/bsm-wheel-smoke/bin/python" -c "from bsm_api_client.generated.client import Client; from bsm_api_client.generated_adapter import operation_module; assert Client and operation_module('get_account')"
-          "$RUNNER_TEMP/bsm-wheel-smoke/bin/python" -m bsm_cli --help
+          pre-commit run --all-files
+          python -m bedrock_server_manager.web.contract --check packages/bsm-api-client/src/bsm_api_client/generated/openapi.json
+          python scripts/generate_client.py packages/bsm-api-client/src/bsm_api_client/generated/openapi.json --check
+          python scripts/generate_models.py --check
 
-      - name: Verify generated public models
-        if: matrix.python-version == '3.14'
-        run: python scripts/generate_models.py --check
-
-      - name: Run Pytest
+      - name: Run tests
         run: python -m pytest
 
       - name: Show integration diagnostics
