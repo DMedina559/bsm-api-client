@@ -71,6 +71,7 @@ def shape(document, spec, values):
 
 
 SUCCESS = {
+    "backups": [],
     "instance_id": "test-instance",
     "pid": 123,
     "phase": "ready",
@@ -231,11 +232,9 @@ CASES = [
     ("properties", "raw", "-s", "test"),
     ("properties", "get", "-s", "test", "-p", "server-name"),
     ("properties", "set", "-s", "test", "-p", "server-name=Test Server"),
-    ("backup", "create", "-s", "test", "-t", "all"),
-    ("backup", "create", "-s", "test", "-t", "config", "-f", "server.properties"),
-    ("backup", "restore", "-s", "test", "-f", "world_backup.zip"),
-    ("backup", "restore", "-s", "test", "-f", "My Level_backup_20261007.mcworld"),
-    ("backup", "restore", "-s", "test", "-f", "custom.zip", "--type", "world"),
+    ("backup", "create", "-s", "test"),
+    ("backup", "create", "-s", "test", "--encrypted"),
+    ("backup", "list", "-s", "test"),
     ("backup", "prune", "-s", "test"),
     ("world", "install", "-s", "test", "-f", "world.mcworld", "--yes"),
     ("world", "export", "-s", "test"),

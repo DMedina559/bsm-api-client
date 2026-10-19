@@ -158,7 +158,12 @@ def share_canonical_models(package: Path) -> None:
         classes = [
             node.name for node in model_tree.body if isinstance(node, ast.ClassDef)
         ]
-        if len(classes) == 1 and classes[0] in canonical:
+        multipart = any(
+            isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
+            and node.name == "to_multipart"
+            for node in ast.walk(model_tree)
+        )
+        if len(classes) == 1 and classes[0] in canonical and not multipart:
             name = classes[0]
             model_file.write_text(
                 f'"""Canonical OpenAPI contract; generated import compatibility."""\n\nfrom ...contracts import {name} as {name}\n'
@@ -224,7 +229,7 @@ def generate_rest_interface(
     """Generate typed operationId methods from the standard endpoint signatures."""
     imports = {
         "from typing import Any, cast",
-        "from .types import Response, UNSET, Unset",
+        "from .types import File, Response, UNSET, Unset",
     }
     methods = []
     authentication = {

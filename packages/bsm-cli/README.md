@@ -246,3 +246,17 @@ bsm-cli diagnostics report --output bsm-support-report.json
 ```
 
 The command discovers the live `get_diagnostic_report` operation and uses your configured authentication. The destination is published only after the response completes. Use `--force` to replace an existing file. Reports contain subsystem metadata and bounded history; inspect them before sharing. Older backends report that the operation is unavailable.
+
+### Portable backups
+
+```console
+bsm-cli backup create --server MyServer
+bsm-cli backup create --server MyServer --encrypted
+bsm-cli backup list --server MyServer
+bsm-cli backup inspect --server MyServer --file ARCHIVE.bsmbackup
+bsm-cli backup restore --server MyServer --file ARCHIVE.bsmbackup --component world --component server.properties
+```
+
+Restore inspects the manifest, offers complete components, prints a destination review, and requests confirmation. Use `--unlock` to prompt privately for an imported backup's recovery key. Use `--no-restart` to leave an originally running server stopped. `--yes` explicitly confirms a noninteractive reviewed restore. Old `--type` backup creation and filename-based restore inference have been replaced by unified archives and component selection.
+
+Offline extraction is provided by the backend package's `bedrock-server-manager backup extract` command and requires no running instance or original database.

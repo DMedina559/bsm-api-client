@@ -18,6 +18,7 @@ from .models.backup_files_response import BackupFilesResponse
 from .models.ban_add_request import BanAddRequest
 from .models.ban_remove_request import BanRemoveRequest
 from .models.base_api_response import BaseApiResponse
+from .models.body_import_server_snapshot import BodyImportServerSnapshot
 from .models.body_login import BodyLogin
 from .models.change_password_payload import ChangePasswordPayload
 from .models.command_payload import CommandPayload
@@ -49,6 +50,8 @@ from .models.install_confirmation_response import InstallConfirmationResponse
 from .models.install_server_payload import InstallServerPayload
 from .models.installation_accepted_response import InstallationAcceptedResponse
 from .models.list_available_addons_response import ListAvailableAddonsResponse
+from .models.list_backup_keys_response_list_backup_keys import ListBackupKeysResponseListBackupKeys
+from .models.list_snapshots_response import ListSnapshotsResponse
 from .models.log_history_page import LogHistoryPage
 from .models.permissions_set_payload import PermissionsSetPayload
 from .models.permissions_update_response import PermissionsUpdateResponse
@@ -66,6 +69,8 @@ from .models.remove_from_allowlist_response import RemoveFromAllowlistResponse
 from .models.remove_server_ban_response import RemoveServerBanResponse
 from .models.restart_server_response import RestartServerResponse
 from .models.restore_action_payload import RestoreActionPayload
+from .models.restore_recovery_response import RestoreRecoveryResponse
+from .models.rotate_backup_key_response_rotate_backup_key import RotateBackupKeyResponseRotateBackupKey
 from .models.runtime_status import RuntimeStatus
 from .models.send_command_response import SendCommandResponse
 from .models.server_process_info_response import ServerProcessInfoResponse
@@ -82,6 +87,10 @@ from .models.setup_account_response import SetupAccountResponse
 from .models.setup_status_response import SetupStatusResponse
 from .models.shutdown_request import ShutdownRequest
 from .models.shutdown_response import ShutdownResponse
+from .models.snapshot_create_payload import SnapshotCreatePayload
+from .models.snapshot_inspect_payload import SnapshotInspectPayload
+from .models.snapshot_plan_payload import SnapshotPlanPayload
+from .models.snapshot_restore_payload import SnapshotRestorePayload
 from .models.start_server_response import StartServerResponse
 from .models.stop_server_response import StopServerResponse
 from .models.task_accepted_response import TaskAcceptedResponse
@@ -94,7 +103,7 @@ from .models.trigger_event_response import TriggerEventResponse
 from .models.update_user_role_payload import UpdateUserRolePayload
 from .models.user_login_payload import UserLoginPayload
 from .models.user_response import UserResponse
-from .types import Response, UNSET, Unset
+from .types import File, Response, UNSET, Unset
 from http import HTTPStatus
 from typing import Any, cast
 from typing import cast
@@ -160,6 +169,14 @@ class RestClient:
         """Generated create_first_user operation."""
         return cast(Response[ErrorEnvelope | SetupAccountResponse], await self._owner.async_call_generated('create_first_user', parameters={}, body=body, authenticated=False, detailed=True))
 
+    async def create_server_snapshot(self, server_name: str, *, body: SnapshotCreatePayload) -> ErrorEnvelope | TaskAcceptedResponse | None:
+        """Generated create_server_snapshot operation."""
+        return cast(ErrorEnvelope | TaskAcceptedResponse | None, await self._owner.async_call_generated('create_server_snapshot', parameters={'server_name': server_name}, body=body, authenticated=True, typed=True))
+
+    async def create_server_snapshot_detailed(self, server_name: str, *, body: SnapshotCreatePayload) -> Response[ErrorEnvelope | TaskAcceptedResponse]:
+        """Generated create_server_snapshot operation."""
+        return cast(Response[ErrorEnvelope | TaskAcceptedResponse], await self._owner.async_call_generated('create_server_snapshot', parameters={'server_name': server_name}, body=body, authenticated=True, detailed=True))
+
     async def delete_server(self, server_name: str) -> ErrorEnvelope | TaskAcceptedResponse | None:
         """Generated delete_server operation."""
         return cast(ErrorEnvelope | TaskAcceptedResponse | None, await self._owner.async_call_generated('delete_server', parameters={'server_name': server_name}, body=None, authenticated=True, typed=True))
@@ -192,6 +209,22 @@ class RestClient:
         """Generated disable_user operation."""
         return cast(Response[BaseApiResponse | ErrorEnvelope], await self._owner.async_call_generated('disable_user', parameters={'user_id': user_id}, body=None, authenticated=True, detailed=True))
 
+    async def download_backup_emergency_kit(self, key_id: str) -> ErrorEnvelope | str | None:
+        """Generated download_backup_emergency_kit operation."""
+        return cast(ErrorEnvelope | str | None, await self._owner.async_call_generated('download_backup_emergency_kit', parameters={'key_id': key_id}, body=None, authenticated=True, typed=True))
+
+    async def download_backup_emergency_kit_detailed(self, key_id: str) -> Response[ErrorEnvelope | str]:
+        """Generated download_backup_emergency_kit operation."""
+        return cast(Response[ErrorEnvelope | str], await self._owner.async_call_generated('download_backup_emergency_kit', parameters={'key_id': key_id}, body=None, authenticated=True, detailed=True))
+
+    async def download_server_snapshot(self, server_name: str, backup_id: str) -> ErrorEnvelope | File | None:
+        """Generated download_server_snapshot operation."""
+        return cast(ErrorEnvelope | File | None, await self._owner.async_call_generated('download_server_snapshot', parameters={'server_name': server_name, 'backup_id': backup_id}, body=None, authenticated=True, typed=True))
+
+    async def download_server_snapshot_detailed(self, server_name: str, backup_id: str) -> Response[ErrorEnvelope | File]:
+        """Generated download_server_snapshot operation."""
+        return cast(Response[ErrorEnvelope | File], await self._owner.async_call_generated('download_server_snapshot', parameters={'server_name': server_name, 'backup_id': backup_id}, body=None, authenticated=True, detailed=True))
+
     async def enable_addon(self, server_name: str, *, body: AddonActionPayload) -> ErrorEnvelope | TaskAcceptedResponse | None:
         """Generated enable_addon operation."""
         return cast(ErrorEnvelope | TaskAcceptedResponse | None, await self._owner.async_call_generated('enable_addon', parameters={'server_name': server_name}, body=body, authenticated=True, typed=True))
@@ -207,6 +240,14 @@ class RestClient:
     async def enable_user_detailed(self, user_id: int) -> Response[BaseApiResponse | ErrorEnvelope]:
         """Generated enable_user operation."""
         return cast(Response[BaseApiResponse | ErrorEnvelope], await self._owner.async_call_generated('enable_user', parameters={'user_id': user_id}, body=None, authenticated=True, detailed=True))
+
+    async def export_decrypted_snapshot(self, server_name: str, backup_id: str, *, body: SnapshotInspectPayload) -> ErrorEnvelope | File | None:
+        """Generated export_decrypted_snapshot operation."""
+        return cast(ErrorEnvelope | File | None, await self._owner.async_call_generated('export_decrypted_snapshot', parameters={'server_name': server_name, 'backup_id': backup_id}, body=body, authenticated=True, typed=True))
+
+    async def export_decrypted_snapshot_detailed(self, server_name: str, backup_id: str, *, body: SnapshotInspectPayload) -> Response[ErrorEnvelope | File]:
+        """Generated export_decrypted_snapshot operation."""
+        return cast(Response[ErrorEnvelope | File], await self._owner.async_call_generated('export_decrypted_snapshot', parameters={'server_name': server_name, 'backup_id': backup_id}, body=body, authenticated=True, detailed=True))
 
     async def export_world(self, server_name: str) -> ErrorEnvelope | TaskAcceptedResponse | None:
         """Generated export_world operation."""
@@ -360,6 +401,14 @@ class RestClient:
         """Generated get_raw_properties operation."""
         return cast(Response[ErrorEnvelope | GetRawPropertiesResponse], await self._owner.async_call_generated('get_raw_properties', parameters={'server_name': server_name}, body=None, authenticated=True, detailed=True))
 
+    async def get_restore_recovery(self, server_name: str) -> ErrorEnvelope | RestoreRecoveryResponse | None:
+        """Generated get_restore_recovery operation."""
+        return cast(ErrorEnvelope | RestoreRecoveryResponse | None, await self._owner.async_call_generated('get_restore_recovery', parameters={'server_name': server_name}, body=None, authenticated=True, typed=True))
+
+    async def get_restore_recovery_detailed(self, server_name: str) -> Response[ErrorEnvelope | RestoreRecoveryResponse]:
+        """Generated get_restore_recovery operation."""
+        return cast(Response[ErrorEnvelope | RestoreRecoveryResponse], await self._owner.async_call_generated('get_restore_recovery', parameters={'server_name': server_name}, body=None, authenticated=True, detailed=True))
+
     async def get_server_addon_icon(self, server_name: str, *, pack_type: str, uuid: str) -> Any | ErrorEnvelope | None:
         """Generated get_server_addon_icon operation."""
         return cast(Any | ErrorEnvelope | None, await self._owner.async_call_generated('get_server_addon_icon', parameters={'server_name': server_name, 'pack_type': pack_type, 'uuid': uuid}, body=None, authenticated=False, typed=True))
@@ -464,6 +513,22 @@ class RestClient:
         """Generated get_world_icon operation."""
         return cast(Response[Any | ErrorEnvelope], await self._owner.async_call_generated('get_world_icon', parameters={'server_name': server_name}, body=None, authenticated=False, detailed=True))
 
+    async def import_server_snapshot(self, server_name: str, *, body: BodyImportServerSnapshot) -> ErrorEnvelope | ListSnapshotsResponse | None:
+        """Generated import_server_snapshot operation."""
+        return cast(ErrorEnvelope | ListSnapshotsResponse | None, await self._owner.async_call_generated('import_server_snapshot', parameters={'server_name': server_name}, body=body, authenticated=True, typed=True))
+
+    async def import_server_snapshot_detailed(self, server_name: str, *, body: BodyImportServerSnapshot) -> Response[ErrorEnvelope | ListSnapshotsResponse]:
+        """Generated import_server_snapshot operation."""
+        return cast(Response[ErrorEnvelope | ListSnapshotsResponse], await self._owner.async_call_generated('import_server_snapshot', parameters={'server_name': server_name}, body=body, authenticated=True, detailed=True))
+
+    async def inspect_server_snapshot(self, server_name: str, backup_id: str, *, body: SnapshotInspectPayload) -> ErrorEnvelope | TaskAcceptedResponse | None:
+        """Generated inspect_server_snapshot operation."""
+        return cast(ErrorEnvelope | TaskAcceptedResponse | None, await self._owner.async_call_generated('inspect_server_snapshot', parameters={'server_name': server_name, 'backup_id': backup_id}, body=body, authenticated=True, typed=True))
+
+    async def inspect_server_snapshot_detailed(self, server_name: str, backup_id: str, *, body: SnapshotInspectPayload) -> Response[ErrorEnvelope | TaskAcceptedResponse]:
+        """Generated inspect_server_snapshot operation."""
+        return cast(Response[ErrorEnvelope | TaskAcceptedResponse], await self._owner.async_call_generated('inspect_server_snapshot', parameters={'server_name': server_name, 'backup_id': backup_id}, body=body, authenticated=True, detailed=True))
+
     async def install_addon(self, server_name: str, *, body: FileNamePayload) -> ErrorEnvelope | TaskAcceptedResponse | None:
         """Generated install_addon operation."""
         return cast(ErrorEnvelope | TaskAcceptedResponse | None, await self._owner.async_call_generated('install_addon', parameters={'server_name': server_name}, body=body, authenticated=True, typed=True))
@@ -520,6 +585,14 @@ class RestClient:
         """Generated list_available_worlds operation."""
         return cast(Response[ContentListResponse | ErrorEnvelope], await self._owner.async_call_generated('list_available_worlds', parameters={}, body=None, authenticated=True, detailed=True))
 
+    async def list_backup_keys(self) -> ErrorEnvelope | ListBackupKeysResponseListBackupKeys | None:
+        """Generated list_backup_keys operation."""
+        return cast(ErrorEnvelope | ListBackupKeysResponseListBackupKeys | None, await self._owner.async_call_generated('list_backup_keys', parameters={}, body=None, authenticated=True, typed=True))
+
+    async def list_backup_keys_detailed(self) -> Response[ErrorEnvelope | ListBackupKeysResponseListBackupKeys]:
+        """Generated list_backup_keys operation."""
+        return cast(Response[ErrorEnvelope | ListBackupKeysResponseListBackupKeys], await self._owner.async_call_generated('list_backup_keys', parameters={}, body=None, authenticated=True, detailed=True))
+
     async def list_downloads(self) -> CustomZipsResponse | ErrorEnvelope | None:
         """Generated list_downloads operation."""
         return cast(CustomZipsResponse | ErrorEnvelope | None, await self._owner.async_call_generated('list_downloads', parameters={}, body=None, authenticated=True, typed=True))
@@ -559,6 +632,14 @@ class RestClient:
     async def list_server_backups_detailed(self, server_name: str, backup_type: str) -> Response[BackupFilesResponse | ErrorEnvelope]:
         """Generated list_server_backups operation."""
         return cast(Response[BackupFilesResponse | ErrorEnvelope], await self._owner.async_call_generated('list_server_backups', parameters={'server_name': server_name, 'backup_type': backup_type}, body=None, authenticated=True, detailed=True))
+
+    async def list_server_snapshots(self, server_name: str) -> ErrorEnvelope | ListSnapshotsResponse | None:
+        """Generated list_server_snapshots operation."""
+        return cast(ErrorEnvelope | ListSnapshotsResponse | None, await self._owner.async_call_generated('list_server_snapshots', parameters={'server_name': server_name}, body=None, authenticated=True, typed=True))
+
+    async def list_server_snapshots_detailed(self, server_name: str) -> Response[ErrorEnvelope | ListSnapshotsResponse]:
+        """Generated list_server_snapshots operation."""
+        return cast(Response[ErrorEnvelope | ListSnapshotsResponse], await self._owner.async_call_generated('list_server_snapshots', parameters={'server_name': server_name}, body=None, authenticated=True, detailed=True))
 
     async def list_servers(self) -> ErrorEnvelope | ServersListResponse | None:
         """Generated list_servers operation."""
@@ -608,6 +689,14 @@ class RestClient:
         """Generated logout operation."""
         return cast(Response[Any | ErrorEnvelope], await self._owner.async_call_generated('logout', parameters={}, body=None, authenticated=True, detailed=True))
 
+    async def plan_snapshot_restore(self, server_name: str, backup_id: str, *, body: SnapshotPlanPayload) -> ErrorEnvelope | TaskAcceptedResponse | None:
+        """Generated plan_snapshot_restore operation."""
+        return cast(ErrorEnvelope | TaskAcceptedResponse | None, await self._owner.async_call_generated('plan_snapshot_restore', parameters={'server_name': server_name, 'backup_id': backup_id}, body=body, authenticated=True, typed=True))
+
+    async def plan_snapshot_restore_detailed(self, server_name: str, backup_id: str, *, body: SnapshotPlanPayload) -> Response[ErrorEnvelope | TaskAcceptedResponse]:
+        """Generated plan_snapshot_restore operation."""
+        return cast(Response[ErrorEnvelope | TaskAcceptedResponse], await self._owner.async_call_generated('plan_snapshot_restore', parameters={'server_name': server_name, 'backup_id': backup_id}, body=body, authenticated=True, detailed=True))
+
     async def prune_backups(self, server_name: str) -> ErrorEnvelope | TaskAcceptedResponse | None:
         """Generated prune_backups operation."""
         return cast(ErrorEnvelope | TaskAcceptedResponse | None, await self._owner.async_call_generated('prune_backups', parameters={'server_name': server_name}, body=None, authenticated=True, typed=True))
@@ -631,6 +720,14 @@ class RestClient:
     async def reauthenticate_detailed(self, *, remember_me: bool | None | Unset=UNSET) -> Response[ErrorEnvelope | TokenResponse]:
         """Generated reauthenticate operation."""
         return cast(Response[ErrorEnvelope | TokenResponse], await self._owner.async_call_generated('reauthenticate', parameters={'remember_me': remember_me}, body=None, authenticated=True, detailed=True))
+
+    async def recover_server_backup(self, server_name: str) -> ErrorEnvelope | TaskAcceptedResponse | None:
+        """Generated recover_server_backup operation."""
+        return cast(ErrorEnvelope | TaskAcceptedResponse | None, await self._owner.async_call_generated('recover_server_backup', parameters={'server_name': server_name}, body=None, authenticated=True, typed=True))
+
+    async def recover_server_backup_detailed(self, server_name: str) -> Response[ErrorEnvelope | TaskAcceptedResponse]:
+        """Generated recover_server_backup operation."""
+        return cast(Response[ErrorEnvelope | TaskAcceptedResponse], await self._owner.async_call_generated('recover_server_backup', parameters={'server_name': server_name}, body=None, authenticated=True, detailed=True))
 
     async def register_user(self, token: str, *, body: UserLoginPayload) -> Any | ErrorEnvelope | None:
         """Generated register_user operation."""
@@ -711,6 +808,22 @@ class RestClient:
     async def restore_backup_detailed(self, server_name: str, *, body: RestoreActionPayload) -> Response[ErrorEnvelope | TaskAcceptedResponse]:
         """Generated restore_backup operation."""
         return cast(Response[ErrorEnvelope | TaskAcceptedResponse], await self._owner.async_call_generated('restore_backup', parameters={'server_name': server_name}, body=body, authenticated=True, detailed=True))
+
+    async def restore_server_snapshot(self, server_name: str, backup_id: str, *, body: SnapshotRestorePayload) -> ErrorEnvelope | TaskAcceptedResponse | None:
+        """Generated restore_server_snapshot operation."""
+        return cast(ErrorEnvelope | TaskAcceptedResponse | None, await self._owner.async_call_generated('restore_server_snapshot', parameters={'server_name': server_name, 'backup_id': backup_id}, body=body, authenticated=True, typed=True))
+
+    async def restore_server_snapshot_detailed(self, server_name: str, backup_id: str, *, body: SnapshotRestorePayload) -> Response[ErrorEnvelope | TaskAcceptedResponse]:
+        """Generated restore_server_snapshot operation."""
+        return cast(Response[ErrorEnvelope | TaskAcceptedResponse], await self._owner.async_call_generated('restore_server_snapshot', parameters={'server_name': server_name, 'backup_id': backup_id}, body=body, authenticated=True, detailed=True))
+
+    async def rotate_backup_key(self) -> ErrorEnvelope | RotateBackupKeyResponseRotateBackupKey | None:
+        """Generated rotate_backup_key operation."""
+        return cast(ErrorEnvelope | RotateBackupKeyResponseRotateBackupKey | None, await self._owner.async_call_generated('rotate_backup_key', parameters={}, body=None, authenticated=True, typed=True))
+
+    async def rotate_backup_key_detailed(self) -> Response[ErrorEnvelope | RotateBackupKeyResponseRotateBackupKey]:
+        """Generated rotate_backup_key operation."""
+        return cast(Response[ErrorEnvelope | RotateBackupKeyResponseRotateBackupKey], await self._owner.async_call_generated('rotate_backup_key', parameters={}, body=None, authenticated=True, detailed=True))
 
     async def scan_players(self) -> AddPlayersResponse | ErrorEnvelope | None:
         """Generated scan_players operation."""

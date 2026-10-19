@@ -36,7 +36,8 @@ jobs:
         uses: actions/checkout@v7
         with:
           repository: DMedina559/bedrock-server-manager
-          ref: dev
+          # Match the backend contract bundled with this client.
+          ref: 98b3017f85449212a3e9dfdb27e8bbf4084e6d55
           path: backend-under-test
 
       - name: Set up Python ${{ matrix.python-version }}
