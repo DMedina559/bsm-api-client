@@ -146,6 +146,13 @@ class TestContentManagement:
         )
         health = await client.backups.async_health(server_name)
         assert health["health"]["last_verified_at"]
+        report = await client.backups.async_recovery_report(server_name)
+        assert report["report"]["report_version"] == 1
+        assert report["report"]["last_restore"]["committed"]
+        import json
+
+        assert identifier not in json.dumps(report)
+        assert "Integration checkpoint" not in json.dumps(report)
         for action in ("verify", "pin", "unpin", "drill"):
             await client.backups.async_wait(
                 await client.backups.async_manage(server_name, identifier, action)

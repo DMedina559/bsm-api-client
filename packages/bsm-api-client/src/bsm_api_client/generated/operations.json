@@ -13,6 +13,7 @@
   "disable_addon": "api.addon_management.disable_addon",
   "disable_user": "api.user_management.disable_user",
   "download_backup_emergency_kit": "api.backup_restore.download_backup_emergency_kit",
+  "download_backup_recovery_report": "api.backup_restore.download_backup_recovery_report",
   "download_server_snapshot": "api.backup_restore.download_server_snapshot",
   "dry_run_server_restore": "api.backup_restore.dry_run_server_restore",
   "enable_addon": "api.addon_management.enable_addon",

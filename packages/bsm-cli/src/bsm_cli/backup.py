@@ -498,3 +498,23 @@ async def cleanup_backup_destination(ctx, server_name, destination, apply):
             click.echo(json.dumps(result, indent=2))
     except Exception as error:
         fail(error)
+
+
+@backup.command("report")
+@server_option
+@click.option("--output", required=True, type=click.Path(path_type=Path))
+@pass_async_context
+async def recovery_report(ctx, server_name, output):
+    """Save a redacted JSON recovery report to a new file."""
+    created = False
+    try:
+        report = await get_client(ctx).backups.async_recovery_report(server_name)
+        with output.open("x", encoding="utf-8") as stream:
+            created = True
+            json.dump(report, stream, indent=2)
+            stream.write("\n")
+        click.echo(f"Recovery report saved to {output}.")
+    except Exception as error:
+        if created:
+            output.unlink(missing_ok=True)
+        fail(error)

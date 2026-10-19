@@ -66,6 +66,7 @@ from .models.profile_update_payload import ProfileUpdatePayload
 from .models.properties_payload import PropertiesPayload
 from .models.prune_downloads_payload import PruneDownloadsPayload
 from .models.prune_downloads_response import PruneDownloadsResponse
+from .models.recovery_report_response import RecoveryReportResponse
 from .models.registration_response import RegistrationResponse
 from .models.remove_from_allowlist_response import RemoveFromAllowlistResponse
 from .models.remove_server_ban_response import RemoveServerBanResponse
@@ -228,6 +229,14 @@ class RestClient:
     async def download_backup_emergency_kit_detailed(self, key_id: str) -> Response[ErrorEnvelope | str]:
         """Generated download_backup_emergency_kit operation."""
         return cast(Response[ErrorEnvelope | str], await self._owner.async_call_generated('download_backup_emergency_kit', parameters={'key_id': key_id}, body=None, authenticated=True, detailed=True))
+
+    async def download_backup_recovery_report(self, server_name: str) -> ErrorEnvelope | RecoveryReportResponse | None:
+        """Generated download_backup_recovery_report operation."""
+        return cast(ErrorEnvelope | RecoveryReportResponse | None, await self._owner.async_call_generated('download_backup_recovery_report', parameters={'server_name': server_name}, body=None, authenticated=True, typed=True))
+
+    async def download_backup_recovery_report_detailed(self, server_name: str) -> Response[ErrorEnvelope | RecoveryReportResponse]:
+        """Generated download_backup_recovery_report operation."""
+        return cast(Response[ErrorEnvelope | RecoveryReportResponse], await self._owner.async_call_generated('download_backup_recovery_report', parameters={'server_name': server_name}, body=None, authenticated=True, detailed=True))
 
     async def download_server_snapshot(self, server_name: str, backup_id: str) -> ErrorEnvelope | File | None:
         """Generated download_server_snapshot operation."""

@@ -1053,6 +1053,58 @@ class RecentDiagnosticWindow(ContractModel):
     window_seconds: Literal[300] = Field(300, title="Window Seconds")
 
 
+class RecoveryReportArchive(ContractModel):
+    """Validate and serialize the RecoveryReportArchive contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    archive_reference: str = Field(..., title="Archive Reference")
+    copies_completed: int = Field(..., title="Copies Completed")
+    copies_failed: int = Field(..., title="Copies Failed")
+    encrypted: bool = Field(..., title="Encrypted")
+    key_available: bool = Field(..., title="Key Available")
+    verification_status: Literal["unverified", "verified", "failed"] = Field(
+        ..., title="Verification Status"
+    )
+    verified_at: str | None = Field(None, title="Verified At")
+
+
+class RecoveryReportDrill(ContractModel):
+    """Validate and serialize the RecoveryReportDrill contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    archive_reference: str = Field(..., title="Archive Reference")
+    checked_at: str | None = Field(None, title="Checked At")
+    checked_files: int | None = Field(0, title="Checked Files")
+    status: Literal["passed", "failed", "running"] = Field(..., title="Status")
+
+
+class RecoveryReportOutcome(ContractModel):
+    """Validate and serialize the RecoveryReportOutcome contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    archive_reference: str = Field(..., title="Archive Reference")
+    cleanup_needed: bool | None = Field(False, title="Cleanup Needed")
+    committed: bool | None = Field(None, title="Committed")
+    components: list[
+        Literal[
+            "world",
+            "server.properties",
+            "allowlist.json",
+            "permissions.json",
+            "script_config",
+            "bsm_settings",
+            "behavior_packs",
+            "resource_packs",
+            "development_behavior_packs",
+            "development_resource_packs",
+        ]
+    ] = Field(..., title="Components")
+    recorded_at: str = Field(..., title="Recorded At")
+    restart_failed: bool | None = Field(False, title="Restart Failed")
+    restarted: bool | None = Field(False, title="Restarted")
+    status: Literal["completed", "failed", "cancelled"] = Field(..., title="Status")
+
+
 class RegistrationResponse(ContractModel):
     """Validate and serialize the RegistrationResponse contract."""
 
@@ -1147,6 +1199,16 @@ class RestoreRecoveryState(ContractModel):
     active: bool = Field(..., title="Active")
     committed: bool | None = Field(None, title="Committed")
     error: str | None = Field(None, title="Error")
+
+
+class RestoreVolume(ContractModel):
+    """Validate and serialize the RestoreVolume contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    available_bytes: int = Field(..., title="Available Bytes")
+    required_bytes: int = Field(..., title="Required Bytes")
+    roles: list[str] = Field(..., title="Roles")
+    sufficient: bool = Field(..., title="Sufficient")
 
 
 class RuntimeDiagnostics(ContractModel):
@@ -2036,6 +2098,33 @@ class PruneDownloadsResponse(ContractModel):
     status: Literal["success", "skipped", "partial"] = Field(..., title="Status")
 
 
+class RecoveryReportReview(ContractModel):
+    """Validate and serialize the RecoveryReportReview contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    archive_reference: str = Field(..., title="Archive Reference")
+    change_counts: dict[str, int] = Field(..., title="Change Counts")
+    checked_files: int = Field(..., title="Checked Files")
+    components: list[
+        Literal[
+            "world",
+            "server.properties",
+            "allowlist.json",
+            "permissions.json",
+            "script_config",
+            "bsm_settings",
+            "behavior_packs",
+            "resource_packs",
+            "development_behavior_packs",
+            "development_resource_packs",
+        ]
+    ] = Field(..., title="Components")
+    dry_run: bool = Field(..., title="Dry Run")
+    recorded_at: str = Field(..., title="Recorded At")
+    sufficient_space: bool = Field(..., title="Sufficient Space")
+    volumes: list[RestoreVolume] = Field(..., title="Volumes")
+
+
 class ResourceFailure(ContractModel):
     """Validate and serialize the ResourceFailure contract."""
 
@@ -2187,6 +2276,35 @@ class PlayerScanDetails(ContractModel):
     unique_players_submitted_for_saving: int = Field(
         ..., ge=0, title="Unique Players Submitted For Saving"
     )
+
+
+class RecoveryReport(ContractModel):
+    """Validate and serialize the RecoveryReport contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    archive_count: int = Field(..., title="Archive Count")
+    archives: list[RecoveryReportArchive] = Field(..., title="Archives")
+    archives_omitted: int = Field(..., title="Archives Omitted")
+    destination_failures: int = Field(..., title="Destination Failures")
+    generated_at: str = Field(..., title="Generated At")
+    last_drill: RecoveryReportDrill | None = None
+    last_restore: RecoveryReportOutcome | None = None
+    last_review: RecoveryReportReview | None = None
+    missing_key_count: int = Field(..., title="Missing Key Count")
+    readiness: Literal["ready", "attention", "unavailable"] = Field(
+        ..., title="Readiness"
+    )
+    recovery_pending: bool = Field(..., title="Recovery Pending")
+    report_version: Literal[1] = Field(1, title="Report Version")
+
+
+class RecoveryReportResponse(ContractModel):
+    """Validate and serialize the RecoveryReportResponse contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    message: str | None = Field(None, title="Message")
+    report: RecoveryReport
+    status: Literal["success"] = Field("success", title="Status")
 
 
 class AddPlayersResponse(ContractModel):

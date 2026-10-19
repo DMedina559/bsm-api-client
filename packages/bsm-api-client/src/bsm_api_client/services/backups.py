@@ -374,3 +374,11 @@ class BackupsService(Service):
             body={"token": token},
             authenticated=True,
         )
+
+    async def async_recovery_report(self, server_name: str) -> Any:
+        """Read redacted verification, drill, capacity and restore evidence.
+
+        :param server_name: Server whose recovery evidence is exported.
+        :returns: Report response without paths, credentials or configuration values.
+        """
+        return await self._call("download_backup_recovery_report", server_name)

@@ -290,3 +290,9 @@ recovery drill, and destination free-space status. Readiness defaults to a maxim
 backup age of 48 hours. Periodic isolated drills default to every 168 hours; set
 `backups.recovery_drill_interval_hours` to zero to disable them. Archive manifests
 remain version 1.
+
+`backup report --server SERVER --output recovery-report.json` writes a redacted
+JSON recovery report to a new file and refuses to overwrite an existing file.
+Reports contain verification, drill, capacity and restore outcome evidence.
+Archive references are hashes; archive filenames, paths, credentials, notes and
+configuration values are excluded.
