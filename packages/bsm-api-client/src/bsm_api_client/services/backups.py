@@ -34,16 +34,23 @@ class BackupsService(Service):
         return await self._call("list_server_snapshots", server_name)
 
     async def async_create(
-        self, server_name: str, encrypted: bool | None = None
+        self,
+        server_name: str,
+        encrypted: bool | None = None,
+        *,
+        include_packs: bool | None = None,
     ) -> Any:
         """Submit one backup using an optional encryption override.
 
         :param server_name: Server to capture.
         :param encrypted: Override the configured default, or use None.
+        :param include_packs: Include server-level packs, exclude them, or use None for the default.
         :returns: The accepted background task.
         """
         return await self._call(
-            "create_server_snapshot", server_name, body={"encrypted": encrypted}
+            "create_server_snapshot",
+            server_name,
+            body={"encrypted": encrypted, "include_packs": include_packs},
         )
 
     async def async_inspect(
@@ -234,17 +241,21 @@ class BackupsService(Service):
         *,
         destination: str | None = None,
         recovery_key: str | None = None,
+        label: str | None = None,
+        notes: str | None = None,
     ) -> Any:
         """Verify, pin, unpin, copy or test a recovery key.
 
         :param server_name: Archive owner.
         :param backup_id: Local archive identifier.
-        :param action: verify, pin, unpin, copy or test_key.
+        :param action: verify, pin, unpin, copy, test_key or annotate.
         :param destination: Configured destination name for copy.
+        :param label: Manager-local archive label for annotate.
+        :param notes: Manager-local archive notes for annotate.
         :param recovery_key: Optional recovery credential; never persisted.
         :returns: Accepted operation task.
         """
-        if action not in {"verify", "pin", "unpin", "copy", "test_key"}:
+        if action not in {"verify", "pin", "unpin", "copy", "test_key", "annotate"}:
             raise ValueError("Unsupported backup action.")
         return await self._call(
             "manage_server_snapshot",
@@ -253,6 +264,8 @@ class BackupsService(Service):
             {
                 "action": action,
                 "destination": destination,
+                "label": label,
+                "notes": notes,
                 "recovery_key": recovery_key,
             },
         )
@@ -291,3 +304,48 @@ class BackupsService(Service):
                 "recovery_key": recovery_key,
             },
         )
+
+    async def async_dry_run(
+        self,
+        server_name: str,
+        backup_id: str,
+        components: list[str],
+        recovery_key: str | None = None,
+    ) -> Any:
+        """Validate isolated replacement copies without stopping Minecraft.
+
+        :param server_name: Restore destination.
+        :param backup_id: Source archive.
+        :param components: Components to exercise.
+        :param recovery_key: Optional archive recovery credential.
+        :returns: Accepted task containing a readiness and capacity report.
+        """
+        return await self._call(
+            "dry_run_server_restore",
+            server_name,
+            backup_id,
+            {"components": components, "recovery_key": recovery_key},
+        )
+
+    async def async_set_schedule(
+        self, server_name: str, schedule: dict[str, Any] | None
+    ) -> Any:
+        """Configure or remove a server schedule using administrator settings.
+
+        :param server_name: Scheduled server.
+        :param schedule: Daily local time, IANA timezone, weekdays, catch_up and stagger_minutes; None removes it.
+        :returns: Updated settings response.
+        """
+        response = await self.async_call_generated("get_settings", authenticated=True)
+        schedules = dict(response["settings"].get("backups", {}).get("schedules", {}))
+        if schedule is None:
+            schedules.pop(server_name, None)
+        else:
+            schedules[server_name] = schedule
+        await self.async_call_generated(
+            "set_setting",
+            body={"key": "backups.schedules", "value": schedules},
+            authenticated=True,
+        )
+
+        return await self.async_call_generated("get_settings", authenticated=True)

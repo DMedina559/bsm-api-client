@@ -228,6 +228,14 @@ class RestClient:
         """Generated download_server_snapshot operation."""
         return cast(Response[ErrorEnvelope | File], await self._owner.async_call_generated('download_server_snapshot', parameters={'server_name': server_name, 'backup_id': backup_id}, body=None, authenticated=True, detailed=True))
 
+    async def dry_run_server_restore(self, server_name: str, backup_id: str, *, body: SnapshotPlanPayload) -> ErrorEnvelope | TaskAcceptedResponse | None:
+        """Generated dry_run_server_restore operation."""
+        return cast(ErrorEnvelope | TaskAcceptedResponse | None, await self._owner.async_call_generated('dry_run_server_restore', parameters={'server_name': server_name, 'backup_id': backup_id}, body=body, authenticated=True, typed=True))
+
+    async def dry_run_server_restore_detailed(self, server_name: str, backup_id: str, *, body: SnapshotPlanPayload) -> Response[ErrorEnvelope | TaskAcceptedResponse]:
+        """Generated dry_run_server_restore operation."""
+        return cast(Response[ErrorEnvelope | TaskAcceptedResponse], await self._owner.async_call_generated('dry_run_server_restore', parameters={'server_name': server_name, 'backup_id': backup_id}, body=body, authenticated=True, detailed=True))
+
     async def enable_addon(self, server_name: str, *, body: AddonActionPayload) -> ErrorEnvelope | TaskAcceptedResponse | None:
         """Generated enable_addon operation."""
         return cast(ErrorEnvelope | TaskAcceptedResponse | None, await self._owner.async_call_generated('enable_addon', parameters={'server_name': server_name}, body=body, authenticated=True, typed=True))

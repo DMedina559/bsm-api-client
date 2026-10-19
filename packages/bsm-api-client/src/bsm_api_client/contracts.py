@@ -189,8 +189,10 @@ class BackupCopy(ContractModel):
     """Validate and serialize the BackupCopy contract."""
 
     model_config = ConfigDict(extra="forbid")
+    attempts: int | None = Field(0, title="Attempts")
     completed_at: str | None = Field(None, title="Completed At")
     error: str | None = Field(None, title="Error")
+    next_retry_at: str | None = Field(None, title="Next Retry At")
     status: Literal["pending", "completed", "failed"] = Field(..., title="Status")
 
 
@@ -205,6 +207,10 @@ class BackupFile(ContractModel):
         "permissions.json",
         "script_config",
         "bsm_settings",
+        "behavior_packs",
+        "resource_packs",
+        "development_behavior_packs",
+        "development_resource_packs",
     ] = Field(..., title="Component")
     path: str = Field(..., title="Path")
     sha256: str = Field(..., pattern="^[a-f0-9]{64}$", title="Sha256")
@@ -216,33 +222,6 @@ class BackupFilesResponse(ContractModel):
 
     model_config = ConfigDict(extra="forbid")
     backups: list[str] | dict[str, list[str]] = Field(..., title="Backups")
-    message: str | None = Field(None, title="Message")
-    status: Literal["success"] = Field("success", title="Status")
-
-
-class BackupHealth(ContractModel):
-    """Validate and serialize the BackupHealth contract."""
-
-    model_config = ConfigDict(extra="forbid")
-    count: int = Field(..., title="Count")
-    destination_failures: int | None = Field(0, title="Destination Failures")
-    failed_count: int | None = Field(0, title="Failed Count")
-    last_error: str | None = Field(None, title="Last Error")
-    last_failure_at: str | None = Field(None, title="Last Failure At")
-    last_success_at: str | None = Field(None, title="Last Success At")
-    last_verified_at: str | None = Field(None, title="Last Verified At")
-    missing_key_ids: list[str] | None = Field(None, title="Missing Key Ids")
-    older_key_ids: list[str] | None = Field(None, title="Older Key Ids")
-    total_bytes: int = Field(..., title="Total Bytes")
-    unverified_count: int | None = Field(0, title="Unverified Count")
-    verification_interval_hours: int = Field(..., title="Verification Interval Hours")
-
-
-class BackupHealthResponse(ContractModel):
-    """Validate and serialize the BackupHealthResponse contract."""
-
-    model_config = ConfigDict(extra="forbid")
-    health: BackupHealth
     message: str | None = Field(None, title="Message")
     status: Literal["success"] = Field("success", title="Status")
 
@@ -265,6 +244,10 @@ class BackupManifest(ContractModel):
             "permissions.json",
             "script_config",
             "bsm_settings",
+            "behavior_packs",
+            "resource_packs",
+            "development_behavior_packs",
+            "development_resource_packs",
         ],
         Literal["included", "absent"],
     ] = Field(..., title="Components")
@@ -273,9 +256,9 @@ class BackupManifest(ContractModel):
     files: list[BackupFile] = Field(..., title="Files")
     format: Literal["bsmbackup"] = Field("bsmbackup", title="Format")
     format_version: Literal[1] = Field(1, title="Format Version")
-    reason: Literal["manual", "pre_start", "pre_update", "pre_restore"] | None = Field(
-        "manual", title="Reason"
-    )
+    reason: (
+        Literal["manual", "pre_start", "pre_update", "pre_restore", "scheduled"] | None
+    ) = Field("manual", title="Reason")
     source_server: str = Field(..., title="Source Server")
     source_world: str = Field(..., title="Source World")
     warnings: list[str] | None = Field(None, title="Warnings")
@@ -1399,6 +1382,7 @@ class SnapshotCreatePayload(ContractModel):
 
     model_config = ConfigDict(extra="forbid")
     encrypted: bool | None = Field(None, title="Encrypted")
+    include_packs: bool | None = Field(None, title="Include Packs")
 
 
 class SnapshotInspectPayload(ContractModel):
@@ -1408,14 +1392,20 @@ class SnapshotInspectPayload(ContractModel):
     recovery_key: SecretStr | None = Field(None, title="Recovery Key")
 
 
+Label = Annotated[str, Field(max_length=120, title="Label")]
+Notes = Annotated[str, Field(max_length=2000, title="Notes")]
+
+
 class SnapshotManagePayload(ContractModel):
     """Validate and serialize the SnapshotManagePayload contract."""
 
     model_config = ConfigDict(extra="forbid")
-    action: Literal["verify", "pin", "unpin", "copy", "test_key"] = Field(
+    action: Literal["verify", "pin", "unpin", "copy", "test_key", "annotate"] = Field(
         ..., title="Action"
     )
     destination: str | None = Field(None, title="Destination")
+    label: Label | None = Field(None, title="Label")
+    notes: Notes | None = Field(None, title="Notes")
     recovery_key: SecretStr | None = Field(None, title="Recovery Key")
 
 
@@ -1431,6 +1421,10 @@ class SnapshotPlanPayload(ContractModel):
             "permissions.json",
             "script_config",
             "bsm_settings",
+            "behavior_packs",
+            "resource_packs",
+            "development_behavior_packs",
+            "development_resource_packs",
         ]
     ] = Field(..., title="Components")
     recovery_key: SecretStr | None = Field(None, title="Recovery Key")
@@ -1448,6 +1442,10 @@ class SnapshotRestorePayload(ContractModel):
             "permissions.json",
             "script_config",
             "bsm_settings",
+            "behavior_packs",
+            "resource_packs",
+            "development_behavior_packs",
+            "development_resource_packs",
         ]
     ] = Field(..., title="Components")
     recovery_key: SecretStr | None = Field(None, title="Recovery Key")
@@ -1733,6 +1731,34 @@ class AuditLogResponse(ContractModel):
     user_id: int = Field(..., title="User Id")
 
 
+class BackupHealth(ContractModel):
+    """Validate and serialize the BackupHealth contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    count: int = Field(..., title="Count")
+    destination_failures: int | None = Field(0, title="Destination Failures")
+    failed_count: int | None = Field(0, title="Failed Count")
+    last_error: str | None = Field(None, title="Last Error")
+    last_failure_at: str | None = Field(None, title="Last Failure At")
+    last_success_at: str | None = Field(None, title="Last Success At")
+    last_verified_at: str | None = Field(None, title="Last Verified At")
+    missing_key_ids: list[str] | None = Field(None, title="Missing Key Ids")
+    older_key_ids: list[str] | None = Field(None, title="Older Key Ids")
+    schedule: dict[str, JsonValue] | None = Field(None, title="Schedule")
+    total_bytes: int = Field(..., title="Total Bytes")
+    unverified_count: int | None = Field(0, title="Unverified Count")
+    verification_interval_hours: int = Field(..., title="Verification Interval Hours")
+
+
+class BackupHealthResponse(ContractModel):
+    """Validate and serialize the BackupHealthResponse contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    health: BackupHealth
+    message: str | None = Field(None, title="Message")
+    status: Literal["success"] = Field("success", title="Status")
+
+
 class BackupSummary(ContractModel):
     """Validate and serialize the BackupSummary contract."""
 
@@ -1743,7 +1769,10 @@ class BackupSummary(ContractModel):
     error: str | None = Field(None, title="Error")
     filename: str = Field(..., title="Filename")
     key_id: str | None = Field(None, title="Key Id")
+    label: str | None = Field("", title="Label")
     manifest: BackupManifest | None = None
+    notes: str | None = Field("", title="Notes")
+    origin: Literal["captured", "imported"] | None = Field("captured", title="Origin")
     pinned: bool | None = Field(False, title="Pinned")
     protected_until: str | None = Field(None, title="Protected Until")
     purpose: str | None = Field(None, title="Purpose")

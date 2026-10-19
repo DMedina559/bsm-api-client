@@ -261,8 +261,14 @@ Restore inspects the manifest, offers complete components, prints a destination 
 
 Offline extraction is provided by the backend package's `bedrock-server-manager backup extract` command and requires no running instance or original database.
 
+Use `backup create --packs` or `--no-packs` to override server-level pack inclusion for one capture. Leaving both unset uses the configured default. Pack directories remain optional components within manifest version 1.
+
 Additional backup commands:
 
+- `backup dry-run --server SERVER --file ID --component world`: stage and verify selected files without stopping Minecraft or replacing live files; report required space per volume.
+- `backup annotate --server SERVER --file ID --label "Before update" --notes "Known good"`: edit local catalog metadata without rewriting the archive.
+- `backup list --server SERVER --kind scheduled --search "label"`: narrow the archive listing.
+- `backup schedule --server SERVER --time 03:00 --timezone America/Los_Angeles`: set a timezone-aware daily schedule. Use `--skip-missed`, `--disable`, or `--remove` to adjust missed-run behavior or pause/remove the schedule.
 - `backup health --server SERVER`: verification, key and destination health.
 - `backup manage verify --server SERVER --file ID`: isolated recovery validation.
 - `backup manage pin` / `unpin`: protect an archive from local retention.

@@ -115,6 +115,10 @@ class TestContentManagement:
         planned = await client.backups.async_wait(
             await client.backups.async_plan(server_name, identifier, components)
         )
+        dry_run = await client.backups.async_wait(
+            await client.backups.async_dry_run(server_name, identifier, components)
+        )
+        assert dry_run["plan"]["dry_run"] and dry_run["plan"]["checked_files"] > 0
         restored = await client.backups.async_wait(
             await client.backups.async_restore(
                 server_name, identifier, components, planned["plan"]["token"]
@@ -122,6 +126,24 @@ class TestContentManagement:
         )
         assert restored["result"]["committed"]
         assert restored["result"]["safety_backup_id"]
+        await client.backups.async_wait(
+            await client.backups.async_manage(
+                server_name,
+                identifier,
+                "annotate",
+                label="Before upgrade",
+                notes="Integration checkpoint",
+            )
+        )
+        labelled = await client.backups.async_list(server_name)
+        assert any(item["label"] == "Before upgrade" for item in labelled["backups"])
+        scheduled = await client.backups.async_set_schedule(
+            server_name, {"enabled": False, "time": "03:00", "timezone": "UTC"}
+        )
+        assert (
+            scheduled["settings"]["backups"]["schedules"][server_name]["enabled"]
+            is False
+        )
         health = await client.backups.async_health(server_name)
         assert health["health"]["last_verified_at"]
         for action in ("verify", "pin", "unpin"):

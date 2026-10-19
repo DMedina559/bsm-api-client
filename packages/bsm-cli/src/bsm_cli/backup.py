@@ -56,11 +56,42 @@ async def unlock_key(unlock):
 
 @backup.command("list")
 @server_option
+@click.option(
+    "--kind",
+    type=click.Choice(
+        [
+            "manual",
+            "scheduled",
+            "pre_update",
+            "pre_start",
+            "pre_restore",
+            "imported",
+            "pinned",
+        ]
+    ),
+)
+@click.option("--search", default="", help="Match labels, notes, or filenames.")
 @pass_async_context
-async def list_backups(ctx, server_name):
+async def list_backups(ctx, server_name, kind, search):
     """List completed portable backup archives."""
     try:
         result = await get_client(ctx).backups.async_list(server_name)
+        if kind or search:
+            result["backups"] = [
+                item
+                for item in result["backups"]
+                if (
+                    not kind
+                    or item.get("purpose") == kind
+                    or item.get("origin") == kind
+                    or kind == "pinned"
+                    and item.get("pinned")
+                )
+                and search.lower()
+                in " ".join(
+                    str(item.get(key, "")) for key in ("filename", "label", "notes")
+                ).lower()
+            ]
         click.echo(json.dumps(result, indent=2))
     except Exception as error:
         fail(error)
@@ -75,15 +106,26 @@ async def list_backups(ctx, server_name):
     is_flag=True,
     help="Create an unencrypted backup.",
 )
+@click.option("--packs", is_flag=True, help="Include server-level packs.")
+@click.option("--no-packs", is_flag=True, help="Exclude server-level packs.")
 @pass_async_context
-async def create_backup(ctx, server_name, encrypted, unencrypted):
+async def create_backup(ctx, server_name, encrypted, unencrypted, packs, no_packs):
     """Create one archive containing the server's supported data and settings."""
     try:
         client = get_client(ctx)
         if encrypted and unencrypted:
             raise click.UsageError("Choose only one encryption override.")
+        if packs and no_packs:
+            raise click.UsageError("Choose only one pack inclusion override.")
+        pack_policy = True if packs else False if no_packs else None
         policy = True if encrypted else False if unencrypted else None
-        accepted = await client.backups.async_create(server_name, policy)
+        accepted = (
+            await client.backups.async_create(
+                server_name, policy, include_packs=pack_policy
+            )
+            if pack_policy is not None
+            else await client.backups.async_create(server_name, policy)
+        )
         await monitor_task(
             client, accepted["task_id"], "Server backup created", "Backup failed"
         )
@@ -129,6 +171,10 @@ async def inspect_backup(ctx, server_name, backup_id, unlock):
             "permissions.json",
             "script_config",
             "bsm_settings",
+            "behavior_packs",
+            "resource_packs",
+            "development_behavior_packs",
+            "development_resource_packs",
         ]
     ),
     help="Repeat to select complete components; otherwise choose interactively.",
@@ -338,3 +384,84 @@ async def prepare_backup_copy(
 
 # Both names use the same native multipart implementation.
 backup.add_command(import_backup, "upload")
+
+
+@backup.command("dry-run")
+@server_option
+@archive_option
+@click.option("--component", "components", multiple=True, required=True)
+@click.option("--unlock", is_flag=True)
+@pass_async_context
+async def dry_run_backup(ctx, server_name, backup_id, components, unlock):
+    """Exercise selected replacement copies in isolation and report free space."""
+    try:
+        client = get_client(ctx)
+        identifier = await choose_archive(client, server_name, backup_id)
+        key = await unlock_key(unlock)
+        result = await client.backups.async_wait(
+            await client.backups.async_dry_run(
+                server_name, identifier, list(components), key
+            )
+        )
+        click.echo(json.dumps(result, indent=2))
+    except Exception as error:
+        fail(error)
+
+
+@backup.command("annotate")
+@server_option
+@archive_option
+@click.option("--label", default=None)
+@click.option("--notes", default=None)
+@pass_async_context
+async def annotate_backup(ctx, server_name, backup_id, label, notes):
+    """Edit manager-local labels and notes without rewriting archive contents."""
+    try:
+        client = get_client(ctx)
+        identifier = await choose_archive(client, server_name, backup_id)
+        result = await client.backups.async_wait(
+            await client.backups.async_manage(
+                server_name, identifier, "annotate", label=label, notes=notes
+            )
+        )
+        click.echo(json.dumps(result, indent=2))
+    except Exception as error:
+        fail(error)
+
+
+@backup.command("schedule")
+@server_option
+@click.option("--time", "local_time", default="03:00", show_default=True)
+@click.option("--timezone", "zone", default="UTC", show_default=True)
+@click.option(
+    "--days", default="0,1,2,3,4,5,6", help="Weekdays: Monday=0 through Sunday=6."
+)
+@click.option("--stagger", default=15, type=click.IntRange(0, 120))
+@click.option("--catch-up/--skip-missed", default=True)
+@click.option("--disable", is_flag=True)
+@click.option("--remove", is_flag=True)
+@pass_async_context
+async def schedule_backup(
+    ctx, server_name, local_time, zone, days, stagger, catch_up, disable, remove
+):
+    """Configure one timezone-aware daily server schedule."""
+    try:
+        weekdays = [int(day.strip()) for day in days.split(",")]
+        result = await get_client(ctx).backups.async_set_schedule(
+            server_name,
+            (
+                None
+                if remove
+                else {
+                    "enabled": not disable,
+                    "time": local_time,
+                    "timezone": zone,
+                    "weekdays": weekdays,
+                    "catch_up": catch_up,
+                    "stagger_minutes": stagger,
+                }
+            ),
+        )
+        click.echo(json.dumps(result, indent=2))
+    except Exception as error:
+        fail(error)
