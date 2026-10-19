@@ -238,3 +238,10 @@ result = await client.backups.async_wait(
 ```
 
 Configure the host recovery key before requesting encrypted automatic backups. Imported encrypted archives can receive a recovery key through the optional `recovery_key` argument. Do not log or persist that argument. New typed low-level operations are available through `client.rest`; existing content backup methods remain compatibility adapters.
+
+Backup recovery management is available through `client.backups.async_health`,
+`async_manage` (`verify`, `pin`, `unpin`, `copy`, `test_key`), and
+`async_prepare_copy`. Preparation installs a stopped destination with chosen ports;
+review and apply its returned archive separately. Restore plans include bounded
+file comparisons and redacted setting changes. Completed restores return a
+`safety_backup_id` for the protected pre-restore recovery point.

@@ -603,6 +603,47 @@
         "title": "BackupActionPayload",
         "type": "object"
       },
+      "BackupCopy": {
+        "additionalProperties": false,
+        "properties": {
+          "completed_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "status": {
+            "enum": [
+              "pending",
+              "completed",
+              "failed"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status"
+        ],
+        "title": "BackupCopy",
+        "type": "object"
+      },
       "BackupFile": {
         "additionalProperties": false,
         "properties": {
@@ -687,6 +728,133 @@
           "backups"
         ],
         "title": "BackupFilesResponse",
+        "type": "object"
+      },
+      "BackupHealth": {
+        "additionalProperties": false,
+        "properties": {
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          },
+          "destination_failures": {
+            "default": 0,
+            "title": "Destination Failures",
+            "type": "integer"
+          },
+          "failed_count": {
+            "default": 0,
+            "title": "Failed Count",
+            "type": "integer"
+          },
+          "last_error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Error"
+          },
+          "last_failure_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Failure At"
+          },
+          "last_success_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Success At"
+          },
+          "last_verified_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Verified At"
+          },
+          "missing_key_ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Missing Key Ids",
+            "type": "array"
+          },
+          "older_key_ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Older Key Ids",
+            "type": "array"
+          },
+          "total_bytes": {
+            "title": "Total Bytes",
+            "type": "integer"
+          },
+          "unverified_count": {
+            "default": 0,
+            "title": "Unverified Count",
+            "type": "integer"
+          },
+          "verification_interval_hours": {
+            "title": "Verification Interval Hours",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "count",
+          "total_bytes",
+          "verification_interval_hours"
+        ],
+        "title": "BackupHealth",
+        "type": "object"
+      },
+      "BackupHealthResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "health": {
+            "$ref": "#/components/schemas/BackupHealth"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          },
+          "status": {
+            "const": "success",
+            "default": "success",
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "health"
+        ],
+        "title": "BackupHealthResponse",
         "type": "object"
       },
       "BackupManifest": {
@@ -780,7 +948,8 @@
             "enum": [
               "manual",
               "pre_start",
-              "pre_update"
+              "pre_update",
+              "pre_restore"
             ],
             "title": "Reason",
             "type": "string"
@@ -824,6 +993,13 @@
             "title": "Backup Id",
             "type": "string"
           },
+          "copies": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/BackupCopy"
+            },
+            "title": "Copies",
+            "type": "object"
+          },
           "encrypted": {
             "title": "Encrypted",
             "type": "boolean"
@@ -864,9 +1040,39 @@
               }
             ]
           },
+          "pinned": {
+            "default": false,
+            "title": "Pinned",
+            "type": "boolean"
+          },
+          "protected_until": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Protected Until"
+          },
+          "purpose": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Purpose"
+          },
           "size": {
             "title": "Size",
             "type": "integer"
+          },
+          "verification": {
+            "$ref": "#/components/schemas/BackupVerification"
           }
         },
         "required": [
@@ -876,6 +1082,95 @@
           "encrypted"
         ],
         "title": "BackupSummary",
+        "type": "object"
+      },
+      "BackupVerification": {
+        "additionalProperties": false,
+        "properties": {
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "status": {
+            "default": "unverified",
+            "enum": [
+              "unverified",
+              "verified",
+              "failed"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "verified_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Verified At"
+          }
+        },
+        "title": "BackupVerification",
+        "type": "object"
+      },
+      "BackupsDiagnostics": {
+        "additionalProperties": false,
+        "properties": {
+          "archives": {
+            "title": "Archives",
+            "type": "integer"
+          },
+          "destination_failures": {
+            "title": "Destination Failures",
+            "type": "integer"
+          },
+          "failed": {
+            "title": "Failed",
+            "type": "integer"
+          },
+          "kind": {
+            "const": "backups",
+            "default": "backups",
+            "title": "Kind",
+            "type": "string"
+          },
+          "missing_keys": {
+            "title": "Missing Keys",
+            "type": "integer"
+          },
+          "servers": {
+            "title": "Servers",
+            "type": "integer"
+          },
+          "total_bytes": {
+            "title": "Total Bytes",
+            "type": "integer"
+          },
+          "without_backup": {
+            "title": "Without Backup",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "servers",
+          "archives",
+          "total_bytes",
+          "failed",
+          "missing_keys",
+          "destination_failures",
+          "without_backup"
+        ],
+        "title": "BackupsDiagnostics",
         "type": "object"
       },
       "BanAddRequest": {
@@ -2039,6 +2334,7 @@
               {
                 "discriminator": {
                   "mapping": {
+                    "backups": "#/components/schemas/BackupsDiagnostics",
                     "events": "#/components/schemas/EventsDiagnostics",
                     "metrics": "#/components/schemas/MetricsDiagnostics",
                     "plugin_values": "#/components/schemas/PluginValues",
@@ -2082,6 +2378,9 @@
                   },
                   {
                     "$ref": "#/components/schemas/PluginValues"
+                  },
+                  {
+                    "$ref": "#/components/schemas/BackupsDiagnostics"
                   }
                 ]
               },
@@ -6275,6 +6574,52 @@
         "title": "SkippedItem",
         "type": "object"
       },
+      "SnapshotCopyPayload": {
+        "additionalProperties": false,
+        "properties": {
+          "recovery_key": {
+            "anyOf": [
+              {
+                "format": "password",
+                "type": "string",
+                "writeOnly": true
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recovery Key"
+          },
+          "server_port": {
+            "maximum": 65535.0,
+            "minimum": 1.0,
+            "title": "Server Port",
+            "type": "integer"
+          },
+          "server_portv6": {
+            "maximum": 65535.0,
+            "minimum": 1.0,
+            "title": "Server Portv6",
+            "type": "integer"
+          },
+          "target_server": {
+            "title": "Target Server",
+            "type": "string"
+          },
+          "target_version": {
+            "default": "LATEST",
+            "title": "Target Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "target_server",
+          "server_port",
+          "server_portv6"
+        ],
+        "title": "SnapshotCopyPayload",
+        "type": "object"
+      },
       "SnapshotCreatePayload": {
         "additionalProperties": false,
         "properties": {
@@ -6311,6 +6656,51 @@
           }
         },
         "title": "SnapshotInspectPayload",
+        "type": "object"
+      },
+      "SnapshotManagePayload": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "enum": [
+              "verify",
+              "pin",
+              "unpin",
+              "copy",
+              "test_key"
+            ],
+            "title": "Action",
+            "type": "string"
+          },
+          "destination": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Destination"
+          },
+          "recovery_key": {
+            "anyOf": [
+              {
+                "format": "password",
+                "type": "string",
+                "writeOnly": true
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recovery Key"
+          }
+        },
+        "required": [
+          "action"
+        ],
+        "title": "SnapshotManagePayload",
         "type": "object"
       },
       "SnapshotPlanPayload": {
@@ -14552,6 +14942,128 @@
         ]
       }
     },
+    "/api/server/{server_name}/backups/health": {
+      "get": {
+        "description": "Read backup verification, storage and key health.",
+        "operationId": "get_backup_health",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "server_name",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "title": "The name of the server",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BackupHealthResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          },
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "summary": "Backup Health",
+        "tags": [
+          "Backup & Restore"
+        ]
+      }
+    },
     "/api/server/{server_name}/backups/import": {
       "post": {
         "description": "Validate an uploaded archive before publishing it under a fresh local ID.",
@@ -15463,6 +15975,147 @@
         ]
       }
     },
+    "/api/server/{server_name}/backups/{backup_id}/manage": {
+      "post": {
+        "description": "Verify, pin, retry a destination copy, or test an emergency recovery key.",
+        "operationId": "manage_server_snapshot",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "backup_id",
+            "required": true,
+            "schema": {
+              "title": "Backup Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "server_name",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "title": "The name of the server",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SnapshotManagePayload"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskAcceptedResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          },
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "summary": "Manage Snapshot",
+        "tags": [
+          "Backup & Restore"
+        ]
+      }
+    },
     "/api/server/{server_name}/backups/{backup_id}/plan": {
       "post": {
         "description": "Prepare a reviewed selection without stopping the Minecraft server.",
@@ -15599,6 +16252,147 @@
           }
         ],
         "summary": "Post Plan",
+        "tags": [
+          "Backup & Restore"
+        ]
+      }
+    },
+    "/api/server/{server_name}/backups/{backup_id}/prepare-copy": {
+      "post": {
+        "description": "Prepare a stopped new server; review its component restore separately.",
+        "operationId": "prepare_backup_copy",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "backup_id",
+            "required": true,
+            "schema": {
+              "title": "Backup Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "server_name",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "title": "The name of the server",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SnapshotCopyPayload"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskAcceptedResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          },
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "summary": "Prepare Backup Copy",
         "tags": [
           "Backup & Restore"
         ]

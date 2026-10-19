@@ -121,6 +121,13 @@ class TestContentManagement:
             )
         )
         assert restored["result"]["committed"]
+        assert restored["result"]["safety_backup_id"]
+        health = await client.backups.async_health(server_name)
+        assert health["health"]["last_verified_at"]
+        for action in ("verify", "pin", "unpin"):
+            await client.backups.async_wait(
+                await client.backups.async_manage(server_name, identifier, action)
+            )
 
     async def test_custom_zips(self, content_client):
         zips = await content_client.application.async_get_custom_zips()

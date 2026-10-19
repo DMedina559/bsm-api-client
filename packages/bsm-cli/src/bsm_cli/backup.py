@@ -248,3 +248,93 @@ async def import_backup(ctx, server_name, archive, unlock):
         click.echo(json.dumps(result, indent=2))
     except Exception as error:
         fail(error)
+
+
+@backup.command("health")
+@server_option
+@pass_async_context
+async def backup_health(ctx, server_name):
+    """Show verification, storage copies, and recovery-key health."""
+    try:
+        result = await get_client(ctx).backups.async_health(server_name)
+        click.echo(json.dumps(result, indent=2))
+    except Exception as error:
+        fail(error)
+
+
+@backup.command("manage")
+@server_option
+@archive_option
+@click.argument(
+    "action", type=click.Choice(["verify", "pin", "unpin", "copy", "test_key"])
+)
+@click.option("--destination", help="Configured destination name for copy.")
+@click.option(
+    "--unlock",
+    is_flag=True,
+    help="Privately prompt for the emergency-kit recovery key.",
+)
+@pass_async_context
+async def manage_backup(ctx, server_name, backup_id, action, destination, unlock):
+    """Verify or pin archives, retry copies, or test a recovery key."""
+    try:
+        client = get_client(ctx)
+        identifier = await choose_archive(client, server_name, backup_id)
+        key = await unlock_key(unlock or action == "test_key")
+        result = await client.backups.async_wait(
+            await client.backups.async_manage(
+                server_name,
+                identifier,
+                action,
+                destination=destination,
+                recovery_key=key,
+            )
+        )
+        click.echo(json.dumps(result, indent=2))
+    except Exception as error:
+        fail(error)
+
+
+@backup.command("prepare-copy")
+@server_option
+@archive_option
+@click.option("--name", required=True, help="New server name.")
+@click.option("--port", required=True, type=click.IntRange(1, 65535))
+@click.option("--portv6", required=True, type=click.IntRange(1, 65535))
+@click.option("--version", default="LATEST", show_default=True)
+@click.option("--unlock", is_flag=True)
+@click.option("--yes", is_flag=True, help="Skip installation confirmation.")
+@pass_async_context
+async def prepare_backup_copy(
+    ctx, server_name, backup_id, name, port, portv6, version, unlock, yes
+):
+    """Install a stopped destination; review its archive before restoring."""
+    try:
+        client = get_client(ctx)
+        identifier = await choose_archive(client, server_name, backup_id)
+        if (
+            not yes
+            and not await questionary.confirm(
+                f"Install a stopped server named {name}?", default=False
+            ).ask_async()
+        ):
+            raise click.Abort()
+        key = await unlock_key(unlock)
+        result = await client.backups.async_wait(
+            await client.backups.async_prepare_copy(
+                server_name,
+                identifier,
+                name,
+                port,
+                portv6,
+                target_version=version,
+                recovery_key=key,
+            )
+        )
+        click.echo(json.dumps(result, indent=2))
+    except Exception as error:
+        fail(error)
+
+
+# Both names use the same native multipart implementation.
+backup.add_command(import_backup, "upload")

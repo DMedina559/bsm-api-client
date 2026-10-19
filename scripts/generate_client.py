@@ -187,9 +187,15 @@ def prune_model_helpers(package: Path) -> None:  # noqa: C901
     pending = list(required)
     while pending:
         name = pending.pop()
-        for node in ast.parse((package / "models" / f"{name}.py").read_text()).body:
-            if isinstance(node, ast.ImportFrom) and node.level == 1 and node.module:
-                dependency = node.module.split(".")[0]
+        for node in ast.walk(
+            ast.parse((package / "models" / f"{name}.py").read_text())
+        ):
+            if isinstance(node, ast.ImportFrom) and node.level >= 1 and node.module:
+                dependency = (
+                    node.module.split(".")[1]
+                    if node.module.startswith("models.")
+                    else node.module.split(".")[0]
+                )
                 if (
                     package / "models" / f"{dependency}.py"
                 ).is_file() and dependency not in required:

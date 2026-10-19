@@ -217,3 +217,77 @@ class BackupsService(Service):
         finally:
             Path(temporary).unlink(missing_ok=True)
         return target
+
+    async def async_health(self, server_name: str) -> Any:
+        """Read durable verification, recovery-key, and destination health.
+
+        :param server_name: Server to inspect.
+        :returns: Backup health response.
+        """
+        return await self._call("get_backup_health", server_name)
+
+    async def async_manage(
+        self,
+        server_name: str,
+        backup_id: str,
+        action: str,
+        *,
+        destination: str | None = None,
+        recovery_key: str | None = None,
+    ) -> Any:
+        """Verify, pin, unpin, copy or test a recovery key.
+
+        :param server_name: Archive owner.
+        :param backup_id: Local archive identifier.
+        :param action: verify, pin, unpin, copy or test_key.
+        :param destination: Configured destination name for copy.
+        :param recovery_key: Optional recovery credential; never persisted.
+        :returns: Accepted operation task.
+        """
+        if action not in {"verify", "pin", "unpin", "copy", "test_key"}:
+            raise ValueError("Unsupported backup action.")
+        return await self._call(
+            "manage_server_snapshot",
+            server_name,
+            backup_id,
+            {
+                "action": action,
+                "destination": destination,
+                "recovery_key": recovery_key,
+            },
+        )
+
+    async def async_prepare_copy(
+        self,
+        server_name: str,
+        backup_id: str,
+        target_server: str,
+        server_port: int,
+        server_portv6: int,
+        *,
+        target_version: str = "LATEST",
+        recovery_key: str | None = None,
+    ) -> Any:
+        """Prepare a stopped new server and an archive with remapped ports.
+
+        :param server_name: Source archive owner.
+        :param backup_id: Source archive identifier.
+        :param target_server: New server name.
+        :param server_port: Destination IPv4 port.
+        :param server_portv6: Destination IPv6 port.
+        :param target_version: Bedrock version to install.
+        :param recovery_key: Optional source recovery credential.
+        :returns: Accepted task; review and restore the returned archive separately.
+        """
+        return await self._call(
+            "prepare_backup_copy",
+            server_name,
+            backup_id,
+            {
+                "target_server": target_server,
+                "server_port": server_port,
+                "server_portv6": server_portv6,
+                "target_version": target_version,
+                "recovery_key": recovery_key,
+            },
+        )

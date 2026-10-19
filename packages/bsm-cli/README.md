@@ -260,3 +260,18 @@ bsm-cli backup restore --server MyServer --file ARCHIVE.bsmbackup --component wo
 Restore inspects the manifest, offers complete components, prints a destination review, and requests confirmation. Use `--unlock` to prompt privately for an imported backup's recovery key. Use `--no-restart` to leave an originally running server stopped. `--yes` explicitly confirms a noninteractive reviewed restore. Old `--type` backup creation and filename-based restore inference have been replaced by unified archives and component selection.
 
 Offline extraction is provided by the backend package's `bedrock-server-manager backup extract` command and requires no running instance or original database.
+
+Additional backup commands:
+
+- `backup health --server SERVER`: verification, key and destination health.
+- `backup manage verify --server SERVER --file ID`: isolated recovery validation.
+- `backup manage pin` / `unpin`: protect an archive from local retention.
+- `backup manage copy --destination NAME`: copy or retry a configured destination.
+- `backup manage test_key`: privately prompt for an emergency-kit key and test it.
+- `backup prepare-copy --name NEW --port PORT --portv6 PORT`: install a stopped
+  destination and prepare a port-remapped archive for a separate reviewed restore.
+- `backup upload ARCHIVE`: alias for the native multipart `backup import` command.
+
+Restore review displays file changes and redacted setting differences. A protected
+safety backup is created before replacement. Download streams directly to a new
+local file, retaining encryption; interrupted transfers remove temporary output.

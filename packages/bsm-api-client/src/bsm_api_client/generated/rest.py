@@ -15,6 +15,7 @@ from .models.app_info_response import AppInfoResponse
 from .models.audit_log_response import AuditLogResponse
 from .models.backup_action_payload import BackupActionPayload
 from .models.backup_files_response import BackupFilesResponse
+from .models.backup_health_response import BackupHealthResponse
 from .models.ban_add_request import BanAddRequest
 from .models.ban_remove_request import BanRemoveRequest
 from .models.base_api_response import BaseApiResponse
@@ -87,8 +88,10 @@ from .models.setup_account_response import SetupAccountResponse
 from .models.setup_status_response import SetupStatusResponse
 from .models.shutdown_request import ShutdownRequest
 from .models.shutdown_response import ShutdownResponse
+from .models.snapshot_copy_payload import SnapshotCopyPayload
 from .models.snapshot_create_payload import SnapshotCreatePayload
 from .models.snapshot_inspect_payload import SnapshotInspectPayload
+from .models.snapshot_manage_payload import SnapshotManagePayload
 from .models.snapshot_plan_payload import SnapshotPlanPayload
 from .models.snapshot_restore_payload import SnapshotRestorePayload
 from .models.start_server_response import StartServerResponse
@@ -304,6 +307,14 @@ class RestClient:
     async def get_application_metrics_detailed(self) -> Response[ErrorEnvelope | GetApplicationMetricsResponse]:
         """Generated get_application_metrics operation."""
         return cast(Response[ErrorEnvelope | GetApplicationMetricsResponse], await self._owner.async_call_generated('get_application_metrics', parameters={}, body=None, authenticated=True, detailed=True))
+
+    async def get_backup_health(self, server_name: str) -> BackupHealthResponse | ErrorEnvelope | None:
+        """Generated get_backup_health operation."""
+        return cast(BackupHealthResponse | ErrorEnvelope | None, await self._owner.async_call_generated('get_backup_health', parameters={'server_name': server_name}, body=None, authenticated=True, typed=True))
+
+    async def get_backup_health_detailed(self, server_name: str) -> Response[BackupHealthResponse | ErrorEnvelope]:
+        """Generated get_backup_health operation."""
+        return cast(Response[BackupHealthResponse | ErrorEnvelope], await self._owner.async_call_generated('get_backup_health', parameters={'server_name': server_name}, body=None, authenticated=True, detailed=True))
 
     async def get_diagnostic_history(self, *, limit: int | Unset=100, subsystem: None | str | Unset=UNSET, instance_id: None | str | Unset=UNSET, correlation_id: None | str | Unset=UNSET, cursor: None | str | Unset=UNSET, owner: None | str | Unset=UNSET, code: None | str | Unset=UNSET, outcome: GetDiagnosticHistoryOutcomeType0 | None | Unset=UNSET, operation_id: None | str | Unset=UNSET) -> DiagnosticHistory | ErrorEnvelope | None:
         """Generated get_diagnostic_history operation."""
@@ -689,6 +700,14 @@ class RestClient:
         """Generated logout operation."""
         return cast(Response[Any | ErrorEnvelope], await self._owner.async_call_generated('logout', parameters={}, body=None, authenticated=True, detailed=True))
 
+    async def manage_server_snapshot(self, server_name: str, backup_id: str, *, body: SnapshotManagePayload) -> ErrorEnvelope | TaskAcceptedResponse | None:
+        """Generated manage_server_snapshot operation."""
+        return cast(ErrorEnvelope | TaskAcceptedResponse | None, await self._owner.async_call_generated('manage_server_snapshot', parameters={'server_name': server_name, 'backup_id': backup_id}, body=body, authenticated=True, typed=True))
+
+    async def manage_server_snapshot_detailed(self, server_name: str, backup_id: str, *, body: SnapshotManagePayload) -> Response[ErrorEnvelope | TaskAcceptedResponse]:
+        """Generated manage_server_snapshot operation."""
+        return cast(Response[ErrorEnvelope | TaskAcceptedResponse], await self._owner.async_call_generated('manage_server_snapshot', parameters={'server_name': server_name, 'backup_id': backup_id}, body=body, authenticated=True, detailed=True))
+
     async def plan_snapshot_restore(self, server_name: str, backup_id: str, *, body: SnapshotPlanPayload) -> ErrorEnvelope | TaskAcceptedResponse | None:
         """Generated plan_snapshot_restore operation."""
         return cast(ErrorEnvelope | TaskAcceptedResponse | None, await self._owner.async_call_generated('plan_snapshot_restore', parameters={'server_name': server_name, 'backup_id': backup_id}, body=body, authenticated=True, typed=True))
@@ -696,6 +715,14 @@ class RestClient:
     async def plan_snapshot_restore_detailed(self, server_name: str, backup_id: str, *, body: SnapshotPlanPayload) -> Response[ErrorEnvelope | TaskAcceptedResponse]:
         """Generated plan_snapshot_restore operation."""
         return cast(Response[ErrorEnvelope | TaskAcceptedResponse], await self._owner.async_call_generated('plan_snapshot_restore', parameters={'server_name': server_name, 'backup_id': backup_id}, body=body, authenticated=True, detailed=True))
+
+    async def prepare_backup_copy(self, server_name: str, backup_id: str, *, body: SnapshotCopyPayload) -> ErrorEnvelope | TaskAcceptedResponse | None:
+        """Generated prepare_backup_copy operation."""
+        return cast(ErrorEnvelope | TaskAcceptedResponse | None, await self._owner.async_call_generated('prepare_backup_copy', parameters={'server_name': server_name, 'backup_id': backup_id}, body=body, authenticated=True, typed=True))
+
+    async def prepare_backup_copy_detailed(self, server_name: str, backup_id: str, *, body: SnapshotCopyPayload) -> Response[ErrorEnvelope | TaskAcceptedResponse]:
+        """Generated prepare_backup_copy operation."""
+        return cast(Response[ErrorEnvelope | TaskAcceptedResponse], await self._owner.async_call_generated('prepare_backup_copy', parameters={'server_name': server_name, 'backup_id': backup_id}, body=body, authenticated=True, detailed=True))
 
     async def prune_backups(self, server_name: str) -> ErrorEnvelope | TaskAcceptedResponse | None:
         """Generated prune_backups operation."""
