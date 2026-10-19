@@ -193,7 +193,9 @@ class BackupCopy(ContractModel):
     completed_at: str | None = Field(None, title="Completed At")
     error: str | None = Field(None, title="Error")
     next_retry_at: str | None = Field(None, title="Next Retry At")
-    status: Literal["pending", "completed", "failed"] = Field(..., title="Status")
+    status: Literal["pending", "completed", "failed", "pruned"] = Field(
+        ..., title="Status"
+    )
 
 
 class BackupFile(ContractModel):
@@ -425,6 +427,13 @@ class CustomZipsResponse(ContractModel):
     custom_zips: list[str] = Field(..., title="Custom Zips")
     message: str | None = Field(None, title="Message")
     status: Literal["success", "skipped", "partial"] = Field(..., title="Status")
+
+
+class DestinationCleanupPayload(ContractModel):
+    """Validate and serialize the DestinationCleanupPayload contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    token: str | None = Field(None, title="Token")
 
 
 class DiagnosticChange(ContractModel):
@@ -1400,9 +1409,9 @@ class SnapshotManagePayload(ContractModel):
     """Validate and serialize the SnapshotManagePayload contract."""
 
     model_config = ConfigDict(extra="forbid")
-    action: Literal["verify", "pin", "unpin", "copy", "test_key", "annotate"] = Field(
-        ..., title="Action"
-    )
+    action: Literal[
+        "verify", "pin", "unpin", "copy", "test_key", "annotate", "drill"
+    ] = Field(..., title="Action")
     destination: str | None = Field(None, title="Destination")
     label: Label | None = Field(None, title="Label")
     notes: Notes | None = Field(None, title="Notes")
@@ -1735,8 +1744,11 @@ class BackupHealth(ContractModel):
     """Validate and serialize the BackupHealth contract."""
 
     model_config = ConfigDict(extra="forbid")
+    alerts: list[dict[str, JsonValue]] | None = Field(None, title="Alerts")
     count: int = Field(..., title="Count")
     destination_failures: int | None = Field(0, title="Destination Failures")
+    destinations: dict[str, JsonValue] | None = Field(None, title="Destinations")
+    drill: dict[str, JsonValue] | None = Field(None, title="Drill")
     failed_count: int | None = Field(0, title="Failed Count")
     last_error: str | None = Field(None, title="Last Error")
     last_failure_at: str | None = Field(None, title="Last Failure At")
@@ -1744,6 +1756,11 @@ class BackupHealth(ContractModel):
     last_verified_at: str | None = Field(None, title="Last Verified At")
     missing_key_ids: list[str] | None = Field(None, title="Missing Key Ids")
     older_key_ids: list[str] | None = Field(None, title="Older Key Ids")
+    readiness: Literal["ready", "attention", "unavailable"] | None = Field(
+        "unavailable", title="Readiness"
+    )
+    readiness_reasons: list[str] | None = Field(None, title="Readiness Reasons")
+    recovery_backup_id: str | None = Field(None, title="Recovery Backup Id")
     schedule: dict[str, JsonValue] | None = Field(None, title="Schedule")
     total_bytes: int = Field(..., title="Total Bytes")
     unverified_count: int | None = Field(0, title="Unverified Count")
@@ -1765,6 +1782,8 @@ class BackupSummary(ContractModel):
     model_config = ConfigDict(extra="forbid")
     backup_id: str = Field(..., title="Backup Id")
     copies: dict[str, BackupCopy] | None = Field(None, title="Copies")
+    created_at: str | None = Field(None, title="Created At")
+    drill: dict[str, JsonValue] | None = Field(None, title="Drill")
     encrypted: bool = Field(..., title="Encrypted")
     error: str | None = Field(None, title="Error")
     filename: str = Field(..., title="Filename")

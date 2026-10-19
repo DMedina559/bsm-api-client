@@ -648,7 +648,8 @@
             "enum": [
               "pending",
               "completed",
-              "failed"
+              "failed",
+              "pruned"
             ],
             "title": "Status",
             "type": "string"
@@ -753,6 +754,16 @@
       "BackupHealth": {
         "additionalProperties": false,
         "properties": {
+          "alerts": {
+            "items": {
+              "additionalProperties": {
+                "$ref": "#/components/schemas/JsonValue"
+              },
+              "type": "object"
+            },
+            "title": "Alerts",
+            "type": "array"
+          },
           "count": {
             "title": "Count",
             "type": "integer"
@@ -761,6 +772,27 @@
             "default": 0,
             "title": "Destination Failures",
             "type": "integer"
+          },
+          "destinations": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/JsonValue"
+            },
+            "title": "Destinations",
+            "type": "object"
+          },
+          "drill": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "$ref": "#/components/schemas/JsonValue"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Drill"
           },
           "failed_count": {
             "default": 0,
@@ -824,6 +856,34 @@
             },
             "title": "Older Key Ids",
             "type": "array"
+          },
+          "readiness": {
+            "default": "unavailable",
+            "enum": [
+              "ready",
+              "attention",
+              "unavailable"
+            ],
+            "title": "Readiness",
+            "type": "string"
+          },
+          "readiness_reasons": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Readiness Reasons",
+            "type": "array"
+          },
+          "recovery_backup_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recovery Backup Id"
           },
           "schedule": {
             "anyOf": [
@@ -1038,6 +1098,31 @@
             },
             "title": "Copies",
             "type": "object"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At"
+          },
+          "drill": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "$ref": "#/components/schemas/JsonValue"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Drill"
           },
           "encrypted": {
             "title": "Encrypted",
@@ -1745,6 +1830,24 @@
           "custom_zips"
         ],
         "title": "CustomZipsResponse",
+        "type": "object"
+      },
+      "DestinationCleanupPayload": {
+        "additionalProperties": false,
+        "properties": {
+          "token": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Token"
+          }
+        },
+        "title": "DestinationCleanupPayload",
         "type": "object"
       },
       "DiagnosticChange": {
@@ -6737,7 +6840,8 @@
               "unpin",
               "copy",
               "test_key",
-              "annotate"
+              "annotate",
+              "drill"
             ],
             "title": "Action",
             "type": "string"
@@ -14526,6 +14630,147 @@
         "summary": "Delete Allowlist",
         "tags": [
           "Server Access"
+        ]
+      }
+    },
+    "/api/server/{server_name}/backup-destinations/{destination}/cleanup": {
+      "post": {
+        "description": "Preview external cleanup; a reviewed token explicitly authorizes deletion.",
+        "operationId": "cleanup_backup_destination",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "destination",
+            "required": true,
+            "schema": {
+              "title": "Destination",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "server_name",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "title": "The name of the server",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DestinationCleanupPayload"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskAcceptedResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          },
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "summary": "Cleanup Destination",
+        "tags": [
+          "Backup & Restore"
         ]
       }
     },

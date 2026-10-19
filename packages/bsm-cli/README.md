@@ -271,6 +271,8 @@ Additional backup commands:
 - `backup schedule --server SERVER --time 03:00 --timezone America/Los_Angeles`: set a timezone-aware daily schedule. Use `--skip-missed`, `--disable`, or `--remove` to adjust missed-run behavior or pause/remove the schedule.
 - `backup health --server SERVER`: verification, key and destination health.
 - `backup manage verify --server SERVER --file ID`: isolated recovery validation.
+- `backup manage drill --server SERVER --file ID`: stage every included component on the destination filesystem and check copied hashes without stopping Minecraft or changing live files.
+- `backup cleanup-destination --server SERVER --destination NAME`: preview independent external retention. Add `--apply` to confirm deletion using the reviewed token. Untracked files, pins, active safety protection, and the newest recorded copy remain protected.
 - `backup manage pin` / `unpin`: protect an archive from local retention.
 - `backup manage copy --destination NAME`: copy or retry a configured destination.
 - `backup manage test_key`: privately prompt for an emergency-kit key and test it.
@@ -281,3 +283,10 @@ Additional backup commands:
 Restore review displays file changes and redacted setting differences. A protected
 safety backup is created before replacement. Download streams directly to a new
 local file, retaining encryption; interrupted transfers remove temporary output.
+
+
+Backup health includes recovery readiness, active alert reasons, the last isolated
+recovery drill, and destination free-space status. Readiness defaults to a maximum
+backup age of 48 hours. Periodic isolated drills default to every 168 hours; set
+`backups.recovery_drill_interval_hours` to zero to disable them. Archive manifests
+remain version 1.

@@ -3,6 +3,7 @@
   "add_players": "api.player_management.add_players",
   "add_server_ban": "api.server_access.add_server_ban",
   "change_password": "api.account_management.change_password",
+  "cleanup_backup_destination": "api.backup_restore.cleanup_backup_destination",
   "compare_diagnostic_snapshots": "api.diagnostics.compare_diagnostic_snapshots",
   "create_backup": "api.backup_restore.create_backup",
   "create_first_user": "api.application_setup.create_first_user",

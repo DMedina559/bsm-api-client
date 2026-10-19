@@ -146,10 +146,41 @@ class TestContentManagement:
         )
         health = await client.backups.async_health(server_name)
         assert health["health"]["last_verified_at"]
-        for action in ("verify", "pin", "unpin"):
+        for action in ("verify", "pin", "unpin", "drill"):
             await client.backups.async_wait(
                 await client.backups.async_manage(server_name, identifier, action)
             )
+
+    async def test_destination_cleanup_preview(
+        self, bedrock_server, content_client, tmp_path
+    ):
+        destination = tmp_path / "external-copies"
+        destination.mkdir()
+        client = content_client
+        await client.backups.async_call_generated(
+            "set_setting",
+            body={
+                "key": "backups.destinations",
+                "value": {"nas": {"path": str(destination), "keep_count": 1}},
+            },
+            authenticated=True,
+        )
+        first = await client.backups.async_wait(
+            await client.backups.async_create(bedrock_server)
+        )
+        await client.backups.async_wait(
+            await client.backups.async_create(bedrock_server)
+        )
+        preview = await client.backups.async_wait(
+            await client.backups.async_cleanup_destination(bedrock_server, "nas")
+        )
+        assert first["backup"]["backup_id"] in preview["plan"]["delete"]
+        applied = await client.backups.async_wait(
+            await client.backups.async_cleanup_destination(
+                bedrock_server, "nas", preview["plan"]["token"]
+            )
+        )
+        assert applied["plan"]["applied"]
 
     async def test_custom_zips(self, content_client):
         zips = await content_client.application.async_get_custom_zips()

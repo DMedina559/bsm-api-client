@@ -37,7 +37,7 @@ jobs:
         with:
           repository: DMedina559/bedrock-server-manager
           # Match the backend contract bundled with this client.
-          ref: 45685528565f97a3a7fcd9fa2724eb3b059f459a
+          ref: 2d86919a4ab736cb64b0fcf6c2c3af3ef2664c84
           path: backend-under-test
 
       - name: Set up Python ${{ matrix.python-version }}

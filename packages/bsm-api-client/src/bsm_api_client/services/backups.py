@@ -244,18 +244,26 @@ class BackupsService(Service):
         label: str | None = None,
         notes: str | None = None,
     ) -> Any:
-        """Verify, pin, unpin, copy or test a recovery key.
+        """Manage archive verification, protection, copies, annotations and drills.
 
         :param server_name: Archive owner.
         :param backup_id: Local archive identifier.
-        :param action: verify, pin, unpin, copy, test_key or annotate.
+        :param action: verify, pin, unpin, copy, test_key, annotate or drill.
         :param destination: Configured destination name for copy.
         :param label: Manager-local archive label for annotate.
         :param notes: Manager-local archive notes for annotate.
         :param recovery_key: Optional recovery credential; never persisted.
         :returns: Accepted operation task.
         """
-        if action not in {"verify", "pin", "unpin", "copy", "test_key", "annotate"}:
+        if action not in {
+            "verify",
+            "pin",
+            "unpin",
+            "copy",
+            "test_key",
+            "annotate",
+            "drill",
+        }:
             raise ValueError("Unsupported backup action.")
         return await self._call(
             "manage_server_snapshot",
@@ -349,3 +357,20 @@ class BackupsService(Service):
         )
 
         return await self.async_call_generated("get_settings", authenticated=True)
+
+    async def async_cleanup_destination(
+        self, server_name: str, destination: str, token: str | None = None
+    ) -> Any:
+        """Preview external cleanup or apply a reviewed, unchanged plan.
+
+        :param server_name: Server whose external copies are inspected.
+        :param destination: Saved destination name.
+        :param token: Preview token authorizing deletion; None previews only.
+        :returns: Accepted task with a destination cleanup plan.
+        """
+        return await self.async_call_generated(
+            "cleanup_backup_destination",
+            parameters={"server_name": server_name, "destination": destination},
+            body={"token": token},
+            authenticated=True,
+        )

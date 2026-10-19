@@ -312,7 +312,7 @@ async def backup_health(ctx, server_name):
 @server_option
 @archive_option
 @click.argument(
-    "action", type=click.Choice(["verify", "pin", "unpin", "copy", "test_key"])
+    "action", type=click.Choice(["verify", "pin", "unpin", "copy", "test_key", "drill"])
 )
 @click.option("--destination", help="Configured destination name for copy.")
 @click.option(
@@ -463,5 +463,38 @@ async def schedule_backup(
             ),
         )
         click.echo(json.dumps(result, indent=2))
+    except Exception as error:
+        fail(error)
+
+
+@backup.command("cleanup-destination")
+@server_option
+@click.option("--destination", required=True)
+@click.option(
+    "--apply", is_flag=True, help="Confirm and apply the displayed cleanup preview."
+)
+@pass_async_context
+async def cleanup_backup_destination(ctx, server_name, destination, apply):
+    """Review external-copy retention before explicitly deleting eligible copies."""
+    try:
+        client = get_client(ctx)
+        result = await client.backups.async_wait(
+            await client.backups.async_cleanup_destination(server_name, destination)
+        )
+        click.echo(json.dumps(result, indent=2))
+        plan = result["plan"]
+        if (
+            apply
+            and plan["delete"]
+            and click.confirm(
+                "Permanently delete the reviewed external copies?", default=False
+            )
+        ):
+            result = await client.backups.async_wait(
+                await client.backups.async_cleanup_destination(
+                    server_name, destination, plan["token"]
+                )
+            )
+            click.echo(json.dumps(result, indent=2))
     except Exception as error:
         fail(error)

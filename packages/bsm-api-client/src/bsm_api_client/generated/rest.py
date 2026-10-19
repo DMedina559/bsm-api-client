@@ -26,6 +26,7 @@ from .models.command_payload import CommandPayload
 from .models.compare_diagnostic_snapshots_request import CompareDiagnosticSnapshotsRequest
 from .models.content_list_response import ContentListResponse
 from .models.custom_zips_response import CustomZipsResponse
+from .models.destination_cleanup_payload import DestinationCleanupPayload
 from .models.diagnostic_comparison import DiagnosticComparison
 from .models.diagnostic_history import DiagnosticHistory
 from .models.diagnostic_report import DiagnosticReport
@@ -147,6 +148,14 @@ class RestClient:
     async def change_password_detailed(self, *, body: ChangePasswordPayload) -> Response[BaseApiResponse | ErrorEnvelope]:
         """Generated change_password operation."""
         return cast(Response[BaseApiResponse | ErrorEnvelope], await self._owner.async_call_generated('change_password', parameters={}, body=body, authenticated=True, detailed=True))
+
+    async def cleanup_backup_destination(self, server_name: str, destination: str, *, body: DestinationCleanupPayload) -> ErrorEnvelope | TaskAcceptedResponse | None:
+        """Generated cleanup_backup_destination operation."""
+        return cast(ErrorEnvelope | TaskAcceptedResponse | None, await self._owner.async_call_generated('cleanup_backup_destination', parameters={'server_name': server_name, 'destination': destination}, body=body, authenticated=True, typed=True))
+
+    async def cleanup_backup_destination_detailed(self, server_name: str, destination: str, *, body: DestinationCleanupPayload) -> Response[ErrorEnvelope | TaskAcceptedResponse]:
+        """Generated cleanup_backup_destination operation."""
+        return cast(Response[ErrorEnvelope | TaskAcceptedResponse], await self._owner.async_call_generated('cleanup_backup_destination', parameters={'server_name': server_name, 'destination': destination}, body=body, authenticated=True, detailed=True))
 
     async def compare_diagnostic_snapshots(self, *, body: CompareDiagnosticSnapshotsRequest) -> DiagnosticComparison | ErrorEnvelope | None:
         """Generated compare_diagnostic_snapshots operation."""
