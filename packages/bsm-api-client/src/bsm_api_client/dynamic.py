@@ -682,7 +682,7 @@ def _request_content(
     if request is None:
         return None
     try:
-        return request.content
+        return cast(bytes, request.content)
     except httpx.RequestNotRead:
         stream = request.stream
         if not isinstance(stream, httpx.AsyncByteStream):
