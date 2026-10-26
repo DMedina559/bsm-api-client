@@ -312,7 +312,10 @@ async def backup_health(ctx, server_name):
 @server_option
 @archive_option
 @click.argument(
-    "action", type=click.Choice(["verify", "pin", "unpin", "copy", "test_key", "drill"])
+    "action",
+    type=click.Choice(
+        ["verify", "pin", "unpin", "copy", "test_key", "drill", "delete"]
+    ),
 )
 @click.option("--destination", help="Configured destination name for copy.")
 @click.option(

@@ -165,6 +165,9 @@ SUCCESS.update(
 # Every curated noninteractive command goes through request serialization and
 # response validation, rather than mocking its facade method.
 CASES = [
+    ("scheduler", "list"),
+    ("scheduler", "list", "--server-name", "TestServer"),
+    ("scheduler", "remove", "nightly"),
     (
         "diagnostics",
         "activity",
@@ -296,12 +299,16 @@ def command_client(monkeypatch, tmp_path):
                 body["events"] = None
             body.update(
                 {
+                    "/api/scheduler/schedules": {
+                        "schedules": [],
+                        "task_types": ["backup", "verify"],
+                    },
                     "/api/diagnostics/activity": {
                         "events": None,
                         "operations": None,
                         "subscriptions": None,
                         "scope": "application",
-                    }
+                    },
                 }.get(path, {})
             )
             if path.startswith("/api/tasks/"):
@@ -647,3 +654,16 @@ def test_recovery_report_writes_new_file_and_preserves_existing(
     result = CliRunner().invoke(cli, args)
     assert result.exit_code != 0
     assert output.read_bytes() == original
+
+
+def test_scheduler_save_json(command_client, tmp_path):
+    config = tmp_path / "schedule.json"
+    config.write_text(
+        json.dumps({"task": "verify", "server_name": "TestServer", "enabled": False})
+    )
+    result = CliRunner().invoke(
+        cli, ["--json", "scheduler", "save", "weekly", str(config)]
+    )
+    assert result.exit_code == 0, result.output
+    request = command_client[0]._dynamic_request.call_args
+    assert request.args[:2] == ("PUT", "/api/scheduler/schedules/weekly")

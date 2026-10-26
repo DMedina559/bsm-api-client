@@ -248,7 +248,7 @@ class BackupsService(Service):
 
         :param server_name: Archive owner.
         :param backup_id: Local archive identifier.
-        :param action: verify, pin, unpin, copy, test_key, annotate or drill.
+        :param action: verify, pin, unpin, copy, test_key, annotate, drill or delete.
         :param destination: Configured destination name for copy.
         :param label: Manager-local archive label for annotate.
         :param notes: Manager-local archive notes for annotate.
@@ -263,6 +263,7 @@ class BackupsService(Service):
             "test_key",
             "annotate",
             "drill",
+            "delete",
         }:
             raise ValueError("Unsupported backup action.")
         return await self._call(
