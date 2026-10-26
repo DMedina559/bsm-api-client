@@ -165,6 +165,26 @@ SUCCESS.update(
 # Every curated noninteractive command goes through request serialization and
 # response validation, rather than mocking its facade method.
 CASES = [
+    (
+        "diagnostics",
+        "activity",
+        "--server-name",
+        "alpha",
+        "--event-name",
+        "sample",
+        "--limit",
+        "5",
+    ),
+    (
+        "events",
+        "activity",
+        "--server-name",
+        "alpha",
+        "--sequence-id",
+        "sequence",
+        "--phase",
+        "before",
+    ),
     ("diagnostics", "snapshot"),
     ("diagnostics", "snapshot", "--subsystem", "runtime"),
     (
@@ -274,6 +294,16 @@ def command_client(monkeypatch, tmp_path):
                 body["recent"] = None
             if path.startswith("/api/diagnostics/trace/"):
                 body["events"] = None
+            body.update(
+                {
+                    "/api/diagnostics/activity": {
+                        "events": None,
+                        "operations": None,
+                        "subscriptions": None,
+                        "scope": "application",
+                    }
+                }.get(path, {})
+            )
             if path.startswith("/api/tasks/"):
                 body = {
                     "id": "test-task",

@@ -16,6 +16,39 @@ def diagnostics():
     """Inspect administrator observations and retained history."""
 
 
+@diagnostics.command("activity")
+@click.option("--limit", type=click.IntRange(1, 200), default=100, show_default=True)
+@click.option("--event-name", "name", help="Filter by event name.")
+@click.option("--owner")
+@click.option("--source")
+@click.option("--server-name")
+@click.option("--operation-name")
+@click.option("--operation-id")
+@click.option("--sequence-id")
+@click.option("--correlation-id")
+@click.option("--phase", type=click.Choice(["before", "after", "custom", "lifecycle"]))
+@click.option(
+    "--status",
+    type=click.Choice(
+        ["dispatching", "completed", "partial", "cancelled", "suppressed"]
+    ),
+)
+@click.pass_context
+async def diagnostic_activity(ctx, **filters):
+    """Inspect activity across all execution chains, not just one correlation."""
+    result = await get_client(ctx).diagnostics.async_get_diagnostic_activity(**filters)
+    if not ctx.obj.get("json_output"):
+        click.echo(
+            "Global activity: bounded current-instance metadata; history resets on restart."
+        )
+        outcome(result.model_dump(mode="json"))
+        if result.truncated:
+            click.echo(
+                "Partial activity view; narrow the filters to inspect specific work."
+            )
+    return result
+
+
 @diagnostics.command("snapshot")
 @click.option("--subsystem", help="Inspect one registered subsystem.")
 @click.pass_context
@@ -138,7 +171,7 @@ async def diagnostic_trace(ctx, correlation_id, limit, cursor):
     )
     if not ctx.obj.get("json_output"):
         click.echo(
-            f"Events: {'available' if result.events_available else 'unavailable'} | Tasks: {'available' if result.tasks_available else 'unavailable'} | History: {'available' if result.history.available else 'unavailable'}"
+            f"Operations: {'available' if result.operations_available else 'unavailable'} | Events: {'available' if result.events_available else 'unavailable'} | Tasks: {'available' if result.tasks_available else 'unavailable'} | History: {'available' if result.history.available else 'unavailable'}"
         )
         outcome(result.model_dump(mode="json"))
         if result.truncated:
