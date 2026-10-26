@@ -360,6 +360,12 @@ async def event_catalog(ctx):
 
 
 @events.command("activity")
+@click.option("--server-name")
+@click.option("--source")
+@click.option("--operation-name")
+@click.option("--operation-id")
+@click.option("--sequence-id")
+@click.option("--phase", type=click.Choice(["before", "after", "custom", "lifecycle"]))
 @click.option("--name")
 @click.option("--owner")
 @click.option("--correlation-id")
@@ -371,14 +377,8 @@ async def event_catalog(ctx):
 )
 @click.option("--limit", type=click.IntRange(1, 10000), default=20, show_default=True)
 @click.pass_context
-async def event_activity(ctx, name, owner, correlation_id, status, limit):
-    result = await get_client(ctx).events.async_get_event_activity(
-        name=name,
-        owner=owner,
-        correlation_id=correlation_id,
-        status=status,
-        limit=limit,
-    )
+async def event_activity(ctx, **filters):
+    result = await get_client(ctx).events.async_get_event_activity(**filters)
     if not ctx.obj.get("json_output"):
         outcome(result.model_dump(mode="json"))
     return result

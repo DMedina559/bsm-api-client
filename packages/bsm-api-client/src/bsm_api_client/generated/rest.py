@@ -27,6 +27,7 @@ from .models.compare_diagnostic_snapshots_request import CompareDiagnosticSnapsh
 from .models.content_list_response import ContentListResponse
 from .models.custom_zips_response import CustomZipsResponse
 from .models.destination_cleanup_payload import DestinationCleanupPayload
+from .models.diagnostic_activity import DiagnosticActivity
 from .models.diagnostic_comparison import DiagnosticComparison
 from .models.diagnostic_history import DiagnosticHistory
 from .models.diagnostic_report import DiagnosticReport
@@ -41,7 +42,10 @@ from .models.generate_token_payload import GenerateTokenPayload
 from .models.get_allowlist_response import GetAllowlistResponse
 from .models.get_application_health_response import GetApplicationHealthResponse
 from .models.get_application_metrics_response import GetApplicationMetricsResponse
+from .models.get_diagnostic_activity_phase_type_0 import GetDiagnosticActivityPhaseType0
+from .models.get_diagnostic_activity_status_type_0 import GetDiagnosticActivityStatusType0
 from .models.get_diagnostic_history_outcome_type_0 import GetDiagnosticHistoryOutcomeType0
+from .models.get_event_activity_phase_type_0 import GetEventActivityPhaseType0
 from .models.get_event_activity_status_type_0 import GetEventActivityStatusType0
 from .models.get_permissions_response import GetPermissionsResponse
 from .models.get_plugin_settings_response import GetPluginSettingsResponse
@@ -342,6 +346,14 @@ class RestClient:
         """Generated get_backup_health operation."""
         return cast(Response[BackupHealthResponse | ErrorEnvelope], await self._owner.async_call_generated('get_backup_health', parameters={'server_name': server_name}, body=None, authenticated=True, detailed=True))
 
+    async def get_diagnostic_activity(self, *, operation_id: None | str | Unset=UNSET, sequence_id: None | str | Unset=UNSET, operation_name: None | str | Unset=UNSET, server_name: None | str | Unset=UNSET, source: None | str | Unset=UNSET, phase: GetDiagnosticActivityPhaseType0 | None | Unset=UNSET, name: None | str | Unset=UNSET, owner: None | str | Unset=UNSET, correlation_id: None | str | Unset=UNSET, status: GetDiagnosticActivityStatusType0 | None | Unset=UNSET, limit: int | Unset=100) -> DiagnosticActivity | ErrorEnvelope | None:
+        """Generated get_diagnostic_activity operation."""
+        return cast(DiagnosticActivity | ErrorEnvelope | None, await self._owner.async_call_generated('get_diagnostic_activity', parameters={'operation_id': operation_id, 'sequence_id': sequence_id, 'operation_name': operation_name, 'server_name': server_name, 'source': source, 'phase': phase, 'name': name, 'owner': owner, 'correlation_id': correlation_id, 'status': status, 'limit': limit}, body=None, authenticated=True, typed=True))
+
+    async def get_diagnostic_activity_detailed(self, *, operation_id: None | str | Unset=UNSET, sequence_id: None | str | Unset=UNSET, operation_name: None | str | Unset=UNSET, server_name: None | str | Unset=UNSET, source: None | str | Unset=UNSET, phase: GetDiagnosticActivityPhaseType0 | None | Unset=UNSET, name: None | str | Unset=UNSET, owner: None | str | Unset=UNSET, correlation_id: None | str | Unset=UNSET, status: GetDiagnosticActivityStatusType0 | None | Unset=UNSET, limit: int | Unset=100) -> Response[DiagnosticActivity | ErrorEnvelope]:
+        """Generated get_diagnostic_activity operation."""
+        return cast(Response[DiagnosticActivity | ErrorEnvelope], await self._owner.async_call_generated('get_diagnostic_activity', parameters={'operation_id': operation_id, 'sequence_id': sequence_id, 'operation_name': operation_name, 'server_name': server_name, 'source': source, 'phase': phase, 'name': name, 'owner': owner, 'correlation_id': correlation_id, 'status': status, 'limit': limit}, body=None, authenticated=True, detailed=True))
+
     async def get_diagnostic_history(self, *, limit: int | Unset=100, subsystem: None | str | Unset=UNSET, instance_id: None | str | Unset=UNSET, correlation_id: None | str | Unset=UNSET, cursor: None | str | Unset=UNSET, owner: None | str | Unset=UNSET, code: None | str | Unset=UNSET, outcome: GetDiagnosticHistoryOutcomeType0 | None | Unset=UNSET, operation_id: None | str | Unset=UNSET) -> DiagnosticHistory | ErrorEnvelope | None:
         """Generated get_diagnostic_history operation."""
         return cast(DiagnosticHistory | ErrorEnvelope | None, await self._owner.async_call_generated('get_diagnostic_history', parameters={'limit': limit, 'subsystem': subsystem, 'instance_id': instance_id, 'correlation_id': correlation_id, 'cursor': cursor, 'owner': owner, 'code': code, 'outcome': outcome, 'operation_id': operation_id}, body=None, authenticated=True, typed=True))
@@ -374,13 +386,13 @@ class RestClient:
         """Generated get_diagnostic_trace operation."""
         return cast(Response[DiagnosticTrace | ErrorEnvelope], await self._owner.async_call_generated('get_diagnostic_trace', parameters={'correlation_id': correlation_id, 'limit': limit, 'cursor': cursor}, body=None, authenticated=True, detailed=True))
 
-    async def get_event_activity(self, *, name: None | str | Unset=UNSET, owner: None | str | Unset=UNSET, correlation_id: None | str | Unset=UNSET, status: GetEventActivityStatusType0 | None | Unset=UNSET, limit: int | Unset=200) -> ErrorEnvelope | EventDiagnostics | None:
+    async def get_event_activity(self, *, operation_id: None | str | Unset=UNSET, sequence_id: None | str | Unset=UNSET, operation_name: None | str | Unset=UNSET, server_name: None | str | Unset=UNSET, source: None | str | Unset=UNSET, phase: GetEventActivityPhaseType0 | None | Unset=UNSET, name: None | str | Unset=UNSET, owner: None | str | Unset=UNSET, correlation_id: None | str | Unset=UNSET, status: GetEventActivityStatusType0 | None | Unset=UNSET, limit: int | Unset=200) -> ErrorEnvelope | EventDiagnostics | None:
         """Generated get_event_activity operation."""
-        return cast(ErrorEnvelope | EventDiagnostics | None, await self._owner.async_call_generated('get_event_activity', parameters={'name': name, 'owner': owner, 'correlation_id': correlation_id, 'status': status, 'limit': limit}, body=None, authenticated=True, typed=True))
+        return cast(ErrorEnvelope | EventDiagnostics | None, await self._owner.async_call_generated('get_event_activity', parameters={'operation_id': operation_id, 'sequence_id': sequence_id, 'operation_name': operation_name, 'server_name': server_name, 'source': source, 'phase': phase, 'name': name, 'owner': owner, 'correlation_id': correlation_id, 'status': status, 'limit': limit}, body=None, authenticated=True, typed=True))
 
-    async def get_event_activity_detailed(self, *, name: None | str | Unset=UNSET, owner: None | str | Unset=UNSET, correlation_id: None | str | Unset=UNSET, status: GetEventActivityStatusType0 | None | Unset=UNSET, limit: int | Unset=200) -> Response[ErrorEnvelope | EventDiagnostics]:
+    async def get_event_activity_detailed(self, *, operation_id: None | str | Unset=UNSET, sequence_id: None | str | Unset=UNSET, operation_name: None | str | Unset=UNSET, server_name: None | str | Unset=UNSET, source: None | str | Unset=UNSET, phase: GetEventActivityPhaseType0 | None | Unset=UNSET, name: None | str | Unset=UNSET, owner: None | str | Unset=UNSET, correlation_id: None | str | Unset=UNSET, status: GetEventActivityStatusType0 | None | Unset=UNSET, limit: int | Unset=200) -> Response[ErrorEnvelope | EventDiagnostics]:
         """Generated get_event_activity operation."""
-        return cast(Response[ErrorEnvelope | EventDiagnostics], await self._owner.async_call_generated('get_event_activity', parameters={'name': name, 'owner': owner, 'correlation_id': correlation_id, 'status': status, 'limit': limit}, body=None, authenticated=True, detailed=True))
+        return cast(Response[ErrorEnvelope | EventDiagnostics], await self._owner.async_call_generated('get_event_activity', parameters={'operation_id': operation_id, 'sequence_id': sequence_id, 'operation_name': operation_name, 'server_name': server_name, 'source': source, 'phase': phase, 'name': name, 'owner': owner, 'correlation_id': correlation_id, 'status': status, 'limit': limit}, body=None, authenticated=True, detailed=True))
 
     async def get_log_history(self, *, topic: str, before: int | None | Unset=UNSET, file_id: None | str | Unset=UNSET) -> ErrorEnvelope | LogHistoryPage | None:
         """Generated get_log_history operation."""

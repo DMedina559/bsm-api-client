@@ -10,6 +10,7 @@ from ... import errors
 
 from ...models.error_envelope import ErrorEnvelope
 from ...models.event_diagnostics import EventDiagnostics
+from ...models.get_event_activity_phase_type_0 import GetEventActivityPhaseType0
 from ...models.get_event_activity_status_type_0 import GetEventActivityStatusType0
 from ...types import UNSET, Unset
 from typing import cast
@@ -18,6 +19,12 @@ from typing import cast
 
 def _get_kwargs(
     *,
+    operation_id: None | str | Unset = UNSET,
+    sequence_id: None | str | Unset = UNSET,
+    operation_name: None | str | Unset = UNSET,
+    server_name: None | str | Unset = UNSET,
+    source: None | str | Unset = UNSET,
+    phase: GetEventActivityPhaseType0 | None | Unset = UNSET,
     name: None | str | Unset = UNSET,
     owner: None | str | Unset = UNSET,
     correlation_id: None | str | Unset = UNSET,
@@ -30,6 +37,50 @@ def _get_kwargs(
     
 
     params: dict[str, Any] = {}
+
+    json_operation_id: None | str | Unset
+    if isinstance(operation_id, Unset):
+        json_operation_id = UNSET
+    else:
+        json_operation_id = operation_id
+    params["operation_id"] = json_operation_id
+
+    json_sequence_id: None | str | Unset
+    if isinstance(sequence_id, Unset):
+        json_sequence_id = UNSET
+    else:
+        json_sequence_id = sequence_id
+    params["sequence_id"] = json_sequence_id
+
+    json_operation_name: None | str | Unset
+    if isinstance(operation_name, Unset):
+        json_operation_name = UNSET
+    else:
+        json_operation_name = operation_name
+    params["operation_name"] = json_operation_name
+
+    json_server_name: None | str | Unset
+    if isinstance(server_name, Unset):
+        json_server_name = UNSET
+    else:
+        json_server_name = server_name
+    params["server_name"] = json_server_name
+
+    json_source: None | str | Unset
+    if isinstance(source, Unset):
+        json_source = UNSET
+    else:
+        json_source = source
+    params["source"] = json_source
+
+    json_phase: None | str | Unset
+    if isinstance(phase, Unset):
+        json_phase = UNSET
+    elif isinstance(phase, GetEventActivityPhaseType0):
+        json_phase = phase.value
+    else:
+        json_phase = phase
+    params["phase"] = json_phase
 
     json_name: None | str | Unset
     if isinstance(name, Unset):
@@ -160,6 +211,12 @@ def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Res
 def sync_detailed(
     *,
     client: AuthenticatedClient,
+    operation_id: None | str | Unset = UNSET,
+    sequence_id: None | str | Unset = UNSET,
+    operation_name: None | str | Unset = UNSET,
+    server_name: None | str | Unset = UNSET,
+    source: None | str | Unset = UNSET,
+    phase: GetEventActivityPhaseType0 | None | Unset = UNSET,
     name: None | str | Unset = UNSET,
     owner: None | str | Unset = UNSET,
     correlation_id: None | str | Unset = UNSET,
@@ -169,6 +226,12 @@ def sync_detailed(
 ) -> Response[ErrorEnvelope | EventDiagnostics]:
     """Get Event Activity
     
+    :param operation_id: Value supplied to the operation.
+    :param sequence_id: Value supplied to the operation.
+    :param operation_name: Value supplied to the operation.
+    :param server_name: Value supplied to the operation.
+    :param source: Value supplied to the operation.
+    :param phase: Value supplied to the operation.
     :param name: Value supplied to the operation.
     :param owner: Value supplied to the operation.
     :param correlation_id: Value supplied to the operation.
@@ -182,7 +245,13 @@ def sync_detailed(
 
 
     kwargs = _get_kwargs(
-        name=name,
+        operation_id=operation_id,
+sequence_id=sequence_id,
+operation_name=operation_name,
+server_name=server_name,
+source=source,
+phase=phase,
+name=name,
 owner=owner,
 correlation_id=correlation_id,
 status=status,
@@ -199,6 +268,12 @@ limit=limit,
 def sync(
     *,
     client: AuthenticatedClient,
+    operation_id: None | str | Unset = UNSET,
+    sequence_id: None | str | Unset = UNSET,
+    operation_name: None | str | Unset = UNSET,
+    server_name: None | str | Unset = UNSET,
+    source: None | str | Unset = UNSET,
+    phase: GetEventActivityPhaseType0 | None | Unset = UNSET,
     name: None | str | Unset = UNSET,
     owner: None | str | Unset = UNSET,
     correlation_id: None | str | Unset = UNSET,
@@ -208,6 +283,12 @@ def sync(
 ) -> ErrorEnvelope | EventDiagnostics | None:
     """Get Event Activity
     
+    :param operation_id: Value supplied to the operation.
+    :param sequence_id: Value supplied to the operation.
+    :param operation_name: Value supplied to the operation.
+    :param server_name: Value supplied to the operation.
+    :param source: Value supplied to the operation.
+    :param phase: Value supplied to the operation.
     :param name: Value supplied to the operation.
     :param owner: Value supplied to the operation.
     :param correlation_id: Value supplied to the operation.
@@ -222,6 +303,12 @@ def sync(
 
     return sync_detailed(
         client=client,
+operation_id=operation_id,
+sequence_id=sequence_id,
+operation_name=operation_name,
+server_name=server_name,
+source=source,
+phase=phase,
 name=name,
 owner=owner,
 correlation_id=correlation_id,
@@ -233,6 +320,12 @@ limit=limit,
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
+    operation_id: None | str | Unset = UNSET,
+    sequence_id: None | str | Unset = UNSET,
+    operation_name: None | str | Unset = UNSET,
+    server_name: None | str | Unset = UNSET,
+    source: None | str | Unset = UNSET,
+    phase: GetEventActivityPhaseType0 | None | Unset = UNSET,
     name: None | str | Unset = UNSET,
     owner: None | str | Unset = UNSET,
     correlation_id: None | str | Unset = UNSET,
@@ -242,6 +335,12 @@ async def asyncio_detailed(
 ) -> Response[ErrorEnvelope | EventDiagnostics]:
     """Get Event Activity
     
+    :param operation_id: Value supplied to the operation.
+    :param sequence_id: Value supplied to the operation.
+    :param operation_name: Value supplied to the operation.
+    :param server_name: Value supplied to the operation.
+    :param source: Value supplied to the operation.
+    :param phase: Value supplied to the operation.
     :param name: Value supplied to the operation.
     :param owner: Value supplied to the operation.
     :param correlation_id: Value supplied to the operation.
@@ -255,7 +354,13 @@ async def asyncio_detailed(
 
 
     kwargs = _get_kwargs(
-        name=name,
+        operation_id=operation_id,
+sequence_id=sequence_id,
+operation_name=operation_name,
+server_name=server_name,
+source=source,
+phase=phase,
+name=name,
 owner=owner,
 correlation_id=correlation_id,
 status=status,
@@ -272,6 +377,12 @@ limit=limit,
 async def asyncio(
     *,
     client: AuthenticatedClient,
+    operation_id: None | str | Unset = UNSET,
+    sequence_id: None | str | Unset = UNSET,
+    operation_name: None | str | Unset = UNSET,
+    server_name: None | str | Unset = UNSET,
+    source: None | str | Unset = UNSET,
+    phase: GetEventActivityPhaseType0 | None | Unset = UNSET,
     name: None | str | Unset = UNSET,
     owner: None | str | Unset = UNSET,
     correlation_id: None | str | Unset = UNSET,
@@ -281,6 +392,12 @@ async def asyncio(
 ) -> ErrorEnvelope | EventDiagnostics | None:
     """Get Event Activity
     
+    :param operation_id: Value supplied to the operation.
+    :param sequence_id: Value supplied to the operation.
+    :param operation_name: Value supplied to the operation.
+    :param server_name: Value supplied to the operation.
+    :param source: Value supplied to the operation.
+    :param phase: Value supplied to the operation.
     :param name: Value supplied to the operation.
     :param owner: Value supplied to the operation.
     :param correlation_id: Value supplied to the operation.
@@ -295,6 +412,12 @@ async def asyncio(
 
     return (await asyncio_detailed(
         client=client,
+operation_id=operation_id,
+sequence_id=sequence_id,
+operation_name=operation_name,
+server_name=server_name,
+source=source,
+phase=phase,
 name=name,
 owner=owner,
 correlation_id=correlation_id,

@@ -27,6 +27,7 @@
   "get_application_health": "api.application.get_application_health",
   "get_application_metrics": "api.application.get_application_metrics",
   "get_backup_health": "api.backup_restore.get_backup_health",
+  "get_diagnostic_activity": "api.diagnostics.get_diagnostic_activity",
   "get_diagnostic_history": "api.diagnostics.get_diagnostic_history",
   "get_diagnostic_report": "api.diagnostics.get_diagnostic_report",
   "get_diagnostic_runs": "api.diagnostics.get_diagnostic_runs",

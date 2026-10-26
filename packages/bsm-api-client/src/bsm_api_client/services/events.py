@@ -21,6 +21,12 @@ class EventService(Service):
         self,
         *,
         name: str | None = None,
+        server_name: str | None = None,
+        source: str | None = None,
+        operation_name: str | None = None,
+        operation_id: str | None = None,
+        sequence_id: str | None = None,
+        phase: Literal["before", "after", "custom", "lifecycle"] | None = None,
         owner: str | None = None,
         correlation_id: str | None = None,
         status: (
@@ -34,6 +40,12 @@ class EventService(Service):
             key: value
             for key, value in {
                 "name": name,
+                "server_name": server_name,
+                "source": source,
+                "operation_name": operation_name,
+                "operation_id": operation_id,
+                "sequence_id": sequence_id,
+                "phase": phase,
                 "owner": owner,
                 "correlation_id": correlation_id,
                 "status": status,

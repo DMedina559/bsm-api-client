@@ -4,6 +4,7 @@ from typing import Literal
 
 from ..models import (
     CompareDiagnosticSnapshotsRequest,
+    DiagnosticActivity,
     DiagnosticComparison,
     DiagnosticHistory,
     DiagnosticReport,
@@ -17,6 +18,44 @@ from .base import Service
 
 class DiagnosticsService(Service):
     """Inspect bounded observations, retained records and snapshot differences."""
+
+    async def async_get_diagnostic_activity(
+        self,
+        *,
+        limit: int = 100,
+        name: str | None = None,
+        owner: str | None = None,
+        source: str | None = None,
+        server_name: str | None = None,
+        operation_name: str | None = None,
+        operation_id: str | None = None,
+        sequence_id: str | None = None,
+        correlation_id: str | None = None,
+        phase: Literal["before", "after", "custom", "lifecycle"] | None = None,
+        status: (
+            Literal["dispatching", "completed", "partial", "cancelled", "suppressed"]
+            | None
+        ) = None,
+    ) -> DiagnosticActivity:
+        """Read bounded global events, operation ancestry/outcomes, and listeners.
+
+        Filters narrow current-instance metadata; this does not replay payloads or
+        return an unlimited history. Requires administrator authentication.
+        """
+        parameters = {
+            key: value
+            for key, value in locals().items()
+            if key != "self" and value is not None
+        }
+        return parse_response(
+            DiagnosticActivity,
+            await self.async_call_generated(
+                "get_diagnostic_activity",
+                parameters=parameters,
+                authenticated=True,
+                typed=True,
+            ),
+        )
 
     async def async_get_application_diagnostics(self) -> DiagnosticSnapshot:
         """Collect application observations; requires an administrator."""

@@ -571,6 +571,18 @@ class EventDelivery(ContractModel):
     unavailable: int | None = Field(0, ge=0, title="Unavailable")
 
 
+class EventFilter(ContractModel):
+    """Validate and serialize the EventFilter contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    correlation_id: str | None = Field(None, title="Correlation Id")
+    operation_name: str | None = Field(None, title="Operation Name")
+    plugin_name: str | None = Field(None, title="Plugin Name")
+    sequence_id: str | None = Field(None, title="Sequence Id")
+    server_name: str | None = Field(None, title="Server Name")
+    source: str | None = Field(None, title="Source")
+
+
 MaxWorkers = Annotated[int, Field(ge=1, le=10000, title="Max Workers")]
 MaxWorkersPerOwner = Annotated[
     int, Field(ge=1, le=10000, title="Max Workers Per Owner")
@@ -594,6 +606,39 @@ class EventOptions(ContractModel):
     max_workers_per_owner: MaxWorkersPerOwner | None = Field(
         None, title="Max Workers Per Owner"
     )
+
+
+class EventSubscriptionInfo(ContractModel):
+    """Validate and serialize the EventSubscriptionInfo contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    active: bool = Field(..., title="Active")
+    after: list[str] | None = Field([], title="After")
+    before: list[str] | None = Field([], title="Before")
+    calls: int | None = Field(0, title="Calls")
+    failures: int | None = Field(0, title="Failures")
+    filters: EventFilter | None = None
+    kind: Literal["legacy", "hook", "observer"] = Field(..., title="Kind")
+    last_duration_ms: float | None = Field(0, title="Last Duration Ms")
+    last_status: str | None = Field(None, title="Last Status")
+    listener_id: str = Field(..., title="Listener Id")
+    name: str = Field(..., title="Name")
+    once: bool = Field(..., title="Once")
+    owner: str = Field(..., title="Owner")
+    priority: int = Field(..., title="Priority")
+    subscription_id: str = Field(..., title="Subscription Id")
+    timeouts: int | None = Field(0, title="Timeouts")
+    unresolved_after: list[str] | None = Field([], title="Unresolved After")
+    unresolved_before: list[str] | None = Field([], title="Unresolved Before")
+
+
+class EventSubscriptions(ContractModel):
+    """Validate and serialize the EventSubscriptions contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    items: list[EventSubscriptionInfo] | None = Field(None, title="Items")
+    total: int | None = Field(0, title="Total")
+    truncated: bool | None = Field(False, title="Truncated")
 
 
 class FileNamePayload(ContractModel):
@@ -765,6 +810,11 @@ class MetricsDiagnostics(ContractModel):
 
     model_config = ConfigDict(extra="forbid")
     attempts: int | None = Field(0, title="Attempts")
+    event_loop_lag_breaches: int | None = Field(0, title="Event Loop Lag Breaches")
+    event_loop_lag_ms: float | None = Field(0, title="Event Loop Lag Ms")
+    event_loop_lag_threshold_ms: float | None = Field(
+        100, title="Event Loop Lag Threshold Ms"
+    )
     failures: int | None = Field(0, title="Failures")
     interval_seconds: float | None = Field(None, title="Interval Seconds")
     kind: Literal["metrics"] = Field("metrics", title="Kind")
@@ -772,6 +822,9 @@ class MetricsDiagnostics(ContractModel):
     last_error_type: str | None = Field(None, title="Last Error Type")
     last_sample_at: float | None = Field(None, title="Last Sample At")
     missed_intervals: int | None = Field(0, title="Missed Intervals")
+    recent_max_event_loop_lag_ms: float | None = Field(
+        0, title="Recent Max Event Loop Lag Ms"
+    )
     sample_age_seconds: float | None = Field(None, title="Sample Age Seconds")
     successes: int | None = Field(0, title="Successes")
     unavailable_measurements: list[str] | None = Field(
@@ -792,6 +845,29 @@ SysRamPercent = Annotated[float, Field(ge=0.0, title="Sys Ram Percent")]
 SysRamTotalMb = Annotated[float, Field(ge=0.0, title="Sys Ram Total Mb")]
 ThreadCount = Annotated[int, Field(ge=0, title="Thread Count")]
 UptimeSeconds = Annotated[float, Field(ge=0.0, title="Uptime Seconds")]
+
+
+class OperationSnapshot(ContractModel):
+    """Immutable coordination metadata; response bodies and secrets are excluded."""
+
+    model_config = ConfigDict(extra="forbid")
+    correlation_id: str = Field(..., title="Correlation Id")
+    finished_at: float | None = Field(None, title="Finished At")
+    name: str = Field(..., title="Name")
+    operation_id: str = Field(..., title="Operation Id")
+    outcome: str | None = Field(None, title="Outcome")
+    owner: str | None = Field("application", title="Owner")
+    parent_operation_id: str | None = Field(None, title="Parent Operation Id")
+    purpose: str | None = Field(None, title="Purpose")
+    root_operation_id: str = Field(..., title="Root Operation Id")
+    scope: list[str] | None = Field([], title="Scope")
+    sequence_id: str = Field(..., title="Sequence Id")
+    server_name: str | None = Field(None, title="Server Name")
+    source: str | None = Field("application", title="Source")
+    started_at: float = Field(..., title="Started At")
+    status: Literal["running", "finished", "failed", "cancelled"] | None = Field(
+        "running", title="Status"
+    )
 
 
 class PersistenceDiagnostics(ContractModel):
@@ -1215,11 +1291,20 @@ class RuntimeDiagnostics(ContractModel):
     """Validate and serialize the RuntimeDiagnostics contract."""
 
     model_config = ConfigDict(extra="forbid")
+    draining_workers: int | None = Field(0, title="Draining Workers")
     kind: Literal["runtime"] = Field("runtime", title="Kind")
+    oldest_draining_worker_seconds: float | None = Field(
+        None, title="Oldest Draining Worker Seconds"
+    )
+    pending_lifecycle_stages: list[str] | None = Field(
+        None, title="Pending Lifecycle Stages"
+    )
     phase: str = Field(..., title="Phase")
     pid: int = Field(..., title="Pid")
     python_version: str = Field(..., title="Python Version")
+    queued_workers: int | None = Field(0, title="Queued Workers")
     ready: bool | None = Field(False, title="Ready")
+    running_workers: int | None = Field(0, title="Running Workers")
     shutdown_reason: str | None = Field(None, title="Shutdown Reason")
     shutdown_requested: bool | None = Field(None, title="Shutdown Requested")
     stage: str | None = Field(None, title="Stage")
@@ -1639,6 +1724,7 @@ class TasksDiagnostics(ContractModel):
     accepting: bool = Field(..., title="Accepting")
     active: int = Field(..., title="Active")
     capacity: int | None = Field(100, title="Capacity")
+    concurrency_limit: int | None = Field(None, title="Concurrency Limit")
     counts_by_status: dict[str, int] = Field(..., title="Counts By Status")
     kind: Literal["tasks"] = Field("tasks", title="Kind")
     oldest_active_seconds: float | None = Field(None, title="Oldest Active Seconds")
@@ -1936,10 +2022,17 @@ class EventRecord(ContractModel):
     listeners: list[ListenerRecord] | None = Field(None, title="Listeners")
     listeners_called: int | None = Field(0, title="Listeners Called")
     name: str = Field(..., title="Name")
+    operation_id: str | None = Field(None, title="Operation Id")
+    operation_name: str | None = Field(None, title="Operation Name")
     parent_event_id: str | None = Field(None, title="Parent Event Id")
+    phase: Literal["before", "after", "custom", "lifecycle"] | None = Field(
+        "custom", title="Phase"
+    )
     rejection_reason: (
         Literal["recursion", "depth_limit", "capacity", "shutdown"] | None
     ) = Field(None, title="Rejection Reason")
+    sequence_id: str | None = Field(None, title="Sequence Id")
+    server_name: str | None = Field(None, title="Server Name")
     source: str = Field(..., title="Source")
     status: Literal[
         "dispatching", "completed", "partial", "cancelled", "suppressed"
@@ -2068,6 +2161,20 @@ class MetricsSample(ContractModel):
     thread_count: ThreadCount | None = Field(None, title="Thread Count")
     timestamp: float = Field(..., gt=0.0, title="Timestamp")
     uptime_seconds: UptimeSeconds | None = Field(None, title="Uptime Seconds")
+
+
+class OperationActivity(ContractModel):
+    """Bounded, metadata-only global activity; recent results are not durable."""
+
+    model_config = ConfigDict(extra="forbid")
+    active: list[OperationSnapshot] | None = Field(None, title="Active")
+    active_operations: int | None = Field(0, title="Active Operations")
+    active_sequences: int | None = Field(0, title="Active Sequences")
+    active_truncated: bool | None = Field(False, title="Active Truncated")
+    completed: int | None = Field(0, title="Completed")
+    history_limit: int | None = Field(0, title="History Limit")
+    recent: list[OperationSnapshot] | None = Field(None, title="Recent")
+    recent_truncated: bool | None = Field(False, title="Recent Truncated")
 
 
 class PermissionsSetPayload(ContractModel):
@@ -2224,6 +2331,8 @@ class EventsDiagnostics(ContractModel):
     activity: EventDiagnostics
     capacity: EventOptions
     kind: Literal["events"] = Field("events", title="Kind")
+    operations: OperationActivity | None = None
+    subscriptions: EventSubscriptions | None = None
     truncated: bool | None = Field(False, title="Truncated")
 
 
@@ -2320,6 +2429,18 @@ class AddPlayersResponse(ContractModel):
     unique_count: UniqueCount | None = Field(None, title="Unique Count")
 
 
+class DiagnosticActivity(ContractModel):
+    """Global current-instance metadata; no correlation filter is required."""
+
+    model_config = ConfigDict(extra="forbid")
+    events: EventDiagnostics | None = None
+    issues: list[DiagnosticIssue] | None = Field(None, max_length=3, title="Issues")
+    operations: OperationActivity | None = None
+    scope: Literal["application"] = Field("application", title="Scope")
+    subscriptions: EventSubscriptions | None = None
+    truncated: bool | None = Field(False, title="Truncated")
+
+
 class DiagnosticSection(ContractModel):
     """Validate and serialize the DiagnosticSection contract."""
 
@@ -2380,7 +2501,9 @@ class DiagnosticTrace(ContractModel):
     events: EventDiagnostics | None
     events_available: bool | None = Field(False, title="Events Available")
     history: DiagnosticHistory
-    issues: list[DiagnosticIssue] | None = Field(None, max_length=3, title="Issues")
+    issues: list[DiagnosticIssue] | None = Field(None, max_length=4, title="Issues")
+    operations: OperationActivity | None = None
+    operations_available: bool | None = Field(False, title="Operations Available")
     tasks: list[TaskDiagnostic] = Field(..., title="Tasks")
     tasks_available: bool = Field(..., title="Tasks Available")
     truncated: bool | None = Field(False, title="Truncated")
