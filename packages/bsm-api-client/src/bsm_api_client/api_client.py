@@ -9,6 +9,7 @@ from .client_base import ClientBase
 from .dynamic import DynamicOpenAPIMixin
 from .services.account import AccountService
 from .services.application import ApplicationService
+from .services.backups import BackupsService
 from .services.content import ContentService
 from .services.diagnostics import DiagnosticsService
 from .services.discovery import DiscoveryService
@@ -41,6 +42,7 @@ class BedrockServerManagerApi(DynamicOpenAPIMixin, ClientBase):
     players: PlayersService
     tasks: TasksService
     content: ContentService
+    backups: BackupsService
     account: AccountService
     users: UsersService
     plugins: PluginsService
@@ -91,6 +93,7 @@ class BedrockServerManagerApi(DynamicOpenAPIMixin, ClientBase):
         self.players = PlayersService(self)
         self.tasks = TasksService(self)
         self.content = ContentService(self)
+        self.backups = BackupsService(self)
         self.plugins = PluginsService(self)
         self.account = AccountService(self)
         self.users = UsersService(self)

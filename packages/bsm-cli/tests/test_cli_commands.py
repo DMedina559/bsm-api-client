@@ -71,6 +71,7 @@ def shape(document, spec, values):
 
 
 SUCCESS = {
+    "backups": [],
     "instance_id": "test-instance",
     "pid": 123,
     "phase": "ready",
@@ -231,11 +232,9 @@ CASES = [
     ("properties", "raw", "-s", "test"),
     ("properties", "get", "-s", "test", "-p", "server-name"),
     ("properties", "set", "-s", "test", "-p", "server-name=Test Server"),
-    ("backup", "create", "-s", "test", "-t", "all"),
-    ("backup", "create", "-s", "test", "-t", "config", "-f", "server.properties"),
-    ("backup", "restore", "-s", "test", "-f", "world_backup.zip"),
-    ("backup", "restore", "-s", "test", "-f", "My Level_backup_20261007.mcworld"),
-    ("backup", "restore", "-s", "test", "-f", "custom.zip", "--type", "world"),
+    ("backup", "create", "-s", "test"),
+    ("backup", "create", "-s", "test", "--encrypted"),
+    ("backup", "list", "-s", "test"),
     ("backup", "prune", "-s", "test"),
     ("world", "install", "-s", "test", "-f", "world.mcworld", "--yes"),
     ("world", "export", "-s", "test"),
@@ -598,3 +597,23 @@ def test_diagnostic_compare_reads_snapshots_and_reports(command_client, tmp_path
         json.loads(request.kwargs["raw_request"].content)["after"]["snapshot_id"]
         == "snapshot"
     )
+
+
+def test_recovery_report_writes_new_file_and_preserves_existing(
+    command_client, monkeypatch, tmp_path
+):
+    from bsm_api_client.services.backups import BackupsService
+
+    report = {"status": "success", "report": {"report_version": 1, "archives": []}}
+    monkeypatch.setattr(
+        BackupsService, "async_recovery_report", AsyncMock(return_value=report)
+    )
+    output = tmp_path / "report.json"
+    args = ["backup", "report", "--server", "test", "--output", str(output)]
+    result = CliRunner().invoke(cli, args)
+    assert result.exit_code == 0, result.output
+    assert json.loads(output.read_text()) == report
+    original = output.read_bytes()
+    result = CliRunner().invoke(cli, args)
+    assert result.exit_code != 0
+    assert output.read_bytes() == original

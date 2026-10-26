@@ -498,6 +498,7 @@ class DynamicOpenAPIMixin(GeneratedOperationMethods):
                             value if isinstance(value, (list, tuple)) else [value]
                         )
                     ]
+                raw_content = _request_content(raw_request)
                 request = self._http_client.build_request(
                     method.upper(),
                     url,
@@ -507,7 +508,7 @@ class DynamicOpenAPIMixin(GeneratedOperationMethods):
                         else _query_values(query or {})
                     ),
                     json=json_data,
-                    content=raw_request.content if raw_request is not None else None,
+                    content=raw_content,
                     data=(
                         _query_values(form_data)
                         if form_data and not multipart and not files
@@ -673,6 +674,25 @@ class DynamicOpenAPIMixin(GeneratedOperationMethods):
                 "{" + name + "}", quote(str(values[name]), safe="")
             )
         return rendered
+
+
+def _request_content(
+    request: httpx.Request | None,
+) -> bytes | AsyncIterator[bytes] | None:
+    if request is None:
+        return None
+    try:
+        return cast(bytes, request.content)
+    except httpx.RequestNotRead:
+        stream = request.stream
+        if not isinstance(stream, httpx.AsyncByteStream):
+            raise InvalidInputError("Generated upload requires an asynchronous stream.")
+
+        async def chunks() -> AsyncIterator[bytes]:
+            async for chunk in stream:
+                yield chunk
+
+        return chunks()
 
 
 class UploadStream:

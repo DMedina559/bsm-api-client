@@ -246,3 +246,53 @@ bsm-cli diagnostics report --output bsm-support-report.json
 ```
 
 The command discovers the live `get_diagnostic_report` operation and uses your configured authentication. The destination is published only after the response completes. Use `--force` to replace an existing file. Reports contain subsystem metadata and bounded history; inspect them before sharing. Older backends report that the operation is unavailable.
+
+### Portable backups
+
+```console
+bsm-cli backup create --server MyServer
+bsm-cli backup create --server MyServer --encrypted
+bsm-cli backup list --server MyServer
+bsm-cli backup inspect --server MyServer --file ARCHIVE.bsmbackup
+bsm-cli backup restore --server MyServer --file ARCHIVE.bsmbackup --component world --component server.properties
+```
+
+Restore inspects the manifest, offers complete components, prints a destination review, and requests confirmation. Use `--unlock` to prompt privately for an imported backup's recovery key. Use `--no-restart` to leave an originally running server stopped. `--yes` explicitly confirms a noninteractive reviewed restore. Old `--type` backup creation and filename-based restore inference have been replaced by unified archives and component selection.
+
+Offline extraction is provided by the backend package's `bedrock-server-manager backup extract` command and requires no running instance or original database.
+
+Use `backup create --packs` or `--no-packs` to override server-level pack inclusion for one capture. Leaving both unset uses the configured default. Pack directories remain optional components within manifest version 1.
+
+Additional backup commands:
+
+- `backup dry-run --server SERVER --file ID --component world`: stage and verify selected files without stopping Minecraft or replacing live files; report required space per volume.
+- `backup annotate --server SERVER --file ID --label "Before update" --notes "Known good"`: edit local catalog metadata without rewriting the archive.
+- `backup list --server SERVER --kind scheduled --search "label"`: narrow the archive listing.
+- `backup schedule --server SERVER --time 03:00 --timezone America/Los_Angeles`: set a timezone-aware daily schedule. Use `--skip-missed`, `--disable`, or `--remove` to adjust missed-run behavior or pause/remove the schedule.
+- `backup health --server SERVER`: verification, key and destination health.
+- `backup manage verify --server SERVER --file ID`: isolated recovery validation.
+- `backup manage drill --server SERVER --file ID`: stage every included component on the destination filesystem and check copied hashes without stopping Minecraft or changing live files.
+- `backup cleanup-destination --server SERVER --destination NAME`: preview independent external retention. Add `--apply` to confirm deletion using the reviewed token. Untracked files, pins, active safety protection, and the newest recorded copy remain protected.
+- `backup manage pin` / `unpin`: protect an archive from local retention.
+- `backup manage copy --destination NAME`: copy or retry a configured destination.
+- `backup manage test_key`: privately prompt for an emergency-kit key and test it.
+- `backup prepare-copy --name NEW --port PORT --portv6 PORT`: install a stopped
+  destination and prepare a port-remapped archive for a separate reviewed restore.
+- `backup upload ARCHIVE`: alias for the native multipart `backup import` command.
+
+Restore review displays file changes and redacted setting differences. A protected
+safety backup is created before replacement. Download streams directly to a new
+local file, retaining encryption; interrupted transfers remove temporary output.
+
+
+Backup health includes recovery readiness, active alert reasons, the last isolated
+recovery drill, and destination free-space status. Readiness defaults to a maximum
+backup age of 48 hours. Periodic isolated drills default to every 168 hours; set
+`backups.recovery_drill_interval_hours` to zero to disable them. Archive manifests
+remain version 1.
+
+`backup report --server SERVER --output recovery-report.json` writes a redacted
+JSON recovery report to a new file and refuses to overwrite an existing file.
+Reports contain verification, drill, capacity and restore outcome evidence.
+Archive references are hashes; archive filenames, paths, credentials, notes and
+configuration values are excluded.

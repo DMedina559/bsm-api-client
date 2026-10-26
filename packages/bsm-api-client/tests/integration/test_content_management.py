@@ -5,9 +5,7 @@ import pytest_asyncio
 
 from bsm_api_client.api_client import BedrockServerManagerApi
 from bsm_api_client.models import (
-    BackupActionPayload,
     FileNamePayload,
-    RestoreActionPayload,
 )
 
 
@@ -81,43 +79,115 @@ class TestContentManagement:
     """
 
     async def test_backup_and_restore(
-        self, bedrock_server, wait_for_server_status, content_client
+        self, bedrock_server, wait_for_server_status, content_client, tmp_path
     ):
         """
         Tests creating a backup, listing it, and then restoring it.
         """
         client = content_client
         server_name = bedrock_server
-        # Dummy server does not implement the live save-query protocol.
-        # Stopped-server backups still exercise the full API/storage/archive path.
-        backup_payload = BackupActionPayload(backup_type="world")
-        backup_result = await client.content.async_trigger_server_backup(
-            server_name, backup_payload
+        created = await client.backups.async_wait(
+            await client.backups.async_create(server_name)
         )
-        assert backup_result.status in ["success", "pending", "accepted"]
-        await wait_for_action(client, backup_result)
-        list_response = None
-        for _ in range(90):  # Increased timeout
-            list_response = await client.content.async_list_server_backups(
-                server_name, "world"
-            )
-            if list_response.backups and len(list_response.backups) > 0:
-                break
-            await asyncio.sleep(1)
-        else:
-            pytest.fail("Backup file did not appear in the backup list in time.")
-        backup_file = list_response.backups[0]
-        restore_payload = RestoreActionPayload(
-            restore_type="world", backup_file=backup_file
-        )
-        restore_result = await client.content.async_restore_server_backup(
-            server_name, restore_payload
-        )
-        await wait_for_action(client, restore_result)
+        identifier = created["backup"]["backup_id"]
+        import io
 
-        # Restore Latest All
-        latest_all = await client.content.async_restore_server_latest_all(server_name)
-        await wait_for_action(client, latest_all)
+        archive = await client.backups.async_download(server_name, identifier)
+        assert archive
+        downloaded = await client.backups.async_download_to(
+            server_name, identifier, tmp_path / "download.bsmbackup"
+        )
+        assert downloaded.read_bytes() == archive
+        imported = await client.backups.async_import(
+            server_name, io.BytesIO(archive), "portable.bsmbackup"
+        )
+        assert len(imported["backups"]) >= 2
+        listing = await client.backups.async_list(server_name)
+        assert identifier in {item["backup_id"] for item in listing["backups"]}
+        inspected = await client.backups.async_wait(
+            await client.backups.async_inspect(server_name, identifier)
+        )
+        components = [
+            name
+            for name, state in inspected["backup"]["manifest"]["components"].items()
+            if state == "included"
+        ]
+        planned = await client.backups.async_wait(
+            await client.backups.async_plan(server_name, identifier, components)
+        )
+        dry_run = await client.backups.async_wait(
+            await client.backups.async_dry_run(server_name, identifier, components)
+        )
+        assert dry_run["plan"]["dry_run"] and dry_run["plan"]["checked_files"] > 0
+        restored = await client.backups.async_wait(
+            await client.backups.async_restore(
+                server_name, identifier, components, planned["plan"]["token"]
+            )
+        )
+        assert restored["result"]["committed"]
+        assert restored["result"]["safety_backup_id"]
+        await client.backups.async_wait(
+            await client.backups.async_manage(
+                server_name,
+                identifier,
+                "annotate",
+                label="Before upgrade",
+                notes="Integration checkpoint",
+            )
+        )
+        labelled = await client.backups.async_list(server_name)
+        assert any(item["label"] == "Before upgrade" for item in labelled["backups"])
+        scheduled = await client.backups.async_set_schedule(
+            server_name, {"enabled": False, "time": "03:00", "timezone": "UTC"}
+        )
+        assert (
+            scheduled["settings"]["backups"]["schedules"][server_name]["enabled"]
+            is False
+        )
+        health = await client.backups.async_health(server_name)
+        assert health["health"]["last_verified_at"]
+        report = await client.backups.async_recovery_report(server_name)
+        assert report["report"]["report_version"] == 1
+        assert report["report"]["last_restore"]["committed"]
+        import json
+
+        assert identifier not in json.dumps(report)
+        assert "Integration checkpoint" not in json.dumps(report)
+        for action in ("verify", "pin", "unpin", "drill"):
+            await client.backups.async_wait(
+                await client.backups.async_manage(server_name, identifier, action)
+            )
+
+    async def test_destination_cleanup_preview(
+        self, bedrock_server, content_client, tmp_path
+    ):
+        destination = tmp_path / "external-copies"
+        destination.mkdir()
+        client = content_client
+        await client.backups.async_call_generated(
+            "set_setting",
+            body={
+                "key": "backups.destinations",
+                "value": {"nas": {"path": str(destination), "keep_count": 1}},
+            },
+            authenticated=True,
+        )
+        first = await client.backups.async_wait(
+            await client.backups.async_create(bedrock_server)
+        )
+        await client.backups.async_wait(
+            await client.backups.async_create(bedrock_server)
+        )
+        preview = await client.backups.async_wait(
+            await client.backups.async_cleanup_destination(bedrock_server, "nas")
+        )
+        assert first["backup"]["backup_id"] in preview["plan"]["delete"]
+        applied = await client.backups.async_wait(
+            await client.backups.async_cleanup_destination(
+                bedrock_server, "nas", preview["plan"]["token"]
+            )
+        )
+        assert applied["plan"]["applied"]
 
     async def test_custom_zips(self, content_client):
         zips = await content_client.application.async_get_custom_zips()

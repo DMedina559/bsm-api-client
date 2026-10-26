@@ -4,7 +4,7 @@ on:
   pull_request:
   workflow_dispatch:
   push:
-    branches: [dev, main]
+    branches: [dev, main, feat/unified-server-backups]
     paths:
       - 'pyproject.toml'
       - 'packages/**'
@@ -36,7 +36,8 @@ jobs:
         uses: actions/checkout@v7
         with:
           repository: DMedina559/bedrock-server-manager
-          ref: dev
+          # Match the backend contract bundled with this client.
+          ref: e7ad137a3a00104608c6466702c2e972846f5573
           path: backend-under-test
 
       - name: Set up Python ${{ matrix.python-version }}

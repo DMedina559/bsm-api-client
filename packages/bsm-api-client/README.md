@@ -213,3 +213,35 @@ Subsystem reads return a filtered `DiagnosticSnapshot`, preserving collection an
 Sphinx guides and Python references live in [docs/source](../../docs/source/index.rst).
 See [setup and validation](../../docs/source/contributing.md) to build them locally.
 The root Read the Docs configuration is ready for project connection and hosting.
+
+### Portable server backups
+
+`client.backups` creates and restores unified `.bsmbackup` archives. These methods return accepted tasks; `async_wait` returns their structured result.
+
+```python
+created = await client.backups.async_wait(
+    await client.backups.async_create("MyServer", encrypted=True)
+)
+backup_id = created["backup"]["backup_id"]
+inspection = await client.backups.async_wait(
+    await client.backups.async_inspect("MyServer", backup_id)
+)
+selected = ["world", "server.properties"]
+review = await client.backups.async_wait(
+    await client.backups.async_plan("MyServer", backup_id, selected)
+)
+result = await client.backups.async_wait(
+    await client.backups.async_restore(
+        "MyServer", backup_id, selected, review["plan"]["token"]
+    )
+)
+```
+
+Configure the host recovery key before requesting encrypted automatic backups. Imported encrypted archives can receive a recovery key through the optional `recovery_key` argument. Do not log or persist that argument. New typed low-level operations are available through `client.rest`; existing content backup methods remain compatibility adapters.
+
+Backup recovery management is available through `client.backups.async_health`,
+`async_manage` (`verify`, `pin`, `unpin`, `copy`, `test_key`), and
+`async_prepare_copy`. Preparation installs a stopped destination with chosen ports;
+review and apply its returned archive separately. Restore plans include bounded
+file comparisons and redacted setting changes. Completed restores return a
+`safety_backup_id` for the protected pre-restore recovery point.
