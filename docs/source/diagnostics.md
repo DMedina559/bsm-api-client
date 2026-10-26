@@ -112,3 +112,21 @@ Committed definitions appear in AppState, and runtime health checks track the
 scheduler heartbeat and timezone data. Scheduler diagnostics use the existing
 4.0 metadata shape and include correlated run history. CLI schedule listings show
 each job's server, task and regional execution time.
+
+
+### Application timezone
+
+`general.timezone` defaults to `UTC`. Set it with the existing global-settings
+service; no new endpoint is required. Read the display default without admin
+settings access using `(await client.application.async_get_info()).info.get(
+"timezone", "UTC")`. Older servers may omit the metadata.
+
+Use IANA regions such as `America/Los_Angeles`, not seasonal abbreviations such
+as `PDT`. New scheduler configurations that omit `timezone` inherit this setting;
+updates that omit it preserve the saved job's timezone. The SDK and CLI preserve
+omitted fields on the wire. Explicit `timezone="UTC"` always remains UTC.
+
+API event, diagnostic, and backup timestamps remain UTC instants. Changing the
+application timezone never changes archive identifiers or existing recorded
+instants. Consumers can convert for display and retain the original value in
+details. Numeric metrics and diagnostic timestamps use epoch seconds.

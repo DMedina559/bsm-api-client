@@ -42,5 +42,10 @@ async def test_schedule_crud():
             await client.scheduler.async_save_schedule("weekly", config)
             assert seen[-1].method == "PUT"
             assert json.loads(seen[-1].content)["task"] == "verify"
+            assert "timezone" not in json.loads(seen[-1].content)
+            await client.scheduler.async_save_schedule(
+                "weekly", config.model_copy(update={"timezone": "America/Los_Angeles"})
+            )
+            assert json.loads(seen[-1].content)["timezone"] == "America/Los_Angeles"
             await client.scheduler.async_delete_schedule("weekly")
             assert seen[-1].method == "DELETE"

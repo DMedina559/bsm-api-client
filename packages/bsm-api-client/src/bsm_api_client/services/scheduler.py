@@ -33,6 +33,10 @@ class SchedulerService(Service):
     ) -> SuccessResponse:
         """Create or replace a schedule. New definitions start at the next occurrence.
 
+        If the configuration omits ``timezone``, supporting backends use the
+        application default for a new job and preserve an existing job's timezone.
+        Set the field explicitly when a job must use a particular timezone.
+
         :param schedule_id: Stable schedule identifier.
         :param configuration: Validated task, timing, server, and task options.
         :returns: Save confirmation.

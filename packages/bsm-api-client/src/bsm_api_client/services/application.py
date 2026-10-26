@@ -29,6 +29,10 @@ class ApplicationService(Service):
     async def async_get_info(self) -> AppInfoResponse:
         """Gets system and application information from the manager.
 
+        The existing ``info`` dictionary includes ``timezone`` on supporting
+        backends. It is the IANA display and scheduling default; timestamp
+        instants remain UTC. Older servers may omit this key.
+
         :returns: `AppInfoResponse`.
         """
         _LOGGER.debug("Fetching manager system and application information from /info")
