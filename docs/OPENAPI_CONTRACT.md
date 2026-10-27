@@ -69,3 +69,12 @@ The CLI supports `bsm backup create -s SERVER --mode world`, `--mode full`, and 
 `client.plugins.async_get_plugin_settings("my_plugin", scope="global")` reads manager-wide values and schema. For server scope, pass `scope="server", server_name="survival"`. Write with `PluginSettingsPayload(settings={...}, scope="server", server_name="survival")` through `async_update_plugin_settings`. Omit scope for plugin-local settings.
 
 The CLI accepts `plugin settings show my_plugin --scope global`, `plugin settings edit my_plugin --scope server --server survival`, and the same options on `plugin settings set`. Server scope requires a server; other scopes omit it. The editor retains schema validation, credential masking and concurrent-edit detection.
+
+Scheduler listings include configuration revisions, pending-attempt timestamps,
+blocked reasons, retry exhaustion and plugin task option schemas. Use
+`client.scheduler.async_control_schedule(id, "run_now" | "pause" | "resume" |
+"retry", revision=...)` for explicit controls. The CLI equivalent is
+`bsm scheduler control nightly run-now --yes` (also `pause`, `resume`, `retry`).
+Controls acknowledge queuing/configuration changes; inspect run history for the
+outcome. Pause does not forcibly interrupt an already claimed run. External plugin
+effects remain at-least-once across crashes.

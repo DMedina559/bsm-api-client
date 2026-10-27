@@ -1,6 +1,13 @@
 """Typed administrator scheduler configuration and run metadata."""
 
-from ..models import ListSchedulesResponse, ScheduledTask, SuccessResponse
+from typing import Literal
+
+from ..models import (
+    ControlSchedulePayload,
+    ListSchedulesResponse,
+    ScheduledTask,
+    SuccessResponse,
+)
 from ..validation import parse_response
 from .base import Service
 
@@ -63,6 +70,31 @@ class SchedulerService(Service):
             await self.async_call_generated(
                 "delete_schedule",
                 parameters={"schedule_id": schedule_id},
+                authenticated=True,
+                typed=True,
+            ),
+        )
+
+    async def async_control_schedule(
+        self,
+        schedule_id: str,
+        action: Literal["run_now", "pause", "resume", "retry"],
+        *,
+        revision: str | None = None,
+    ) -> SuccessResponse:
+        """Queue a run/retry or pause/resume a schedule without replacing its definition.
+
+        :param schedule_id: Stable schedule identifier.
+        :param action: Explicit scheduler action.
+        :param revision: Optional revision from the last schedule listing.
+        :returns: Control acknowledgement; execution is tracked in run history.
+        """
+        return parse_response(
+            SuccessResponse,
+            await self.async_call_generated(
+                "control_schedule",
+                parameters={"schedule_id": schedule_id},
+                body=ControlSchedulePayload(action=action, revision=revision),
                 authenticated=True,
                 typed=True,
             ),

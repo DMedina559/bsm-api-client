@@ -25,6 +25,7 @@ from .models.change_password_payload import ChangePasswordPayload
 from .models.command_payload import CommandPayload
 from .models.compare_diagnostic_snapshots_request import CompareDiagnosticSnapshotsRequest
 from .models.content_list_response import ContentListResponse
+from .models.control_schedule_payload import ControlSchedulePayload
 from .models.custom_zips_response import CustomZipsResponse
 from .models.destination_cleanup_payload import DestinationCleanupPayload
 from .models.diagnostic_activity import DiagnosticActivity
@@ -173,6 +174,14 @@ class RestClient:
     async def compare_diagnostic_snapshots_detailed(self, *, body: CompareDiagnosticSnapshotsRequest) -> Response[DiagnosticComparison | ErrorEnvelope]:
         """Generated compare_diagnostic_snapshots operation."""
         return cast(Response[DiagnosticComparison | ErrorEnvelope], await self._owner.async_call_generated('compare_diagnostic_snapshots', parameters={}, body=body, authenticated=True, detailed=True))
+
+    async def control_schedule(self, schedule_id: str, *, body: ControlSchedulePayload) -> ErrorEnvelope | SuccessResponse | None:
+        """Generated control_schedule operation."""
+        return cast(ErrorEnvelope | SuccessResponse | None, await self._owner.async_call_generated('control_schedule', parameters={'schedule_id': schedule_id}, body=body, authenticated=True, typed=True))
+
+    async def control_schedule_detailed(self, schedule_id: str, *, body: ControlSchedulePayload) -> Response[ErrorEnvelope | SuccessResponse]:
+        """Generated control_schedule operation."""
+        return cast(Response[ErrorEnvelope | SuccessResponse], await self._owner.async_call_generated('control_schedule', parameters={'schedule_id': schedule_id}, body=body, authenticated=True, detailed=True))
 
     async def create_backup(self, server_name: str, *, body: BackupActionPayload) -> ErrorEnvelope | TaskAcceptedResponse | None:
         """Generated create_backup operation."""

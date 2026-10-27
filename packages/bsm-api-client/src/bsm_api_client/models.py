@@ -38,6 +38,7 @@ from .contracts import (
     CompareDiagnosticSnapshotsRequest,
     CompletedItem,
     ContentListResponse,
+    ControlSchedulePayload,
     CpuPercent,
     CustomZipsResponse,
     DiagnosticActivity,
@@ -409,5 +410,6 @@ __all__ += [
     "ListSchedulesResponse",
     "ScheduleEntry",
     "ScheduledTask",
+    "ControlSchedulePayload",
     "SuccessResponse",
 ]

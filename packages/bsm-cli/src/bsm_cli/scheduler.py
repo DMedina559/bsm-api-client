@@ -78,3 +78,21 @@ async def remove_schedule(ctx, schedule_id):
     if not ctx.obj.get("json_output"):
         click.echo(result.message)
     return result
+
+
+@scheduler.command("control")
+@click.argument("schedule_id")
+@click.argument("action", type=click.Choice(["run-now", "pause", "resume", "retry"]))
+@click.option("--revision", help="Revision from the most recent schedule listing.")
+@click.option(
+    "--yes", is_flag=True, help="Confirm immediate execution without prompting."
+)
+@click.pass_context
+async def control_schedule(ctx, schedule_id, action, revision, yes):
+    """Run, retry, pause or resume a persistent schedule."""
+    if action in ("run-now", "retry") and not yes:
+        click.confirm(f"{action} for {schedule_id}?", abort=True)
+    result = await get_client(ctx).scheduler.async_control_schedule(
+        schedule_id, action.replace("-", "_"), revision=revision
+    )
+    click.echo(result.message)
