@@ -666,6 +666,7 @@
         "properties": {
           "component": {
             "enum": [
+              "server_directory",
               "world",
               "server.properties",
               "allowlist.json",
@@ -679,6 +680,11 @@
             ],
             "title": "Component",
             "type": "string"
+          },
+          "executable": {
+            "default": false,
+            "title": "Executable",
+            "type": "boolean"
           },
           "path": {
             "title": "Path",
@@ -995,6 +1001,7 @@
             },
             "propertyNames": {
               "enum": [
+                "server_directory",
                 "world",
                 "server.properties",
                 "allowlist.json",
@@ -1041,6 +1048,22 @@
             "title": "Format Version",
             "type": "integer"
           },
+          "mode": {
+            "anyOf": [
+              {
+                "enum": [
+                  "world",
+                  "selected",
+                  "full"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mode"
+          },
           "reason": {
             "default": "manual",
             "enum": [
@@ -1052,6 +1075,55 @@
             ],
             "title": "Reason",
             "type": "string"
+          },
+          "selected_components": {
+            "anyOf": [
+              {
+                "items": {
+                  "enum": [
+                    "server_directory",
+                    "world",
+                    "server.properties",
+                    "allowlist.json",
+                    "permissions.json",
+                    "script_config",
+                    "bsm_settings",
+                    "behavior_packs",
+                    "resource_packs",
+                    "development_behavior_packs",
+                    "development_resource_packs"
+                  ],
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Selected Components"
+          },
+          "source_architecture": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Architecture"
+          },
+          "source_platform": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Platform"
           },
           "source_server": {
             "title": "Source Server",
@@ -6403,6 +6475,7 @@
           "components": {
             "items": {
               "enum": [
+                "server_directory",
                 "world",
                 "server.properties",
                 "allowlist.json",
@@ -6503,6 +6576,7 @@
           "components": {
             "items": {
               "enum": [
+                "server_directory",
                 "world",
                 "server.properties",
                 "allowlist.json",
@@ -7988,6 +8062,33 @@
       "SnapshotCreatePayload": {
         "additionalProperties": false,
         "properties": {
+          "components": {
+            "anyOf": [
+              {
+                "items": {
+                  "enum": [
+                    "server_directory",
+                    "world",
+                    "server.properties",
+                    "allowlist.json",
+                    "permissions.json",
+                    "script_config",
+                    "bsm_settings",
+                    "behavior_packs",
+                    "resource_packs",
+                    "development_behavior_packs",
+                    "development_resource_packs"
+                  ],
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Components"
+          },
           "encrypted": {
             "anyOf": [
               {
@@ -8009,6 +8110,22 @@
               }
             ],
             "title": "Include Packs"
+          },
+          "mode": {
+            "anyOf": [
+              {
+                "enum": [
+                  "world",
+                  "selected",
+                  "full"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mode"
           }
         },
         "title": "SnapshotCreatePayload",
@@ -8111,6 +8228,7 @@
           "components": {
             "items": {
               "enum": [
+                "server_directory",
                 "world",
                 "server.properties",
                 "allowlist.json",
@@ -8153,6 +8271,7 @@
           "components": {
             "items": {
               "enum": [
+                "server_directory",
                 "world",
                 "server.properties",
                 "allowlist.json",

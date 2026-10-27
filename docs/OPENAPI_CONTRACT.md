@@ -55,3 +55,10 @@ and generated HTTP clients. Borrowed HTTPX clients and aiohttp WebSocket session
 remain open. `verify_ssl` and `request_timeout` configure the internally owned
 HTTPX client; a supplied `http_client` retains its connection and timeout settings. A URL path represents the
 server's reverse-proxy mount; `base_path` selects the API prefix within it.
+
+
+### Backup contents
+
+`client.backups.async_create(server_name, mode="world")` captures the active world and its local packs. Use `mode="selected", components=["world", "server.properties"]` to choose components, or `mode="full"` for a stopped server's complete directory and BSM server settings. Omit mode and components to inherit global defaults. Server-level packs are excluded from new global defaults. The legacy `include_packs` option remains supported; do not combine it with explicit component selection.
+
+The CLI supports `bsm backup create -s SERVER --mode world`, `--mode full`, and `--mode selected --component world --component server.properties`. Full-directory restore requires the same OS, architecture and Bedrock version. Backup storage must be outside the server directory. Restore continues through the existing inspect, plan and restore APIs.

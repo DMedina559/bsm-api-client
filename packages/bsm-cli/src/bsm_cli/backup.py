@@ -108,8 +108,17 @@ async def list_backups(ctx, server_name, kind, search):
 )
 @click.option("--packs", is_flag=True, help="Include server-level packs.")
 @click.option("--no-packs", is_flag=True, help="Exclude server-level packs.")
+@click.option("--mode", type=click.Choice(["world", "selected", "full"]))
+@click.option(
+    "--component",
+    "components",
+    multiple=True,
+    help="Component to capture in selected mode. Repeat for multiple components.",
+)
 @pass_async_context
-async def create_backup(ctx, server_name, encrypted, unencrypted, packs, no_packs):
+async def create_backup(
+    ctx, server_name, encrypted, unencrypted, packs, no_packs, mode, components
+):
     """Create one archive containing the server's supported data and settings."""
     try:
         client = get_client(ctx)
@@ -119,13 +128,16 @@ async def create_backup(ctx, server_name, encrypted, unencrypted, packs, no_pack
             raise click.UsageError("Choose only one pack inclusion override.")
         pack_policy = True if packs else False if no_packs else None
         policy = True if encrypted else False if unencrypted else None
-        accepted = (
-            await client.backups.async_create(
-                server_name, policy, include_packs=pack_policy
-            )
-            if pack_policy is not None
-            else await client.backups.async_create(server_name, policy)
-        )
+        if components and mode not in (None, "selected"):
+            raise click.UsageError("--component requires --mode selected")
+        overrides = {}
+        if pack_policy is not None:
+            overrides["include_packs"] = pack_policy
+        if mode or components:
+            overrides["mode"] = mode or "selected"
+        if components:
+            overrides["components"] = list(components)
+        accepted = await client.backups.async_create(server_name, policy, **overrides)
         await monitor_task(
             client, accepted["task_id"], "Server backup created", "Backup failed"
         )

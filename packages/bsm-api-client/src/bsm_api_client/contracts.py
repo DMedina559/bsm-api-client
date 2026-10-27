@@ -203,6 +203,7 @@ class BackupFile(ContractModel):
 
     model_config = ConfigDict(extra="forbid")
     component: Literal[
+        "server_directory",
         "world",
         "server.properties",
         "allowlist.json",
@@ -214,6 +215,7 @@ class BackupFile(ContractModel):
         "development_behavior_packs",
         "development_resource_packs",
     ] = Field(..., title="Component")
+    executable: bool | None = Field(False, title="Executable")
     path: str = Field(..., title="Path")
     sha256: str = Field(..., pattern="^[a-f0-9]{64}$", title="Sha256")
     size: int = Field(..., ge=0, title="Size")
@@ -240,6 +242,7 @@ class BackupManifest(ContractModel):
     capture_started_at: AwareDatetime = Field(..., title="Capture Started At")
     components: dict[
         Literal[
+            "server_directory",
             "world",
             "server.properties",
             "allowlist.json",
@@ -258,9 +261,30 @@ class BackupManifest(ContractModel):
     files: list[BackupFile] = Field(..., title="Files")
     format: Literal["bsmbackup"] = Field("bsmbackup", title="Format")
     format_version: Literal[1] = Field(1, title="Format Version")
+    mode: Literal["world", "selected", "full"] | None = Field(None, title="Mode")
     reason: (
         Literal["manual", "pre_start", "pre_update", "pre_restore", "scheduled"] | None
     ) = Field("manual", title="Reason")
+    selected_components: (
+        list[
+            Literal[
+                "server_directory",
+                "world",
+                "server.properties",
+                "allowlist.json",
+                "permissions.json",
+                "script_config",
+                "bsm_settings",
+                "behavior_packs",
+                "resource_packs",
+                "development_behavior_packs",
+                "development_resource_packs",
+            ]
+        ]
+        | None
+    ) = Field(None, title="Selected Components")
+    source_architecture: str | None = Field(None, title="Source Architecture")
+    source_platform: str | None = Field(None, title="Source Platform")
     source_server: str = Field(..., title="Source Server")
     source_world: str = Field(..., title="Source World")
     warnings: list[str] | None = Field(None, title="Warnings")
@@ -1163,6 +1187,7 @@ class RecoveryReportOutcome(ContractModel):
     committed: bool | None = Field(None, title="Committed")
     components: list[
         Literal[
+            "server_directory",
             "world",
             "server.properties",
             "allowlist.json",
@@ -1561,8 +1586,27 @@ class SnapshotCreatePayload(ContractModel):
     """Validate and serialize the SnapshotCreatePayload contract."""
 
     model_config = ConfigDict(extra="forbid")
+    components: (
+        list[
+            Literal[
+                "server_directory",
+                "world",
+                "server.properties",
+                "allowlist.json",
+                "permissions.json",
+                "script_config",
+                "bsm_settings",
+                "behavior_packs",
+                "resource_packs",
+                "development_behavior_packs",
+                "development_resource_packs",
+            ]
+        ]
+        | None
+    ) = Field(None, title="Components")
     encrypted: bool | None = Field(None, title="Encrypted")
     include_packs: bool | None = Field(None, title="Include Packs")
+    mode: Literal["world", "selected", "full"] | None = Field(None, title="Mode")
 
 
 class SnapshotInspectPayload(ContractModel):
@@ -1595,6 +1639,7 @@ class SnapshotPlanPayload(ContractModel):
     model_config = ConfigDict(extra="forbid")
     components: list[
         Literal[
+            "server_directory",
             "world",
             "server.properties",
             "allowlist.json",
@@ -1616,6 +1661,7 @@ class SnapshotRestorePayload(ContractModel):
     model_config = ConfigDict(extra="forbid")
     components: list[
         Literal[
+            "server_directory",
             "world",
             "server.properties",
             "allowlist.json",
@@ -2249,6 +2295,7 @@ class RecoveryReportReview(ContractModel):
     checked_files: int = Field(..., title="Checked Files")
     components: list[
         Literal[
+            "server_directory",
             "world",
             "server.properties",
             "allowlist.json",

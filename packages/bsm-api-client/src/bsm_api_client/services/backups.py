@@ -2,7 +2,7 @@
 
 import asyncio
 from pathlib import Path
-from typing import Any, BinaryIO
+from typing import Any, BinaryIO, Literal
 
 from ..exceptions import OperationFailedError
 from .base import Service
@@ -39,18 +39,27 @@ class BackupsService(Service):
         encrypted: bool | None = None,
         *,
         include_packs: bool | None = None,
+        mode: Literal["world", "selected", "full"] | None = None,
+        components: list[str] | None = None,
     ) -> Any:
         """Submit one backup using an optional encryption override.
 
         :param server_name: Server to capture.
         :param encrypted: Override the configured default, or use None.
         :param include_packs: Include server-level packs, exclude them, or use None for the default.
+        :param mode: world, selected, full, or None for global defaults.
+        :param components: Component names for selected mode.
         :returns: The accepted background task.
         """
         return await self._call(
             "create_server_snapshot",
             server_name,
-            body={"encrypted": encrypted, "include_packs": include_packs},
+            body={
+                "encrypted": encrypted,
+                "include_packs": include_packs,
+                "mode": mode,
+                "components": components,
+            },
         )
 
     async def async_inspect(
