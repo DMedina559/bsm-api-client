@@ -444,6 +444,14 @@ class ContentListResponse(ContractModel):
     status: Literal["success", "skipped", "partial"] = Field(..., title="Status")
 
 
+class ControlSchedulePayload(ContractModel):
+    """Validate and serialize the ControlSchedulePayload contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    action: Literal["run_now", "pause", "resume", "retry"] = Field(..., title="Action")
+    revision: str | None = Field(None, title="Revision")
+
+
 class CustomZipsResponse(ContractModel):
     """Response model for custom zips list."""
 
@@ -1370,6 +1378,51 @@ class RuntimeStatus(ContractModel):
     shutdown_requested: bool = Field(..., title="Shutdown Requested")
 
 
+class ScheduleConfigurationView(ContractModel):
+    """Read saved definitions even if this host has lost their timezone data."""
+
+    model_config = ConfigDict(extra="forbid")
+    catch_up: bool | None = Field(True, title="Catch Up")
+    enabled: bool | None = Field(True, title="Enabled")
+    options: dict[str, JsonValue] | None = Field(None, title="Options")
+    server_name: str = Field(..., max_length=160, min_length=1, title="Server Name")
+    stagger_minutes: int | None = Field(15, ge=0, le=120, title="Stagger Minutes")
+    task: str = Field(
+        ...,
+        max_length=160,
+        pattern="^(backup|verify|[a-zA-Z0-9_.-]+:[a-zA-Z0-9_.-]+)$",
+        title="Task",
+    )
+    time: str | None = Field(
+        "03:00", pattern="^(?:[01][0-9]|2[0-3]):[0-5][0-9]$", title="Time"
+    )
+    timezone: str | None = Field("UTC", title="Timezone")
+    weekdays: list[int] | None = Field(
+        None, max_length=7, min_length=1, title="Weekdays"
+    )
+
+
+class ScheduleEntry(ContractModel):
+    """Validate and serialize the ScheduleEntry contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    attempts: int | None = Field(0, title="Attempts")
+    available: bool = Field(..., title="Available")
+    blocked_reason: str | None = Field(None, title="Blocked Reason")
+    configuration: ScheduleConfigurationView
+    last_error: str | None = Field(None, title="Last Error")
+    last_evaluated_at: str | None = Field(None, title="Last Evaluated At")
+    last_status: str | None = Field(None, title="Last Status")
+    last_success_at: str | None = Field(None, title="Last Success At")
+    legacy: bool | None = Field(False, title="Legacy")
+    next_attempt_at: str | None = Field(None, title="Next Attempt At")
+    next_run_at: str | None = Field(None, title="Next Run At")
+    retry_exhausted: bool | None = Field(False, title="Retry Exhausted")
+    revision: str | None = Field(None, title="Revision")
+    runs: list[dict[str, JsonValue]] | None = Field(None, title="Runs")
+    schedule_id: str = Field(..., title="Schedule Id")
+
+
 class ScheduledTask(ContractModel):
     """Validate and serialize the ScheduledTask contract."""
 
@@ -2226,6 +2279,23 @@ class InstalledAddons(ContractModel):
     resource_packs: list[InstalledAddon] | None = Field(None, title="Resource Packs")
 
 
+class ListSchedulesResponse(ContractModel):
+    """Validate and serialize the ListSchedulesResponse contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    host_timezone: str | None = Field(None, title="Host Timezone")
+    schedules: list[ScheduleEntry] | None = Field(None, title="Schedules")
+    server_time: str | None = Field(None, title="Server Time")
+    task_definitions: dict[str, dict[str, JsonValue]] | None = Field(
+        None, title="Task Definitions"
+    )
+    task_types: list[str] | None = Field(None, title="Task Types")
+    timezone_database_available: bool | None = Field(
+        True, title="Timezone Database Available"
+    )
+    timezones: list[str] | None = Field(None, title="Timezones")
+
+
 class ListSnapshotsResponse(ContractModel):
     """Validate and serialize the ListSnapshotsResponse contract."""
 
@@ -2347,22 +2417,6 @@ class RestoreRecoveryResponse(ContractModel):
     status: Literal["success"] = Field("success", title="Status")
 
 
-class ScheduleEntry(ContractModel):
-    """Validate and serialize the ScheduleEntry contract."""
-
-    model_config = ConfigDict(extra="forbid")
-    attempts: int | None = Field(0, title="Attempts")
-    available: bool = Field(..., title="Available")
-    configuration: ScheduledTask
-    last_error: str | None = Field(None, title="Last Error")
-    last_status: str | None = Field(None, title="Last Status")
-    last_success_at: str | None = Field(None, title="Last Success At")
-    legacy: bool | None = Field(False, title="Legacy")
-    next_run_at: str | None = Field(None, title="Next Run At")
-    runs: list[dict[str, JsonValue]] | None = Field(None, title="Runs")
-    schedule_id: str = Field(..., title="Schedule Id")
-
-
 class ServersListResponse(ContractModel):
     """Validate and serialize the ServersListResponse contract."""
 
@@ -2472,20 +2526,6 @@ class GetApplicationMetricsResponse(ContractModel):
     message: str | None = Field(None, title="Message")
     revision: Revision | None = Field(None, title="Revision")
     status: Literal["success"] = Field("success", title="Status")
-
-
-class ListSchedulesResponse(ContractModel):
-    """Validate and serialize the ListSchedulesResponse contract."""
-
-    model_config = ConfigDict(extra="forbid")
-    host_timezone: str | None = Field(None, title="Host Timezone")
-    schedules: list[ScheduleEntry] | None = Field(None, title="Schedules")
-    server_time: str | None = Field(None, title="Server Time")
-    task_types: list[str] | None = Field(None, title="Task Types")
-    timezone_database_available: bool | None = Field(
-        True, title="Timezone Database Available"
-    )
-    timezones: list[str] | None = Field(None, title="Timezones")
 
 
 class PermissionsUpdateResponse(ContractModel):

@@ -1872,6 +1872,37 @@
         "title": "ContentListResponse",
         "type": "object"
       },
+      "ControlSchedulePayload": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "enum": [
+              "run_now",
+              "pause",
+              "resume",
+              "retry"
+            ],
+            "title": "Action",
+            "type": "string"
+          },
+          "revision": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revision"
+          }
+        },
+        "required": [
+          "action"
+        ],
+        "title": "ControlSchedulePayload",
+        "type": "object"
+      },
       "CustomZipsResponse": {
         "additionalProperties": false,
         "description": "Response model for custom zips list.",
@@ -4504,6 +4535,16 @@
               }
             ],
             "title": "Server Time"
+          },
+          "task_definitions": {
+            "additionalProperties": {
+              "additionalProperties": {
+                "$ref": "#/components/schemas/JsonValue"
+              },
+              "type": "object"
+            },
+            "title": "Task Definitions",
+            "type": "object"
           },
           "task_types": {
             "items": {
@@ -7193,6 +7234,74 @@
         "title": "RuntimeStatus",
         "type": "object"
       },
+      "ScheduleConfigurationView": {
+        "additionalProperties": false,
+        "description": "Read saved definitions even if this host has lost their timezone data.",
+        "properties": {
+          "catch_up": {
+            "default": true,
+            "title": "Catch Up",
+            "type": "boolean"
+          },
+          "enabled": {
+            "default": true,
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "options": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/JsonValue"
+            },
+            "title": "Options",
+            "type": "object"
+          },
+          "server_name": {
+            "maxLength": 160,
+            "minLength": 1,
+            "title": "Server Name",
+            "type": "string"
+          },
+          "stagger_minutes": {
+            "default": 15,
+            "maximum": 120.0,
+            "minimum": 0.0,
+            "title": "Stagger Minutes",
+            "type": "integer"
+          },
+          "task": {
+            "maxLength": 160,
+            "pattern": "^(backup|verify|[a-zA-Z0-9_.-]+:[a-zA-Z0-9_.-]+)$",
+            "title": "Task",
+            "type": "string"
+          },
+          "time": {
+            "default": "03:00",
+            "pattern": "^(?:[01][0-9]|2[0-3]):[0-5][0-9]$",
+            "title": "Time",
+            "type": "string"
+          },
+          "timezone": {
+            "default": "UTC",
+            "title": "Timezone",
+            "type": "string"
+          },
+          "weekdays": {
+            "items": {
+              "type": "integer"
+            },
+            "maxItems": 7,
+            "minItems": 1,
+            "title": "Weekdays",
+            "type": "array"
+          }
+        },
+        "required": [
+          "task",
+          "server_name"
+        ],
+        "title": "ScheduleConfigurationView",
+        "type": "object"
+      },
       "ScheduleEntry": {
         "additionalProperties": false,
         "properties": {
@@ -7205,8 +7314,19 @@
             "title": "Available",
             "type": "boolean"
           },
+          "blocked_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Blocked Reason"
+          },
           "configuration": {
-            "$ref": "#/components/schemas/ScheduledTask"
+            "$ref": "#/components/schemas/ScheduleConfigurationView"
           },
           "last_error": {
             "anyOf": [
@@ -7218,6 +7338,17 @@
               }
             ],
             "title": "Last Error"
+          },
+          "last_evaluated_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Evaluated At"
           },
           "last_status": {
             "anyOf": [
@@ -7246,6 +7377,17 @@
             "title": "Legacy",
             "type": "boolean"
           },
+          "next_attempt_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Attempt At"
+          },
           "next_run_at": {
             "anyOf": [
               {
@@ -7256,6 +7398,22 @@
               }
             ],
             "title": "Next Run At"
+          },
+          "retry_exhausted": {
+            "default": false,
+            "title": "Retry Exhausted",
+            "type": "boolean"
+          },
+          "revision": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revision"
           },
           "runs": {
             "items": {
@@ -15283,6 +15441,136 @@
           }
         ],
         "summary": "Save Schedule",
+        "tags": [
+          "Scheduler"
+        ]
+      }
+    },
+    "/api/scheduler/schedules/{schedule_id}/action": {
+      "post": {
+        "operationId": "control_schedule",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "schedule_id",
+            "required": true,
+            "schema": {
+              "title": "Schedule Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ControlSchedulePayload"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          },
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "summary": "Control Schedule",
         "tags": [
           "Scheduler"
         ]

@@ -5,6 +5,7 @@
   "change_password": "api.account_management.change_password",
   "cleanup_backup_destination": "api.backup_restore.cleanup_backup_destination",
   "compare_diagnostic_snapshots": "api.diagnostics.compare_diagnostic_snapshots",
+  "control_schedule": "api.scheduler.control_schedule",
   "create_backup": "api.backup_restore.create_backup",
   "create_first_user": "api.application_setup.create_first_user",
   "create_server_snapshot": "api.backup_restore.create_server_snapshot",
