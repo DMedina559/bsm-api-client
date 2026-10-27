@@ -1582,28 +1582,30 @@ class SnapshotCopyPayload(ContractModel):
     target_version: str | None = Field("LATEST", title="Target Version")
 
 
+Components = Annotated[
+    list[
+        Literal[
+            "world",
+            "server.properties",
+            "allowlist.json",
+            "permissions.json",
+            "script_config",
+            "bsm_settings",
+            "behavior_packs",
+            "resource_packs",
+            "development_behavior_packs",
+            "development_resource_packs",
+        ]
+    ],
+    Field(min_length=1, title="Components"),
+]
+
+
 class SnapshotCreatePayload(ContractModel):
     """Validate and serialize the SnapshotCreatePayload contract."""
 
     model_config = ConfigDict(extra="forbid")
-    components: (
-        list[
-            Literal[
-                "server_directory",
-                "world",
-                "server.properties",
-                "allowlist.json",
-                "permissions.json",
-                "script_config",
-                "bsm_settings",
-                "behavior_packs",
-                "resource_packs",
-                "development_behavior_packs",
-                "development_resource_packs",
-            ]
-        ]
-        | None
-    ) = Field(None, title="Components")
+    components: Components | None = Field(None, title="Components")
     encrypted: bool | None = Field(None, title="Encrypted")
     include_packs: bool | None = Field(None, title="Include Packs")
     mode: Literal["world", "selected", "full"] | None = Field(None, title="Mode")
