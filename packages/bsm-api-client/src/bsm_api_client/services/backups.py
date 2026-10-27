@@ -38,7 +38,6 @@ class BackupsService(Service):
         server_name: str,
         encrypted: bool | None = None,
         *,
-        include_packs: bool | None = None,
         mode: Literal["world", "selected", "full"] | None = None,
         components: list[str] | None = None,
     ) -> Any:
@@ -46,7 +45,6 @@ class BackupsService(Service):
 
         :param server_name: Server to capture.
         :param encrypted: Override the configured default, or use None.
-        :param include_packs: Include server-level packs, exclude them, or use None for the default.
         :param mode: world, selected, full, or None for global defaults.
         :param components: Component names for selected mode.
         :returns: The accepted background task.
@@ -56,7 +54,6 @@ class BackupsService(Service):
             server_name,
             body={
                 "encrypted": encrypted,
-                "include_packs": include_packs,
                 **({"mode": mode} if mode is not None else {}),
                 **({"components": components} if components is not None else {}),
             },

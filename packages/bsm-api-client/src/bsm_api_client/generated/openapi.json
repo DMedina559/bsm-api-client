@@ -5668,6 +5668,16 @@
             "title": "Enabled",
             "type": "boolean"
           },
+          "has_global_settings": {
+            "default": false,
+            "title": "Has Global Settings",
+            "type": "boolean"
+          },
+          "has_server_settings": {
+            "default": false,
+            "title": "Has Server Settings",
+            "type": "boolean"
+          },
           "has_settings": {
             "default": false,
             "title": "Has Settings",
@@ -5741,6 +5751,32 @@
       "PluginSettingsPayload": {
         "additionalProperties": false,
         "properties": {
+          "scope": {
+            "default": "plugin",
+            "enum": [
+              "plugin",
+              "global",
+              "server"
+            ],
+            "title": "Scope",
+            "type": "string"
+          },
+          "server_name": {
+            "anyOf": [
+              {
+                "examples": [
+                  "example"
+                ],
+                "minLength": 1,
+                "pattern": "^[a-zA-Z0-9_-]+$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Server Name"
+          },
           "settings": {
             "additionalProperties": {
               "$ref": "#/components/schemas/JsonValue"
@@ -8120,17 +8156,6 @@
               }
             ],
             "title": "Encrypted"
-          },
-          "include_packs": {
-            "anyOf": [
-              {
-                "type": "boolean"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Include Packs"
           },
           "mode": {
             "anyOf": [
@@ -14037,6 +14062,37 @@
             "schema": {
               "title": "Plugin Name",
               "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "scope",
+            "required": false,
+            "schema": {
+              "default": "plugin",
+              "enum": [
+                "plugin",
+                "global",
+                "server"
+              ],
+              "title": "Scope",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "server_name",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Server Name"
             }
           }
         ],

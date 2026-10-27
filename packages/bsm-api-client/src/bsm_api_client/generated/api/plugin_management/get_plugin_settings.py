@@ -10,23 +10,46 @@ from ... import errors
 
 from ...models.error_envelope import ErrorEnvelope
 from ...models.get_plugin_settings_response import GetPluginSettingsResponse
+from ...models.get_plugin_settings_scope import GetPluginSettingsScope
+from ...types import UNSET, Unset
 from typing import cast
 
 
 
 def _get_kwargs(
     plugin_name: str,
+    *,
+    scope: GetPluginSettingsScope | Unset = GetPluginSettingsScope.PLUGIN,
+    server_name: None | str | Unset = UNSET,
 
 ) -> dict[str, Any]:
     
 
     
 
-    
+    params: dict[str, Any] = {}
+
+    json_scope: str | Unset = UNSET
+    if not isinstance(scope, Unset):
+        json_scope = scope.value
+
+    params["scope"] = json_scope
+
+    json_server_name: None | str | Unset
+    if isinstance(server_name, Unset):
+        json_server_name = UNSET
+    else:
+        json_server_name = server_name
+    params["server_name"] = json_server_name
+
+
+    params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
+
 
     _kwargs: dict[str, Any] = {
         "method": "get",
         "url": "/api/plugins/{plugin_name}/settings".format(plugin_name=quote(str(plugin_name), safe=""),),
+        "params": params,
     }
 
 
@@ -117,11 +140,15 @@ def sync_detailed(
     plugin_name: str,
     *,
     client: AuthenticatedClient,
+    scope: GetPluginSettingsScope | Unset = GetPluginSettingsScope.PLUGIN,
+    server_name: None | str | Unset = UNSET,
 
 ) -> Response[ErrorEnvelope | GetPluginSettingsResponse]:
     """Get Plugin Settings
     
     :param plugin_name: Value supplied to the operation.
+    :param scope: Default: GetPluginSettingsScope.PLUGIN.
+    :param server_name: Value supplied to the operation.
     
     :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
     :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
@@ -131,6 +158,8 @@ def sync_detailed(
 
     kwargs = _get_kwargs(
         plugin_name=plugin_name,
+scope=scope,
+server_name=server_name,
 
     )
 
@@ -144,11 +173,15 @@ def sync(
     plugin_name: str,
     *,
     client: AuthenticatedClient,
+    scope: GetPluginSettingsScope | Unset = GetPluginSettingsScope.PLUGIN,
+    server_name: None | str | Unset = UNSET,
 
 ) -> ErrorEnvelope | GetPluginSettingsResponse | None:
     """Get Plugin Settings
     
     :param plugin_name: Value supplied to the operation.
+    :param scope: Default: GetPluginSettingsScope.PLUGIN.
+    :param server_name: Value supplied to the operation.
     
     :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
     :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
@@ -159,6 +192,8 @@ def sync(
     return sync_detailed(
         plugin_name=plugin_name,
 client=client,
+scope=scope,
+server_name=server_name,
 
     ).parsed
 
@@ -166,11 +201,15 @@ async def asyncio_detailed(
     plugin_name: str,
     *,
     client: AuthenticatedClient,
+    scope: GetPluginSettingsScope | Unset = GetPluginSettingsScope.PLUGIN,
+    server_name: None | str | Unset = UNSET,
 
 ) -> Response[ErrorEnvelope | GetPluginSettingsResponse]:
     """Get Plugin Settings
     
     :param plugin_name: Value supplied to the operation.
+    :param scope: Default: GetPluginSettingsScope.PLUGIN.
+    :param server_name: Value supplied to the operation.
     
     :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
     :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
@@ -180,6 +219,8 @@ async def asyncio_detailed(
 
     kwargs = _get_kwargs(
         plugin_name=plugin_name,
+scope=scope,
+server_name=server_name,
 
     )
 
@@ -193,11 +234,15 @@ async def asyncio(
     plugin_name: str,
     *,
     client: AuthenticatedClient,
+    scope: GetPluginSettingsScope | Unset = GetPluginSettingsScope.PLUGIN,
+    server_name: None | str | Unset = UNSET,
 
 ) -> ErrorEnvelope | GetPluginSettingsResponse | None:
     """Get Plugin Settings
     
     :param plugin_name: Value supplied to the operation.
+    :param scope: Default: GetPluginSettingsScope.PLUGIN.
+    :param server_name: Value supplied to the operation.
     
     :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
     :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
@@ -208,5 +253,7 @@ async def asyncio(
     return (await asyncio_detailed(
         plugin_name=plugin_name,
 client=client,
+scope=scope,
+server_name=server_name,
 
     )).parsed
