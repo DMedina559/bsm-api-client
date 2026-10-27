@@ -11,7 +11,12 @@ from bsm_api_client import BedrockServerManagerApi
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     "mode,components",
-    [("world", None), ("full", None), ("selected", ["world", "server.properties"])],
+    [
+        (None, None),
+        ("world", None),
+        ("full", None),
+        ("selected", ["world", "server.properties"]),
+    ],
 )
 async def test_backup_content_http_serialization(mode, components):
     seen = []
@@ -31,5 +36,8 @@ async def test_backup_content_http_serialization(mode, components):
             )
     assert result["task_id"] == "task"
     assert seen[0].url.path == "/api/server/alpha/backups"
-    assert json.loads(seen[0].content)["mode"] == mode
-    assert json.loads(seen[0].content)["components"] == components
+    assert json.loads(seen[0].content).get("mode") == mode
+    if mode is None:
+        assert "mode" not in json.loads(seen[0].content)
+        assert "components" not in json.loads(seen[0].content)
+    assert json.loads(seen[0].content).get("components") == components

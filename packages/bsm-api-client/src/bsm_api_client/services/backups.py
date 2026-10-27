@@ -57,8 +57,8 @@ class BackupsService(Service):
             body={
                 "encrypted": encrypted,
                 "include_packs": include_packs,
-                "mode": mode,
-                "components": components,
+                **({"mode": mode} if mode is not None else {}),
+                **({"components": components} if components is not None else {}),
             },
         )
 
