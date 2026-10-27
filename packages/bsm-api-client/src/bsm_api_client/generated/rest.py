@@ -49,6 +49,7 @@ from .models.get_event_activity_phase_type_0 import GetEventActivityPhaseType0
 from .models.get_event_activity_status_type_0 import GetEventActivityStatusType0
 from .models.get_permissions_response import GetPermissionsResponse
 from .models.get_plugin_settings_response import GetPluginSettingsResponse
+from .models.get_plugin_settings_scope import GetPluginSettingsScope
 from .models.get_properties_response import GetPropertiesResponse
 from .models.get_raw_properties_response import GetRawPropertiesResponse
 from .models.get_server_bans_response import GetServerBansResponse
@@ -437,13 +438,13 @@ class RestClient:
         """Generated get_plugin_pages operation."""
         return cast(Response[ErrorEnvelope | PluginPagesResponse], await self._owner.async_call_generated('get_plugin_pages', parameters={}, body=None, authenticated=True, detailed=True))
 
-    async def get_plugin_settings(self, plugin_name: str) -> ErrorEnvelope | GetPluginSettingsResponse | None:
+    async def get_plugin_settings(self, plugin_name: str, *, scope: GetPluginSettingsScope | Unset=GetPluginSettingsScope.PLUGIN, server_name: None | str | Unset=UNSET) -> ErrorEnvelope | GetPluginSettingsResponse | None:
         """Generated get_plugin_settings operation."""
-        return cast(ErrorEnvelope | GetPluginSettingsResponse | None, await self._owner.async_call_generated('get_plugin_settings', parameters={'plugin_name': plugin_name}, body=None, authenticated=True, typed=True))
+        return cast(ErrorEnvelope | GetPluginSettingsResponse | None, await self._owner.async_call_generated('get_plugin_settings', parameters={'plugin_name': plugin_name, 'scope': scope, 'server_name': server_name}, body=None, authenticated=True, typed=True))
 
-    async def get_plugin_settings_detailed(self, plugin_name: str) -> Response[ErrorEnvelope | GetPluginSettingsResponse]:
+    async def get_plugin_settings_detailed(self, plugin_name: str, *, scope: GetPluginSettingsScope | Unset=GetPluginSettingsScope.PLUGIN, server_name: None | str | Unset=UNSET) -> Response[ErrorEnvelope | GetPluginSettingsResponse]:
         """Generated get_plugin_settings operation."""
-        return cast(Response[ErrorEnvelope | GetPluginSettingsResponse], await self._owner.async_call_generated('get_plugin_settings', parameters={'plugin_name': plugin_name}, body=None, authenticated=True, detailed=True))
+        return cast(Response[ErrorEnvelope | GetPluginSettingsResponse], await self._owner.async_call_generated('get_plugin_settings', parameters={'plugin_name': plugin_name, 'scope': scope, 'server_name': server_name}, body=None, authenticated=True, detailed=True))
 
     async def get_properties(self, server_name: str) -> ErrorEnvelope | GetPropertiesResponse | None:
         """Generated get_properties operation."""

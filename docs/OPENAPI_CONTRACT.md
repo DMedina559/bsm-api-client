@@ -59,6 +59,13 @@ server's reverse-proxy mount; `base_path` selects the API prefix within it.
 
 ### Backup contents
 
-`client.backups.async_create(server_name, mode="world")` captures the active world and its local packs. Use `mode="selected", components=["world", "server.properties"]` to choose components, or `mode="full"` for a stopped server's complete directory and BSM server settings. Omit mode and components to inherit global defaults. Server-level packs are excluded from new global defaults. The legacy `include_packs` option remains supported; do not combine it with explicit component selection.
+`client.backups.async_create(server_name, mode="world")` captures the active world and its local packs. Use `mode="selected", components=["world", "server.properties"]` to choose components, or `mode="full"` for a stopped server's complete directory and BSM server settings. Omit mode and components to inherit global defaults. Server-level packs are excluded from new global defaults. Select server pack directories explicitly in `components`; the separate pack override has been removed.
 
 The CLI supports `bsm backup create -s SERVER --mode world`, `--mode full`, and `--mode selected --component world --component server.properties`. Full-directory restore requires the same OS, architecture and Bedrock version. Backup storage must be outside the server directory. Restore continues through the existing inspect, plan and restore APIs.
+
+
+### Plugin settings scopes
+
+`client.plugins.async_get_plugin_settings("my_plugin", scope="global")` reads manager-wide values and schema. For server scope, pass `scope="server", server_name="survival"`. Write with `PluginSettingsPayload(settings={...}, scope="server", server_name="survival")` through `async_update_plugin_settings`. Omit scope for plugin-local settings.
+
+The CLI accepts `plugin settings show my_plugin --scope global`, `plugin settings edit my_plugin --scope server --server survival`, and the same options on `plugin settings set`. Server scope requires a server; other scopes omit it. The editor retains schema validation, credential masking and concurrent-edit detection.

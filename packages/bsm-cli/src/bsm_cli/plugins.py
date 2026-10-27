@@ -292,19 +292,32 @@ async def trigger_event(ctx, event_name: str, payload_json: str):
         fail(e)
 
 
-async def edit_plugin_settings(client, plugin_name):
-    response = await client.plugins.async_get_plugin_settings(plugin_name)
+def scoped_options(scope, server_name):
+    if (scope == "server") != (server_name is not None):
+        raise click.UsageError(
+            "Server scope requires --server; other scopes must omit it"
+        )
+    if scope == "plugin":
+        return {}
+    return {"scope": scope, **({"server_name": server_name} if server_name else {})}
+
+
+async def edit_plugin_settings(
+    client, plugin_name, *, scope="plugin", server_name=None
+):
+    options = scoped_options(scope, server_name)
+    response = await client.plugins.async_get_plugin_settings(plugin_name, **options)
     original = response.settings
     draft = await edit_settings(original, response.settings_schema)
     if draft is None:
         return
-    latest = await client.plugins.async_get_plugin_settings(plugin_name)
+    latest = await client.plugins.async_get_plugin_settings(plugin_name, **options)
     if latest.settings != original:
         raise click.ClickException(
             "Settings changed in another session. Reopen the editor to review the current values."
         )
     result = await client.plugins.async_update_plugin_settings(
-        plugin_name, PluginSettingsPayload(settings=draft)
+        plugin_name, PluginSettingsPayload(settings=draft, **options)
     )
     click.echo(result.message)
 
@@ -316,9 +329,18 @@ def plugin_settings():
 
 @plugin_settings.command("show")
 @click.argument("plugin_name")
+@click.option(
+    "--scope",
+    type=click.Choice(["plugin", "global", "server"]),
+    default="plugin",
+    show_default=True,
+)
+@click.option("--server", "server_name", help="Server for server-scoped settings.")
 @click.pass_context
-async def show_settings(ctx, plugin_name):
-    response = await get_client(ctx).plugins.async_get_plugin_settings(plugin_name)
+async def show_settings(ctx, plugin_name, scope, server_name):
+    response = await get_client(ctx).plugins.async_get_plugin_settings(
+        plugin_name, **scoped_options(scope, server_name)
+    )
     # The interactive editor masks credential fields; JSON is an explicit export.
     from bsm_cli.settings_editor import display, fields
 
@@ -332,21 +354,38 @@ async def show_settings(ctx, plugin_name):
 
 @plugin_settings.command("edit")
 @click.argument("plugin_name")
+@click.option(
+    "--scope",
+    type=click.Choice(["plugin", "global", "server"]),
+    default="plugin",
+    show_default=True,
+)
+@click.option("--server", "server_name", help="Server for server-scoped settings.")
 @click.pass_context
-async def configure_settings(ctx, plugin_name):
+async def configure_settings(ctx, plugin_name, scope, server_name):
     if ctx.obj.get("json_output"):
         raise click.UsageError("Use settings set with --json.")
-    await edit_plugin_settings(get_client(ctx), plugin_name)
+    await edit_plugin_settings(
+        get_client(ctx), plugin_name, scope=scope, server_name=server_name
+    )
 
 
 @plugin_settings.command("set")
 @click.argument("plugin_name")
 @click.argument("settings_file", type=click.File("r"))
+@click.option(
+    "--scope",
+    type=click.Choice(["plugin", "global", "server"]),
+    default="plugin",
+    show_default=True,
+)
+@click.option("--server", "server_name", help="Server for server-scoped settings.")
 @click.pass_context
-async def set_settings(ctx, plugin_name, settings_file):
+async def set_settings(ctx, plugin_name, settings_file, scope, server_name):
     """Replace settings from a JSON object file."""
     values = json.load(settings_file)
     response = await get_client(ctx).plugins.async_update_plugin_settings(
-        plugin_name, PluginSettingsPayload(settings=values)
+        plugin_name,
+        PluginSettingsPayload(settings=values, **scoped_options(scope, server_name)),
     )
     click.echo(response.message)

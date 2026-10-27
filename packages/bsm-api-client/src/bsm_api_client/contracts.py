@@ -979,6 +979,8 @@ class PluginInfo(ContractModel):
     author: str | None = Field("", title="Author")
     description: str | None = Field("", title="Description")
     enabled: bool = Field(..., title="Enabled")
+    has_global_settings: bool | None = Field(False, title="Has Global Settings")
+    has_server_settings: bool | None = Field(False, title="Has Server Settings")
     has_settings: bool | None = Field(False, title="Has Settings")
     status: str | None = Field("UNKNOWN", title="Status")
     version: str | None = Field("N/A", title="Version")
@@ -993,10 +995,23 @@ class PluginPagesResponse(ContractModel):
     status: Literal["success", "skipped", "partial"] = Field(..., title="Status")
 
 
+ServerName = Annotated[
+    str,
+    Field(
+        examples=["example"],
+        min_length=1,
+        pattern="^[a-zA-Z0-9_-]+$",
+        title="Server Name",
+    ),
+]
+
+
 class PluginSettingsPayload(ContractModel):
     """Validate and serialize the PluginSettingsPayload contract."""
 
     model_config = ConfigDict(extra="forbid")
+    scope: Literal["plugin", "global", "server"] | None = Field("plugin", title="Scope")
+    server_name: ServerName | None = Field(None, title="Server Name")
     settings: dict[str, JsonValue] = Field(..., title="Settings")
 
 
@@ -1607,7 +1622,6 @@ class SnapshotCreatePayload(ContractModel):
     model_config = ConfigDict(extra="forbid")
     components: Components | None = Field(None, title="Components")
     encrypted: bool | None = Field(None, title="Encrypted")
-    include_packs: bool | None = Field(None, title="Include Packs")
     mode: Literal["world", "selected", "full"] | None = Field(None, title="Mode")
 
 

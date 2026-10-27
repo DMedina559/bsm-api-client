@@ -1,6 +1,7 @@
 import logging
-from typing import cast
+from typing import Literal, cast
 
+from ..generated.models.get_plugin_settings_scope import GetPluginSettingsScope
 from ..models import (
     ActionResponse,
     GetPluginSettingsResponse,
@@ -108,17 +109,32 @@ class PluginsService(Service):
         )
 
     async def async_get_plugin_settings(
-        self, plugin_name: str
+        self,
+        plugin_name: str,
+        *,
+        scope: Literal["plugin", "global", "server"] = "plugin",
+        server_name: str | None = None,
     ) -> GetPluginSettingsResponse:
         """Read settings and the plugin's current validation schema.
 
         :param plugin_name: The plugin identifier.
 
+        :param scope: Plugin-local, global, or per-server settings.
+        :param server_name: Required for server scope.
         :returns: `GetPluginSettingsResponse`.
         """
+        if (scope == "server") != (server_name is not None):
+            raise ValueError(
+                "Server scope requires server_name; other scopes must omit it"
+            )
+        query: dict[str, str] = {}
+        if scope != "plugin":
+            query["scope"] = GetPluginSettingsScope(scope)
+        if server_name is not None:
+            query["server_name"] = server_name
         response = await self.async_call_generated(
             "get_plugin_settings",
-            parameters={"plugin_name": plugin_name},
+            parameters={"plugin_name": plugin_name, **query},
             authenticated=True,
             typed=True,
         )
@@ -138,7 +154,7 @@ class PluginsService(Service):
         response = await self.async_call_generated(
             "update_plugin_settings",
             parameters={"plugin_name": plugin_name},
-            body=payload.model_dump(mode="json"),
+            body=payload.model_dump(mode="json", exclude_unset=True),
             authenticated=True,
             typed=True,
         )
