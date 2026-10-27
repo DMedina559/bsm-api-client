@@ -89,6 +89,7 @@ from .contracts import (
     InstallServerPayload,
     Keep,
     ListAvailableAddonsResponse,
+    ListSchedulesResponse,
     ListSnapshotsResponse,
     LogHistoryPage,
     MemoryMb,
@@ -134,6 +135,8 @@ from .contracts import (
     Revision,
     RuntimeDiagnostics,
     RuntimeStatus,
+    ScheduledTask,
+    ScheduleEntry,
     SendCommandResponse,
     ServerMetrics,
     ServerProcessInfoResponse,
@@ -160,6 +163,7 @@ from .contracts import (
     StopServerResponse,
     StorageDiagnostics,
     Subpack,
+    SuccessResponse,
     SysCpuPercent,
     SysRamMb,
     SysRamPercent,
@@ -399,4 +403,11 @@ __all__ += [
     "TaskDiagnostic",
     "TasksDiagnostics",
     "TransportDiagnostics",
+]
+
+__all__ += [
+    "ListSchedulesResponse",
+    "ScheduleEntry",
+    "ScheduledTask",
+    "SuccessResponse",
 ]

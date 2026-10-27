@@ -2,7 +2,7 @@
 
 import asyncio
 from pathlib import Path
-from typing import Any, BinaryIO
+from typing import Any, BinaryIO, Literal
 
 from ..exceptions import OperationFailedError
 from .base import Service
@@ -39,18 +39,27 @@ class BackupsService(Service):
         encrypted: bool | None = None,
         *,
         include_packs: bool | None = None,
+        mode: Literal["world", "selected", "full"] | None = None,
+        components: list[str] | None = None,
     ) -> Any:
         """Submit one backup using an optional encryption override.
 
         :param server_name: Server to capture.
         :param encrypted: Override the configured default, or use None.
         :param include_packs: Include server-level packs, exclude them, or use None for the default.
+        :param mode: world, selected, full, or None for global defaults.
+        :param components: Component names for selected mode.
         :returns: The accepted background task.
         """
         return await self._call(
             "create_server_snapshot",
             server_name,
-            body={"encrypted": encrypted, "include_packs": include_packs},
+            body={
+                "encrypted": encrypted,
+                "include_packs": include_packs,
+                **({"mode": mode} if mode is not None else {}),
+                **({"components": components} if components is not None else {}),
+            },
         )
 
     async def async_inspect(
@@ -248,7 +257,7 @@ class BackupsService(Service):
 
         :param server_name: Archive owner.
         :param backup_id: Local archive identifier.
-        :param action: verify, pin, unpin, copy, test_key, annotate or drill.
+        :param action: verify, pin, unpin, copy, test_key, annotate, drill or delete.
         :param destination: Configured destination name for copy.
         :param label: Manager-local archive label for annotate.
         :param notes: Manager-local archive notes for annotate.
@@ -263,6 +272,7 @@ class BackupsService(Service):
             "test_key",
             "annotate",
             "drill",
+            "delete",
         }:
             raise ValueError("Unsupported backup action.")
         return await self._call(

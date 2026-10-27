@@ -60,3 +60,73 @@ restart and excludes payloads, credentials and task arguments.
 The existing `client.events.async_get_event_activity()` and
 `bsm-cli events activity` also accept server, source, operation name/ID,
 sequence ID, and phase filters in addition to their previous filters.
+
+
+## Backup and verification schedules
+
+`client.scheduler.async_list_schedules(server_name=None)` returns durable task
+configuration, handler availability, next occurrence and recent run outcomes.
+Create or replace a job with `async_save_schedule(schedule_id, ScheduledTask(...))`
+and remove it with `async_delete_schedule(schedule_id)`. Administrator access is
+required. The SDK exports `ScheduledTask`, `ScheduleEntry` and `ListSchedulesResponse`.
+
+```python
+from bsm_api_client.models import ScheduledTask
+
+await client.scheduler.async_save_schedule("weekly-verify", ScheduledTask(
+    task="verify", server_name="MyServer", enabled=True,
+    time="04:00", timezone="UTC", weekdays=[6],
+    options={"minimum_age_hours": 168},
+))
+```
+
+CLI equivalents are `bsm-cli scheduler list`,
+`bsm-cli scheduler save weekly-verify schedule.json`, and
+`bsm-cli scheduler remove weekly-verify` (all support the global `--json` option).
+Saving uses a JSON file with the same `ScheduledTask` fields.
+
+Full verification after capture, periodic verification and automatic recovery
+drills default to off on new installations. Existing explicitly configured
+intervals are retained. A new archive is **unverified** until checked. Restore
+integrity validation remains mandatory. Configure `backups.verify_after_create`
+through the existing settings service for immediate verification; alternatively
+create an independent `verify` job. Backup summaries include per-stage durations
+in `stage_durations_ms`. The existing backup manage method also accepts `delete`
+for unpinned local archives outside their safety protection window.
+
+Lifecycle endpoints remain synchronous. Choose a `request_timeout` appropriate
+for long pre-start backups and check status before retrying an interrupted write.
+
+
+### Schedule clock metadata
+
+The schedule listing includes supported `timezones`, a
+`timezone_database_available` flag, `server_time` in UTC, and the display-only
+`host_timezone`. Use `America/Los_Angeles` for Pacific Time, rather than `PDT`.
+Schedules keep their regional wall-clock time and derive each occurrence in UTC,
+including daylight-saving transitions. A fixed conversion to the host offset
+would change the local execution hour after a seasonal clock change.
+
+Storage now observes schedule writes through its ordinary transaction boundary.
+Committed definitions appear in AppState, and runtime health checks track the
+scheduler heartbeat and timezone data. Scheduler diagnostics use the existing
+4.0 metadata shape and include correlated run history. CLI schedule listings show
+each job's server, task and regional execution time.
+
+
+### Application timezone
+
+`general.timezone` defaults to `UTC`. Set it with the existing global-settings
+service; no new endpoint is required. Read the display default without admin
+settings access using `(await client.application.async_get_info()).info.get(
+"timezone", "UTC")`. Older servers may omit the metadata.
+
+Use IANA regions such as `America/Los_Angeles`, not seasonal abbreviations such
+as `PDT`. New scheduler configurations that omit `timezone` inherit this setting;
+updates that omit it preserve the saved job's timezone. The SDK and CLI preserve
+omitted fields on the wire. Explicit `timezone="UTC"` always remains UTC.
+
+API event, diagnostic, and backup timestamps remain UTC instants. Changing the
+application timezone never changes archive identifiers or existing recorded
+instants. Consumers can convert for display and retain the original value in
+details. Numeric metrics and diagnostic timestamps use epoch seconds.

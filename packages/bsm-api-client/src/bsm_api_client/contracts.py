@@ -203,6 +203,7 @@ class BackupFile(ContractModel):
 
     model_config = ConfigDict(extra="forbid")
     component: Literal[
+        "server_directory",
         "world",
         "server.properties",
         "allowlist.json",
@@ -214,6 +215,7 @@ class BackupFile(ContractModel):
         "development_behavior_packs",
         "development_resource_packs",
     ] = Field(..., title="Component")
+    executable: bool | None = Field(False, title="Executable")
     path: str = Field(..., title="Path")
     sha256: str = Field(..., pattern="^[a-f0-9]{64}$", title="Sha256")
     size: int = Field(..., ge=0, title="Size")
@@ -240,6 +242,7 @@ class BackupManifest(ContractModel):
     capture_started_at: AwareDatetime = Field(..., title="Capture Started At")
     components: dict[
         Literal[
+            "server_directory",
             "world",
             "server.properties",
             "allowlist.json",
@@ -258,9 +261,30 @@ class BackupManifest(ContractModel):
     files: list[BackupFile] = Field(..., title="Files")
     format: Literal["bsmbackup"] = Field("bsmbackup", title="Format")
     format_version: Literal[1] = Field(1, title="Format Version")
+    mode: Literal["world", "selected", "full"] | None = Field(None, title="Mode")
     reason: (
         Literal["manual", "pre_start", "pre_update", "pre_restore", "scheduled"] | None
     ) = Field("manual", title="Reason")
+    selected_components: (
+        list[
+            Literal[
+                "server_directory",
+                "world",
+                "server.properties",
+                "allowlist.json",
+                "permissions.json",
+                "script_config",
+                "bsm_settings",
+                "behavior_packs",
+                "resource_packs",
+                "development_behavior_packs",
+                "development_resource_packs",
+            ]
+        ]
+        | None
+    ) = Field(None, title="Selected Components")
+    source_architecture: str | None = Field(None, title="Source Architecture")
+    source_platform: str | None = Field(None, title="Source Platform")
     source_server: str = Field(..., title="Source Server")
     source_world: str = Field(..., title="Source World")
     warnings: list[str] | None = Field(None, title="Warnings")
@@ -1163,6 +1187,7 @@ class RecoveryReportOutcome(ContractModel):
     committed: bool | None = Field(None, title="Committed")
     components: list[
         Literal[
+            "server_directory",
             "world",
             "server.properties",
             "allowlist.json",
@@ -1328,6 +1353,30 @@ class RuntimeStatus(ContractModel):
         Literal["administrator", "local_cli", "service", "signal"] | None
     ) = Field(None, title="Shutdown Reason")
     shutdown_requested: bool = Field(..., title="Shutdown Requested")
+
+
+class ScheduledTask(ContractModel):
+    """Validate and serialize the ScheduledTask contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    catch_up: bool | None = Field(True, title="Catch Up")
+    enabled: bool | None = Field(True, title="Enabled")
+    options: dict[str, JsonValue] | None = Field(None, title="Options")
+    server_name: str = Field(..., max_length=160, min_length=1, title="Server Name")
+    stagger_minutes: int | None = Field(15, ge=0, le=120, title="Stagger Minutes")
+    task: str = Field(
+        ...,
+        max_length=160,
+        pattern="^(backup|verify|[a-zA-Z0-9_.-]+:[a-zA-Z0-9_.-]+)$",
+        title="Task",
+    )
+    time: str | None = Field(
+        "03:00", pattern="^(?:[01][0-9]|2[0-3]):[0-5][0-9]$", title="Time"
+    )
+    timezone: str | None = Field("UTC", title="Timezone")
+    weekdays: list[int] | None = Field(
+        None, max_length=7, min_length=1, title="Weekdays"
+    )
 
 
 class SendCommandResponse(ContractModel):
@@ -1533,12 +1582,33 @@ class SnapshotCopyPayload(ContractModel):
     target_version: str | None = Field("LATEST", title="Target Version")
 
 
+Components = Annotated[
+    list[
+        Literal[
+            "world",
+            "server.properties",
+            "allowlist.json",
+            "permissions.json",
+            "script_config",
+            "bsm_settings",
+            "behavior_packs",
+            "resource_packs",
+            "development_behavior_packs",
+            "development_resource_packs",
+        ]
+    ],
+    Field(min_length=1, title="Components"),
+]
+
+
 class SnapshotCreatePayload(ContractModel):
     """Validate and serialize the SnapshotCreatePayload contract."""
 
     model_config = ConfigDict(extra="forbid")
+    components: Components | None = Field(None, title="Components")
     encrypted: bool | None = Field(None, title="Encrypted")
     include_packs: bool | None = Field(None, title="Include Packs")
+    mode: Literal["world", "selected", "full"] | None = Field(None, title="Mode")
 
 
 class SnapshotInspectPayload(ContractModel):
@@ -1571,6 +1641,7 @@ class SnapshotPlanPayload(ContractModel):
     model_config = ConfigDict(extra="forbid")
     components: list[
         Literal[
+            "server_directory",
             "world",
             "server.properties",
             "allowlist.json",
@@ -1592,6 +1663,7 @@ class SnapshotRestorePayload(ContractModel):
     model_config = ConfigDict(extra="forbid")
     components: list[
         Literal[
+            "server_directory",
             "world",
             "server.properties",
             "allowlist.json",
@@ -1688,6 +1760,14 @@ class Subpack(ContractModel):
     folder_name: str = Field(..., title="Folder Name")
     memory_tier: int | None = Field(None, title="Memory Tier")
     name: str | None = Field(None, title="Name")
+
+
+class SuccessResponse(ContractModel):
+    """Validate and serialize the SuccessResponse contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    message: str | None = Field(None, title="Message")
+    status: Literal["success"] = Field("success", title="Status")
 
 
 class TaskAcceptedResponse(ContractModel):
@@ -1944,6 +2024,9 @@ class BackupSummary(ContractModel):
     protected_until: str | None = Field(None, title="Protected Until")
     purpose: str | None = Field(None, title="Purpose")
     size: int = Field(..., title="Size")
+    stage_durations_ms: dict[str, float] | None = Field(
+        None, title="Stage Durations Ms"
+    )
     verification: BackupVerification | None = None
 
 
@@ -2214,6 +2297,7 @@ class RecoveryReportReview(ContractModel):
     checked_files: int = Field(..., title="Checked Files")
     components: list[
         Literal[
+            "server_directory",
             "world",
             "server.properties",
             "allowlist.json",
@@ -2247,6 +2331,22 @@ class RestoreRecoveryResponse(ContractModel):
     message: str | None = Field(None, title="Message")
     recovery: RestoreRecoveryState
     status: Literal["success"] = Field("success", title="Status")
+
+
+class ScheduleEntry(ContractModel):
+    """Validate and serialize the ScheduleEntry contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    attempts: int | None = Field(0, title="Attempts")
+    available: bool = Field(..., title="Available")
+    configuration: ScheduledTask
+    last_error: str | None = Field(None, title="Last Error")
+    last_status: str | None = Field(None, title="Last Status")
+    last_success_at: str | None = Field(None, title="Last Success At")
+    legacy: bool | None = Field(False, title="Legacy")
+    next_run_at: str | None = Field(None, title="Next Run At")
+    runs: list[dict[str, JsonValue]] | None = Field(None, title="Runs")
+    schedule_id: str = Field(..., title="Schedule Id")
 
 
 class ServersListResponse(ContractModel):
@@ -2358,6 +2458,20 @@ class GetApplicationMetricsResponse(ContractModel):
     message: str | None = Field(None, title="Message")
     revision: Revision | None = Field(None, title="Revision")
     status: Literal["success"] = Field("success", title="Status")
+
+
+class ListSchedulesResponse(ContractModel):
+    """Validate and serialize the ListSchedulesResponse contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    host_timezone: str | None = Field(None, title="Host Timezone")
+    schedules: list[ScheduleEntry] | None = Field(None, title="Schedules")
+    server_time: str | None = Field(None, title="Server Time")
+    task_types: list[str] | None = Field(None, title="Task Types")
+    timezone_database_available: bool | None = Field(
+        True, title="Timezone Database Available"
+    )
+    timezones: list[str] | None = Field(None, title="Timezones")
 
 
 class PermissionsUpdateResponse(ContractModel):

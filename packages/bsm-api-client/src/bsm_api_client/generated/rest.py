@@ -57,6 +57,7 @@ from .models.install_server_payload import InstallServerPayload
 from .models.installation_accepted_response import InstallationAcceptedResponse
 from .models.list_available_addons_response import ListAvailableAddonsResponse
 from .models.list_backup_keys_response_list_backup_keys import ListBackupKeysResponseListBackupKeys
+from .models.list_schedules_response import ListSchedulesResponse
 from .models.list_snapshots_response import ListSnapshotsResponse
 from .models.log_history_page import LogHistoryPage
 from .models.permissions_set_payload import PermissionsSetPayload
@@ -79,6 +80,7 @@ from .models.restore_action_payload import RestoreActionPayload
 from .models.restore_recovery_response import RestoreRecoveryResponse
 from .models.rotate_backup_key_response_rotate_backup_key import RotateBackupKeyResponseRotateBackupKey
 from .models.runtime_status import RuntimeStatus
+from .models.scheduled_task import ScheduledTask
 from .models.send_command_response import SendCommandResponse
 from .models.server_process_info_response import ServerProcessInfoResponse
 from .models.server_running_status_response import ServerRunningStatusResponse
@@ -102,6 +104,7 @@ from .models.snapshot_plan_payload import SnapshotPlanPayload
 from .models.snapshot_restore_payload import SnapshotRestorePayload
 from .models.start_server_response import StartServerResponse
 from .models.stop_server_response import StopServerResponse
+from .models.success_response import SuccessResponse
 from .models.task_accepted_response import TaskAcceptedResponse
 from .models.task_snapshot import TaskSnapshot
 from .models.theme_list_response import ThemeListResponse
@@ -193,6 +196,14 @@ class RestClient:
     async def create_server_snapshot_detailed(self, server_name: str, *, body: SnapshotCreatePayload) -> Response[ErrorEnvelope | TaskAcceptedResponse]:
         """Generated create_server_snapshot operation."""
         return cast(Response[ErrorEnvelope | TaskAcceptedResponse], await self._owner.async_call_generated('create_server_snapshot', parameters={'server_name': server_name}, body=body, authenticated=True, detailed=True))
+
+    async def delete_schedule(self, schedule_id: str) -> ErrorEnvelope | SuccessResponse | None:
+        """Generated delete_schedule operation."""
+        return cast(ErrorEnvelope | SuccessResponse | None, await self._owner.async_call_generated('delete_schedule', parameters={'schedule_id': schedule_id}, body=None, authenticated=True, typed=True))
+
+    async def delete_schedule_detailed(self, schedule_id: str) -> Response[ErrorEnvelope | SuccessResponse]:
+        """Generated delete_schedule operation."""
+        return cast(Response[ErrorEnvelope | SuccessResponse], await self._owner.async_call_generated('delete_schedule', parameters={'schedule_id': schedule_id}, body=None, authenticated=True, detailed=True))
 
     async def delete_server(self, server_name: str) -> ErrorEnvelope | TaskAcceptedResponse | None:
         """Generated delete_server operation."""
@@ -666,6 +677,14 @@ class RestClient:
         """Generated list_plugins operation."""
         return cast(Response[ErrorEnvelope | PluginStatusesResponse], await self._owner.async_call_generated('list_plugins', parameters={}, body=None, authenticated=True, detailed=True))
 
+    async def list_schedules(self, *, server_name: None | str | Unset=UNSET) -> ErrorEnvelope | ListSchedulesResponse | None:
+        """Generated list_schedules operation."""
+        return cast(ErrorEnvelope | ListSchedulesResponse | None, await self._owner.async_call_generated('list_schedules', parameters={'server_name': server_name}, body=None, authenticated=True, typed=True))
+
+    async def list_schedules_detailed(self, *, server_name: None | str | Unset=UNSET) -> Response[ErrorEnvelope | ListSchedulesResponse]:
+        """Generated list_schedules operation."""
+        return cast(Response[ErrorEnvelope | ListSchedulesResponse], await self._owner.async_call_generated('list_schedules', parameters={'server_name': server_name}, body=None, authenticated=True, detailed=True))
+
     async def list_server_addons(self, server_name: str) -> AddonListResponse | ErrorEnvelope | None:
         """Generated list_server_addons operation."""
         return cast(AddonListResponse | ErrorEnvelope | None, await self._owner.async_call_generated('list_server_addons', parameters={'server_name': server_name}, body=None, authenticated=True, typed=True))
@@ -889,6 +908,14 @@ class RestClient:
     async def rotate_backup_key_detailed(self) -> Response[ErrorEnvelope | RotateBackupKeyResponseRotateBackupKey]:
         """Generated rotate_backup_key operation."""
         return cast(Response[ErrorEnvelope | RotateBackupKeyResponseRotateBackupKey], await self._owner.async_call_generated('rotate_backup_key', parameters={}, body=None, authenticated=True, detailed=True))
+
+    async def save_schedule(self, schedule_id: str, *, body: ScheduledTask) -> ErrorEnvelope | SuccessResponse | None:
+        """Generated save_schedule operation."""
+        return cast(ErrorEnvelope | SuccessResponse | None, await self._owner.async_call_generated('save_schedule', parameters={'schedule_id': schedule_id}, body=body, authenticated=True, typed=True))
+
+    async def save_schedule_detailed(self, schedule_id: str, *, body: ScheduledTask) -> Response[ErrorEnvelope | SuccessResponse]:
+        """Generated save_schedule operation."""
+        return cast(Response[ErrorEnvelope | SuccessResponse], await self._owner.async_call_generated('save_schedule', parameters={'schedule_id': schedule_id}, body=body, authenticated=True, detailed=True))
 
     async def scan_players(self) -> AddPlayersResponse | ErrorEnvelope | None:
         """Generated scan_players operation."""

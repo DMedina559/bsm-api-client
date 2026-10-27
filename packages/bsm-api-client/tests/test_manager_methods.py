@@ -27,12 +27,16 @@ async def test_get_info(client):
     with patch.object(
         client, "async_call_generated", new_callable=AsyncMock
     ) as mock_request:
-        mock_request.return_value = {"status": "success", "info": {"version": "1.0.0"}}
+        mock_request.return_value = {
+            "status": "success",
+            "info": {"version": "1.0.0", "timezone": "America/Los_Angeles"},
+        }
         result = await client.application.async_get_info()
         mock_request.assert_called_once_with(
             "get_system_info", authenticated=False, typed=True
         )
         assert result.info["version"] == "1.0.0"
+        assert result.info["timezone"] == "America/Los_Angeles"
 
 
 @pytest.mark.asyncio

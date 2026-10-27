@@ -33,3 +33,6 @@ Domain services
 
 .. automodule:: bsm_api_client.services.users
    :members:
+
+.. automodule:: bsm_api_client.services.scheduler
+   :members:

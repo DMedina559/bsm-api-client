@@ -29,6 +29,7 @@ from bsm_cli.permissions import permissions
 from bsm_cli.player import player
 from bsm_cli.plugins import plugin
 from bsm_cli.properties import properties
+from bsm_cli.scheduler import scheduler
 from bsm_cli.server import server
 from bsm_cli.system import system
 from bsm_cli.users import users
@@ -88,6 +89,7 @@ cli.add_command(auth)
 cli.add_command(server)
 cli.add_command(addon)
 cli.add_command(backup)
+cli.add_command(scheduler)
 cli.add_command(player)
 cli.add_command(plugin)
 cli.add_command(allowlist)
