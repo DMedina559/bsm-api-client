@@ -92,7 +92,7 @@ from .models.server_summary import ServerSummary
 from .models.servers_list_response import ServersListResponse
 from .models.set_plugin_setting_response import SetPluginSettingResponse
 from .models.set_properties_response import SetPropertiesResponse
-from .models.setting_item_response import SettingItemResponse
+from .models.setting_item_payload import SettingItemPayload
 from .models.settings_response import SettingsResponse
 from .models.setup_account_response import SetupAccountResponse
 from .models.setup_status_response import SetupStatusResponse
@@ -975,11 +975,11 @@ class RestClient:
         """Generated set_server_setting operation."""
         return cast(Response[ErrorEnvelope | ServerSettingsResponse], await self._owner.async_call_generated('set_server_setting', parameters={'server_name': server_name}, body=body, authenticated=True, detailed=True))
 
-    async def set_setting(self, *, body: SettingItemResponse) -> ErrorEnvelope | SettingsResponse | None:
+    async def set_setting(self, *, body: SettingItemPayload) -> ErrorEnvelope | SettingsResponse | None:
         """Generated set_setting operation."""
         return cast(ErrorEnvelope | SettingsResponse | None, await self._owner.async_call_generated('set_setting', parameters={}, body=body, authenticated=True, typed=True))
 
-    async def set_setting_detailed(self, *, body: SettingItemResponse) -> Response[ErrorEnvelope | SettingsResponse]:
+    async def set_setting_detailed(self, *, body: SettingItemPayload) -> Response[ErrorEnvelope | SettingsResponse]:
         """Generated set_setting operation."""
         return cast(Response[ErrorEnvelope | SettingsResponse], await self._owner.async_call_generated('set_setting', parameters={}, body=body, authenticated=True, detailed=True))
 

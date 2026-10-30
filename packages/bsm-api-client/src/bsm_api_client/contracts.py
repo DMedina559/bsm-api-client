@@ -1566,7 +1566,7 @@ class SetPropertiesResponse(ContractModel):
     )
 
 
-class SettingItemResponse(ContractModel):
+class SettingItemPayload(ContractModel):
     """Request model for a single setting key-value pair."""
 
     model_config = ConfigDict(extra="forbid")
@@ -1585,7 +1585,7 @@ class SettingsResponse(ContractModel):
 
     model_config = ConfigDict(extra="forbid")
     message: str | None = Field(None, title="Message")
-    setting: SettingItemResponse | None = None
+    setting: SettingItemPayload | None = None
     settings: dict[str, JsonValue] | None = Field(None, title="Settings")
     status: Literal["success", "skipped", "partial"] = Field(..., title="Status")
 

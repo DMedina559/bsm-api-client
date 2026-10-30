@@ -9,7 +9,7 @@ from ..models import (
     PruneDownloadsPayload,
     PruneDownloadsResponse,
     RuntimeStatus,
-    SettingItemResponse,
+    SettingItemPayload,
     SettingsResponse,
     SetupAccountResponse,
     SetupStatusResponse,
@@ -74,10 +74,10 @@ class ApplicationService(Service):
         )
         return cast(SettingsResponse, parse_response(SettingsResponse, response))
 
-    async def async_set_setting(self, payload: SettingItemResponse) -> SettingsResponse:
+    async def async_set_setting(self, payload: SettingItemPayload) -> SettingsResponse:
         """Sets a specific global application setting.
 
-        :param payload: The SettingItemResponse request model.
+        :param payload: The SettingItemPayload request model.
 
         :returns: `SettingsResponse`.
         """

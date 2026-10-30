@@ -9,6 +9,7 @@ from bsm_api_client.models import (
     AddPlayersPayload,
     InstallServerPayload,
     PruneDownloadsPayload,
+    SettingItemPayload,
     SettingItemResponse,
 )
 
@@ -112,7 +113,8 @@ async def test_set_setting(client):
     with patch.object(
         client, "async_call_generated", new_callable=AsyncMock
     ) as mock_request:
-        payload = SettingItemResponse(key="web.port", value=8081)
+        assert SettingItemResponse is SettingItemPayload
+        payload = SettingItemPayload(key="web.port", value=8081)
         mock_request.return_value = {"status": "success", "message": "Setting updated."}
         result = await client.application.async_set_setting(payload)
         mock_request.assert_called_once_with(

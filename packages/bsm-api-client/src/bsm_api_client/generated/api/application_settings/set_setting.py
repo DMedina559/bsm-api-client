@@ -9,7 +9,7 @@ from ...types import Response, UNSET
 from ... import errors
 
 from ...models.error_envelope import ErrorEnvelope
-from ...models.setting_item_response import SettingItemResponse
+from ...models.setting_item_payload import SettingItemPayload
 from ...models.settings_response import SettingsResponse
 from typing import cast
 
@@ -17,7 +17,7 @@ from typing import cast
 
 def _get_kwargs(
     *,
-    body: SettingItemResponse,
+    body: SettingItemPayload,
 
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
@@ -123,7 +123,7 @@ def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Res
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    body: SettingItemResponse,
+    body: SettingItemPayload,
 
 ) -> Response[ErrorEnvelope | SettingsResponse]:
     """Post Set Setting
@@ -152,7 +152,7 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    body: SettingItemResponse,
+    body: SettingItemPayload,
 
 ) -> ErrorEnvelope | SettingsResponse | None:
     """Post Set Setting
@@ -176,7 +176,7 @@ body=body,
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    body: SettingItemResponse,
+    body: SettingItemPayload,
 
 ) -> Response[ErrorEnvelope | SettingsResponse]:
     """Post Set Setting
@@ -205,7 +205,7 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    body: SettingItemResponse,
+    body: SettingItemPayload,
 
 ) -> ErrorEnvelope | SettingsResponse | None:
     """Post Set Setting

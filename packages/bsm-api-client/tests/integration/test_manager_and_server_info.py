@@ -6,7 +6,7 @@ from bsm_api_client.api_client import BedrockServerManagerApi
 from bsm_api_client.models import (
     AddPlayersPayload,
     PruneDownloadsPayload,
-    SettingItemResponse,
+    SettingItemPayload,
 )
 
 
@@ -76,7 +76,7 @@ class TestManagerAndServerInfo:
             setting_key = "custom.test_setting"
             setting_value = f"test_value_{int(time.time())}"
 
-            setting_payload = SettingItemResponse(key=setting_key, value=setting_value)
+            setting_payload = SettingItemPayload(key=setting_key, value=setting_value)
             set_result = await client.application.async_set_setting(setting_payload)
             assert set_result.status == "success"
 

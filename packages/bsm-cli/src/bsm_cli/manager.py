@@ -242,7 +242,7 @@ async def show_task(ctx, task_id):
 @click.pass_context
 async def settings(ctx):
     """Review and edit typed global application settings."""
-    from bsm_api_client.models import SettingItemResponse
+    from bsm_api_client.models import SettingItemPayload
     from bsm_cli.settings_editor import edit_settings, fields, infer_schema
 
     if ctx.obj.get("json_output"):
@@ -263,7 +263,7 @@ async def settings(ctx):
             previous = previous.get(key) if isinstance(previous, dict) else None
         if previous != value:
             await client.application.async_set_setting(
-                SettingItemResponse(key=".".join(path), value=value)
+                SettingItemPayload(key=".".join(path), value=value)
             )
             click.echo(f"Saved {'.'.join(path)}")
 

@@ -148,7 +148,7 @@ from .contracts import (
     ServerSummary,
     SetPluginSettingResponse,
     SetPropertiesResponse,
-    SettingItemResponse,
+    SettingItemPayload,
     SettingsResponse,
     SetupAccountResponse,
     SetupStatusResponse,
@@ -214,6 +214,9 @@ class HTTPValidationError(BaseModel):
 
     detail: list[ValidationError] | None = Field(None, title="Detail")
 
+
+# Compatibility with clients using the former backend request-model name.
+SettingItemResponse = SettingItemPayload
 
 __all__ = [
     "BackupSummary",
@@ -335,6 +338,7 @@ __all__ = [
     "ServerSummary",
     "ServersListResponse",
     "SetPluginSettingResponse",
+    "SettingItemPayload",
     "SettingItemResponse",
     "SettingsResponse",
     "SetupAccountResponse",
