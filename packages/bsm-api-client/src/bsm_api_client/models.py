@@ -223,6 +223,8 @@ class CurrentAccountResponse(UserResponse):
     """Account details with optional capabilities from newer backends."""
 
     mfa_enrollment_required: bool | None = None
+    credential_name: str | None = None
+    credential_expires_at: int | None = None
 
     permissions: list[str] | None = None
     policy_revision: str | None = None
