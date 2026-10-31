@@ -56,7 +56,9 @@ def test_cli_against_backend(server, tmp_path, monkeypatch, args):
     monkeypatch.setattr(generated_adapter, "operation_module", resolve_operation)
     monkeypatch.setattr("bsm_cli.config.get_config_path", lambda: tmp_path / "cli.json")
     config = Config()
-    config.update(base_url=server, username="admin", password="password")
+    config.update(
+        base_url=server, username="admin", password="integration secure passphrase"
+    )
     result = CliRunner().invoke(cli, ["--json", *args])
     assert result.exit_code == 0, result.output
     assert json.loads(result.stdout) is not None

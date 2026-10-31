@@ -12,7 +12,9 @@ class TestAccountManagement:
 
     async def test_account_methods(self, server):
         """Tests account management methods."""
-        client = BedrockServerManagerApi(server, "admin", "password")
+        client = BedrockServerManagerApi(
+            server, "admin", "integration secure passphrase"
+        )
         try:
             # Get Account Details
             account = await client.account.async_get_account_details()

@@ -18,7 +18,9 @@ class TestManagerAndServerInfo:
 
     async def test_get_info(self, server):
         """Tests the unauthenticated /info endpoint and themes."""
-        client = BedrockServerManagerApi(server, "admin", "password")
+        client = BedrockServerManagerApi(
+            server, "admin", "integration secure passphrase"
+        )
         try:
             info = await client.application.async_get_info()
             assert info.status == "success"
@@ -33,7 +35,9 @@ class TestManagerAndServerInfo:
     async def test_prune_downloads(self, server, server_data_dir):
         """Tests pruning downloads cache."""
         (server_data_dir / ".downloads" / "stable").mkdir(parents=True, exist_ok=True)
-        client = BedrockServerManagerApi(server, "admin", "password")
+        client = BedrockServerManagerApi(
+            server, "admin", "integration secure passphrase"
+        )
         try:
             payload = PruneDownloadsPayload(directory="stable", keep=1)
             res = await client.application.async_prune_downloads(payload)
@@ -45,7 +49,9 @@ class TestManagerAndServerInfo:
 
     async def test_player_management(self, server):
         """Tests getting and adding global players."""
-        client = BedrockServerManagerApi(server, "admin", "password")
+        client = BedrockServerManagerApi(
+            server, "admin", "integration secure passphrase"
+        )
         try:
             unique_name = f"TestPlayer_{int(time.time())}"
             unique_xuid = f"{int(time.time())}"
@@ -71,7 +77,9 @@ class TestManagerAndServerInfo:
 
     async def test_settings_management(self, server):
         """Tests getting and setting global settings."""
-        client = BedrockServerManagerApi(server, "admin", "password")
+        client = BedrockServerManagerApi(
+            server, "admin", "integration secure passphrase"
+        )
         try:
             setting_key = "custom.test_setting"
             setting_value = f"test_value_{int(time.time())}"
@@ -100,7 +108,9 @@ class TestManagerAndServerInfo:
         self, server, bedrock_server, wait_for_server_status
     ):
         """Tests various server-specific informational endpoints."""
-        client = BedrockServerManagerApi(server, "admin", "password")
+        client = BedrockServerManagerApi(
+            server, "admin", "integration secure passphrase"
+        )
         server_name = bedrock_server
         try:
             # Ensure server is stopped before this test
@@ -138,7 +148,9 @@ class TestManagerAndServerInfo:
 async def test_standalone_event_and_web_runtime_contracts_against_backend(server):
     from bsm_api_client.exceptions import InvalidInputError
 
-    async with BedrockServerManagerApi(server, "admin", "password") as client:
+    async with BedrockServerManagerApi(
+        server, "admin", "integration secure passphrase"
+    ) as client:
         runtime = await client.application.async_get_web_runtime()
         assert runtime.phase == "ready" and not runtime.shutdown_requested
         snapshot = await client.diagnostics.async_get_application_diagnostics()

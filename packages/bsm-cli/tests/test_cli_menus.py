@@ -121,6 +121,8 @@ async def test_blank_menu_options_match_command_line_defaults(
     for param in params:
         if isinstance(param, click.Option):
             param.prompt = None
+            if not param.expose_value:
+                param.callback = None
     received = []
     command = click.Command(
         "command", params=params, callback=lambda **kw: received.append(kw)
@@ -147,7 +149,8 @@ async def test_blank_menu_options_match_command_line_defaults(
         )
     with click.Context(group) as ctx:
         await command_menu(ctx, group)
-    assert received == [expected], path
+    confirmation = any(not param.expose_value for param in params)
+    assert received == ([] if confirmation else [expected]), path
 
 
 @pytest.mark.asyncio

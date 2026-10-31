@@ -174,3 +174,34 @@ def test_plugin_metadata_overrides_display_tag():
         }
     }
     assert index_operations(schema)["download_ui"].plugin == "custom_owner"
+
+
+def test_access_metadata_and_older_backend_fallback(schema):
+    import copy
+
+    from bsm_api_client.openapi import index_operations
+
+    document = copy.deepcopy(schema)
+    operation = next(
+        value
+        for item in document["paths"].values()
+        for value in item.values()
+        if isinstance(value, dict) and "operationId" in value
+    )
+    identifier = operation["operationId"]
+    operation["x-bsm-access"] = {
+        "version": 1,
+        "classification": "permission",
+        "authentication": "required",
+        "required_permissions": ["servers:control"],
+        "allowed_roles": ["moderator", "admin"],
+        "additional_checks": [],
+    }
+    indexed = index_operations(document)[identifier]
+    assert indexed.accessible_with(["servers:control"]) is True
+    assert indexed.accessible_with([]) is False
+    assert indexed.to_dict()["access"] == operation["x-bsm-access"]
+    operation["x-bsm-access"]["classification"] = "custom"
+    assert index_operations(document)[identifier].accessible_with([]) is None
+    del operation["x-bsm-access"]
+    assert index_operations(document)[identifier].access["classification"] == "unknown"

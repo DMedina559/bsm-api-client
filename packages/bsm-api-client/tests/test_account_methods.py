@@ -92,14 +92,17 @@ async def test_change_password(client):
     ) as mock_request:
         mock_request.return_value = {"status": "success"}
         payload = ChangePasswordPayload(
-            current_password="password", new_password="new_password"
+            current_password="password", new_password="new secure passphrase"
         )
         result = await client.account.async_change_password(payload)
         assert isinstance(result, BaseApiResponse)
         assert result.status == "success"
         mock_request.assert_called_once_with(
             "change_password",
-            body={"current_password": "password", "new_password": "new_password"},
+            body={
+                "current_password": "password",
+                "new_password": "new secure passphrase",
+            },
             authenticated=True,
             typed=True,
         )
@@ -153,7 +156,53 @@ async def test_change_password_error(client):
         with pytest.raises(Exception) as excinfo:
             await client.account.async_change_password(
                 ChangePasswordPayload(
-                    current_password="password", new_password="new_password"
+                    current_password="password", new_password="new secure passphrase"
                 )
             )
         assert "API Error" in str(excinfo.value)
+
+
+@pytest.mark.asyncio
+async def test_integration_credentials_never_silently_fall_back_to_password_login(
+    client,
+):
+    from unittest.mock import AsyncMock, patch
+
+    from bsm_api_client.exceptions import AuthError
+
+    client._jwt_token = "bsm_it_opaque.integration-secret"
+    with patch.object(client, "authenticate", new_callable=AsyncMock) as login:
+        with pytest.raises(AuthError, match="replace it explicitly"):
+            await client._ensure_authenticated(stale_token=client._jwt_token)
+        login.assert_not_awaited()
+    with patch.object(
+        client, "async_call_generated", new_callable=AsyncMock
+    ) as operation:
+        assert (await client.async_logout())["status"] == "success"
+        operation.assert_not_awaited()
+        assert client._jwt_token is None
+
+
+@pytest.mark.asyncio
+async def test_logout_clears_password_fallback_even_when_server_is_unreachable(client):
+    from unittest.mock import AsyncMock, patch
+
+    client._password = "saved-password"
+    client._otp = "one-time-code"
+    with patch.object(
+        client, "async_call_generated", new_callable=AsyncMock
+    ) as operation:
+        operation.side_effect = OSError("offline")
+        with pytest.raises(OSError):
+            await client.async_logout()
+    assert client._jwt_token is None
+    assert client._password == ""
+    assert client._otp == ""
+
+
+def test_password_validation_does_not_echo_the_supplied_secret():
+    from pydantic import ValidationError
+
+    with pytest.raises(ValidationError) as failure:
+        ChangePasswordPayload(current_password="old-secret", new_password="tiny-secret")
+    assert "tiny-secret" not in str(failure.value)

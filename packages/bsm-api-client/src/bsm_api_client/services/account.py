@@ -4,9 +4,9 @@ from typing import cast
 from ..models import (
     BaseApiResponse,
     ChangePasswordPayload,
+    CurrentAccountResponse,
     ProfileUpdatePayload,
     ThemeUpdatePayload,
-    UserResponse,
 )
 from ..validation import parse_response
 from .base import Service
@@ -17,10 +17,10 @@ _LOGGER = logging.getLogger(__name__.split(".")[0] + ".client.account")
 class AccountService(Service):
     """Service for account-related endpoints."""
 
-    async def async_get_account_details(self) -> UserResponse:
+    async def async_get_account_details(self) -> CurrentAccountResponse:
         """Gets the current user's account details.
 
-        :returns: `UserResponse`.
+        :returns: `CurrentAccountResponse`.
 
         .. code-block:: python
 
@@ -30,7 +30,13 @@ class AccountService(Service):
         response = await self.async_call_generated(
             "get_account", authenticated=True, typed=True
         )
-        return cast(UserResponse, parse_response(UserResponse, response))
+        return cast(
+            CurrentAccountResponse,
+            parse_response(
+                CurrentAccountResponse,
+                response.model_dump() if hasattr(response, "model_dump") else response,
+            ),
+        )
 
     async def async_update_theme(self, payload: ThemeUpdatePayload) -> BaseApiResponse:
         """Updates the current user's theme.

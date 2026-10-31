@@ -230,7 +230,7 @@ CASES = [
         "--current-password",
         "old-password",
         "--new-password",
-        "new-password",
+        "new secure passphrase",
     ),
     ("users", "list"),
     ("users", "delete", "1", "--yes"),
@@ -299,6 +299,7 @@ def command_client(monkeypatch, tmp_path):
                 body["events"] = None
             body.update(
                 {
+                    "/api/account": {"permissions": ["account:read", "servers:read"]},
                     "/api/scheduler/schedules": {
                         "schedules": [],
                         "task_types": ["backup", "verify"],

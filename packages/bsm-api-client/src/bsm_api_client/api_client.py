@@ -61,6 +61,7 @@ class BedrockServerManagerApi(DynamicOpenAPIMixin, ClientBase):
         verify_ssl: bool = True,
         http_client: httpx.AsyncClient | None = None,
         remember_me: bool = False,
+        otp: str = "",
     ) -> None:
         """Create the SDK and its domain services without opening a WebSocket.
 
@@ -83,6 +84,7 @@ class BedrockServerManagerApi(DynamicOpenAPIMixin, ClientBase):
             verify_ssl=verify_ssl,
             http_client=http_client,
             remember_me=remember_me,
+            otp=otp,
         )
         from .generated.rest import RestClient
 

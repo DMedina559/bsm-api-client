@@ -95,9 +95,14 @@ def server(server_data_dir):  # noqa: C901
 
                 # Perform initial setup
                 if needs_setup:
-                    print("[Test Server] Creating first user: admin / password")
+                    print(
+                        "[Test Server] Creating the isolated integration-test account"
+                    )
                     async with aiohttp.ClientSession() as session:
-                        payload = {"username": "admin", "password": "password"}
+                        payload = {
+                            "username": "admin",
+                            "password": "integration secure passphrase",
+                        }
                         async with session.post(
                             f"{base_url}/api/setup/create-first-user", json=payload
                         ) as response:
@@ -143,7 +148,7 @@ async def bedrock_server(server, server_data_dir):
     The server is deleted at the end of the test session.
     """
     server_name = "test-server"
-    client = BedrockServerManagerApi(server, "admin", "password")
+    client = BedrockServerManagerApi(server, "admin", "integration secure passphrase")
     installed = False
     try:
         from bsm_test_utils import create_server_zip

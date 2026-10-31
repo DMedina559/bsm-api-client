@@ -15,7 +15,9 @@ class TestPluginSystem:
 
     async def test_get_plugin_statuses(self, server):
         """Tests that we can get the status of all plugins."""
-        client = BedrockServerManagerApi(server, "admin", "password")
+        client = BedrockServerManagerApi(
+            server, "admin", "integration secure passphrase"
+        )
         try:
             await client.plugins.async_reload_plugins()
             status_res = await client.plugins.async_get_plugin_statuses()
@@ -32,7 +34,9 @@ class TestPluginSystem:
 
     async def test_set_plugin_status(self, server):
         """Tests enabling and disabling a default plugin."""
-        client = BedrockServerManagerApi(server, "admin", "password")
+        client = BedrockServerManagerApi(
+            server, "admin", "integration secure passphrase"
+        )
         try:
             # 1. Get initial status
             status_res = await client.plugins.async_get_plugin_statuses()
@@ -67,7 +71,9 @@ class TestPluginSystem:
 
     async def test_trigger_plugin_event(self, server):
         """Tests triggering a custom plugin event."""
-        client = BedrockServerManagerApi(server, "admin", "password")
+        client = BedrockServerManagerApi(
+            server, "admin", "integration secure passphrase"
+        )
         try:
             payload = TriggerEventPayload(
                 event_name="any_event", payload={"data": "some_value"}
@@ -79,7 +85,9 @@ class TestPluginSystem:
 
     async def test_reload_plugins(self, server):
         """Tests the reload plugins endpoint."""
-        client = BedrockServerManagerApi(server, "admin", "password")
+        client = BedrockServerManagerApi(
+            server, "admin", "integration secure passphrase"
+        )
         try:
             reload_res = await client.plugins.async_reload_plugins()
             assert reload_res.status == "success"
@@ -132,7 +140,11 @@ def test_builtin_plugin_operation_discovery(
         BedrockServerManagerApi, "_fetch_openapi_schema", AsyncMock(return_value=schema)
     )
     monkeypatch.setattr("bsm_cli.config.get_config_path", lambda: tmp_path / "cli.json")
-    Config().update(base_url="http://localhost", username="admin", password="password")
+    Config().update(
+        base_url="http://localhost",
+        username="admin",
+        password="integration secure passphrase",
+    )
     result = CliRunner().invoke(cli, ["--json", "plugin", "operations", module])
     assert result.exit_code == 0, result.output
     rows = json.loads(result.stdout)
@@ -146,7 +158,9 @@ async def test_typed_plugin_settings_round_trip(server):
     from bsm_api_client.exceptions import InvalidInputError
     from bsm_api_client.models import PluginSettingsPayload
 
-    async with BedrockServerManagerApi(server, "admin", "password") as client:
+    async with BedrockServerManagerApi(
+        server, "admin", "integration secure passphrase"
+    ) as client:
         name = "backup_on_start"
         original = await client.plugins.async_get_plugin_settings(name)
         assert original.settings_schema

@@ -263,16 +263,32 @@ async def schema(ctx):
     ),
 )
 @click.option("--plugin", "plugin_name", shell_complete=complete_plugin)
+@click.option(
+    "--accessible",
+    is_flag=True,
+    help="Show statically accessible operations; contextual or unknown policies are omitted.",
+)
 @pass_async_context
-async def operations(ctx, tag, method=None, plugin_name=None, search=""):
+async def operations(
+    ctx, tag, method=None, plugin_name=None, accessible=False, search=""
+):
     """List HTTP operations advertised by the server."""
     client = await discover(ctx)
+    permissions = []
+    if accessible:
+        account = await client.async_call_operation("get_account")
+        if hasattr(account, "to_dict"):
+            account = account.to_dict()
+        elif hasattr(account, "model_dump"):
+            account = account.model_dump()
+        permissions = account.get("permissions") or []
     rows = [
         op.to_dict()
         for op in sorted(client.operations.values(), key=lambda op: op.operation_id)
         if (not tag or tag in op.tags)
         and (not method or op.method == method.upper())
         and (not plugin_name or op.plugin == plugin_name)
+        and (not accessible or op.accessible_with(permissions) is True)
         and search.lower()
         in f"{op.operation_id} {op.path} {op.summary} {' '.join(op.tags)}".lower()
     ]
@@ -282,9 +298,15 @@ async def operations(ctx, tag, method=None, plugin_name=None, search=""):
 
     table(
         "API operations",
-        ("METHOD", "OPERATION", "SUMMARY", "PATH"),
+        ("METHOD", "OPERATION", "SUMMARY", "PATH", "ACCESS"),
         [
-            (row["method"], row["operation_id"], row.get("summary") or "", row["path"])
+            (
+                row["method"],
+                row["operation_id"],
+                row.get("summary") or "",
+                row["path"],
+                row["access"].get("classification", "unknown"),
+            )
             for row in rows
         ],
     )

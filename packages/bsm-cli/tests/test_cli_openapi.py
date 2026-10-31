@@ -507,3 +507,92 @@ def test_diagnostic_report_missing_operation_does_not_create_file(client, tmp_pa
     output = tmp_path / "support.json"
     result = run("diagnostics", "report", "--output", str(output))
     assert result.exit_code != 0 and not output.exists()
+
+
+def test_accessible_filter_keeps_unavailable_operations_inspectable(client):
+    import copy
+
+    schema = copy.deepcopy(SCHEMA)
+    schema["paths"]["/api/info"]["get"]["x-bsm-access"] = {
+        "version": 1,
+        "classification": "permission",
+        "authentication": "required",
+        "required_permissions": ["servers:read"],
+        "allowed_roles": ["user", "moderator", "admin"],
+        "additional_checks": [],
+    }
+    client._fetch_openapi_schema.return_value = schema
+    client.async_call_operation.return_value = {"permissions": ["servers:read"]}
+    result = run("--json", "api", "operations", "--accessible")
+    assert result.exit_code == 0, result.output
+    assert [op["operation_id"] for op in json.loads(result.stdout)] == ["info"]
+    result = run("--json", "api", "operations", "--accessible", "--search", "INFO")
+    assert result.exit_code == 0, result.output
+    assert [op["operation_id"] for op in json.loads(result.stdout)] == ["info"]
+    result = run("--json", "api", "operations", "--accessible", "--search", "demo")
+    assert result.exit_code == 0, result.output
+    assert json.loads(result.stdout) == []
+    client.async_call_operation.return_value = {"permissions": []}
+    result = run("--json", "api", "operations")
+    assert result.exit_code == 0, result.output
+    assert {op["operation_id"] for op in json.loads(result.stdout)} == {
+        "info",
+        "demo_action",
+    }
+
+
+def test_named_credential_commands_forward_explicit_scope_and_resource_limits(client):
+    result = run(
+        "--json",
+        "auth",
+        "tokens",
+        "create",
+        "--name",
+        "Home Assistant",
+        "--permission",
+        "servers:read",
+        "--server-id",
+        "a" * 32,
+        "--expires-days",
+        "7",
+    )
+    assert result.exit_code == 0, result.output
+    call = client.async_call_operation.call_args
+    assert call.args == ("create_integration_token",)
+    assert call.kwargs["json_data"] == {
+        "name": "Home Assistant",
+        "permissions": ["servers:read"],
+        "server_ids": ["a" * 32],
+        "expires_in_days": 7,
+    }
+    result = run(
+        "--json",
+        "access",
+        "set",
+        "2",
+        "--mode",
+        "assigned",
+        "--grant",
+        "a" * 32 + "=servers:read",
+    )
+    assert result.exit_code == 0, result.output
+    assert client.async_call_operation.call_args.kwargs["json_data"]["grants"] == [
+        {"server_id": "a" * 32, "permissions": ["servers:read"]}
+    ]
+
+
+def test_never_expiring_integration_token_is_explicit(client):
+    result = run(
+        "--json",
+        "auth",
+        "tokens",
+        "create",
+        "--name",
+        "Home Assistant",
+        "--never-expire",
+    )
+    assert result.exit_code == 0, result.output
+    assert (
+        client.async_call_operation.call_args.kwargs["json_data"]["expires_in_days"]
+        is None
+    )

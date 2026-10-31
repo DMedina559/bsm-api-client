@@ -74,6 +74,12 @@ class ApiOperation:
     request_body: dict[str, Any] = field(default_factory=dict)
     responses: dict[str, Any] = field(default_factory=dict)
     security: tuple[dict[str, Any], ...] = ()
+    access: dict[str, Any] = field(
+        default_factory=lambda: {
+            "classification": "unknown",
+            "authentication": "unknown",
+        }
+    )
     plugin: str | None = None
     generated: bool = False
 
@@ -81,6 +87,21 @@ class ApiOperation:
     def requires_authentication(self) -> bool:
         """OpenAPI security is optional when any alternative is empty."""
         return bool(self.security) and {} not in self.security
+
+    def accessible_with(self, permissions) -> bool | None:
+        """Return static accessibility, or None when contextual policy is unresolved."""
+        if self.access.get("version") != 1:
+            return None
+        classification = self.access.get("classification")
+        if classification == "public":
+            return True
+        if (
+            classification != "permission"
+            or self.access.get("additional_checks")
+            or self.access.get("resource_scope") in {"server", "collection"}
+        ):
+            return None
+        return set(self.access.get("required_permissions", ())) <= set(permissions)
 
     @property
     def namespace(self) -> str:
@@ -150,6 +171,12 @@ def index_operations(
                     for k, v in details.get("responses", {}).items()
                 },
                 security=tuple(details.get("security", schema.get("security", ()))),
+                access=copy.deepcopy(
+                    details.get(
+                        "x-bsm-access",
+                        {"classification": "unknown", "authentication": "unknown"},
+                    )
+                ),
                 plugin=plugin,
                 generated=identifier in (generated_ids or set()),
             )
