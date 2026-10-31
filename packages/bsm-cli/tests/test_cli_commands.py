@@ -281,8 +281,6 @@ def command_client(monkeypatch, tmp_path):
         async def request(method, path, **kwargs):
             status = 200
             body = dict(SUCCESS)
-            if path == "/api/account":
-                body["permissions"] = ["account:read", "servers:read"]
             if path == "/api/server/install":
                 body.update(status="accepted", task_id="test-task")
             if "restart" in path:
@@ -301,6 +299,7 @@ def command_client(monkeypatch, tmp_path):
                 body["events"] = None
             body.update(
                 {
+                    "/api/account": {"permissions": ["account:read", "servers:read"]},
                     "/api/scheduler/schedules": {
                         "schedules": [],
                         "task_types": ["backup", "verify"],
