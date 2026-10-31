@@ -296,3 +296,49 @@ JSON recovery report to a new file and refuses to overwrite an existing file.
 Reports contain verification, drill, capacity and restore outcome evidence.
 Archive references are hashes; archive filenames, paths, credentials, notes and
 configuration values are excluded.
+
+## Interactive API Explorer
+
+Run `bsm-cli api explore`, or select **Advanced API** from the home menu, to browse
+live core and plugin operations. Type in the operation/model selectors to search.
+Operation views show parameter types and request/response contracts. Build JSON
+requests with guided fields (including nested objects, enums, booleans and defaults)
+or enter raw JSON. Invalid inputs are rejected before execution; cancelling a
+prompt sends no request. Review the redacted preview and choose Execute to send it.
+
+Responses include HTTP status and elapsed time. Switch between structured Body,
+Headers and Raw JSON views; filter array items and move through pages of 25 rows.
+Nested collections are bounded in the terminal; raw views retain complete results.
+The explorer keeps requests and responses in memory for the current action.
+
+Equivalent direct commands are available for scripting and one-off inspection:
+
+```sh
+bsm-cli api operations --search backup
+bsm-cli api models --search Snapshot
+bsm-cli api model SnapshotCreatePayload
+bsm-cli api operation create_server_snapshot
+bsm-cli api call get_settings --dry-run
+bsm-cli api call get_settings --details
+bsm-cli api call get_settings --raw
+bsm-cli --json api call get_settings
+```
+
+`--json` continues to return the complete response body without presentation or
+pagination. `--details` opts into an envelope containing `status_code`, `headers`,
+`data` and `duration_ms`; it does not change the default result shape.
+`--dry-run` validates and previews without executing, concealing credentials and
+write-only model fields. `--raw` prints complete JSON instead of terminal tables.
+Model/operation inspection also supports `--raw`.
+
+To inspect or execute from an exported contract, place `--schema-file` before the
+API subcommand:
+
+```sh
+bsm-cli api --schema-file saved-openapi.json explore
+bsm-cli api --schema-file saved-openapi.json model SnapshotCreatePayload
+```
+
+Imported `servers` URLs never change the configured backend or credentials.
+Refresh reloads the selected source. Generic form uploads and streaming downloads
+remain available through `api call --form/--file` and `api download`.

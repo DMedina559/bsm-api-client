@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import copy
 import logging
 import re
 from contextlib import asynccontextmanager
@@ -170,21 +171,31 @@ class DynamicOpenAPIMixin(GeneratedOperationMethods):
         return cast("Client | AuthenticatedClient", clients[authenticated])
 
     async def async_discover_api(
-        self, *, force: bool = False
+        self, *, force: bool = False, schema: Optional[Mapping[str, Any]] = None
     ) -> Mapping[str, DiscoveredOperation]:
-        """Fetch /openapi.json and index every HTTP operation exposed by BSM."""
-        if self._openapi_schema is not None and not force:
+        """Index the live API or an explicitly supplied OpenAPI document.
+
+        :param schema: Optional local contract. Server URLs in it are ignored;
+            requests continue to use this client's configured backend.
+        """
+        if self._openapi_schema is not None and not force and schema is None:
             return self.operations
         if not hasattr(self, "_discovery_lock"):
             self._discovery_lock = asyncio.Lock()
         previous = self._openapi_schema
         async with self._discovery_lock:
             # Coalesce refreshes that were waiting for the same snapshot.
-            if self._openapi_schema is not None and (
-                not force or self._openapi_schema is not previous
+            if (
+                schema is None
+                and self._openapi_schema is not None
+                and (not force or self._openapi_schema is not previous)
             ):
                 return self.operations
-            schema = await self._fetch_openapi_schema()
+            schema = (
+                copy.deepcopy(schema)
+                if schema is not None
+                else await self._fetch_openapi_schema()
+            )
             try:
                 generated_ids = set(
                     index_operations(await asyncio.to_thread(generated_schema))
@@ -194,7 +205,7 @@ class DynamicOpenAPIMixin(GeneratedOperationMethods):
             operations = index_operations(schema, generated_ids)
             fingerprint = schema_fingerprint(schema)
             # Publish only after the entire document has been validated.
-            self._openapi_schema = schema
+            self._openapi_schema = dict(schema)
             self._openapi_fingerprint = fingerprint
             self._discovered_operations = operations
             _LOGGER.debug(
@@ -223,8 +234,14 @@ class DynamicOpenAPIMixin(GeneratedOperationMethods):
         headers: Optional[Mapping[str, str]] = None,
         files: Optional[Mapping[str, Any]] = None,
         authenticated: bool = True,
+        detailed: bool = False,
     ) -> Any:
-        """Invoke an operation discovered from the live OpenAPI schema."""
+        """Invoke an operation discovered from the live OpenAPI schema.
+
+        :param detailed: Include status_code, headers and data in a response envelope.
+            The default returns only the response body for compatibility.
+        """
+        details: Dict[str, Any] = {"detailed": True} if detailed else {}
         if not self.operations:
             await self.async_discover_api()
         try:
@@ -266,6 +283,7 @@ class DynamicOpenAPIMixin(GeneratedOperationMethods):
                 headers=headers,
                 authenticated=authenticated,
                 multipart=True,
+                **details,
             )
         if files:
             return await self._dynamic_request(
@@ -276,6 +294,7 @@ class DynamicOpenAPIMixin(GeneratedOperationMethods):
                 headers=headers,
                 authenticated=authenticated,
                 files=files,
+                **details,
             )
         return await self._dynamic_request(
             operation.method,
@@ -285,6 +304,7 @@ class DynamicOpenAPIMixin(GeneratedOperationMethods):
             form_data=form_data,
             headers=headers,
             authenticated=authenticated,
+            **details,
         )
 
     def _validate_operation_inputs(
@@ -589,6 +609,7 @@ class DynamicOpenAPIMixin(GeneratedOperationMethods):
         raw_request: Optional[httpx.Request] = None,
         files: Optional[Mapping[str, Any]] = None,
         multipart: bool = False,
+        detailed: bool = False,
     ) -> Any:
         async with self._open_response(
             method,
@@ -618,8 +639,16 @@ class DynamicOpenAPIMixin(GeneratedOperationMethods):
                 response.status_code == 204
                 or response.headers.get("content-length") == "0"
             ):
-                return None
-            return await _read_response(response)
+                data = None
+            else:
+                data = await _read_response(response)
+            if detailed:
+                return {
+                    "status_code": response.status_code,
+                    "headers": dict(response.headers),
+                    "data": data,
+                }
+            return data
 
     @asynccontextmanager
     async def async_stream_operation(

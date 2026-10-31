@@ -6,6 +6,7 @@ import json
 import mimetypes
 import os
 import tempfile
+import time
 from contextlib import ExitStack
 from pathlib import Path
 from typing import Any
@@ -26,7 +27,17 @@ from bsm_cli.output import emit, get_client
 
 async def discover(ctx, *, force=False):
     client = get_client(ctx)
-    await client.async_discover_api(force=force)
+    schema_file = ctx.obj.get("api_schema_file")
+    if schema_file:
+        try:
+            document = json.loads(schema_file.read_text(encoding="utf-8"))
+        except (OSError, ValueError) as error:
+            raise click.BadParameter(
+                "Cannot read a valid OpenAPI JSON document.", param_hint="--schema-file"
+            ) from error
+        await client.async_discover_api(force=force, schema=document)
+    else:
+        await client.async_discover_api(force=force)
     return client
 
 
@@ -76,7 +87,20 @@ def parameter_value(schema, parameter, value):
     return parsed
 
 
-async def invoke(ctx, operation_id, param, json_body, form, plugin_name=None, file=()):
+async def invoke(
+    ctx,
+    operation_id,
+    param,
+    json_body,
+    form,
+    plugin_name=None,
+    file=(),
+    *,
+    dry_run=False,
+    raw=False,
+    details=False,
+    render=True,
+):
     client = await discover(ctx)
     operation = client.operations.get(operation_id)
     if operation is None or (plugin_name and operation.plugin != plugin_name):
@@ -85,6 +109,20 @@ async def invoke(ctx, operation_id, param, json_body, form, plugin_name=None, fi
     if file and json_body is not None:
         raise click.BadParameter("Choose --json or --file/--form.")
     body = request_body(operation, json_body, form or file)
+    from bsm_cli.api_explorer import preview_request, validate_request
+
+    validate_request(client.schema, operation, locations, body)
+    assignments(form)
+    assignments(file)
+    if dry_run:
+        preview = preview_request(client.schema, operation, locations, body, form, file)
+        if ctx.obj.get("json_output") or raw:
+            return emit(ctx, preview)
+        from bsm_cli.api_presentation import show_data
+
+        show_data(preview, title="Request preview")
+        return preview
+    started = time.perf_counter()
     with ExitStack() as stack:
         files = {}
         for name, path in assignments(file).items():
@@ -108,8 +146,27 @@ async def invoke(ctx, operation_id, param, json_body, form, plugin_name=None, fi
             form_data=assignments(form) if form else None,
             authenticated=operation.requires_authentication,
             **({"files": files} if files else {}),
+            **({"detailed": True} if details else {}),
         )
-    return emit(ctx, result)
+    if details:
+        result = {
+            **result,
+            "duration_ms": round((time.perf_counter() - started) * 1000),
+        }
+    if not render:
+        return result
+    return _emit_result(ctx, result, raw=raw, details=details)
+
+
+def _emit_result(ctx, result, *, raw, details):
+    from bsm_cli.api_presentation import show_data
+
+    if ctx.obj.get("json_output") or raw:
+        return emit(ctx, result)
+    if details:
+        click.echo(f"HTTP {result['status_code']} · {result['duration_ms']} ms")
+    show_data(result.get("data") if details else result)
+    return result
 
 
 def operation_arguments(schema, operation, param):
@@ -159,8 +216,16 @@ def call_options(fn):
 
 
 @click.group()
-def api():
+@click.option(
+    "--schema-file",
+    type=click.Path(exists=True, dir_okay=False, path_type=Path),
+    help="Use a saved OpenAPI contract against the configured backend.",
+)
+@click.pass_context
+def api(ctx, schema_file):
     """Inspect and call the server's OpenAPI contract."""
+    ctx.ensure_object(dict)
+    ctx.obj["api_schema_file"] = schema_file
 
 
 @api.command("info")
@@ -188,6 +253,7 @@ async def schema(ctx):
 
 
 @api.command("operations")
+@click.option("--search", default="", help="Search IDs, paths, summaries and tags.")
 @click.option("--tag", help="Filter by exact OpenAPI tag.")
 @click.option(
     "--method",
@@ -203,7 +269,9 @@ async def schema(ctx):
     help="Show statically accessible operations; contextual or unknown policies are omitted.",
 )
 @pass_async_context
-async def operations(ctx, tag, method=None, plugin_name=None, accessible=False):
+async def operations(
+    ctx, tag, method=None, plugin_name=None, accessible=False, search=""
+):
     """List HTTP operations advertised by the server."""
     client = await discover(ctx)
     permissions = []
@@ -221,30 +289,131 @@ async def operations(ctx, tag, method=None, plugin_name=None, accessible=False):
         and (not method or op.method == method.upper())
         and (not plugin_name or op.plugin == plugin_name)
         and (not accessible or op.accessible_with(permissions) is True)
+        and search.lower()
+        in f"{op.operation_id} {op.path} {op.summary} {' '.join(op.tags)}".lower()
     ]
-    if not ctx.obj.get("json_output"):
-        for row in rows:
-            row["access_label"] = row["access"].get("classification", "unknown")
-    return emit(ctx, rows, columns=("method", "operation_id", "path", "access_label"))
+    if ctx.obj.get("json_output"):
+        return emit(ctx, rows)
+    from bsm_cli.presentation import table
+
+    table(
+        "API operations",
+        ("METHOD", "OPERATION", "SUMMARY", "PATH", "ACCESS"),
+        [
+            (
+                row["method"],
+                row["operation_id"],
+                row.get("summary") or "",
+                row["path"],
+                row["access"].get("classification", "unknown"),
+            )
+            for row in rows
+        ],
+    )
+    return rows
 
 
 @api.command("operation")
+@click.option("--raw", is_flag=True, help="Print the complete operation JSON.")
 @click.argument("operation_id", shell_complete=complete_operation)
 @pass_async_context
-async def operation(ctx, operation_id):
+async def operation(ctx, operation_id, raw=False):
     """Inspect one operation and its request/response contract."""
     client = await discover(ctx)
     if operation_id not in client.operations:
         raise NotFoundError(f"Unknown operation: {operation_id}")
-    return emit(ctx, client.operations[operation_id].to_dict())
+    selected = client.operations[operation_id]
+    if raw or ctx.obj.get("json_output"):
+        return emit(ctx, selected.to_dict())
+    from bsm_cli.api_presentation import show_operation
+
+    show_operation(client.schema, selected)
+    return selected.to_dict()
 
 
 @api.command("call")
+@click.option(
+    "--dry-run", is_flag=True, help="Validate and preview without sending a request."
+)
+@click.option(
+    "--raw", is_flag=True, help="Print complete response JSON instead of tables."
+)
+@click.option(
+    "--details", is_flag=True, help="Include HTTP status, headers and timing."
+)
 @call_options
 @pass_async_context
-async def call(ctx, operation_id, param, json_body, form, file):
+async def call(
+    ctx,
+    operation_id,
+    param,
+    json_body,
+    form,
+    file,
+    dry_run=False,
+    raw=False,
+    details=False,
+):
     """Invoke any advertised core or plugin HTTP operation."""
-    return await invoke(ctx, operation_id, param, json_body, form, file=file)
+    return await invoke(
+        ctx,
+        operation_id,
+        param,
+        json_body,
+        form,
+        file=file,
+        dry_run=dry_run,
+        raw=raw,
+        details=details,
+    )
+
+
+@api.command("models")
+@click.option("--search", default="", help="Filter component model names.")
+@pass_async_context
+async def models(ctx, search):
+    """Browse the live contract's named models."""
+    client = await discover(ctx)
+    rows = [
+        {"name": name, "description": spec.get("description", "")}
+        for name, spec in sorted(
+            client.schema.get("components", {}).get("schemas", {}).items()
+        )
+        if search.lower() in name.lower()
+    ]
+    return emit(ctx, rows, columns=("name", "description"))
+
+
+@api.command("model")
+@click.argument("name")
+@click.option("--raw", is_flag=True, help="Print the complete JSON Schema model.")
+@pass_async_context
+async def model(ctx, name, raw):
+    """Inspect a model's fields, requirements, defaults and references."""
+    client = await discover(ctx)
+    schemas = client.schema.get("components", {}).get("schemas", {})
+    if name not in schemas:
+        raise NotFoundError(f"Unknown model: {name}")
+    if raw or ctx.obj.get("json_output"):
+        return emit(ctx, schemas[name])
+    from bsm_cli.api_presentation import show_model
+
+    show_model(client.schema, name, schemas[name])
+    return schemas[name]
+
+
+@api.command("explore")
+@click.option("--search", default="", help="Start with a filtered operation list.")
+@pass_async_context
+async def explore_api(ctx, search):
+    """Open the interactive API explorer with typed request prompts."""
+    if ctx.obj.get("json_output"):
+        raise click.BadParameter(
+            "Use api operations/model/call with --json; api explore requires an interactive terminal."
+        )
+    from bsm_cli.api_explorer import explore
+
+    await explore(ctx, search=search)
 
 
 @api.command("diff")
