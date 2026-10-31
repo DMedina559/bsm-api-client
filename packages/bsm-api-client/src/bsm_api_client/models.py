@@ -222,6 +222,8 @@ SettingItemResponse = SettingItemPayload
 class CurrentAccountResponse(UserResponse):
     """Account details with optional capabilities from newer backends."""
 
+    mfa_enrollment_required: bool | None = None
+
     permissions: list[str] | None = None
     policy_revision: str | None = None
     server_access: str | None = "all"

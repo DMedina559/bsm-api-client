@@ -92,14 +92,17 @@ async def test_change_password(client):
     ) as mock_request:
         mock_request.return_value = {"status": "success"}
         payload = ChangePasswordPayload(
-            current_password="password", new_password="new_password"
+            current_password="password", new_password="new secure passphrase"
         )
         result = await client.account.async_change_password(payload)
         assert isinstance(result, BaseApiResponse)
         assert result.status == "success"
         mock_request.assert_called_once_with(
             "change_password",
-            body={"current_password": "password", "new_password": "new_password"},
+            body={
+                "current_password": "password",
+                "new_password": "new secure passphrase",
+            },
             authenticated=True,
             typed=True,
         )
@@ -153,7 +156,7 @@ async def test_change_password_error(client):
         with pytest.raises(Exception) as excinfo:
             await client.account.async_change_password(
                 ChangePasswordPayload(
-                    current_password="password", new_password="new_password"
+                    current_password="password", new_password="new secure passphrase"
                 )
             )
         assert "API Error" in str(excinfo.value)
@@ -195,3 +198,11 @@ async def test_logout_clears_password_fallback_even_when_server_is_unreachable(c
     assert client._jwt_token is None
     assert client._password == ""
     assert client._otp == ""
+
+
+def test_password_validation_does_not_echo_the_supplied_secret():
+    from pydantic import ValidationError
+
+    with pytest.raises(ValidationError) as failure:
+        ChangePasswordPayload(current_password="old-secret", new_password="tiny-secret")
+    assert "tiny-secret" not in str(failure.value)
