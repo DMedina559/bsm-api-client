@@ -323,6 +323,7 @@ async def browse_models(ctx, document):
                 "Models (type to search)",
                 choices=[*sorted(models), "Back"],
                 use_search_filter=True,
+                use_jk_keys=False,
             )
         )
         if name == "Back":
@@ -418,6 +419,7 @@ async def explore(ctx, *, search=""):
                         "Operations (type to search)",
                         choices=[*choices, "Back"],
                         use_search_filter=True,
+                        use_jk_keys=False,
                     )
                 )
                 if identifier != "Back":

@@ -284,3 +284,55 @@ async def test_detailed_response_retains_cli_failure_policy():
     )
     with pytest.raises(OperationFailedError, match="Rejected"):
         await RecordingClient(client).async_call_operation("operation", detailed=True)
+
+
+@pytest.mark.parametrize("destination", ["Operations", "Models"])
+def test_searchable_pickers_accept_j_and_k(destination, transport, monkeypatch):
+    """Construct the real Questionary prompt and exercise its search bindings."""
+    from copy import deepcopy
+
+    import questionary
+    from prompt_toolkit.input import create_pipe_input
+    from prompt_toolkit.output import DummyOutput
+
+    from bsm_cli import api_explorer
+
+    document = deepcopy(SCHEMA)
+    document["paths"]["/api/fixture/{name}"]["post"]["operationId"] = "jk_action"
+    document["components"]["schemas"]["JkModel"] = {"type": "object"}
+    monkeypatch.setitem(globals(), "SCHEMA", document)
+    menu = iter([destination, "Back"])
+    real_select = questionary.select
+    searched = []
+    shown = []
+    operation_menu = AsyncMock()
+    monkeypatch.setattr(api_explorer, "operation_menu", operation_menu)
+    monkeypatch.setattr(
+        api_explorer, "show_model", lambda doc, name, spec: shown.append(name)
+    )
+
+    with create_pipe_input() as pipe:
+
+        def select(message, **kwargs):
+            if kwargs.get("use_search_filter"):
+                if searched:
+                    return Answer("Back")
+                searched.append(message)
+                prompt = real_select(
+                    message, **kwargs, input=pipe, output=DummyOutput()
+                )
+                pipe.send_text("jk\r")
+                return prompt
+            return Answer(next(menu) if message == "API Explorer" else "Back")
+
+        monkeypatch.setattr(api_explorer.questionary, "select", select)
+        result = run("api", "explore")
+
+    assert result.exit_code == 0, result.output
+    assert "Action failed" not in result.output
+    if destination == "Operations":
+        operation_menu.assert_awaited_once()
+        assert operation_menu.await_args.args[2].operation_id == "jk_action"
+    else:
+        assert shown == ["JkModel"]
+    assert not transport
