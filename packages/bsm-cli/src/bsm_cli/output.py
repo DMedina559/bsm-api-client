@@ -150,12 +150,19 @@ class RecordingClient:
         @functools.wraps(target)
         async def record(*args, **kwargs):
             result = await target(*args, **kwargs)
-            status = (
-                result.get("status")
-                if isinstance(result, dict)
-                else getattr(result, "status", None)
+            payload = (
+                result.get("data")
+                if name == "async_call_operation"
+                and kwargs.get("detailed")
+                and isinstance(result, dict)
+                else result
             )
-            error = result.get("error") if isinstance(result, dict) else None
+            status = (
+                payload.get("status")
+                if isinstance(payload, dict)
+                else getattr(payload, "status", None)
+            )
+            error = payload.get("error") if isinstance(payload, dict) else None
             if status in {"error", "failed", "cancelled", "partial"} or isinstance(
                 error, dict
             ):
@@ -163,23 +170,23 @@ class RecordingClient:
                     from bsm_cli.manager import outcome
 
                     outcome(
-                        result if isinstance(result, dict) else serializable(result)
+                        payload if isinstance(payload, dict) else serializable(payload)
                     )
                 raise OperationFailedError(
                     (
-                        (error or result).get("message", "Operation failed")
-                        if isinstance(result, dict)
-                        else getattr(result, "message", None) or "Operation failed"
+                        (error or payload).get("message", "Operation failed")
+                        if isinstance(payload, dict)
+                        else getattr(payload, "message", None) or "Operation failed"
                     ),
                     response_data=(
-                        result
-                        if isinstance(result, dict)
+                        payload
+                        if isinstance(payload, dict)
                         else (
-                            result.model_dump(mode="json")
-                            if hasattr(result, "model_dump")
+                            payload.model_dump(mode="json")
+                            if hasattr(payload, "model_dump")
                             else {
                                 "status": status,
-                                "message": getattr(result, "message", None),
+                                "message": getattr(payload, "message", None),
                             }
                         )
                     ),

@@ -177,7 +177,10 @@ async def test_diagnostics_preserve_administrator_errors_without_retrying():
 @pytest.mark.asyncio
 async def test_global_activity_round_trip_filters_operations_and_listener_details():
     from bedrock_server_manager.events import EventSubscriptionInfo, EventSubscriptions
-    from bedrock_server_manager.events.operations import OperationActivity, OperationSnapshot
+    from bedrock_server_manager.events.operations import (
+        OperationActivity,
+        OperationSnapshot,
+    )
 
     from bsm_api_client.models import DiagnosticActivity
 

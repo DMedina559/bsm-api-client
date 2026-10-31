@@ -245,3 +245,20 @@ Backup recovery management is available through `client.backups.async_health`,
 review and apply its returned archive separately. Restore plans include bounded
 file comparisons and redacted setting changes. Completed restores return a
 `safety_backup_id` for the protected pre-restore recovery point.
+
+### Explicit contract sources and response metadata
+
+Runtime discovery can use a locally supplied OpenAPI document without changing the
+configured backend. The SDK validates and copies the document before replacing
+its active catalog; a rejected document leaves the previous contract intact.
+
+```python
+await client.async_discover_api(schema=saved_schema)
+response = await client.async_call_operation("get_settings", detailed=True)
+print(response["status_code"], response["headers"], response["data"])
+```
+
+`detailed=False` remains the default and returns only the original response body.
+HTTP failures continue to raise the existing API exceptions. Imported `servers`
+entries are ignored; authentication, URL prefixes and cancellation retain the
+client's existing transport behavior.

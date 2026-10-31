@@ -172,6 +172,10 @@ async def _open_destination(ctx, choice, routes, groups):
     elif choice in routes:
         await _invoke(ctx, _command(ctx, *routes[choice]))
         click.pause("Press any key to return home...")
+    elif choice == "Advanced API":
+        from bsm_cli.api_explorer import explore
+
+        await explore(ctx)
     elif choice in groups:
         await command_menu(ctx, ctx.obj["cli"].commands[groups[choice]])
     elif choice == "Plugins":
