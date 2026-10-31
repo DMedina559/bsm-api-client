@@ -164,6 +164,8 @@ async def _prompt_parameter(ctx, param):  # noqa: C901
         answer = await questionary.confirm(
             prompt, default=bool(param.get_default(ctx))
         ).ask_async()
+        if not param.expose_value:
+            return _DEFAULT if answer else _CANCEL
         return _CANCEL if answer is None else answer
     if not multiple and not getattr(param, "hide_input", False):
         try:

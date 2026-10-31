@@ -1,7 +1,7 @@
 # Generated from bundled OpenAPI by scripts/generate_models.py.
 from __future__ import annotations
 
-from typing import Annotated, Literal
+from typing import Annotated, Any, Literal
 from uuid import UUID
 
 from pydantic import AwareDatetime, ConfigDict, Field, JsonValue, SecretStr
@@ -385,6 +385,7 @@ class BodyLogin(ContractModel):
     client_id: str | None = Field(None, title="Client Id")
     client_secret: SecretStr | None = Field(None, title="Client Secret")
     grant_type: GrantType | None = Field(None, title="Grant Type")
+    otp: str | None = Field("", max_length=128, title="Otp")
     password: SecretStr = Field(..., title="Password")
     remember_me: bool | None = Field(False, title="Remember Me")
     scope: str | None = Field("", title="Scope")
@@ -505,6 +506,7 @@ class CurrentAccountResponse(ContractModel):
     server_permissions: dict[str, list[str]] | None = Field(
         None, title="Server Permissions"
     )
+    session_id: str | None = Field(None, title="Session Id")
     theme: str | None = Field("default", title="Theme")
     username: str = Field(..., title="Username")
 
@@ -730,6 +732,22 @@ class EventSubscriptions(ContractModel):
     truncated: bool | None = Field(False, title="Truncated")
 
 
+class FactorCode(ContractModel):
+    """Validate and serialize the FactorCode contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    code: str = Field(..., max_length=128, min_length=6, title="Code")
+
+
+class FactorEnrollment(ContractModel):
+    """Validate and serialize the FactorEnrollment contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    provisioning_uri: str = Field(..., title="Provisioning Uri")
+    qr_svg: str = Field(..., title="Qr Svg")
+    secret: str = Field(..., title="Secret")
+
+
 class FileNamePayload(ContractModel):
     """Payload for file-based operations.
 
@@ -906,6 +924,23 @@ class LogHistoryPage(ContractModel):
     file_id: str = Field(..., title="File Id")
     has_more: bool = Field(..., title="Has More")
     start: int = Field(..., title="Start")
+
+
+class LoginSessionInfo(ContractModel):
+    """Validate and serialize the LoginSessionInfo contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    active: bool = Field(..., title="Active")
+    connected: bool = Field(..., title="Connected")
+    created_at: int = Field(..., title="Created At")
+    current: bool = Field(..., title="Current")
+    expires_at: int = Field(..., title="Expires At")
+    id: str = Field(..., pattern="^[a-f0-9]{32}$", title="Id")
+    ip_address: str = Field(..., title="Ip Address")
+    last_seen_at: int = Field(..., title="Last Seen At")
+    name: str = Field(..., title="Name")
+    revoked_at: int | None = Field(None, title="Revoked At")
+    user_agent: str = Field(..., title="User Agent")
 
 
 class MetricsDiagnostics(ContractModel):
@@ -1247,6 +1282,13 @@ class RecentDiagnosticWindow(ContractModel):
     window_seconds: Literal[300] = Field(300, title="Window Seconds")
 
 
+class RecoveryCodes(ContractModel):
+    """Validate and serialize the RecoveryCodes contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    recovery_codes: list[str] = Field(..., title="Recovery Codes")
+
+
 class RecoveryReportArchive(ContractModel):
     """Validate and serialize the RecoveryReportArchive contract."""
 
@@ -1355,6 +1397,15 @@ class RemoveServerBanResponse(ContractModel):
     )
 
 
+class RenameSession(ContractModel):
+    """Validate and serialize the RenameSession contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    name: str = Field(
+        ..., max_length=100, min_length=1, pattern=".*\\S.*", title="Name"
+    )
+
+
 class RestartServerResponse(ContractModel):
     """Validate and serialize the RestartServerResponse contract."""
 
@@ -1404,6 +1455,13 @@ class RestoreVolume(ContractModel):
     required_bytes: int = Field(..., title="Required Bytes")
     roles: list[str] = Field(..., title="Roles")
     sufficient: bool = Field(..., title="Sufficient")
+
+
+class RevokeSessions(ContractModel):
+    """Validate and serialize the RevokeSessions contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    mode: Literal["others", "all"] = Field(..., title="Mode")
 
 
 class RuntimeDiagnostics(ContractModel):
@@ -1516,6 +1574,28 @@ class ScheduledTask(ContractModel):
     weekdays: list[int] | None = Field(
         None, max_length=7, min_length=1, title="Weekdays"
     )
+
+
+class SecurityEventInfo(ContractModel):
+    """Validate and serialize the SecurityEventInfo contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    action: str = Field(..., title="Action")
+    details: dict[str, Any] = Field(..., title="Details")
+    id: str = Field(..., title="Id")
+    timestamp: int = Field(..., title="Timestamp")
+
+
+class SecurityStatus(ContractModel):
+    """Validate and serialize the SecurityStatus contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    enabled: bool = Field(..., title="Enabled")
+    idle_timeout_seconds: int = Field(..., title="Idle Timeout Seconds")
+    max_session_days: int = Field(..., title="Max Session Days")
+    recent_until: int = Field(..., title="Recent Until")
+    recovery_codes_remaining: int = Field(..., title="Recovery Codes Remaining")
+    session_id: str | None = Field(None, title="Session Id")
 
 
 class SendCommandResponse(ContractModel):
@@ -1683,7 +1763,11 @@ class SetupAccountResponse(ContractModel):
     """First account creation returns the same session credentials as login."""
 
     model_config = ConfigDict(extra="forbid")
-    access_token: str = Field(..., title="Access Token")
+    access_token: str = Field(
+        ...,
+        description="Bearer JWT; empty in explicitly negotiated cookie mode, where the credential is HttpOnly",
+        title="Access Token",
+    )
     message: str = Field(..., title="Message")
     status: Literal["success"] = Field("success", title="Status")
     token_type: Literal["bearer"] = Field("bearer", title="Token Type")
@@ -1989,7 +2073,11 @@ class TokenResponse(ContractModel):
     """Response model for successful authentication, providing an access token."""
 
     model_config = ConfigDict(extra="forbid")
-    access_token: str = Field(..., title="Access Token")
+    access_token: str = Field(
+        ...,
+        description="Bearer JWT; empty in explicitly negotiated cookie mode, where the credential is HttpOnly",
+        title="Access Token",
+    )
     message: str | None = Field(None, title="Message")
     token_type: Literal["bearer"] = Field("bearer", title="Token Type")
 
@@ -2072,6 +2160,21 @@ class UserResponse(ContractModel):
     role: Literal["admin", "moderator", "user"] = Field(..., title="Role")
     theme: str | None = Field("default", title="Theme")
     username: str = Field(..., title="Username")
+
+
+class VerifiedSecurity(ContractModel):
+    """Validate and serialize the VerifiedSecurity contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    verified_until: int = Field(..., title="Verified Until")
+
+
+class VerifySecurity(ContractModel):
+    """Validate and serialize the VerifySecurity contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    otp: str | None = Field("", max_length=128, title="Otp")
+    password: SecretStr = Field(..., max_length=1024, min_length=1, title="Password")
 
 
 class APIErrorResponse(ContractModel):

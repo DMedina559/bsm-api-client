@@ -668,3 +668,23 @@ async def test_health_response_preserves_process_identity(
             assert response.version == "4.0.0b8"
             assert response.ready is ready
             assert response.checks["lifecycle"].healthy is ready
+
+
+@pytest.mark.asyncio
+async def test_revoked_session_never_silently_logs_in_again(local_api):
+    from unittest.mock import AsyncMock
+    from bsm_api_client import AuthError
+
+    client, _ = local_api
+    original_send = client._http_client.send
+
+    async def revoked(*args, **kwargs):
+        response = await original_send(*args, **kwargs)
+        response.headers["X-BSM-Session-Invalid"] = "1"
+        return response
+
+    client._http_client.send = revoked
+    client.authenticate = AsyncMock()
+    with pytest.raises(AuthError, match="sign in explicitly"):
+        await client.servers.async_start_server("example")
+    client.authenticate.assert_not_awaited()

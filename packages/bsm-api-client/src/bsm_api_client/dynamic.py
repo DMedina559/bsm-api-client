@@ -444,6 +444,14 @@ class DynamicOpenAPIMixin(GeneratedOperationMethods):
             result["Authorization"] = f"Bearer {self._jwt_token}"
         return result
 
+    async def _reject_invalid_session(self, response):
+        if (
+            response.status_code == 401
+            and response.headers.get("X-BSM-Session-Invalid") == "1"
+        ):
+            await response.aclose()
+            raise AuthError("Login session expired or revoked; sign in explicitly.")
+
     @asynccontextmanager
     async def _open_response(
         self,
@@ -539,6 +547,7 @@ class DynamicOpenAPIMixin(GeneratedOperationMethods):
                     "auth_retry": bool(attempt),
                 },
             )
+            await self._reject_invalid_session(response)
             refresh = (
                 response.status_code == 401
                 and authenticated

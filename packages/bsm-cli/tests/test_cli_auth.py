@@ -79,7 +79,12 @@ def test_logout_clears_credentials_that_would_automatically_login_again(
 ):
     config, path = auth_config
     monkeypatch.setattr("bsm_cli.__main__.Config", lambda: config)
+    client = AsyncMock()
+    client.__aenter__.return_value = client
+    monkeypatch.setattr("bsm_cli.auth.BedrockServerManagerApi", lambda **kw: client)
+    monkeypatch.setattr("bsm_cli.__main__.BedrockServerManagerApi", lambda **kw: client)
     result = CliRunner().invoke(cli, ["--json", "auth", "logout"])
+    client.async_logout.assert_awaited_once()
     assert result.exit_code == 0, result.output
     saved = json.loads(path.read_text())
     assert all(saved[key] is None for key in ("jwt_token", "username", "password"))
