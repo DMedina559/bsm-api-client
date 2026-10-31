@@ -452,6 +452,19 @@ class ControlSchedulePayload(ContractModel):
     revision: str | None = Field(None, title="Revision")
 
 
+class CurrentAccountResponse(ContractModel):
+    """Current account with sorted role-derived HTTP capabilities."""
+
+    model_config = ConfigDict(extra="forbid")
+    id: int = Field(..., title="Id")
+    identity_type: str | None = Field(None, title="Identity Type")
+    is_active: bool = Field(..., title="Is Active")
+    permissions: list[str] | None = Field(None, title="Permissions")
+    role: Literal["admin", "moderator", "user"] = Field(..., title="Role")
+    theme: str | None = Field("default", title="Theme")
+    username: str = Field(..., title="Username")
+
+
 class CustomZipsResponse(ContractModel):
     """Response model for custom zips list."""
 

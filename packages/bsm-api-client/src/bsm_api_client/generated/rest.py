@@ -26,6 +26,7 @@ from .models.command_payload import CommandPayload
 from .models.compare_diagnostic_snapshots_request import CompareDiagnosticSnapshotsRequest
 from .models.content_list_response import ContentListResponse
 from .models.control_schedule_payload import ControlSchedulePayload
+from .models.current_account_response import CurrentAccountResponse
 from .models.custom_zips_response import CustomZipsResponse
 from .models.destination_cleanup_payload import DestinationCleanupPayload
 from .models.diagnostic_activity import DiagnosticActivity
@@ -319,13 +320,21 @@ class RestClient:
         """Generated generate_registration_token operation."""
         return cast(Response[ErrorEnvelope | RegistrationResponse], await self._owner.async_call_generated('generate_registration_token', parameters={}, body=body, authenticated=True, detailed=True))
 
-    async def get_account(self) -> ErrorEnvelope | UserResponse | None:
+    async def get_account(self) -> CurrentAccountResponse | ErrorEnvelope | None:
         """Generated get_account operation."""
-        return cast(ErrorEnvelope | UserResponse | None, await self._owner.async_call_generated('get_account', parameters={}, body=None, authenticated=True, typed=True))
+        return cast(CurrentAccountResponse | ErrorEnvelope | None, await self._owner.async_call_generated('get_account', parameters={}, body=None, authenticated=True, typed=True))
 
-    async def get_account_detailed(self) -> Response[ErrorEnvelope | UserResponse]:
+    async def get_account_detailed(self) -> Response[CurrentAccountResponse | ErrorEnvelope]:
         """Generated get_account operation."""
-        return cast(Response[ErrorEnvelope | UserResponse], await self._owner.async_call_generated('get_account', parameters={}, body=None, authenticated=True, detailed=True))
+        return cast(Response[CurrentAccountResponse | ErrorEnvelope], await self._owner.async_call_generated('get_account', parameters={}, body=None, authenticated=True, detailed=True))
+
+    async def get_account_permissions(self) -> ErrorEnvelope | list[str] | None:
+        """Generated get_account_permissions operation."""
+        return cast(ErrorEnvelope | list[str] | None, await self._owner.async_call_generated('get_account_permissions', parameters={}, body=None, authenticated=True, typed=True))
+
+    async def get_account_permissions_detailed(self) -> Response[ErrorEnvelope | list[str]]:
+        """Generated get_account_permissions operation."""
+        return cast(Response[ErrorEnvelope | list[str]], await self._owner.async_call_generated('get_account_permissions', parameters={}, body=None, authenticated=True, detailed=True))
 
     async def get_allowlist(self, server_name: str) -> ErrorEnvelope | GetAllowlistResponse | None:
         """Generated get_allowlist operation."""

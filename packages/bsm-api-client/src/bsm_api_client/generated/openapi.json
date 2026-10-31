@@ -1903,6 +1903,64 @@
         "title": "ControlSchedulePayload",
         "type": "object"
       },
+      "CurrentAccountResponse": {
+        "additionalProperties": false,
+        "description": "Current account with sorted role-derived HTTP capabilities.",
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "identity_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Identity Type"
+          },
+          "is_active": {
+            "title": "Is Active",
+            "type": "boolean"
+          },
+          "permissions": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Permissions",
+            "type": "array"
+          },
+          "role": {
+            "enum": [
+              "admin",
+              "moderator",
+              "user"
+            ],
+            "title": "Role",
+            "type": "string"
+          },
+          "theme": {
+            "default": "default",
+            "title": "Theme",
+            "type": "string"
+          },
+          "username": {
+            "title": "Username",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "username",
+          "role",
+          "is_active"
+        ],
+        "title": "CurrentAccountResponse",
+        "type": "object"
+      },
       "CustomZipsResponse": {
         "additionalProperties": false,
         "description": "Response model for custom zips list.",
@@ -9514,7 +9572,50 @@
       "OAuth2PasswordBearer": {
         "flows": {
           "password": {
-            "scopes": {},
+            "scopes": {
+              "account:manage": "Account manage",
+              "account:read": "Account read",
+              "allowlist:manage": "Allowlist manage",
+              "allowlist:read": "Allowlist read",
+              "audit:read": "Audit read",
+              "backups:create": "Backups create",
+              "backups:destinations": "Backups destinations",
+              "backups:export": "Backups export",
+              "backups:keys": "Backups keys",
+              "backups:manage": "Backups manage",
+              "backups:read": "Backups read",
+              "backups:restore": "Backups restore",
+              "bans:manage": "Bans manage",
+              "bans:read": "Bans read",
+              "content:manage": "Content manage",
+              "content:read": "Content read",
+              "diagnostics:read": "Diagnostics read",
+              "logs:read": "Logs read",
+              "logs:read_application": "Logs read application",
+              "permissions:manage": "Permissions manage",
+              "permissions:read": "Permissions read",
+              "players:manage": "Players manage",
+              "players:read": "Players read",
+              "plugins:manage": "Plugins manage",
+              "plugins:pages": "Plugins pages",
+              "plugins:read": "Plugins read",
+              "runtime:metrics": "Runtime metrics",
+              "runtime:read": "Runtime read",
+              "runtime:shutdown": "Runtime shutdown",
+              "scheduler:manage": "Scheduler manage",
+              "scheduler:read": "Scheduler read",
+              "servers:configure": "Servers configure",
+              "servers:control": "Servers control",
+              "servers:inspect": "Servers inspect",
+              "servers:manage": "Servers manage",
+              "servers:properties": "Servers properties",
+              "servers:read": "Servers read",
+              "settings:manage": "Settings manage",
+              "settings:read": "Settings read",
+              "tasks:read": "Tasks read",
+              "users:manage": "Users manage",
+              "users:read": "Users read"
+            },
             "tokenUrl": "auth/token"
           }
         },
@@ -9530,14 +9631,14 @@
   "paths": {
     "/api/account": {
       "get": {
-        "description": "Return the current user's account details.",
+        "description": "Return the current user's account details and role-derived permissions.",
         "operationId": "get_account",
         "responses": {
           "200": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UserResponse"
+                  "$ref": "#/components/schemas/CurrentAccountResponse"
                 }
               }
             },
@@ -9626,7 +9727,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "account:read"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -9635,7 +9738,21 @@
         "summary": "Get Account Api",
         "tags": [
           "Account Management"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "user",
+            "moderator",
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "account:read"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/account/change-password": {
@@ -9746,7 +9863,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "account:manage"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -9755,7 +9874,151 @@
         "summary": "Post Change Password",
         "tags": [
           "Account Management"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "user",
+            "moderator",
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "account:manage"
+          ],
+          "version": 1
+        }
+      }
+    },
+    "/api/account/permissions": {
+      "get": {
+        "description": "Return current role-derived capabilities, not resource-specific guarantees.",
+        "operationId": "get_account_permissions",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "title": "Response Get Account Permissions",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": [
+              "account:read"
+            ]
+          },
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "summary": "Get Account Permissions",
+        "tags": [
+          "Account Management"
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "user",
+            "moderator",
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "account:read"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/account/profile": {
@@ -9866,7 +10129,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "account:manage"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -9875,7 +10140,21 @@
         "summary": "Post Update Profile",
         "tags": [
           "Account Management"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "user",
+            "moderator",
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "account:manage"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/account/theme": {
@@ -9986,7 +10265,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "account:manage"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -9995,7 +10276,21 @@
         "summary": "Post Update Theme",
         "tags": [
           "Account Management"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "user",
+            "moderator",
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "account:manage"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/backups/keys": {
@@ -10098,7 +10393,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "backups:keys"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -10107,7 +10404,19 @@
         "summary": "List Keys",
         "tags": [
           "Backup & Restore"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "backups:keys"
+          ],
+          "version": 1
+        }
       },
       "post": {
         "description": "Generate a new active key and retain all previous keys.",
@@ -10210,7 +10519,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "backups:keys"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -10219,7 +10530,19 @@
         "summary": "Rotate Key",
         "tags": [
           "Backup & Restore"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "backups:keys"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/backups/keys/{key_id}/emergency-kit": {
@@ -10331,7 +10654,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "backups:keys"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -10340,7 +10665,19 @@
         "summary": "Emergency Kit",
         "tags": [
           "Backup & Restore"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "backups:keys"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/content/addons": {
@@ -10441,7 +10778,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "content:read"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -10450,7 +10789,20 @@
         "summary": "Get Addons",
         "tags": [
           "Addon Management"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "moderator",
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "content:read"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/content/worlds": {
@@ -10551,7 +10903,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "content:read"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -10560,7 +10914,20 @@
         "summary": "Get Worlds List",
         "tags": [
           "World Management"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "moderator",
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "content:read"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/diagnostics": {
@@ -10661,7 +11028,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "diagnostics:read"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -10670,7 +11039,19 @@
         "summary": "Get Application Diagnostics",
         "tags": [
           "Diagnostics"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "diagnostics:read"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/diagnostics/activity": {
@@ -10958,7 +11339,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "diagnostics:read"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -10967,7 +11350,19 @@
         "summary": "Get Diagnostic Activity",
         "tags": [
           "Diagnostics"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "diagnostics:read"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/diagnostics/compare": {
@@ -11078,7 +11473,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "diagnostics:read"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -11087,7 +11484,19 @@
         "summary": "Compare Diagnostic Snapshots",
         "tags": [
           "Diagnostics"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "diagnostics:read"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/diagnostics/history": {
@@ -11341,7 +11750,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "diagnostics:read"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -11350,7 +11761,19 @@
         "summary": "Get Diagnostic History",
         "tags": [
           "Diagnostics"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "diagnostics:read"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/diagnostics/report": {
@@ -11451,7 +11874,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "diagnostics:read"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -11460,7 +11885,19 @@
         "summary": "Get Diagnostic Report",
         "tags": [
           "Diagnostics"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "diagnostics:read"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/diagnostics/runs": {
@@ -11574,7 +12011,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "diagnostics:read"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -11583,7 +12022,19 @@
         "summary": "Get Diagnostic Runs",
         "tags": [
           "Diagnostics"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "diagnostics:read"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/diagnostics/trace/{correlation_id}": {
@@ -11723,7 +12174,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "diagnostics:read"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -11732,7 +12185,19 @@
         "summary": "Get Diagnostic Trace",
         "tags": [
           "Diagnostics"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "diagnostics:read"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/diagnostics/{subsystem}": {
@@ -11843,7 +12308,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "diagnostics:read"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -11852,7 +12319,19 @@
         "summary": "Get Subsystem Diagnostics",
         "tags": [
           "Diagnostics"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "diagnostics:read"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/downloads/list": {
@@ -11952,7 +12431,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "content:read"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -11961,7 +12442,20 @@
         "summary": "Get Custom Zips",
         "tags": [
           "Downloads"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "moderator",
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "content:read"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/downloads/prune": {
@@ -12072,7 +12566,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "content:manage"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -12081,7 +12577,19 @@
         "summary": "Put Prune Downloads",
         "tags": [
           "Downloads"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "content:manage"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/events": {
@@ -12181,7 +12689,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "diagnostics:read"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -12190,7 +12700,19 @@
         "summary": "List Application Events",
         "tags": [
           "Application Events"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "diagnostics:read"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/events/activity": {
@@ -12477,7 +12999,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "diagnostics:read"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -12486,7 +13010,19 @@
         "summary": "Get Event Activity",
         "tags": [
           "Application Events"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "diagnostics:read"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/health": {
@@ -12599,7 +13135,18 @@
         "summary": "Get Application Health",
         "tags": [
           "Application"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [
+            "local-readiness-or-account",
+            "local-readiness-peer"
+          ],
+          "allowed_roles": [],
+          "authentication": "required",
+          "classification": "custom",
+          "required_permissions": [],
+          "version": 1
+        }
       }
     },
     "/api/info": {
@@ -12701,7 +13248,15 @@
         "summary": "Get System Info",
         "tags": [
           "Application"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [],
+          "authentication": "none",
+          "classification": "public",
+          "required_permissions": [],
+          "version": 1
+        }
       }
     },
     "/api/info/themes": {
@@ -12803,7 +13358,15 @@
         "summary": "Get Themes",
         "tags": [
           "Appearance"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [],
+          "authentication": "none",
+          "classification": "public",
+          "required_permissions": [],
+          "version": 1
+        }
       }
     },
     "/api/logs/history": {
@@ -12950,7 +13513,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "logs:read"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -12959,7 +13524,22 @@
         "summary": "Get Log History",
         "tags": [
           "Logs"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [
+            "application-log-admin"
+          ],
+          "allowed_roles": [
+            "moderator",
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "logs:read"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/metrics": {
@@ -13060,7 +13640,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "runtime:metrics"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -13069,7 +13651,21 @@
         "summary": "Get Application Metrics",
         "tags": [
           "Application"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "user",
+            "moderator",
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "runtime:metrics"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/panorama": {
@@ -13164,7 +13760,15 @@
         "summary": "Serve Custom Panorama Api",
         "tags": [
           "Appearance"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [],
+          "authentication": "none",
+          "classification": "public",
+          "required_permissions": [],
+          "version": 1
+        }
       }
     },
     "/api/players/add": {
@@ -13275,7 +13879,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "players:manage"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -13284,7 +13890,20 @@
         "summary": "Post Add Players",
         "tags": [
           "Player Management"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "moderator",
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "players:manage"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/players/get": {
@@ -13385,7 +14004,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "players:read"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -13394,7 +14015,20 @@
         "summary": "Get All Players",
         "tags": [
           "Player Management"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "moderator",
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "players:read"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/players/scan": {
@@ -13495,7 +14129,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "players:manage"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -13504,7 +14140,20 @@
         "summary": "Put Scan Players",
         "tags": [
           "Player Management"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "moderator",
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "players:manage"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/plugins": {
@@ -13605,7 +14254,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "plugins:read"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -13614,7 +14265,19 @@
         "summary": "Get Plugins Status",
         "tags": [
           "Plugin Management"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "plugins:read"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/plugins/pages": {
@@ -13715,7 +14378,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "plugins:pages"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -13724,7 +14389,21 @@
         "summary": "Get Plugin Pages",
         "tags": [
           "Plugin Management"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "user",
+            "moderator",
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "plugins:pages"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/plugins/reload": {
@@ -13825,7 +14504,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "plugins:manage"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -13834,7 +14515,19 @@
         "summary": "Put Reload Plugins",
         "tags": [
           "Plugin Management"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "plugins:manage"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/plugins/trigger_event": {
@@ -13945,7 +14638,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "plugins:manage"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -13954,7 +14649,19 @@
         "summary": "Post Trigger Event",
         "tags": [
           "Plugin Management"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "plugins:manage"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/plugins/{plugin_name}": {
@@ -14076,7 +14783,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "plugins:manage"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -14085,7 +14794,19 @@
         "summary": "Post Set Plugin Status",
         "tags": [
           "Plugin Management"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "plugins:manage"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/plugins/{plugin_name}/reload": {
@@ -14197,7 +14918,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "plugins:manage"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -14206,7 +14929,19 @@
         "summary": "Post Reload Single Plugin",
         "tags": [
           "Plugin Management"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "plugins:manage"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/plugins/{plugin_name}/settings": {
@@ -14348,7 +15083,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "plugins:read"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -14357,7 +15094,19 @@
         "summary": "Get Plugin Settings",
         "tags": [
           "Plugin Management"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "plugins:read"
+          ],
+          "version": 1
+        }
       },
       "put": {
         "operationId": "update_plugin_settings",
@@ -14476,7 +15225,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "plugins:manage"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -14485,7 +15236,19 @@
         "summary": "Update Plugin Settings",
         "tags": [
           "Plugin Management"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "plugins:manage"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/register/generate-token": {
@@ -14596,7 +15359,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "users:manage"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -14605,7 +15370,19 @@
         "summary": "Generate Token",
         "tags": [
           "Registration"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "users:manage"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/register/validate/{token}": {
@@ -14716,7 +15493,17 @@
         "summary": "Validate Token",
         "tags": [
           "Registration"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [
+            "registration-token"
+          ],
+          "allowed_roles": [],
+          "authentication": "none",
+          "classification": "custom",
+          "required_permissions": [],
+          "version": 1
+        }
       }
     },
     "/api/register/{token}": {
@@ -14837,7 +15624,17 @@
         "summary": "Register User",
         "tags": [
           "Registration"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [
+            "registration-token"
+          ],
+          "allowed_roles": [],
+          "authentication": "none",
+          "classification": "custom",
+          "required_permissions": [],
+          "version": 1
+        }
       }
     },
     "/api/runtime": {
@@ -14937,7 +15734,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "runtime:read"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -14946,7 +15745,19 @@
         "summary": "Runtime Status",
         "tags": [
           "Runtime"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "runtime:read"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/runtime/shutdown": {
@@ -15068,7 +15879,19 @@
         "summary": "Shutdown Runtime",
         "tags": [
           "Runtime"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [
+            "administrator-or-local-shutdown-token"
+          ],
+          "allowed_roles": [
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "custom",
+          "required_permissions": [],
+          "version": 1
+        }
       }
     },
     "/api/scheduler/schedules": {
@@ -15186,7 +16009,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "scheduler:manage"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -15195,7 +16020,19 @@
         "summary": "List Schedules",
         "tags": [
           "Scheduler"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "scheduler:manage"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/scheduler/schedules/{schedule_id}": {
@@ -15306,7 +16143,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "scheduler:manage"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -15315,7 +16154,19 @@
         "summary": "Delete Schedule",
         "tags": [
           "Scheduler"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "scheduler:manage"
+          ],
+          "version": 1
+        }
       },
       "put": {
         "operationId": "save_schedule",
@@ -15434,7 +16285,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "scheduler:manage"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -15443,7 +16296,19 @@
         "summary": "Save Schedule",
         "tags": [
           "Scheduler"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "scheduler:manage"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/scheduler/schedules/{schedule_id}/action": {
@@ -15564,7 +16429,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "scheduler:manage"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -15573,7 +16440,19 @@
         "summary": "Control Schedule",
         "tags": [
           "Scheduler"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "scheduler:manage"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/server/install": {
@@ -15691,7 +16570,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "servers:manage"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -15700,7 +16581,19 @@
         "summary": "Post Install Server",
         "tags": [
           "Server Management"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "servers:manage"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/server/{server_name}/addon/disable": {
@@ -15823,7 +16716,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "content:manage"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -15832,7 +16727,19 @@
         "summary": "Post Disable Addon",
         "tags": [
           "Addon Management"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "content:manage"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/server/{server_name}/addon/enable": {
@@ -15955,7 +16862,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "content:manage"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -15964,7 +16873,19 @@
         "summary": "Post Enable Addon",
         "tags": [
           "Addon Management"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "content:manage"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/server/{server_name}/addon/icon": {
@@ -16094,7 +17015,15 @@
         "summary": "Get Server Addon Icon",
         "tags": [
           "Addon Management"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [],
+          "authentication": "none",
+          "classification": "public",
+          "required_permissions": [],
+          "version": 1
+        }
       }
     },
     "/api/server/{server_name}/addon/install": {
@@ -16217,7 +17146,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "content:manage"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -16226,7 +17157,19 @@
         "summary": "Post Install Addon",
         "tags": [
           "Addon Management"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "content:manage"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/server/{server_name}/addon/reorder": {
@@ -16349,7 +17292,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "content:manage"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -16358,7 +17303,19 @@
         "summary": "Post Reorder Addons",
         "tags": [
           "Addon Management"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "content:manage"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/server/{server_name}/addon/subpack": {
@@ -16481,7 +17438,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "content:manage"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -16490,7 +17449,19 @@
         "summary": "Post Update Subpack",
         "tags": [
           "Addon Management"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "content:manage"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/server/{server_name}/addon/uninstall": {
@@ -16613,7 +17584,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "content:manage"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -16622,7 +17595,19 @@
         "summary": "Delete Uninstall Addon",
         "tags": [
           "Addon Management"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "content:manage"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/server/{server_name}/addons": {
@@ -16735,7 +17720,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "content:manage"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -16744,7 +17731,19 @@
         "summary": "Get Server Addons",
         "tags": [
           "Addon Management"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "content:manage"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/server/{server_name}/allowlist/add": {
@@ -16866,7 +17865,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "allowlist:manage"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -16875,7 +17876,20 @@
         "summary": "Post Allowlist",
         "tags": [
           "Server Access"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "moderator",
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "allowlist:manage"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/server/{server_name}/allowlist/get": {
@@ -16987,7 +18001,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "allowlist:read"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -16996,7 +18012,20 @@
         "summary": "Get Allowlist",
         "tags": [
           "Server Access"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "moderator",
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "allowlist:read"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/server/{server_name}/allowlist/remove": {
@@ -17118,7 +18147,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "allowlist:manage"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -17127,7 +18158,20 @@
         "summary": "Delete Allowlist",
         "tags": [
           "Server Access"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "moderator",
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "allowlist:manage"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/server/{server_name}/backup-destinations/{destination}/cleanup": {
@@ -17259,7 +18303,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "backups:destinations"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -17268,7 +18314,19 @@
         "summary": "Cleanup Destination",
         "tags": [
           "Backup & Restore"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "backups:destinations"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/server/{server_name}/backup/action": {
@@ -17391,7 +18449,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "backups:create"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -17400,7 +18460,20 @@
         "summary": "Post Backup Action",
         "tags": [
           "Backup & Restore"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "moderator",
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "backups:create"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/server/{server_name}/backup/list/{backup_type}": {
@@ -17522,7 +18595,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "backups:read"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -17531,7 +18606,20 @@
         "summary": "Get List Server Backups",
         "tags": [
           "Backup & Restore"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "moderator",
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "backups:read"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/server/{server_name}/backups": {
@@ -17644,7 +18732,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "backups:read"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -17653,7 +18743,20 @@
         "summary": "Get Snapshots",
         "tags": [
           "Backup & Restore"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "moderator",
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "backups:read"
+          ],
+          "version": 1
+        }
       },
       "post": {
         "description": "Capture one server backup using the configured encryption default.",
@@ -17774,7 +18877,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "backups:create"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -17783,7 +18888,20 @@
         "summary": "Post Snapshot",
         "tags": [
           "Backup & Restore"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "moderator",
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "backups:create"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/server/{server_name}/backups/health": {
@@ -17896,7 +19014,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "backups:read"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -17905,7 +19025,20 @@
         "summary": "Backup Health",
         "tags": [
           "Backup & Restore"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "moderator",
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "backups:read"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/server/{server_name}/backups/import": {
@@ -18028,7 +19161,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "backups:manage"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -18037,7 +19172,20 @@
         "summary": "Import Snapshot",
         "tags": [
           "Backup & Restore"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "moderator",
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "backups:manage"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/server/{server_name}/backups/prune": {
@@ -18150,7 +19298,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "backups:manage"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -18159,7 +19309,20 @@
         "summary": "Put Prune Backups",
         "tags": [
           "Backup & Restore"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "moderator",
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "backups:manage"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/server/{server_name}/backups/recovery": {
@@ -18272,7 +19435,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "backups:read"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -18281,7 +19446,20 @@
         "summary": "Get Recovery",
         "tags": [
           "Backup & Restore"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "moderator",
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "backups:read"
+          ],
+          "version": 1
+        }
       },
       "post": {
         "description": "Retry journal recovery; stop a running server before rolling back data.",
@@ -18392,7 +19570,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "backups:restore"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -18401,7 +19581,20 @@
         "summary": "Retry Recovery",
         "tags": [
           "Backup & Restore"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "moderator",
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "backups:restore"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/server/{server_name}/backups/report": {
@@ -18514,7 +19707,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "backups:read"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -18523,7 +19718,20 @@
         "summary": "Download Recovery Report",
         "tags": [
           "Backup & Restore"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "moderator",
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "backups:read"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/server/{server_name}/backups/{backup_id}/download": {
@@ -18646,7 +19854,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "backups:read"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -18655,7 +19865,20 @@
         "summary": "Download Snapshot",
         "tags": [
           "Backup & Restore"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "moderator",
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "backups:read"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/server/{server_name}/backups/{backup_id}/dry-run": {
@@ -18787,7 +20010,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "backups:restore"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -18796,7 +20021,20 @@
         "summary": "Dry Run Restore",
         "tags": [
           "Backup & Restore"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "moderator",
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "backups:restore"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/server/{server_name}/backups/{backup_id}/export": {
@@ -18929,7 +20167,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "backups:export"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -18938,7 +20178,19 @@
         "summary": "Export Snapshot",
         "tags": [
           "Backup & Restore"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "backups:export"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/server/{server_name}/backups/{backup_id}/inspect": {
@@ -19070,7 +20322,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "backups:read"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -19079,7 +20333,20 @@
         "summary": "Post Inspect",
         "tags": [
           "Backup & Restore"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "moderator",
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "backups:read"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/server/{server_name}/backups/{backup_id}/manage": {
@@ -19211,7 +20478,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "backups:manage"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -19220,7 +20489,20 @@
         "summary": "Manage Snapshot",
         "tags": [
           "Backup & Restore"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "moderator",
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "backups:manage"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/server/{server_name}/backups/{backup_id}/plan": {
@@ -19352,7 +20634,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "backups:restore"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -19361,7 +20645,20 @@
         "summary": "Post Plan",
         "tags": [
           "Backup & Restore"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "moderator",
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "backups:restore"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/server/{server_name}/backups/{backup_id}/prepare-copy": {
@@ -19493,7 +20790,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "backups:destinations"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -19502,7 +20801,19 @@
         "summary": "Prepare Backup Copy",
         "tags": [
           "Backup & Restore"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "backups:destinations"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/server/{server_name}/backups/{backup_id}/restore": {
@@ -19634,7 +20945,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "backups:restore"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -19643,7 +20956,20 @@
         "summary": "Post Snapshot Restore",
         "tags": [
           "Backup & Restore"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "moderator",
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "backups:restore"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/server/{server_name}/bans/add": {
@@ -19766,7 +21092,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "bans:manage"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -19775,7 +21103,19 @@
         "summary": "Post Add Server Ban",
         "tags": [
           "Server Access"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "bans:manage"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/server/{server_name}/bans/get": {
@@ -19888,7 +21228,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "bans:manage"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -19897,7 +21239,19 @@
         "summary": "Get Server Bans",
         "tags": [
           "Server Access"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "bans:manage"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/server/{server_name}/bans/remove": {
@@ -20020,7 +21374,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "bans:manage"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -20029,7 +21385,19 @@
         "summary": "Delete Remove Server Ban",
         "tags": [
           "Server Access"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "bans:manage"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/server/{server_name}/delete": {
@@ -20142,7 +21510,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "servers:manage"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -20151,7 +21521,19 @@
         "summary": "Delete Server",
         "tags": [
           "Server Management"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "servers:manage"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/server/{server_name}/permissions/get": {
@@ -20263,7 +21645,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "permissions:read"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -20272,7 +21656,20 @@
         "summary": "Get Permissions",
         "tags": [
           "Server Access"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "moderator",
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "permissions:read"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/server/{server_name}/permissions/set": {
@@ -20394,7 +21791,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "permissions:manage"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -20403,7 +21802,20 @@
         "summary": "Post Permissions Set",
         "tags": [
           "Server Access"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "moderator",
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "permissions:manage"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/server/{server_name}/process_info": {
@@ -20516,7 +21928,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "servers:read"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -20525,7 +21939,21 @@
         "summary": "Get Server Process Info",
         "tags": [
           "Server Processes"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "user",
+            "moderator",
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "servers:read"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/server/{server_name}/properties/get": {
@@ -20637,7 +22065,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "servers:properties"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -20646,7 +22076,20 @@
         "summary": "Get Properties",
         "tags": [
           "Server Properties"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "moderator",
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "servers:properties"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/server/{server_name}/properties/raw": {
@@ -20759,7 +22202,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "servers:properties"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -20768,7 +22213,20 @@
         "summary": "Get Raw Properties",
         "tags": [
           "Server Properties"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "moderator",
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "servers:properties"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/server/{server_name}/properties/set": {
@@ -20890,7 +22348,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "servers:properties"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -20899,7 +22359,20 @@
         "summary": "Post Properties Set",
         "tags": [
           "Server Properties"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "moderator",
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "servers:properties"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/server/{server_name}/restart": {
@@ -21012,7 +22485,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "servers:control"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -21021,7 +22496,20 @@
         "summary": "Post Restart Server",
         "tags": [
           "Server Processes"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "moderator",
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "servers:control"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/server/{server_name}/restore/action": {
@@ -21144,7 +22632,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "backups:restore"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -21153,7 +22643,20 @@
         "summary": "Post Restore Action",
         "tags": [
           "Backup & Restore"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "moderator",
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "backups:restore"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/server/{server_name}/send_command": {
@@ -21276,7 +22779,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "servers:control"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -21285,7 +22790,20 @@
         "summary": "Post Send Command",
         "tags": [
           "Server Processes"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "moderator",
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "servers:control"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/server/{server_name}/settings/get": {
@@ -21398,7 +22916,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "servers:read"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -21407,7 +22927,21 @@
         "summary": "Get Server Settings",
         "tags": [
           "Server Settings"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "user",
+            "moderator",
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "servers:read"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/server/{server_name}/settings/set": {
@@ -21530,7 +23064,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "servers:configure"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -21539,7 +23075,19 @@
         "summary": "Post Set Server Setting",
         "tags": [
           "Server Settings"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "servers:configure"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/server/{server_name}/start": {
@@ -21652,7 +23200,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "servers:control"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -21661,7 +23211,20 @@
         "summary": "Post Start Server",
         "tags": [
           "Server Processes"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "moderator",
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "servers:control"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/server/{server_name}/status": {
@@ -21774,7 +23337,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "servers:read"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -21783,7 +23348,21 @@
         "summary": "Get Server Running Status",
         "tags": [
           "Server Processes"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "user",
+            "moderator",
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "servers:read"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/server/{server_name}/stop": {
@@ -21896,7 +23475,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "servers:control"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -21905,7 +23486,20 @@
         "summary": "Post Stop Server",
         "tags": [
           "Server Processes"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "moderator",
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "servers:control"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/server/{server_name}/summary": {
@@ -22018,7 +23612,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "servers:inspect"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -22027,7 +23623,20 @@
         "summary": "Get Server Summary",
         "tags": [
           "Server Management"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "moderator",
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "servers:inspect"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/server/{server_name}/update": {
@@ -22140,7 +23749,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "servers:manage"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -22149,7 +23760,19 @@
         "summary": "Post Update Server",
         "tags": [
           "Server Management"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "servers:manage"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/server/{server_name}/validate": {
@@ -22261,7 +23884,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "servers:read"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -22270,7 +23895,21 @@
         "summary": "Get Validate Server",
         "tags": [
           "Server Management"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "user",
+            "moderator",
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "servers:read"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/server/{server_name}/world/export": {
@@ -22383,7 +24022,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "content:manage"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -22392,7 +24033,19 @@
         "summary": "Post World Export",
         "tags": [
           "World Management"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "content:manage"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/server/{server_name}/world/icon": {
@@ -22499,7 +24152,15 @@
         "summary": "Get World Icon",
         "tags": [
           "World Management"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [],
+          "authentication": "none",
+          "classification": "public",
+          "required_permissions": [],
+          "version": 1
+        }
       }
     },
     "/api/server/{server_name}/world/install": {
@@ -22622,7 +24283,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "content:manage"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -22631,7 +24294,19 @@
         "summary": "Post World Install",
         "tags": [
           "World Management"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "content:manage"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/server/{server_name}/world/reset": {
@@ -22744,7 +24419,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "content:manage"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -22753,7 +24430,19 @@
         "summary": "Delete World Reset",
         "tags": [
           "World Management"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "content:manage"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/servers": {
@@ -22854,7 +24543,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "servers:read"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -22863,7 +24554,21 @@
         "summary": "Get Servers List",
         "tags": [
           "Server Management"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "user",
+            "moderator",
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "servers:read"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/settings/get": {
@@ -22964,7 +24669,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "settings:read"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -22973,7 +24680,19 @@
         "summary": "Get All Settings",
         "tags": [
           "Application Settings"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "settings:read"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/settings/reload": {
@@ -23074,7 +24793,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "settings:manage"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -23083,7 +24804,19 @@
         "summary": "Put Reload Settings",
         "tags": [
           "Application Settings"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "settings:manage"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/settings/set": {
@@ -23194,7 +24927,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "settings:manage"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -23203,7 +24938,19 @@
         "summary": "Post Set Setting",
         "tags": [
           "Application Settings"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "settings:manage"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/setup/create-first-user": {
@@ -23315,7 +25062,17 @@
         "summary": "Create First User",
         "tags": [
           "Application Setup"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [
+            "first-account-only"
+          ],
+          "allowed_roles": [],
+          "authentication": "none",
+          "classification": "custom",
+          "required_permissions": [],
+          "version": 1
+        }
       }
     },
     "/api/setup/status": {
@@ -23417,7 +25174,15 @@
         "summary": "Get Setup Status",
         "tags": [
           "Application Setup"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [],
+          "authentication": "none",
+          "classification": "public",
+          "required_permissions": [],
+          "version": 1
+        }
       }
     },
     "/api/tasks/list": {
@@ -23522,7 +25287,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "tasks:read"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -23531,7 +25298,23 @@
         "summary": "List Tasks",
         "tags": [
           "Background Tasks"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [
+            "task-owner"
+          ],
+          "allowed_roles": [
+            "user",
+            "moderator",
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "tasks:read"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/tasks/status/{task_id}": {
@@ -23643,7 +25426,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "tasks:read"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -23652,7 +25437,23 @@
         "summary": "Get Task Status",
         "tags": [
           "Background Tasks"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [
+            "task-owner"
+          ],
+          "allowed_roles": [
+            "user",
+            "moderator",
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "tasks:read"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/users/list": {
@@ -23757,7 +25558,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "users:read"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -23766,7 +25569,20 @@
         "summary": "List Users Api",
         "tags": [
           "User Management"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "moderator",
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "users:read"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/users/{user_id}/delete": {
@@ -23878,7 +25694,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "users:manage"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -23887,7 +25705,19 @@
         "summary": "Delete User",
         "tags": [
           "User Management"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "users:manage"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/users/{user_id}/disable": {
@@ -23998,7 +25828,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "users:manage"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -24007,7 +25839,19 @@
         "summary": "Disable User",
         "tags": [
           "User Management"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "users:manage"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/users/{user_id}/enable": {
@@ -24118,7 +25962,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "users:manage"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -24127,7 +25973,19 @@
         "summary": "Enable User",
         "tags": [
           "User Management"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "users:manage"
+          ],
+          "version": 1
+        }
       }
     },
     "/api/users/{user_id}/role": {
@@ -24248,7 +26106,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "users:manage"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -24257,7 +26117,19 @@
         "summary": "Update User Role",
         "tags": [
           "User Management"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "users:manage"
+          ],
+          "version": 1
+        }
       }
     },
     "/audit-log/list": {
@@ -24362,7 +26234,9 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "OAuth2PasswordBearer": [
+              "audit:read"
+            ]
           },
           {
             "APIKeyCookie": []
@@ -24371,7 +26245,19 @@
         "summary": "List Audit Logs Api",
         "tags": [
           "Audit Logs"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "required_permissions": [
+            "audit:read"
+          ],
+          "version": 1
+        }
       }
     },
     "/auth/logout": {
@@ -24479,7 +26365,19 @@
         "summary": "Logout",
         "tags": [
           "Authentication"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "user",
+            "moderator",
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "authenticated",
+          "required_permissions": [],
+          "version": 1
+        }
       }
     },
     "/auth/reauth": {
@@ -24607,7 +26505,19 @@
         "summary": "Reauth",
         "tags": [
           "Authentication"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "user",
+            "moderator",
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "authenticated",
+          "required_permissions": [],
+          "version": 1
+        }
       }
     },
     "/auth/token": {
@@ -24719,7 +26629,15 @@
         "summary": "Api Login For Access Token",
         "tags": [
           "Authentication"
-        ]
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [],
+          "authentication": "none",
+          "classification": "public",
+          "required_permissions": [],
+          "version": 1
+        }
       }
     }
   },

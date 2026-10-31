@@ -197,18 +197,35 @@ async def schema(ctx):
     ),
 )
 @click.option("--plugin", "plugin_name", shell_complete=complete_plugin)
+@click.option(
+    "--accessible",
+    is_flag=True,
+    help="Show statically accessible operations; contextual or unknown policies are omitted.",
+)
 @pass_async_context
-async def operations(ctx, tag, method=None, plugin_name=None):
+async def operations(ctx, tag, method=None, plugin_name=None, accessible=False):
     """List HTTP operations advertised by the server."""
     client = await discover(ctx)
+    permissions = []
+    if accessible:
+        account = await client.async_call_operation("get_account")
+        if hasattr(account, "to_dict"):
+            account = account.to_dict()
+        elif hasattr(account, "model_dump"):
+            account = account.model_dump()
+        permissions = account.get("permissions") or []
     rows = [
         op.to_dict()
         for op in sorted(client.operations.values(), key=lambda op: op.operation_id)
         if (not tag or tag in op.tags)
         and (not method or op.method == method.upper())
         and (not plugin_name or op.plugin == plugin_name)
+        and (not accessible or op.accessible_with(permissions) is True)
     ]
-    return emit(ctx, rows, columns=("method", "operation_id", "path"))
+    if not ctx.obj.get("json_output"):
+        for row in rows:
+            row["access_label"] = row["access"].get("classification", "unknown")
+    return emit(ctx, rows, columns=("method", "operation_id", "path", "access_label"))
 
 
 @api.command("operation")

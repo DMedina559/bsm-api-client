@@ -24,6 +24,7 @@
   "export_world": "api.world_management.export_world",
   "generate_registration_token": "api.registration.generate_registration_token",
   "get_account": "api.account_management.get_account",
+  "get_account_permissions": "api.account_management.get_account_permissions",
   "get_allowlist": "api.server_access.get_allowlist",
   "get_application_diagnostics": "api.diagnostics.get_application_diagnostics",
   "get_application_health": "api.application.get_application_health",
