@@ -533,3 +533,43 @@ def test_accessible_filter_keeps_unavailable_operations_inspectable(client):
         "info",
         "demo_action",
     }
+
+
+def test_named_credential_commands_forward_explicit_scope_and_resource_limits(client):
+    result = run(
+        "--json",
+        "auth",
+        "tokens",
+        "create",
+        "--name",
+        "Home Assistant",
+        "--permission",
+        "servers:read",
+        "--server-id",
+        "a" * 32,
+        "--expires-days",
+        "7",
+    )
+    assert result.exit_code == 0, result.output
+    call = client.async_call_operation.call_args
+    assert call.args == ("create_integration_token",)
+    assert call.kwargs["json_data"] == {
+        "name": "Home Assistant",
+        "permissions": ["servers:read"],
+        "server_ids": ["a" * 32],
+        "expires_in_days": 7,
+    }
+    result = run(
+        "--json",
+        "access",
+        "set",
+        "2",
+        "--mode",
+        "assigned",
+        "--grant",
+        "a" * 32 + "=servers:read",
+    )
+    assert result.exit_code == 0, result.output
+    assert client.async_call_operation.call_args.kwargs["json_data"]["grants"] == [
+        {"server_id": "a" * 32, "permissions": ["servers:read"]}
+    ]

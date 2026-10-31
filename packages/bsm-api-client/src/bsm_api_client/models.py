@@ -223,6 +223,10 @@ class CurrentAccountResponse(UserResponse):
     """Account details with optional capabilities from newer backends."""
 
     permissions: list[str] | None = None
+    policy_revision: str | None = None
+    server_access: str | None = "all"
+    credential_id: str | None = None
+    server_permissions: dict[str, list[str]] | None = None
 
 
 __all__ = [

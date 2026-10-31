@@ -72,3 +72,30 @@ contextual and unknown policies are omitted from that filter. Without the filter
 unavailable operations remain inspectable. Account permissions are resolved from
 current roles; endpoint scopes do not narrow an individual JWT. CLI and integration
 credentials remain bearer tokens.
+
+
+## Named credentials and server assignments
+
+New backends expose credential operations through the generated operation API:
+`create_integration_token`, `list_integration_tokens`, and
+`revoke_integration_token`. A created secret is returned once; lists contain
+metadata only. Use the secret as the client's existing bearer `token`. Expired or
+revoked integration credentials raise authentication errors without silently
+falling back to a configured username/password. Logging out clears the local
+credential; revoke it explicitly to disable it elsewhere.
+
+```sh
+bsm-cli access servers
+bsm-cli auth tokens create --name "Home Assistant" --expires-days 30
+bsm-cli auth tokens list
+bsm-cli auth tokens revoke TOKEN_ID
+bsm-cli access show USER_ID
+bsm-cli access set USER_ID --mode assigned --grant SERVER_ID=servers:read,servers:control
+```
+
+The create command prints the one-time secret and never saves it as your login
+credential. Repeat `--permission` and `--server-id` to narrow a credential.
+Assignments replace the account's grant set and require an administrator.
+Server identifiers are immutable; account roles remain the upper capability
+limit. `ApiOperation.accessible_with()` returns unknown for resource-scoped
+operations because capability membership alone cannot establish resource access.

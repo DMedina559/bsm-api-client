@@ -157,3 +157,24 @@ async def test_change_password_error(client):
                 )
             )
         assert "API Error" in str(excinfo.value)
+
+
+@pytest.mark.asyncio
+async def test_integration_credentials_never_silently_fall_back_to_password_login(
+    client,
+):
+    from unittest.mock import AsyncMock, patch
+
+    from bsm_api_client.exceptions import AuthError
+
+    client._jwt_token = "bsm_it_opaque.integration-secret"
+    with patch.object(client, "authenticate", new_callable=AsyncMock) as login:
+        with pytest.raises(AuthError, match="replace it explicitly"):
+            await client._ensure_authenticated(stale_token=client._jwt_token)
+        login.assert_not_awaited()
+    with patch.object(
+        client, "async_call_generated", new_callable=AsyncMock
+    ) as operation:
+        assert (await client.async_logout())["status"] == "success"
+        operation.assert_not_awaited()
+        assert client._jwt_token is None

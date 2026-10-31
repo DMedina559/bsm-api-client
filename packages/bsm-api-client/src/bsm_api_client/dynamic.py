@@ -412,6 +412,10 @@ class DynamicOpenAPIMixin(GeneratedOperationMethods):
                     or getattr(self, "_auth_generation", 0) == stale_generation
                 )
             ):
+                if (self._jwt_token or stale_token or "").startswith("bsm_it_"):
+                    raise AuthError(
+                        "Integration credential expired or revoked; replace it explicitly."
+                    )
                 self._jwt_token = None
                 await self.authenticate()
                 if not self._jwt_token:

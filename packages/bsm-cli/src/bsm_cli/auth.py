@@ -30,7 +30,7 @@ def auth():
 )
 @click.option("--username", help="The username for authentication.")
 @click.option("--password", help="The password for authentication.")
-@click.option("--token", help="The JWT token for authentication.")
+@click.option("--token", help="A JWT or named integration bearer credential.")
 @click.option(
     "--remember-me",
     is_flag=True,
