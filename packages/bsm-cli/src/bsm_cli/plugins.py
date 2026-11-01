@@ -6,7 +6,6 @@ import questionary
 from bsm_api_client.models import (
     PluginSettingsPayload,
     PluginStatusSetPayload,
-    TriggerEventPayload,
 )
 from bsm_cli.output import fail, get_client
 from bsm_cli.presentation import screen_header
@@ -263,31 +262,6 @@ async def reload_plugins(ctx):
             click.secho("Plugins reloaded successfully.", fg="green")
         else:
             click.secho(f"Failed to reload plugins: {response.message}", fg="red")
-    except Exception as e:
-        fail(e)
-
-
-@plugin.command("trigger-event")
-@click.argument("event_name")
-@click.option(
-    "--payload-json", help="Optional JSON string to use as the event payload."
-)
-@click.pass_context
-async def trigger_event(ctx, event_name: str, payload_json: str):
-    """Triggers a custom plugin event."""
-    client = get_client(ctx)
-
-    try:
-        payload = None
-        if payload_json:
-            payload = json.loads(payload_json)
-
-        event_payload = TriggerEventPayload(event_name=event_name, payload=payload)
-        response = await client.plugins.async_trigger_plugin_event(event_payload)
-        if response.status == "success":
-            click.secho(f"Event '{event_name}' triggered successfully.", fg="green")
-        else:
-            click.secho(f"Failed to trigger event: {response.message}", fg="red")
     except Exception as e:
         fail(e)
 

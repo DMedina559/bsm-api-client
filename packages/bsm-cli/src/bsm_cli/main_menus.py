@@ -85,8 +85,6 @@ async def main_menu(ctx):
         "Health checks": (None, "health"),
     }
     groups = {
-        "Account": "account",
-        "Users": "users",
         "Players": "player",
         "Content": "content",
         "Appearance": "appearance",
@@ -123,9 +121,7 @@ async def main_menu(ctx):
                     "App settings",
                     "Appearance",
                     "Health checks",
-                    Separator("── Accounts and content ──"),
-                    "Account",
-                    "Users",
+                    Separator("── Content ──"),
                     "Players",
                     "Content",
                     Separator("── Developer ──"),

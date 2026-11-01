@@ -15,7 +15,7 @@ async def test_login(server):
     """
     Tests that the client can successfully log in to the server.
     """
-    client = BedrockServerManagerApi(server, "admin", "password")
+    client = BedrockServerManagerApi(server, "admin", "integration secure passphrase")
     try:
         servers_response = await client.servers.async_get_servers()
         assert servers_response is not None
@@ -44,7 +44,7 @@ async def test_server_operations(server, bedrock_server):
     Tests creating a server, managing its properties, allowlist, permissions, and then deleting it.
     This test relies on the `bedrock_server` fixture to create and tear down the server.
     """
-    client = BedrockServerManagerApi(server, "admin", "password")
+    client = BedrockServerManagerApi(server, "admin", "integration secure passphrase")
     server_name = bedrock_server
 
     try:

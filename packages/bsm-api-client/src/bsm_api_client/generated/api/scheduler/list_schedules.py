@@ -98,6 +98,13 @@ def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Res
 
         return response_422
 
+    if response.status_code == 429:
+        response_429 = ErrorEnvelope.from_dict(response.json())
+
+
+
+        return response_429
+
     if response.status_code == 500:
         response_500 = ErrorEnvelope.from_dict(response.json())
 
@@ -135,6 +142,12 @@ def sync_detailed(
 ) -> Response[ErrorEnvelope | ListSchedulesResponse]:
     """List Schedules
     
+     List scheduled tasks.
+    
+    Requires unrestricted resource access and the ``scheduler:read`` capability.
+    Principals restricted to specific servers cannot query or inspect schedules,
+    even when filtering by an assigned server name.
+    
     :param server_name: Value supplied to the operation.
     
     :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -162,6 +175,12 @@ def sync(
 ) -> ErrorEnvelope | ListSchedulesResponse | None:
     """List Schedules
     
+     List scheduled tasks.
+    
+    Requires unrestricted resource access and the ``scheduler:read`` capability.
+    Principals restricted to specific servers cannot query or inspect schedules,
+    even when filtering by an assigned server name.
+    
     :param server_name: Value supplied to the operation.
     
     :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -183,6 +202,12 @@ async def asyncio_detailed(
 
 ) -> Response[ErrorEnvelope | ListSchedulesResponse]:
     """List Schedules
+    
+     List scheduled tasks.
+    
+    Requires unrestricted resource access and the ``scheduler:read`` capability.
+    Principals restricted to specific servers cannot query or inspect schedules,
+    even when filtering by an assigned server name.
     
     :param server_name: Value supplied to the operation.
     
@@ -210,6 +235,12 @@ async def asyncio(
 
 ) -> ErrorEnvelope | ListSchedulesResponse | None:
     """List Schedules
+    
+     List scheduled tasks.
+    
+    Requires unrestricted resource access and the ``scheduler:read`` capability.
+    Principals restricted to specific servers cannot query or inspect schedules,
+    even when filtering by an assigned server name.
     
     :param server_name: Value supplied to the operation.
     

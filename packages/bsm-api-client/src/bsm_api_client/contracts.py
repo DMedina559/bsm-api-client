@@ -1,12 +1,43 @@
 # Generated from bundled OpenAPI by scripts/generate_models.py.
 from __future__ import annotations
 
-from typing import Annotated, Literal
+from typing import Annotated, Any, Literal
 from uuid import UUID
 
 from pydantic import AwareDatetime, ConfigDict, Field, JsonValue, SecretStr
 
 from bsm_api_client.contract_base import ContractModel
+
+
+class AccessPolicyInfo(ContractModel):
+    """Validate and serialize the AccessPolicyInfo contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    permissions: dict[str, str] = Field(..., title="Permissions")
+    revision: str = Field(..., title="Revision")
+    role_permissions: dict[str, list[str]] = Field(..., title="Role Permissions")
+    server_permissions: list[str] = Field(..., title="Server Permissions")
+    token_permissions: list[str] = Field(..., title="Token Permissions")
+
+
+class AccessPreview(ContractModel):
+    """Validate and serialize the AccessPreview contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    effective_permissions: list[str] = Field(..., title="Effective Permissions")
+    policy_revision: str = Field(..., title="Policy Revision")
+    requested_permissions: list[str] = Field(..., title="Requested Permissions")
+    server_permissions: dict[str, list[str]] = Field(..., title="Server Permissions")
+    unavailable_permissions: list[str] = Field(..., title="Unavailable Permissions")
+
+
+class AccessServerInfo(ContractModel):
+    """Validate and serialize the AccessServerInfo contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    id: str = Field(..., pattern="^[a-f0-9]{32}$", title="Id")
+    name: str = Field(..., title="Name")
+    permissions: list[str] = Field(..., title="Permissions")
 
 
 class ActionResponse(ContractModel):
@@ -230,6 +261,22 @@ class BackupFilesResponse(ContractModel):
     status: Literal["success"] = Field("success", title="Status")
 
 
+class BackupKeyInfo(ContractModel):
+    """Validate and serialize the BackupKeyInfo contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    created_at: str = Field(..., title="Created At")
+    key_id: str = Field(..., title="Key Id")
+
+
+class BackupKeysInfo(ContractModel):
+    """Validate and serialize the BackupKeysInfo contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    active: str | None = Field(..., title="Active")
+    keys: list[BackupKeyInfo] = Field(..., title="Keys")
+
+
 class BackupManifest(ContractModel):
     """Validate and serialize the BackupManifest contract."""
 
@@ -365,9 +412,12 @@ class BodyLogin(ContractModel):
     client_id: str | None = Field(None, title="Client Id")
     client_secret: SecretStr | None = Field(None, title="Client Secret")
     grant_type: GrantType | None = Field(None, title="Grant Type")
+    otp: str | None = Field("", max_length=128, title="Otp")
     password: SecretStr = Field(..., title="Password")
+    remember_device: bool | None = Field(False, title="Remember Device")
     remember_me: bool | None = Field(False, title="Remember Me")
     scope: str | None = Field("", title="Scope")
+    trusted_device_token: SecretStr | None = Field(None, title="Trusted Device Token")
     username: str = Field(..., title="Username")
 
 
@@ -380,7 +430,9 @@ class ChangePasswordPayload(ContractModel):
 
     model_config = ConfigDict(extra="forbid")
     current_password: SecretStr = Field(..., min_length=1, title="Current Password")
-    new_password: SecretStr = Field(..., min_length=1, title="New Password")
+    new_password: SecretStr = Field(
+        ..., max_length=1024, min_length=8, title="New Password"
+    )
 
 
 class CollectionDiagnostics(ContractModel):
@@ -423,6 +475,18 @@ class CommandPayload(ContractModel):
     )
 
 
+Name = Annotated[str, Field(max_length=100, min_length=1, title="Name")]
+
+
+class CompletePasskeyRegistration(ContractModel):
+    """Validate and serialize the CompletePasskeyRegistration contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    challenge_id: str = Field(..., pattern="^[a-f0-9]{32}$", title="Challenge Id")
+    credential: dict[str, Any] = Field(..., title="Credential")
+    name: Name | None = Field(None, title="Name")
+
+
 class CompletedItem(ContractModel):
     """Validate and serialize the CompletedItem contract."""
 
@@ -450,6 +514,50 @@ class ControlSchedulePayload(ContractModel):
     model_config = ConfigDict(extra="forbid")
     action: Literal["run_now", "pause", "resume", "retry"] = Field(..., title="Action")
     revision: str | None = Field(None, title="Revision")
+
+
+ExpiresInDays = Annotated[int, Field(ge=1, le=365, title="Expires In Days")]
+ServerId = Annotated[str, Field(pattern="^[a-f0-9]{32}$")]
+ServerIds = Annotated[list[ServerId], Field(max_length=1000, title="Server Ids")]
+
+
+class CreateIntegrationToken(ContractModel):
+    """Validate and serialize the CreateIntegrationToken contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    expires_in_days: ExpiresInDays | None = Field(
+        30, title="Expires In Days", validate_default=True
+    )
+    name: str = Field(
+        ..., max_length=100, min_length=1, pattern=".*\\S.*", title="Name"
+    )
+    permissions: list[str] = Field(
+        ..., max_length=256, min_length=1, title="Permissions"
+    )
+    server_ids: ServerIds | None = Field(None, title="Server Ids")
+
+
+class CurrentAccountResponse(ContractModel):
+    """Current account with sorted role-derived HTTP capabilities."""
+
+    model_config = ConfigDict(extra="forbid")
+    credential_expires_at: int | None = Field(None, title="Credential Expires At")
+    credential_id: str | None = Field(None, title="Credential Id")
+    credential_name: str | None = Field(None, title="Credential Name")
+    id: int = Field(..., title="Id")
+    identity_type: str | None = Field(None, title="Identity Type")
+    is_active: bool = Field(..., title="Is Active")
+    mfa_enrollment_required: bool | None = Field(False, title="Mfa Enrollment Required")
+    permissions: list[str] | None = Field(None, title="Permissions")
+    policy_revision: str | None = Field(None, title="Policy Revision")
+    role: Literal["admin", "moderator", "user"] = Field(..., title="Role")
+    server_access: str | None = Field("all", title="Server Access")
+    server_permissions: dict[str, list[str]] | None = Field(
+        None, title="Server Permissions"
+    )
+    session_id: str | None = Field(None, title="Session Id")
+    theme: str | None = Field("default", title="Theme")
+    username: str = Field(..., title="Username")
 
 
 class CustomZipsResponse(ContractModel):
@@ -673,6 +781,22 @@ class EventSubscriptions(ContractModel):
     truncated: bool | None = Field(False, title="Truncated")
 
 
+class FactorCode(ContractModel):
+    """Validate and serialize the FactorCode contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    code: str = Field(..., max_length=128, min_length=6, title="Code")
+
+
+class FactorEnrollment(ContractModel):
+    """Validate and serialize the FactorEnrollment contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    provisioning_uri: str = Field(..., title="Provisioning Uri")
+    qr_svg: str = Field(..., title="Qr Svg")
+    secret: str = Field(..., title="Secret")
+
+
 class FileNamePayload(ContractModel):
     """Payload for file-based operations.
 
@@ -789,6 +913,20 @@ class InstallationAcceptedResponse(ContractModel):
     task_id: str = Field(..., title="Task Id")
 
 
+class IntegrationTokenInfo(ContractModel):
+    """Validate and serialize the IntegrationTokenInfo contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    created_at: int = Field(..., title="Created At")
+    expires_at: int | None = Field(..., title="Expires At")
+    id: str = Field(..., pattern="^[a-f0-9]{32}$", title="Id")
+    last_used_at: int | None = Field(None, title="Last Used At")
+    name: str = Field(..., title="Name")
+    permissions: list[str] = Field(..., title="Permissions")
+    revoked_at: int | None = Field(None, title="Revoked At")
+    server_ids: list[ServerId] | None = Field(None, title="Server Ids")
+
+
 class ListAvailableAddonsResponse(ContractModel):
     """Validate and serialize the ListAvailableAddonsResponse contract."""
 
@@ -835,6 +973,26 @@ class LogHistoryPage(ContractModel):
     file_id: str = Field(..., title="File Id")
     has_more: bool = Field(..., title="Has More")
     start: int = Field(..., title="Start")
+
+
+class LoginSessionInfo(ContractModel):
+    """Validate and serialize the LoginSessionInfo contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    active: bool = Field(..., title="Active")
+    connected: bool = Field(..., title="Connected")
+    created_at: int = Field(..., title="Created At")
+    current: bool = Field(..., title="Current")
+    expired_reason: Literal["absolute", "idle"] | None = Field(
+        None, title="Expired Reason"
+    )
+    expires_at: int = Field(..., title="Expires At")
+    id: str = Field(..., pattern="^[a-f0-9]{32}$", title="Id")
+    ip_address: str = Field(..., title="Ip Address")
+    last_seen_at: int = Field(..., title="Last Seen At")
+    name: str = Field(..., title="Name")
+    revoked_at: int | None = Field(None, title="Revoked At")
+    user_agent: str = Field(..., title="User Agent")
 
 
 class MetricsDiagnostics(ContractModel):
@@ -900,6 +1058,56 @@ class OperationSnapshot(ContractModel):
     status: Literal["running", "finished", "failed", "cancelled"] | None = Field(
         "running", title="Status"
     )
+
+
+class PasskeyInfo(ContractModel):
+    """Validate and serialize the PasskeyInfo contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    aaguid: str | None = Field(None, title="Aaguid")
+    active: bool = Field(..., title="Active")
+    backup_eligible: bool | None = Field(False, title="Backup Eligible")
+    backup_state: bool | None = Field(False, title="Backup State")
+    created_at: int = Field(..., title="Created At")
+    id: str = Field(..., pattern="^[a-f0-9]{32}$", title="Id")
+    last_used_at: int | None = Field(None, title="Last Used At")
+    name: str = Field(..., title="Name")
+    revoked_at: int | None = Field(None, title="Revoked At")
+    transports: list[str] | None = Field(None, title="Transports")
+    user_verified: bool | None = Field(False, title="User Verified")
+
+
+Username = Annotated[str, Field(max_length=80, title="Username")]
+
+
+class PasskeyLoginOptionsRequest(ContractModel):
+    """Optional username hint when requesting WebAuthn authentication options."""
+
+    model_config = ConfigDict(extra="forbid")
+    username: Username | None = Field(None, title="Username")
+
+
+class PasskeyLoginVerifyRequest(ContractModel):
+    """WebAuthn assertion payload for passwordless passkey login."""
+
+    model_config = ConfigDict(extra="forbid")
+    challenge_id: str = Field(
+        ...,
+        max_length=32,
+        min_length=32,
+        pattern="^[0-9a-f]{32}$",
+        title="Challenge Id",
+    )
+    credential: dict[str, Any] = Field(..., title="Credential")
+    remember_me: bool | None = Field(False, title="Remember Me")
+
+
+class PasskeyOptionsResponse(ContractModel):
+    """Validate and serialize the PasskeyOptionsResponse contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    challenge_id: str = Field(..., pattern="^[a-f0-9]{32}$", title="Challenge Id")
+    public_key: dict[str, Any] = Field(..., title="Public Key")
 
 
 class PersistenceDiagnostics(ContractModel):
@@ -1176,6 +1384,13 @@ class RecentDiagnosticWindow(ContractModel):
     window_seconds: Literal[300] = Field(300, title="Window Seconds")
 
 
+class RecoveryCodes(ContractModel):
+    """Validate and serialize the RecoveryCodes contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    recovery_codes: list[str] = Field(..., title="Recovery Codes")
+
+
 class RecoveryReportArchive(ContractModel):
     """Validate and serialize the RecoveryReportArchive contract."""
 
@@ -1284,6 +1499,24 @@ class RemoveServerBanResponse(ContractModel):
     )
 
 
+class RenamePasskey(ContractModel):
+    """Validate and serialize the RenamePasskey contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    name: str = Field(
+        ..., max_length=100, min_length=1, pattern=".*\\S.*", title="Name"
+    )
+
+
+class RenameSession(ContractModel):
+    """Validate and serialize the RenameSession contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    name: str = Field(
+        ..., max_length=100, min_length=1, pattern=".*\\S.*", title="Name"
+    )
+
+
 class RestartServerResponse(ContractModel):
     """Validate and serialize the RestartServerResponse contract."""
 
@@ -1333,6 +1566,20 @@ class RestoreVolume(ContractModel):
     required_bytes: int = Field(..., title="Required Bytes")
     roles: list[str] = Field(..., title="Roles")
     sufficient: bool = Field(..., title="Sufficient")
+
+
+class RevokeSessions(ContractModel):
+    """Validate and serialize the RevokeSessions contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    mode: Literal["others", "all"] = Field(..., title="Mode")
+
+
+class RevokeTrustedDevices(ContractModel):
+    """Validate and serialize the RevokeTrustedDevices contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    mode: Literal["others", "all"] = Field(..., title="Mode")
 
 
 class RuntimeDiagnostics(ContractModel):
@@ -1447,6 +1694,35 @@ class ScheduledTask(ContractModel):
     )
 
 
+class SecurityEventInfo(ContractModel):
+    """Validate and serialize the SecurityEventInfo contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    action: str = Field(..., title="Action")
+    details: dict[str, Any] = Field(..., title="Details")
+    id: str = Field(..., title="Id")
+    timestamp: int = Field(..., title="Timestamp")
+
+
+class SecurityStatus(ContractModel):
+    """Validate and serialize the SecurityStatus contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    enabled: bool = Field(..., title="Enabled")
+    idle_timeout_seconds: int = Field(..., title="Idle Timeout Seconds")
+    max_session_days: int = Field(..., title="Max Session Days")
+    passkey_count: int | None = Field(0, title="Passkey Count")
+    passkeys_enabled: bool | None = Field(False, title="Passkeys Enabled")
+    recent_until: int = Field(..., title="Recent Until")
+    recovery_codes_remaining: int = Field(..., title="Recovery Codes Remaining")
+    required: bool | None = Field(False, title="Required")
+    session_id: str | None = Field(None, title="Session Id")
+    trusted_device: bool | None = Field(False, title="Trusted Device")
+    trusted_device_expires_at: int | None = Field(
+        None, title="Trusted Device Expires At"
+    )
+
+
 class SendCommandResponse(ContractModel):
     """Validate and serialize the SendCommandResponse contract."""
 
@@ -1462,6 +1738,16 @@ class SendCommandResponse(ContractModel):
     status: Literal["success", "skipped", "partial"] | None = Field(
         "success", title="Status"
     )
+
+
+class ServerGrant(ContractModel):
+    """Validate and serialize the ServerGrant contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    permissions: list[str] = Field(
+        ..., max_length=256, min_length=1, title="Permissions"
+    )
+    server_id: str = Field(..., pattern="^[a-f0-9]{32}$", title="Server Id")
 
 
 CpuPercent = Annotated[float, Field(ge=0.0, title="Cpu Percent")]
@@ -1566,6 +1852,14 @@ class SetPropertiesResponse(ContractModel):
     )
 
 
+class SetServerAccess(ContractModel):
+    """Validate and serialize the SetServerAccess contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    grants: list[ServerGrant] | None = Field(None, max_length=1000, title="Grants")
+    mode: Literal["all", "assigned"] = Field(..., title="Mode")
+
+
 class SettingItemPayload(ContractModel):
     """Request model for a single setting key-value pair."""
 
@@ -1594,10 +1888,22 @@ class SetupAccountResponse(ContractModel):
     """First account creation returns the same session credentials as login."""
 
     model_config = ConfigDict(extra="forbid")
-    access_token: str = Field(..., title="Access Token")
+    access_token: str = Field(
+        ...,
+        description="Bearer JWT; empty in explicitly negotiated cookie mode, where the credential is HttpOnly",
+        title="Access Token",
+    )
     message: str = Field(..., title="Message")
     status: Literal["success"] = Field("success", title="Status")
     token_type: Literal["bearer"] = Field("bearer", title="Token Type")
+    trusted_device_expires_at: int | None = Field(
+        None, title="Trusted Device Expires At"
+    )
+    trusted_device_token: str | None = Field(
+        None,
+        description="One-time remembered-device credential; omitted in cookie mode. Store only when explicitly requested.",
+        title="Trusted Device Token",
+    )
 
 
 class SetupStatusResponse(ContractModel):
@@ -1900,9 +2206,21 @@ class TokenResponse(ContractModel):
     """Response model for successful authentication, providing an access token."""
 
     model_config = ConfigDict(extra="forbid")
-    access_token: str = Field(..., title="Access Token")
+    access_token: str = Field(
+        ...,
+        description="Bearer JWT; empty in explicitly negotiated cookie mode, where the credential is HttpOnly",
+        title="Access Token",
+    )
     message: str | None = Field(None, title="Message")
     token_type: Literal["bearer"] = Field("bearer", title="Token Type")
+    trusted_device_expires_at: int | None = Field(
+        None, title="Trusted Device Expires At"
+    )
+    trusted_device_token: str | None = Field(
+        None,
+        description="One-time remembered-device credential; omitted in cookie mode. Store only when explicitly requested.",
+        title="Trusted Device Token",
+    )
 
 
 class TransportDiagnostics(ContractModel):
@@ -1955,6 +2273,23 @@ class TriggerEventResponse(ContractModel):
     status: Literal["success", "skipped", "partial"] = Field(..., title="Status")
 
 
+class TrustedDeviceInfo(ContractModel):
+    """Validate and serialize the TrustedDeviceInfo contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    created_at: int = Field(..., title="Created At")
+    current: bool = Field(..., title="Current")
+    expires_at: int = Field(..., title="Expires At")
+    id: str = Field(..., pattern="^[a-f0-9]{32}$", title="Id")
+    ip_address: str = Field(..., title="Ip Address")
+    last_used_at: int = Field(..., title="Last Used At")
+    name: str = Field(..., title="Name")
+    status: Literal["active", "revoked", "expired", "invalidated"] = Field(
+        ..., title="Status"
+    )
+    user_agent: str = Field(..., title="User Agent")
+
+
 class UpdateUserRolePayload(ContractModel):
     """Request payload for updating a user's role.
 
@@ -1968,7 +2303,7 @@ class UserLoginPayload(ContractModel):
     """Request model for user login credentials."""
 
     model_config = ConfigDict(extra="forbid")
-    password: SecretStr = Field(..., min_length=1, title="Password")
+    password: SecretStr = Field(..., max_length=1024, min_length=8, title="Password")
     remember_me: bool | None = Field(False, title="Remember Me")
     username: str = Field(..., max_length=80, min_length=1, title="Username")
 
@@ -1983,6 +2318,35 @@ class UserResponse(ContractModel):
     role: Literal["admin", "moderator", "user"] = Field(..., title="Role")
     theme: str | None = Field("default", title="Theme")
     username: str = Field(..., title="Username")
+
+
+class VerifiedSecurity(ContractModel):
+    """Validate and serialize the VerifiedSecurity contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    trusted_device_expires_at: int | None = Field(
+        None, title="Trusted Device Expires At"
+    )
+    trusted_device_token: str | None = Field(None, title="Trusted Device Token")
+    verified_until: int = Field(..., title="Verified Until")
+
+
+class VerifyPasskeyAssertion(ContractModel):
+    """Validate and serialize the VerifyPasskeyAssertion contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    challenge_id: str = Field(..., pattern="^[a-f0-9]{32}$", title="Challenge Id")
+    credential: dict[str, Any] = Field(..., title="Credential")
+
+
+class VerifySecurity(ContractModel):
+    """Validate and serialize the VerifySecurity contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    otp: str | None = Field("", max_length=128, title="Otp")
+    password: SecretStr = Field(..., max_length=1024, min_length=1, title="Password")
+    remember_device: bool | None = Field(False, title="Remember Device")
+    trusted_device_token: SecretStr | None = Field(None, title="Trusted Device Token")
 
 
 class APIErrorResponse(ContractModel):
@@ -2013,6 +2377,16 @@ class APIErrorResponse(ContractModel):
     ] = Field(..., title="Code")
     details: dict[str, JsonValue] | None = Field(None, title="Details")
     message: str = Field(..., title="Message")
+
+
+class AccountServerAccessInfo(ContractModel):
+    """Validate and serialize the AccountServerAccessInfo contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    grants: list[ServerGrant] = Field(..., title="Grants")
+    mode: Literal["all", "assigned"] = Field(..., title="Mode")
+    policy_revision: str = Field(..., title="Policy Revision")
+    user_id: int = Field(..., title="User Id")
 
 
 class AppInfoResponse(ContractModel):
@@ -2095,6 +2469,14 @@ class BackupSummary(ContractModel):
         None, title="Stage Durations Ms"
     )
     verification: BackupVerification | None = None
+
+
+class CreatedIntegrationToken(ContractModel):
+    """Validate and serialize the CreatedIntegrationToken contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    credential: IntegrationTokenInfo
+    token: str = Field(..., title="Token")
 
 
 class DiagnosticFinding(ContractModel):

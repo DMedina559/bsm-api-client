@@ -4,6 +4,14 @@
 
 # bsm-cli
 
+The default command tree focuses on server operations, backups, scheduling, monitoring,
+file workflows, and authentication. Use `bsm-cli api explore` or
+`bsm-cli api call OPERATION_ID` for uncommon HTTP administration.
+See the [complete command inventory and scope decisions](docs/command-scope.md).
+The redundant administration commands have been removed; the inventory lists
+their HTTP operation replacements. Passkeys are registered and used through the
+web UI; the CLI does not implement browser WebAuthn.
+
 <p align="center">
   <a href="https://github.com/DMedina559/bsm-api-client/releases">
     <img alt="Stable" src="https://img.shields.io/github/v/release/DMedina559/bsm-api-client?label=Stable&color=blue">
@@ -47,7 +55,7 @@ Which will trigger the interactive menu allowing you to manage and configure you
 
 ## OpenAPI commands
 
-The CLI targets BSM's typed-contract branch and stable operation IDs. Curated commands remain available;
+The CLI uses stable operation IDs. Common operational workflows have dedicated commands;
 new server/plugin HTTP endpoints can be inspected and called immediately:
 
 ```bash
@@ -226,16 +234,16 @@ extend the lifetime of an existing token supplied with `--token`.
 ```bash
 bsm-cli diagnostics snapshot
 bsm-cli diagnostics snapshot --subsystem runtime
-bsm-cli diagnostics history --outcome failed --limit 50
-bsm-cli diagnostics history --cursor RETURNED_CURSOR
-bsm-cli diagnostics runs
-bsm-cli diagnostics trace CORRELATION_ID
+bsm-cli api call get_diagnostic_history --param outcome=failed --param limit=50
+bsm-cli api call get_diagnostic_history --param cursor=RETURNED_CURSOR
+bsm-cli api call get_diagnostic_runs
+bsm-cli api call get_diagnostic_trace --param correlation_id=CORRELATION_ID
 bsm-cli --json diagnostics snapshot > before.json
 bsm-cli --json diagnostics snapshot > after.json
-bsm-cli diagnostics compare before.json after.json
+bsm-cli api operation compare_diagnostic_snapshots
 ```
 
-History supports subsystem, instance, owner, code, outcome, operation and correlation filters. Trace sources may be independently unavailable. Comparison accepts snapshots or the `snapshot` member of saved support reports; counter deltas are unavailable across instance changes. All commands support the existing `--json` output and administrator error policy. Requests are on demand; no new background polling is added.
+History supports subsystem, instance, owner, code, outcome, operation and correlation filters. Trace sources may be independently unavailable. Use `api call compare_diagnostic_snapshots --json BODY` with `before` and `after` snapshot objects; extract the `snapshot` member when starting from a saved support report. Counter deltas are unavailable across instance changes. All commands support the existing `--json` output and administrator error policy. Requests are on demand; no new background polling is added.
 
 ### Support reports
 
@@ -268,7 +276,7 @@ Additional backup commands:
 - `backup dry-run --server SERVER --file ID --component world`: stage and verify selected files without stopping Minecraft or replacing live files; report required space per volume.
 - `backup annotate --server SERVER --file ID --label "Before update" --notes "Known good"`: edit local catalog metadata without rewriting the archive.
 - `backup list --server SERVER --kind scheduled --search "label"`: narrow the archive listing.
-- `backup schedule --server SERVER --time 03:00 --timezone America/Los_Angeles`: set a timezone-aware daily schedule. Use `--skip-missed`, `--disable`, or `--remove` to adjust missed-run behavior or pause/remove the schedule.
+- `scheduler save NAME configuration.json`: create or replace a validated timezone-aware schedule. Use `scheduler control` to pause, resume, or run it.
 - `backup health --server SERVER`: verification, key and destination health.
 - `backup manage verify --server SERVER --file ID`: isolated recovery validation.
 - `backup manage drill --server SERVER --file ID`: stage every included component on the destination filesystem and check copied hashes without stopping Minecraft or changing live files.
@@ -342,3 +350,24 @@ bsm-cli api --schema-file saved-openapi.json model SnapshotCreatePayload
 Imported `servers` URLs never change the configured backend or credentials.
 Refresh reloads the selected source. Generic form uploads and streaming downloads
 remain available through `api call --form/--file` and `api download`.
+
+
+### Remembered MFA devices
+
+`bsm-cli auth login --remember-device --mfa` remembers the second factor for
+30 days after a fresh authenticator or recovery code. `auth verify --remember-device
+--mfa` can do the same during security reauthentication. Your password is still
+required; `--remember-me` independently controls the login token lifetime.
+The CLI stores the proof in its protected configuration scoped to the account
+and backend, never prints it, and does not save passwords or one-use codes.
+Logout clears the login while keeping remembered trust for a future password
+login. Use Account Security → Sessions to forget remembered devices; this does
+not sign out existing sessions. Password/MFA changes invalidate remembered trust.
+
+Integration-token history supports `auth tokens list --status active|inactive|all
+--limit 50 --offset 0`. `api call list_trusted_devices` shows remembered second-factor devices.
+Use `api call revoke_trusted_device --param device_id=ID`, or
+`api call revoke_trusted_devices --json '{"mode":"others"}'` (or mode `all`)
+to remove trust without signing out login sessions. Reauthentication saves newly remembered trust for the account
+returned by the backend, rather than an old local username label. An environment
+credential override does not automatically receive another saved account's proof.

@@ -8,8 +8,8 @@ from ...client import AuthenticatedClient, Client
 from ...types import Response, UNSET
 from ... import errors
 
+from ...models.backup_key_info import BackupKeyInfo
 from ...models.error_envelope import ErrorEnvelope
-from ...models.rotate_backup_key_response_rotate_backup_key import RotateBackupKeyResponseRotateBackupKey
 from typing import cast
 
 
@@ -33,9 +33,9 @@ def _get_kwargs(
 
 
 
-def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> ErrorEnvelope | RotateBackupKeyResponseRotateBackupKey | None:
+def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> BackupKeyInfo | ErrorEnvelope | None:
     if response.status_code == 200:
-        response_200 = RotateBackupKeyResponseRotateBackupKey.from_dict(response.json())
+        response_200 = BackupKeyInfo.from_dict(response.json())
 
 
 
@@ -83,6 +83,13 @@ def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Res
 
         return response_422
 
+    if response.status_code == 429:
+        response_429 = ErrorEnvelope.from_dict(response.json())
+
+
+
+        return response_429
+
     if response.status_code == 500:
         response_500 = ErrorEnvelope.from_dict(response.json())
 
@@ -103,7 +110,7 @@ def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Res
         return None
 
 
-def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[ErrorEnvelope | RotateBackupKeyResponseRotateBackupKey]:
+def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[BackupKeyInfo | ErrorEnvelope]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -116,7 +123,7 @@ def sync_detailed(
     *,
     client: AuthenticatedClient,
 
-) -> Response[ErrorEnvelope | RotateBackupKeyResponseRotateBackupKey]:
+) -> Response[BackupKeyInfo | ErrorEnvelope]:
     """Rotate Key
     
      Generate a new active key and retain all previous keys.
@@ -141,7 +148,7 @@ def sync(
     *,
     client: AuthenticatedClient,
 
-) -> ErrorEnvelope | RotateBackupKeyResponseRotateBackupKey | None:
+) -> BackupKeyInfo | ErrorEnvelope | None:
     """Rotate Key
     
      Generate a new active key and retain all previous keys.
@@ -149,7 +156,7 @@ def sync(
     :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
     :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
     
-    :returns: ErrorEnvelope | RotateBackupKeyResponseRotateBackupKey"""
+    :returns: BackupKeyInfo | ErrorEnvelope"""
 
 
     return sync_detailed(
@@ -161,7 +168,7 @@ async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
 
-) -> Response[ErrorEnvelope | RotateBackupKeyResponseRotateBackupKey]:
+) -> Response[BackupKeyInfo | ErrorEnvelope]:
     """Rotate Key
     
      Generate a new active key and retain all previous keys.
@@ -186,7 +193,7 @@ async def asyncio(
     *,
     client: AuthenticatedClient,
 
-) -> ErrorEnvelope | RotateBackupKeyResponseRotateBackupKey | None:
+) -> BackupKeyInfo | ErrorEnvelope | None:
     """Rotate Key
     
      Generate a new active key and retain all previous keys.
@@ -194,7 +201,7 @@ async def asyncio(
     :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
     :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
     
-    :returns: ErrorEnvelope | RotateBackupKeyResponseRotateBackupKey"""
+    :returns: BackupKeyInfo | ErrorEnvelope"""
 
 
     return (await asyncio_detailed(

@@ -9,6 +9,8 @@ from ...types import Response, UNSET
 from ... import errors
 
 from ...models.error_envelope import ErrorEnvelope
+from ...types import File, FileTypes
+from io import BytesIO
 from typing import cast
 
 
@@ -33,9 +35,14 @@ def _get_kwargs(
 
 
 
-def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Any | ErrorEnvelope | None:
+def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> ErrorEnvelope | File | None:
     if response.status_code == 200:
-        response_200 = cast(Any, None)
+        response_200 = File(
+             payload = BytesIO(response.content)
+        )
+
+
+
         return response_200
 
     if response.status_code == 400:
@@ -80,6 +87,13 @@ def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Res
 
         return response_422
 
+    if response.status_code == 429:
+        response_429 = ErrorEnvelope.from_dict(response.json())
+
+
+
+        return response_429
+
     if response.status_code == 500:
         response_500 = ErrorEnvelope.from_dict(response.json())
 
@@ -100,7 +114,7 @@ def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Res
         return None
 
 
-def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[Any | ErrorEnvelope]:
+def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[ErrorEnvelope | File]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -112,9 +126,9 @@ def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Res
 def sync_detailed(
     server_name: str,
     *,
-    client: AuthenticatedClient | Client,
+    client: AuthenticatedClient,
 
-) -> Response[Any | ErrorEnvelope]:
+) -> Response[ErrorEnvelope | File]:
     """Get World Icon
     
      Serves the ``world_icon.jpeg`` for a server, or a default icon if not found.
@@ -141,9 +155,9 @@ def sync_detailed(
 def sync(
     server_name: str,
     *,
-    client: AuthenticatedClient | Client,
+    client: AuthenticatedClient,
 
-) -> Any | ErrorEnvelope | None:
+) -> ErrorEnvelope | File | None:
     """Get World Icon
     
      Serves the ``world_icon.jpeg`` for a server, or a default icon if not found.
@@ -153,7 +167,7 @@ def sync(
     :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
     :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
     
-    :returns: Any | ErrorEnvelope"""
+    :returns: ErrorEnvelope | File"""
 
 
     return sync_detailed(
@@ -165,9 +179,9 @@ client=client,
 async def asyncio_detailed(
     server_name: str,
     *,
-    client: AuthenticatedClient | Client,
+    client: AuthenticatedClient,
 
-) -> Response[Any | ErrorEnvelope]:
+) -> Response[ErrorEnvelope | File]:
     """Get World Icon
     
      Serves the ``world_icon.jpeg`` for a server, or a default icon if not found.
@@ -194,9 +208,9 @@ async def asyncio_detailed(
 async def asyncio(
     server_name: str,
     *,
-    client: AuthenticatedClient | Client,
+    client: AuthenticatedClient,
 
-) -> Any | ErrorEnvelope | None:
+) -> ErrorEnvelope | File | None:
     """Get World Icon
     
      Serves the ``world_icon.jpeg`` for a server, or a default icon if not found.
@@ -206,7 +220,7 @@ async def asyncio(
     :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
     :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
     
-    :returns: Any | ErrorEnvelope"""
+    :returns: ErrorEnvelope | File"""
 
 
     return (await asyncio_detailed(

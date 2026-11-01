@@ -179,33 +179,51 @@ CASES = [
         "5",
     ),
     (
-        "events",
-        "activity",
-        "--server-name",
-        "alpha",
-        "--sequence-id",
-        "sequence",
-        "--phase",
-        "before",
+        "api",
+        "call",
+        "get_event_activity",
+        "--param",
+        "server_name=alpha",
+        "--param",
+        "sequence_id=sequence",
+        "--param",
+        "phase=before",
     ),
     ("diagnostics", "snapshot"),
     ("diagnostics", "snapshot", "--subsystem", "runtime"),
     (
-        "diagnostics",
-        "history",
-        "--limit",
-        "2",
-        "--outcome",
-        "failed",
-        "--cursor",
-        "next",
+        "api",
+        "call",
+        "get_diagnostic_history",
+        "--param",
+        "limit=2",
+        "--param",
+        "outcome=failed",
+        "--param",
+        "cursor=next",
     ),
-    ("diagnostics", "runs", "--limit", "5"),
-    ("diagnostics", "trace", "trace", "--cursor", "next"),
-    ("runtime",),
+    ("api", "call", "get_diagnostic_runs", "--param", "limit=5"),
+    (
+        "api",
+        "call",
+        "get_diagnostic_trace",
+        "--param",
+        "correlation_id=trace",
+        "--param",
+        "cursor=next",
+    ),
+    ("api", "call", "get_web_runtime"),
     ("shutdown", "--yes"),
-    ("events", "catalog"),
-    ("events", "activity", "--limit", "5", "--status", "partial"),
+    ("api", "call", "list_application_events"),
+    (
+        "api",
+        "call",
+        "get_event_activity",
+        "--param",
+        "limit=5",
+        "--param",
+        "status=partial",
+    ),
     ("server", "list"),
     ("server", "list", "--server-name", "test"),
     ("server", "start", "-s", "test"),
@@ -214,35 +232,48 @@ CASES = [
     ("server", "update", "-s", "test"),
     ("server", "delete", "-s", "test", "--yes"),
     ("server", "send-command", "-s", "test", "say", "hello world"),
-    ("account", "details"),
-    ("account", "update-theme", "--theme", "dark"),
+    ("auth", "whoami"),
+    ("api", "call", "update_account_theme", "--json", '{"theme": "dark"}'),
     (
-        "account",
-        "update-profile",
-        "--full-name",
-        "Test User",
-        "--email",
-        "test@example.com",
+        "api",
+        "call",
+        "update_account_profile",
+        "--json",
+        '{"full_name": "Test User", "email": "test@example.com"}',
     ),
     (
-        "account",
+        "auth",
         "change-password",
         "--current-password",
         "old-password",
         "--new-password",
-        "new-password",
+        "new secure passphrase",
     ),
-    ("users", "list"),
-    ("users", "delete", "1", "--yes"),
-    ("users", "set-role", "1", "moderator"),
-    ("users", "enable", "1"),
-    ("users", "disable", "1"),
-    ("users", "invite", "user"),
+    ("api", "call", "list_users"),
+    ("api", "call", "delete_user", "--param", "user_id=1"),
+    (
+        "api",
+        "call",
+        "update_user_role",
+        "--param",
+        "user_id=1",
+        "--json",
+        '{"role": "moderator"}',
+    ),
+    ("api", "call", "enable_user", "--param", "user_id=1"),
+    ("api", "call", "disable_user", "--param", "user_id=1"),
+    ("api", "call", "generate_registration_token", "--json", '{"role": "user"}'),
     ("plugin", "list"),
     ("plugin", "enable", "demo"),
     ("plugin", "disable", "demo"),
     ("plugin", "reload"),
-    ("plugin", "trigger-event", "demo", "--payload-json", '{"value":1}'),
+    (
+        "api",
+        "call",
+        "trigger_plugin_event",
+        "--json",
+        '{"event_name": "demo", "payload": {"value": 1}}',
+    ),
     ("player", "scan"),
     ("player", "add", "-p", "Test Player:123"),
     ("allowlist", "list", "-s", "test"),
@@ -263,6 +294,20 @@ CASES = [
     ("world", "export", "-s", "test"),
     ("world", "reset", "-s", "test", "--yes"),
     ("addon", "install", "-s", "test", "-f", "addon.mcaddon"),
+    ("api", "call", "list_passkeys"),
+    ("api", "call", "list_account_passkeys", "--param", "user_id=2"),
+    (
+        "api",
+        "call",
+        "rename_passkey",
+        "--param",
+        "passkey_id=pk-1",
+        "--json",
+        '{"name": "Hardware key"}',
+    ),
+    ("api", "call", "revoke_passkey", "--param", "passkey_id=pk-1"),
+    ("api", "call", "reset_account_mfa", "--param", "user_id=2"),
+    ("api", "call", "revoke_trusted_devices", "--json", '{"mode": "others"}'),
 ]
 
 
@@ -277,6 +322,9 @@ def command_client(monkeypatch, tmp_path):
 
     def create(**kwargs):
         client = BedrockServerManagerApi(**kwargs)
+        from bsm_api_client.openapi import generated_schema
+
+        client._fetch_openapi_schema = AsyncMock(return_value=generated_schema())
 
         async def request(method, path, **kwargs):
             status = 200
@@ -299,6 +347,7 @@ def command_client(monkeypatch, tmp_path):
                 body["events"] = None
             body.update(
                 {
+                    "/api/account": {"permissions": ["account:read", "servers:read"]},
                     "/api/scheduler/schedules": {
                         "schedules": [],
                         "task_types": ["backup", "verify"],
@@ -321,7 +370,11 @@ def command_client(monkeypatch, tmp_path):
                 }
             else:
                 status, body = response_for(method, path, body)
-            return httpx.Response(status, json=body)
+            return (
+                httpx.Response(status, json=body)
+                if kwargs.get("raw_request") is not None
+                else body
+            )
 
         client._dynamic_request = AsyncMock(side_effect=request)
         clients.append(client)
@@ -412,7 +465,6 @@ def test_curated_api_failures(monkeypatch, tmp_path, args, machine):
         ),
         (("addon", "manage", "-s", "test"), [], ["Back"], []),
         (("server", "settings", "-s", "test"), [], ["cancel"], []),
-        (("users",), [], ["Back"], []),
     ],
 )
 def test_interactive_workflows(
@@ -624,16 +676,21 @@ def test_diagnostic_compare_reads_snapshots_and_reports(command_client, tmp_path
     before.write_text(json.dumps(current))
     after.write_text(json.dumps({"snapshot": current}))
     result = CliRunner().invoke(
-        cli, ["--json", "diagnostics", "compare", str(before), str(after)]
+        cli,
+        [
+            "--json",
+            "api",
+            "call",
+            "compare_diagnostic_snapshots",
+            "--json",
+            json.dumps({"before": current, "after": current}),
+        ],
     )
     assert result.exit_code == 0, result.output
     assert json.loads(result.stdout)["same_instance"] is False
     request = command_client[0]._dynamic_request.call_args
     assert request.args[:2] == ("POST", "/api/diagnostics/compare")
-    assert (
-        json.loads(request.kwargs["raw_request"].content)["after"]["snapshot_id"]
-        == "snapshot"
-    )
+    assert request.kwargs["json_data"]["after"]["snapshot_id"] == "snapshot"
 
 
 def test_recovery_report_writes_new_file_and_preserves_existing(
@@ -667,3 +724,33 @@ def test_scheduler_save_json(command_client, tmp_path):
     assert result.exit_code == 0, result.output
     request = command_client[0]._dynamic_request.call_args
     assert request.args[:2] == ("PUT", "/api/scheduler/schedules/weekly")
+
+
+@pytest.mark.parametrize("machine", [False, True])
+def test_audit_page_flags_are_serialized(command_client, machine, monkeypatch):
+    for key, value in {
+        "action": "login",
+        "timestamp": "2026-10-31T12:00:00Z",
+        "user_id": 1,
+    }.items():
+        monkeypatch.setitem(SUCCESS, key, value)
+    result = CliRunner().invoke(
+        cli,
+        (["--json"] if machine else []) + ["audit", "--limit", "25", "--offset", "100"],
+    )
+    assert result.exit_code == 0, result.output
+    call = command_client[0]._dynamic_request.call_args
+    assert call.args[:2] == ("GET", "/audit-log/list")
+    assert str(call.kwargs["raw_request"].url).endswith("?limit=25&offset=100")
+    if machine:
+        assert isinstance(json.loads(result.stdout), list)
+
+
+@pytest.mark.parametrize(
+    "flag, value", [("--limit", "501"), ("--limit", "0"), ("--offset", "-1")]
+)
+def test_audit_invalid_pages_are_rejected(command_client, flag, value):
+    result = CliRunner().invoke(cli, ["audit", flag, value])
+    assert result.exit_code != 0
+    assert "Invalid value" in result.output
+    assert not command_client or command_client[0]._dynamic_request.await_count == 0

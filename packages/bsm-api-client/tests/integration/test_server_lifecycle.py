@@ -13,7 +13,7 @@ async def client_fixture(server, bedrock_server, wait_for_server_status):
     Provides a client and ensures the server is in a known (stopped)
     state before and after each test.
     """
-    client = BedrockServerManagerApi(server, "admin", "password")
+    client = BedrockServerManagerApi(server, "admin", "integration secure passphrase")
     server_name = bedrock_server
     try:
         # Ensure server is stopped before the test begins

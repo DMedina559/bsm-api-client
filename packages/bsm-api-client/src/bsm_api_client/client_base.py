@@ -77,6 +77,10 @@ class ClientBase:
         verify_ssl: bool = True,
         http_client: Optional[httpx.AsyncClient] = None,
         remember_me: bool = False,
+        otp: str = "",
+        remember_device: bool = False,
+        trusted_device_token: Optional[str] = None,
+        client_name: Optional[str] = None,
     ):
         """Initializes the base API client.
         :param base_url: The base URL of the Bedrock Server Manager (e.g., http://localhost:8080).
@@ -139,11 +143,17 @@ class ClientBase:
         self._username = username
         self._password = password
         self._remember_me = remember_me
+        self._otp = otp
+        self._remember_device = remember_device
+        self._trusted_device_token = trusted_device_token
         self._request_timeout = request_timeout
         self._verify_ssl = verify_ssl
 
         self._jwt_token: Optional[str] = jwt_token
-        self._default_headers: Mapping[str, str] = {"Accept": "application/json"}
+        self._default_headers: Mapping[str, str] = {
+            "Accept": "application/json",
+            "X-BSM-Client": client_name or "BSM Python SDK",
+        }
         self._session = session
         self._close_session = session is None
         self._http_client = http_client or httpx.AsyncClient(
@@ -298,7 +308,10 @@ class ClientBase:
 
         if status == 400:  # Bad Request
             raise InvalidInputError(
-                message, status_code=status, response_data=error_data
+                message,
+                status_code=status,
+                response_data=error_data,
+                response_headers=dict(response.headers),
             )
         if status == 401:  # Unauthorized
             # Check if it's a login attempt specifically, to give a more specific error.
@@ -314,11 +327,20 @@ class ClientBase:
                     "Bad username or password",  # Keep generic message for this case
                     status_code=status,
                     response_data=error_data,
+                    response_headers=dict(response.headers),
                 )
-            raise AuthError(message, status_code=status, response_data=error_data)
+            raise AuthError(
+                message,
+                status_code=status,
+                response_data=error_data,
+                response_headers=dict(response.headers),
+            )
         if status == 403:  # Forbidden
             raise AuthError(
-                message, status_code=status, response_data=error_data
+                message,
+                status_code=status,
+                response_data=error_data,
+                response_headers=dict(response.headers),
             )  # AuthError is suitable for 403 too
         if status == 404:  # Not Found
             if (
@@ -326,10 +348,16 @@ class ClientBase:
                 or "/server/" in request_path_for_log
             ):  # More general check
                 raise ServerNotFoundError(  # Specific error for server-related 404s
-                    message, status_code=status, response_data=error_data
+                    message,
+                    status_code=status,
+                    response_data=error_data,
+                    response_headers=dict(response.headers),
                 )
             raise NotFoundError(
-                message, status_code=status, response_data=error_data
+                message,
+                status_code=status,
+                response_data=error_data,
+                response_headers=dict(response.headers),
             )  # Generic 404
         if status == 422:  # Unprocessable Entity (Common for FastAPI validation errors)
             # HTTPValidationError from FastAPI will often have details in error_data["detail"]
@@ -340,10 +368,14 @@ class ClientBase:
                 f"Validation Error: {message}",
                 status_code=status,
                 response_data=error_data,
+                response_headers=dict(response.headers),
             )
         if status == 501:  # Not Implemented
             raise OperationFailedError(
-                message, status_code=status, response_data=error_data
+                message,
+                status_code=status,
+                response_data=error_data,
+                response_headers=dict(response.headers),
             )
 
         # Check message content for ServerNotRunningError, as this can come with various status codes
@@ -358,26 +390,44 @@ class ClientBase:
         ):
             if status >= 400:
                 raise ServerNotRunningError(
-                    message, status_code=status, response_data=error_data
+                    message,
+                    status_code=status,
+                    response_data=error_data,
+                    response_headers=dict(response.headers),
                 )
 
         if status >= 500:
             raise APIServerSideError(
-                message, status_code=status, response_data=error_data
+                message,
+                status_code=status,
+                response_data=error_data,
+                response_headers=dict(response.headers),
             )
 
         if status >= 400:
-            raise APIError(message, status_code=status, response_data=error_data)
+            raise APIError(
+                message,
+                status_code=status,
+                response_data=error_data,
+                response_headers=dict(response.headers),
+            )
 
         _LOGGER.error(
             f"Unhandled API error condition: Status {status}, Message: {message}"
         )
-        raise APIError(message, status_code=status, response_data=error_data)
+        raise APIError(
+            message,
+            status_code=status,
+            response_data=error_data,
+            response_headers=dict(response.headers),
+        )
 
-    async def authenticate(self) -> TokenResponse:
+    async def authenticate(self, *, otp: Optional[str] = None) -> TokenResponse:
         """Authenticate against BSM's OpenAPI-described OAuth2 token endpoint."""
         if not self._username or not self._password:
             raise AuthError("Username and password are required to authenticate.")
+        proof = self._otp if otp is None else otp
+        self._otp = ""
         response_data = await self.async_call_generated(
             "login",
             body={
@@ -385,6 +435,13 @@ class ClientBase:
                 "username": self._username,
                 "password": self._password,
                 "remember_me": self._remember_me,
+                **({"otp": proof} if proof else {}),
+                **({"remember_device": True} if self._remember_device else {}),
+                **(
+                    {"trusted_device_token": self._trusted_device_token}
+                    if self._trusted_device_token
+                    else {}
+                ),
             },
             authenticated=False,
         )
@@ -393,12 +450,23 @@ class ClientBase:
         except Exception as exc:
             self._jwt_token = None
             raise AuthError("Authentication response was invalid.") from exc
+        self._otp = ""
         self._jwt_token = token.access_token
+        if token.trusted_device_token:
+            self._trusted_device_token = token.trusted_device_token
         self._auth_generation += 1
         return cast(TokenResponse, token)
 
     async def async_logout(self) -> Dict[str, Any]:
         """Log out through the shared REST transport and clear the local token."""
+        if (self._jwt_token or "").startswith("bsm_it_"):
+            self._jwt_token = None
+            self._password = ""
+            self._otp = ""
+            return {
+                "status": "success",
+                "message": "Integration credential cleared locally.",
+            }
         try:
             response = await self.async_call_generated(
                 "logout", authenticated=bool(self._jwt_token)
@@ -406,6 +474,8 @@ class ClientBase:
             return cast(Dict[str, Any], response or {})
         finally:
             self._jwt_token = None
+            self._password = ""
+            self._otp = ""
 
     async def websocket_connect(self) -> WebSocketClient:
         """Connects to the WebSocket endpoint.

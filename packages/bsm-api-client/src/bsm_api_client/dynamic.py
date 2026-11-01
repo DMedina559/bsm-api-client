@@ -52,6 +52,7 @@ class DynamicOpenAPIMixin(GeneratedOperationMethods):
     if TYPE_CHECKING:
         _default_headers: Mapping[str, str]
         _jwt_token: Optional[str]
+        _trusted_device_token: Optional[str]
         _base_url: str
         _server_root_url: str
         _api_base_segment: str
@@ -63,7 +64,7 @@ class DynamicOpenAPIMixin(GeneratedOperationMethods):
 
         _auth_lock: asyncio.Lock
 
-        async def authenticate(self) -> Any: ...
+        async def authenticate(self, *, otp: Optional[str] = None) -> Any: ...
         async def _handle_api_error(self, response: Any, path: str) -> Any: ...
 
     if TYPE_CHECKING:
@@ -432,6 +433,10 @@ class DynamicOpenAPIMixin(GeneratedOperationMethods):
                     or getattr(self, "_auth_generation", 0) == stale_generation
                 )
             ):
+                if (self._jwt_token or stale_token or "").startswith("bsm_it_"):
+                    raise AuthError(
+                        "Integration credential expired or revoked; replace it explicitly."
+                    )
                 self._jwt_token = None
                 await self.authenticate()
                 if not self._jwt_token:
@@ -459,6 +464,36 @@ class DynamicOpenAPIMixin(GeneratedOperationMethods):
         if authenticated and self._jwt_token:
             result["Authorization"] = f"Bearer {self._jwt_token}"
         return result
+
+    async def _reject_invalid_session(self, response):
+        if (
+            response.status_code == 401
+            and response.headers.get("X-BSM-Session-Invalid") == "1"
+        ):
+            await response.aclose()
+            raise AuthError(
+                "Login session expired or revoked; sign in explicitly.",
+                status_code=401,
+                response_headers=dict(response.headers),
+            )
+
+    def _add_trusted_device_header(self, headers, path, authenticated):
+        """Never disclose the remembered factor to unrelated or plugin operations."""
+        security_path = f"{self._api_base_segment}/account/security"
+        operation = httpx.URL(path)
+        if (
+            authenticated
+            and operation.is_relative_url
+            and (
+                operation.path == security_path
+                or operation.path.startswith(security_path + "/")
+            )
+            and not any(part in {".", ".."} for part in operation.path.split("/"))
+            and not (self._jwt_token or "").startswith("bsm_it_")
+            and getattr(self, "_trusted_device_token", None)
+            and not any(key.lower() == "x-bsm-trusted-device-token" for key in headers)
+        ):
+            headers["X-BSM-Trusted-Device-Token"] = self._trusted_device_token
 
     @asynccontextmanager
     async def _open_response(
@@ -493,6 +528,7 @@ class DynamicOpenAPIMixin(GeneratedOperationMethods):
             token_used = self._jwt_token
             generation_used = getattr(self, "_auth_generation", 0)
             request_headers = self._request_headers(headers, raw_request, authenticated)
+            self._add_trusted_device_header(request_headers, path, authenticated)
             try:
                 upload: list[Any] = [
                     (
@@ -555,6 +591,7 @@ class DynamicOpenAPIMixin(GeneratedOperationMethods):
                     "auth_retry": bool(attempt),
                 },
             )
+            await self._reject_invalid_session(response)
             refresh = (
                 response.status_code == 401
                 and authenticated

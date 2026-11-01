@@ -269,18 +269,41 @@ async def settings(ctx):
 
 
 @manager.command("audit")
+@click.option(
+    "--limit",
+    type=click.IntRange(1, 500),
+    default=100,
+    show_default=True,
+    help="Maximum audit records per page.",
+)
+@click.option(
+    "--offset",
+    type=click.IntRange(min=0),
+    default=0,
+    show_default=True,
+    help="Skip this many newest records.",
+)
 @click.pass_context
-async def audit(ctx):
+async def audit(ctx, limit, offset):
     """Show audit records with time, actor, action, and structured details."""
     records = await get_client(ctx).async_call_generated(
-        "list_audit_logs", authenticated=True
+        "list_audit_logs",
+        parameters={"limit": limit, "offset": offset},
+        authenticated=True,
     )
+    if ctx.obj.get("json_output"):
+        return records
     for record in records:
         click.echo(
             f"{record['timestamp']} | User {record['user_id']} | {record['action']}"
         )
         if record.get("details"):
             outcome(record["details"])
+    if len(records) == limit:
+        click.echo(
+            f"More records may be available: bsm-cli audit --limit {limit} --offset {offset + limit}",
+            err=True,
+        )
 
 
 @manager.command("logs")
@@ -316,16 +339,6 @@ async def logs(ctx, topic, before, file_id):
         )
 
 
-@manager.command("runtime")
-@click.pass_context
-async def runtime(ctx):
-    """Inspect the web host phase; requires administrator access."""
-    result = await get_client(ctx).application.async_get_web_runtime()
-    if not ctx.obj.get("json_output"):
-        outcome(result.model_dump(mode="json"))
-    return result
-
-
 @manager.command("shutdown")
 @click.option("--yes", is_flag=True, help="Confirm shutdown without prompting.")
 @click.pass_context
@@ -338,47 +351,4 @@ async def shutdown(ctx, yes):
         click.echo(
             f"Shutdown accepted for instance {result.instance_id}; cleanup is still in progress."
         )
-    return result
-
-
-@manager.group("events")
-def events():
-    """Inspect event declarations and delivery diagnostics as an administrator."""
-
-
-@events.command("catalog")
-@click.pass_context
-async def event_catalog(ctx):
-    result = await get_client(ctx).events.async_list_application_events()
-    if not ctx.obj.get("json_output"):
-        table(
-            "Application events",
-            ("Name", "Phase", "Owner"),
-            [(event.name, event.phase, event.owner) for event in result.events],
-        )
-    return result
-
-
-@events.command("activity")
-@click.option("--server-name")
-@click.option("--source")
-@click.option("--operation-name")
-@click.option("--operation-id")
-@click.option("--sequence-id")
-@click.option("--phase", type=click.Choice(["before", "after", "custom", "lifecycle"]))
-@click.option("--name")
-@click.option("--owner")
-@click.option("--correlation-id")
-@click.option(
-    "--status",
-    type=click.Choice(
-        ["dispatching", "completed", "partial", "cancelled", "suppressed"]
-    ),
-)
-@click.option("--limit", type=click.IntRange(1, 10000), default=20, show_default=True)
-@click.pass_context
-async def event_activity(ctx, **filters):
-    result = await get_client(ctx).events.async_get_event_activity(**filters)
-    if not ctx.obj.get("json_output"):
-        outcome(result.model_dump(mode="json"))
     return result

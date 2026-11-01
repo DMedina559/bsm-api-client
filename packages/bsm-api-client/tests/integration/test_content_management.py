@@ -51,7 +51,7 @@ async def content_client(server, bedrock_server, wait_for_server_status):
     """
     Provides a client and ensures the server is stopped before and after each test.
     """
-    client = BedrockServerManagerApi(server, "admin", "password")
+    client = BedrockServerManagerApi(server, "admin", "integration secure passphrase")
     server_name = bedrock_server
     try:
         status_res = await client.servers.async_get_server_running_status(server_name)

@@ -18,18 +18,17 @@ from bsm_cli.config import Config
         ("api", "schema"),
         ("api", "diff"),
         ("api", "refresh"),
-        ("account", "details"),
-        ("account", "update-theme", "--theme", "default"),
+        ("auth", "whoami"),
+        ("api", "call", "update_account_theme", "--json", '{"theme":"default"}'),
         (
-            "account",
-            "update-profile",
-            "--full-name",
-            "CLI Test",
-            "--email",
-            "cli@example.com",
+            "api",
+            "call",
+            "update_account_profile",
+            "--json",
+            '{"full_name":"CLI Test","email":"cli@example.com"}',
         ),
-        ("users", "list"),
-        ("users", "invite", "user"),
+        ("api", "call", "list_users"),
+        ("api", "call", "generate_registration_token", "--json", '{"role":"user"}'),
         ("server", "list"),
         ("player", "scan"),
         ("player", "add", "-p", "CLI Test:987654321"),
@@ -42,7 +41,13 @@ from bsm_cli.config import Config
         ("plugin", "settings", "show", "backup_on_start"),
         ("plugin", "list"),
         ("plugin", "reload"),
-        ("plugin", "trigger-event", "cli_test_event"),
+        (
+            "api",
+            "call",
+            "trigger_plugin_event",
+            "--json",
+            '{"event_name":"cli_test_event"}',
+        ),
     ],
 )
 def test_cli_against_backend(server, tmp_path, monkeypatch, args):
@@ -56,23 +61,20 @@ def test_cli_against_backend(server, tmp_path, monkeypatch, args):
     monkeypatch.setattr(generated_adapter, "operation_module", resolve_operation)
     monkeypatch.setattr("bsm_cli.config.get_config_path", lambda: tmp_path / "cli.json")
     config = Config()
-    config.update(base_url=server, username="admin", password="password")
+    config.update(
+        base_url=server, username="admin", password="integration secure passphrase"
+    )
     result = CliRunner().invoke(cli, ["--json", *args])
     assert result.exit_code == 0, result.output
     assert json.loads(result.stdout) is not None
     assert not result.stderr
     expected_operation = {
-        ("account", "details"): "get_account",
-        ("account", "update-theme"): "update_account_theme",
-        ("account", "update-profile"): "update_account_profile",
-        ("users", "list"): "list_users",
-        ("users", "invite"): "generate_registration_token",
+        ("auth", "whoami"): "get_account",
         ("server", "list"): "list_servers",
         ("player", "scan"): "scan_players",
         ("player", "add"): "add_players",
         ("plugin", "list"): "list_plugins",
         ("plugin", "reload"): "reload_plugins",
-        ("plugin", "trigger-event"): "trigger_plugin_event",
     }.get(args[:2])
     if expected_operation:
         assert expected_operation in generated_operations
