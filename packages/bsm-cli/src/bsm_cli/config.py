@@ -12,11 +12,56 @@ def get_config_path() -> Path:
     return Path.home() / CONFIG_FILE_NAME
 
 
+def protect_config(path: Path) -> None:
+    """Protect persisted credentials before reading or writing their bytes."""
+    if path.is_symlink():
+        raise OSError("CLI credential file must not be a symbolic link")
+    if os.name != "nt":
+        path.chmod(0o600)
+        return
+    import ntsecuritycon
+    import win32api
+    import win32con
+    import win32security
+
+    token = win32security.OpenProcessToken(
+        win32api.GetCurrentProcess(), win32con.TOKEN_QUERY
+    )
+    try:
+        owner = win32security.GetTokenInformation(token, win32security.TokenUser)[0]
+    finally:
+        token.Close()
+    acl = win32security.ACL()
+    for sid in (
+        owner,
+        win32security.CreateWellKnownSid(
+            win32security.WinBuiltinAdministratorsSid, None
+        ),
+        win32security.CreateWellKnownSid(win32security.WinLocalSystemSid, None),
+    ):
+        acl.AddAccessAllowedAceEx(
+            win32security.ACL_REVISION, 0, ntsecuritycon.FILE_ALL_ACCESS, sid
+        )
+    win32security.SetNamedSecurityInfo(
+        str(path),
+        win32security.SE_FILE_OBJECT,
+        win32security.DACL_SECURITY_INFORMATION
+        | win32security.PROTECTED_DACL_SECURITY_INFORMATION,
+        None,
+        None,
+        acl,
+        None,
+    )
+
+
 def load_config() -> Dict[str, Any]:
     """Loads the configuration from the config file."""
     config_path = get_config_path()
+    if config_path.is_symlink():
+        raise OSError("CLI credential file must not be a symbolic link")
     if not config_path.exists():
         return {}
+    protect_config(config_path)
     try:
         with config_path.open(encoding="utf-8") as handle:
             data = json.load(handle)
@@ -30,6 +75,8 @@ def save_config(config: Dict[str, Any]):
     import tempfile
 
     config_path = get_config_path()
+    if config_path.is_symlink():
+        raise OSError("CLI credential file must not be a symbolic link")
     config_path.parent.mkdir(parents=True, exist_ok=True)
     temporary_path = None
     try:
@@ -42,10 +89,11 @@ def save_config(config: Dict[str, Any]):
             delete=False,
         ) as handle:
             temporary_path = Path(handle.name)
+            protect_config(temporary_path)
             json.dump(config, handle, indent=4)
             handle.flush()
             os.fsync(handle.fileno())
-        os.chmod(temporary_path, 0o600)
+        protect_config(temporary_path)
         os.replace(temporary_path, config_path)
     finally:
         if temporary_path is not None:

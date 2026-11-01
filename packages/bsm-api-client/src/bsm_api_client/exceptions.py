@@ -14,9 +14,32 @@ class APIError(Exception):
         message: str,
         status_code: Optional[int] = None,
         response_data: Optional[Dict[str, Any]] = None,
+        response_headers: Optional[Dict[str, str]] = None,
     ):
         super().__init__(message)
         self.status_code = status_code
+        allowed = {
+            "x-bsm-mfa",
+            "x-bsm-recent-auth",
+            "x-bsm-mfa-enrollment",
+            "x-bsm-session-invalid",
+            "retry-after",
+        }
+        self.response_headers = {
+            k.lower(): v
+            for k, v in (response_headers or {}).items()
+            if k.lower() in allowed
+        }
+        self.mfa_required = self.response_headers.get("x-bsm-mfa") == "required"
+        self.passkey_required = self.response_headers.get("x-bsm-mfa") == "passkey"
+        self.recent_auth_required = (
+            self.response_headers.get("x-bsm-recent-auth") == "required"
+        )
+        self.enrollment_required = (
+            self.response_headers.get("x-bsm-mfa-enrollment") == "required"
+        )
+        self.session_invalid = self.response_headers.get("x-bsm-session-invalid") == "1"
+        self.retry_after = self.response_headers.get("retry-after")
         self.response_data = response_data if response_data is not None else {}
         # Extract common fields from API response if available for convenience
         self.api_message: str = self.response_data.get("message", "")

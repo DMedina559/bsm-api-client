@@ -435,44 +435,6 @@ async def annotate_backup(ctx, server_name, backup_id, label, notes):
         fail(error)
 
 
-@backup.command("schedule")
-@server_option
-@click.option("--time", "local_time", default="03:00", show_default=True)
-@click.option("--timezone", "zone", default="UTC", show_default=True)
-@click.option(
-    "--days", default="0,1,2,3,4,5,6", help="Weekdays: Monday=0 through Sunday=6."
-)
-@click.option("--stagger", default=15, type=click.IntRange(0, 120))
-@click.option("--catch-up/--skip-missed", default=True)
-@click.option("--disable", is_flag=True)
-@click.option("--remove", is_flag=True)
-@pass_async_context
-async def schedule_backup(
-    ctx, server_name, local_time, zone, days, stagger, catch_up, disable, remove
-):
-    """Configure one timezone-aware daily server schedule."""
-    try:
-        weekdays = [int(day.strip()) for day in days.split(",")]
-        result = await get_client(ctx).backups.async_set_schedule(
-            server_name,
-            (
-                None
-                if remove
-                else {
-                    "enabled": not disable,
-                    "time": local_time,
-                    "timezone": zone,
-                    "weekdays": weekdays,
-                    "catch_up": catch_up,
-                    "stagger_minutes": stagger,
-                }
-            ),
-        )
-        click.echo(json.dumps(result, indent=2))
-    except Exception as error:
-        fail(error)
-
-
 @backup.command("cleanup-destination")
 @server_option
 @click.option("--destination", required=True)

@@ -1,6 +1,9 @@
+import sys
+
 import click
 
 from bsm_api_client import BedrockServerManagerApi
+from bsm_api_client.exceptions import AuthError
 from bsm_cli.output import emit, get_client
 
 
@@ -115,7 +118,23 @@ async def _login(
                 else {}
             ),
         ) as client:
-            authenticated = await client.authenticate()
+            try:
+                authenticated = await client.authenticate()
+            except AuthError as failure:
+                if failure.passkey_required:
+                    raise click.ClickException(
+                        "This account requires a passkey. Sign in through the web UI; the CLI does not implement WebAuthn."
+                    ) from None
+                if (
+                    not failure.mfa_required
+                    or otp
+                    or ctx.obj.get("json_output")
+                    or not sys.stdin.isatty()
+                ):
+                    raise
+                # Retry only the explicit login challenge, never a failed mutation.
+                code = click.prompt("Authenticator or recovery code", hide_input=True)
+                authenticated = await client.authenticate(otp=code)
             token = authenticated.access_token
             if remember_device and isinstance(authenticated.trusted_device_token, str):
                 device_values = {
@@ -246,14 +265,31 @@ async def verify(ctx, password, otp, mfa, remember_device):
         if remember_device
         else None
     )
-    result = await get_client(ctx).async_call_operation(
-        "verify_account_security",
-        json_data={
-            "password": password,
-            "otp": otp,
-            **({"remember_device": True} if remember_device else {}),
-        },
-    )
+    payload = {
+        "password": password,
+        "otp": otp,
+        **({"remember_device": True} if remember_device else {}),
+    }
+    try:
+        result = await get_client(ctx).async_call_operation(
+            "verify_account_security", json_data=payload
+        )
+    except AuthError as failure:
+        if failure.passkey_required:
+            raise click.ClickException(
+                "Verify this account with a passkey in the web UI; the CLI does not implement WebAuthn."
+            ) from None
+        if (
+            not failure.mfa_required
+            or otp
+            or ctx.obj.get("json_output")
+            or not sys.stdin.isatty()
+        ):
+            raise
+        payload["otp"] = click.prompt("Authenticator or recovery code", hide_input=True)
+        result = await get_client(ctx).async_call_operation(
+            "verify_account_security", json_data=payload
+        )
     credential = result.pop("trusted_device_token", None)
     if credential and account:
         config = ctx.obj["config"]
@@ -268,11 +304,38 @@ async def verify(ctx, password, otp, mfa, remember_device):
     return emit(ctx, result)
 
 
-@auth.command("activity")
+@auth.command("whoami")
 @click.pass_context
-async def security_activity(ctx):
-    return emit(
-        ctx,
-        await get_client(ctx).async_call_operation("list_security_activity"),
-        columns=("timestamp", "action"),
+async def details(ctx):
+    """Get your account details."""
+    client = get_client(ctx)
+    details = await client.account.async_get_account_details()
+    return emit(ctx, details)
+
+
+@auth.command("change-password")
+@click.option(
+    "--current-password",
+    prompt=True,
+    hide_input=True,
+    confirmation_prompt=False,
+    help="Your current password.",
+)
+@click.option(
+    "--new-password",
+    prompt=True,
+    hide_input=True,
+    confirmation_prompt=True,
+    help="Your new password.",
+)
+@click.pass_context
+async def change_password(ctx, current_password, new_password):
+    """Change your password."""
+    from bsm_api_client.models import ChangePasswordPayload
+
+    client = get_client(ctx)
+    payload = ChangePasswordPayload(
+        current_password=current_password, new_password=new_password
     )
+    response = await client.account.async_change_password(payload)
+    return emit(ctx, response)

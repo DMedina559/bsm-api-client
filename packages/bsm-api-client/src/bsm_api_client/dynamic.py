@@ -64,7 +64,7 @@ class DynamicOpenAPIMixin(GeneratedOperationMethods):
 
         _auth_lock: asyncio.Lock
 
-        async def authenticate(self) -> Any: ...
+        async def authenticate(self, *, otp: Optional[str] = None) -> Any: ...
         async def _handle_api_error(self, response: Any, path: str) -> Any: ...
 
     if TYPE_CHECKING:
@@ -471,7 +471,11 @@ class DynamicOpenAPIMixin(GeneratedOperationMethods):
             and response.headers.get("X-BSM-Session-Invalid") == "1"
         ):
             await response.aclose()
-            raise AuthError("Login session expired or revoked; sign in explicitly.")
+            raise AuthError(
+                "Login session expired or revoked; sign in explicitly.",
+                status_code=401,
+                response_headers=dict(response.headers),
+            )
 
     def _add_trusted_device_header(self, headers, path, authenticated):
         """Never disclose the remembered factor to unrelated or plugin operations."""

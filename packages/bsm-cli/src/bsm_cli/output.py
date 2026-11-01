@@ -8,6 +8,7 @@ from typing import Any
 import click
 
 from bsm_api_client.exceptions import (
+    APIError,
     AuthError,
     CannotConnectError,
     InvalidInputError,
@@ -60,6 +61,18 @@ def normalize_error(error: Exception) -> click.ClickException:
     )
     normalized = error_class(str(error))
     normalized.response_data = getattr(error, "response_data", None)
+    if isinstance(error, APIError) and error.response_headers:
+        normalized.response_data = {
+            **(normalized.response_data or {}),
+            "authentication": {
+                "mfa_required": error.mfa_required,
+                "passkey_required": error.passkey_required,
+                "recent_auth_required": error.recent_auth_required,
+                "enrollment_required": error.enrollment_required,
+                "session_invalid": error.session_invalid,
+                "retry_after": error.retry_after,
+            },
+        }
     return normalized
 
 

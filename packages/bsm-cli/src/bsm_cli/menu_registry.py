@@ -73,7 +73,7 @@ def _command_choices(group):
             "download",
         }:
             section = "View and inspect"
-        elif name in {"call", "trigger-event", "refresh"}:
+        elif name in {"call", "refresh"}:
             section = "Advanced"
         else:
             section = "Manage"

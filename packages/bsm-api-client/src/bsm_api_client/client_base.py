@@ -308,7 +308,10 @@ class ClientBase:
 
         if status == 400:  # Bad Request
             raise InvalidInputError(
-                message, status_code=status, response_data=error_data
+                message,
+                status_code=status,
+                response_data=error_data,
+                response_headers=dict(response.headers),
             )
         if status == 401:  # Unauthorized
             # Check if it's a login attempt specifically, to give a more specific error.
@@ -324,11 +327,20 @@ class ClientBase:
                     "Bad username or password",  # Keep generic message for this case
                     status_code=status,
                     response_data=error_data,
+                    response_headers=dict(response.headers),
                 )
-            raise AuthError(message, status_code=status, response_data=error_data)
+            raise AuthError(
+                message,
+                status_code=status,
+                response_data=error_data,
+                response_headers=dict(response.headers),
+            )
         if status == 403:  # Forbidden
             raise AuthError(
-                message, status_code=status, response_data=error_data
+                message,
+                status_code=status,
+                response_data=error_data,
+                response_headers=dict(response.headers),
             )  # AuthError is suitable for 403 too
         if status == 404:  # Not Found
             if (
@@ -336,10 +348,16 @@ class ClientBase:
                 or "/server/" in request_path_for_log
             ):  # More general check
                 raise ServerNotFoundError(  # Specific error for server-related 404s
-                    message, status_code=status, response_data=error_data
+                    message,
+                    status_code=status,
+                    response_data=error_data,
+                    response_headers=dict(response.headers),
                 )
             raise NotFoundError(
-                message, status_code=status, response_data=error_data
+                message,
+                status_code=status,
+                response_data=error_data,
+                response_headers=dict(response.headers),
             )  # Generic 404
         if status == 422:  # Unprocessable Entity (Common for FastAPI validation errors)
             # HTTPValidationError from FastAPI will often have details in error_data["detail"]
@@ -350,10 +368,14 @@ class ClientBase:
                 f"Validation Error: {message}",
                 status_code=status,
                 response_data=error_data,
+                response_headers=dict(response.headers),
             )
         if status == 501:  # Not Implemented
             raise OperationFailedError(
-                message, status_code=status, response_data=error_data
+                message,
+                status_code=status,
+                response_data=error_data,
+                response_headers=dict(response.headers),
             )
 
         # Check message content for ServerNotRunningError, as this can come with various status codes
@@ -368,27 +390,43 @@ class ClientBase:
         ):
             if status >= 400:
                 raise ServerNotRunningError(
-                    message, status_code=status, response_data=error_data
+                    message,
+                    status_code=status,
+                    response_data=error_data,
+                    response_headers=dict(response.headers),
                 )
 
         if status >= 500:
             raise APIServerSideError(
-                message, status_code=status, response_data=error_data
+                message,
+                status_code=status,
+                response_data=error_data,
+                response_headers=dict(response.headers),
             )
 
         if status >= 400:
-            raise APIError(message, status_code=status, response_data=error_data)
+            raise APIError(
+                message,
+                status_code=status,
+                response_data=error_data,
+                response_headers=dict(response.headers),
+            )
 
         _LOGGER.error(
             f"Unhandled API error condition: Status {status}, Message: {message}"
         )
-        raise APIError(message, status_code=status, response_data=error_data)
+        raise APIError(
+            message,
+            status_code=status,
+            response_data=error_data,
+            response_headers=dict(response.headers),
+        )
 
-    async def authenticate(self) -> TokenResponse:
+    async def authenticate(self, *, otp: Optional[str] = None) -> TokenResponse:
         """Authenticate against BSM's OpenAPI-described OAuth2 token endpoint."""
         if not self._username or not self._password:
             raise AuthError("Username and password are required to authenticate.")
-        proof = self._otp
+        proof = self._otp if otp is None else otp
         self._otp = ""
         response_data = await self.async_call_generated(
             "login",

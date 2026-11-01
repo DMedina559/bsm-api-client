@@ -11,8 +11,6 @@ except ImportError:
 from contextlib import asynccontextmanager
 
 from bsm_api_client import BedrockServerManagerApi
-from bsm_cli.access import access, devices, mfa, passkeys, sessions, tokens
-from bsm_cli.account import account
 from bsm_cli.addon import addon
 from bsm_cli.allowlist import allowlist
 from bsm_cli.api import api, register_plugin_commands
@@ -22,6 +20,7 @@ from bsm_cli.backup import backup
 from bsm_cli.bans import bans
 from bsm_cli.config import Config
 from bsm_cli.content import content
+from bsm_cli.credentials import sessions, tokens
 from bsm_cli.decorators import AsyncGroup
 from bsm_cli.diagnostics import diagnostics
 from bsm_cli.main_menus import main_menu
@@ -33,7 +32,6 @@ from bsm_cli.properties import properties
 from bsm_cli.scheduler import scheduler
 from bsm_cli.server import server
 from bsm_cli.system import system
-from bsm_cli.users import users
 from bsm_cli.world import world
 
 
@@ -56,7 +54,12 @@ def cli(ctx, json_output):
 @asynccontextmanager
 async def cli_context(ctx):
     ctx.obj["json_output"] = ctx.params.get("json_output", False)
-    config = Config()
+    try:
+        config = Config()
+    except OSError as error:
+        raise click.ClickException(
+            "Cannot read or protect CLI credentials; check the configuration file permissions."
+        ) from error
     ctx.obj["config"] = config
 
     try:
@@ -93,11 +96,7 @@ cli.add_command(diagnostics)
 cli.add_command(api)
 register_plugin_commands(plugin)
 auth.add_command(tokens)
-auth.add_command(devices)
 auth.add_command(sessions)
-auth.add_command(mfa)
-auth.add_command(passkeys)
-cli.add_command(access)
 cli.add_command(auth)
 cli.add_command(server)
 cli.add_command(addon)
@@ -110,9 +109,7 @@ cli.add_command(bans)
 cli.add_command(permissions)
 cli.add_command(properties)
 cli.add_command(world)
-cli.add_command(account)
 cli.add_command(content)
-cli.add_command(users)
 
 # Register each workflow at its canonical command path.
 for name in (
@@ -122,14 +119,15 @@ for name in (
     "health",
     "audit",
     "logs",
-    "runtime",
     "shutdown",
-    "events",
 ):
     cli.add_command(manager.commands[name], name=name)
 cli.add_command(manager.commands["tasks"], name="operations")
 server.add_command(system.commands["monitor"], name="monitor")
 server.add_command(system.commands["settings"], name="settings")
+
+
+cli.epilog = "Use api explore to browse all HTTP operations, or api call OPERATION_ID for uncommon administration. Passkey ceremonies run in the web UI."
 
 if __name__ == "__main__":
     cli()

@@ -565,15 +565,24 @@ def test_named_credential_commands_forward_explicit_scope_and_resource_limits(cl
         "server_ids": ["a" * 32],
         "expires_in_days": 7,
     }
+    from bsm_api_client.openapi import generated_schema
+
+    client._openapi_schema = None
+    client._fetch_openapi_schema.return_value = generated_schema()
     result = run(
         "--json",
-        "access",
-        "set",
-        "2",
-        "--mode",
-        "assigned",
-        "--grant",
-        "a" * 32 + "=servers:read",
+        "api",
+        "call",
+        "set_account_server_access",
+        "--param",
+        "user_id=2",
+        "--json",
+        json.dumps(
+            {
+                "mode": "assigned",
+                "grants": [{"server_id": "a" * 32, "permissions": ["servers:read"]}],
+            }
+        ),
     )
     assert result.exit_code == 0, result.output
     assert client.async_call_operation.call_args.kwargs["json_data"]["grants"] == [

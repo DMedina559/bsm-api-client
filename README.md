@@ -51,8 +51,8 @@ from backend `dev`. Administrators can use `client.events.async_list_application
 `client.rest` operation-ID methods. `async_shutdown_web_runtime()` submits `{}` and
 returns an HTTP 202 receipt; it confirms acceptance, not completed cleanup.
 
-CLI equivalents are `events catalog`, `events activity`,
-`runtime`, and `shutdown --yes`. Shutdown uses administrator
+CLI equivalents are `api call list_application_events`, `api call get_event_activity`,
+`api call get_web_runtime`, and `shutdown --yes`. Shutdown uses administrator
 credentials, not the private local-host control token. Event payloads remain
 separate from metadata-only diagnostics. Custom event emission must follow the
 backend's declared-event and ownership rules.
@@ -85,12 +85,12 @@ falling back to a configured username/password. Logging out clears the local
 credential; revoke it explicitly to disable it elsewhere.
 
 ```sh
-bsm-cli access servers
+bsm-cli api call list_access_servers
 bsm-cli auth tokens create --name "Home Assistant" --expires-days 30
 bsm-cli auth tokens list
 bsm-cli auth tokens revoke TOKEN_ID
-bsm-cli access show USER_ID
-bsm-cli access set USER_ID --mode assigned --grant SERVER_ID=servers:read,servers:control
+bsm-cli api call get_account_server_access --param user_id=USER_ID
+bsm-cli api call set_account_server_access --param user_id=USER_ID --json '{"mode":"assigned","grants":[{"server_id":"SERVER_ID","permissions":["servers:read","servers:control"]}]}'
 ```
 
 The create command prints the one-time secret and never saves it as your login
@@ -114,17 +114,15 @@ bsm-cli auth sessions list
 bsm-cli auth sessions revoke SESSION_ID
 bsm-cli auth sessions revoke-all
 bsm-cli auth verify --mfa
-bsm-cli auth activity
-bsm-cli auth mfa status
-bsm-cli auth mfa enroll
-bsm-cli auth mfa confirm
+bsm-cli api call list_security_activity
+bsm-cli api call get_account_security
 bsm-cli auth tokens rotate TOKEN_ID
-bsm-cli access sessions USER_ID
-bsm-cli access signout USER_ID --all
+bsm-cli api call list_account_login_sessions --param user_id=USER_ID
+bsm-cli api call revoke_account_login_sessions --param user_id=USER_ID
 ```
 
-Use an authenticator or one-use recovery code when prompted. MFA enrollment and
-recovery commands print secrets once; save them securely. The SDK accepts a
+Use an authenticator or one-use recovery code when prompted. Use the web Account Security page for MFA enrollment, passkeys, and recovery
+codes. Advanced scripted administration remains available through `api explore`. The SDK accepts a
 one-use `otp=` argument for password authentication. Sensitive operations require
 recent password/factor verification; refresh does not extend that verification.
 Integration credentials remain independent from login-session revocation.
