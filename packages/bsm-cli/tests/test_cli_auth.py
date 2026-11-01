@@ -127,3 +127,70 @@ async def test_interactive_login_offers_remember_me(
     login.assert_awaited_once_with(
         context, config.base_url, None, None, config.verify_ssl, None, remember_me
     )
+
+
+def test_remembered_device_is_account_destination_and_expiry_scoped(auth_config):
+    import time
+
+    config, _ = auth_config
+    config.update(
+        trusted_device_owner="owner",
+        trusted_device_backend="https://one.example",
+        trusted_device_token="bsm_td_proof",
+        trusted_device_expires_at=int(time.time()) + 1000,
+        active_username="owner",
+    )
+    assert config.trusted_device("owner", "https://one.example/") == "bsm_td_proof"
+    assert config.trusted_device("other", "https://one.example") is None
+    assert config.trusted_device("owner", "https://two.example") is None
+    config.update(trusted_device_expires_at=1)
+    assert config.trusted_device("owner", "https://one.example") is None
+
+
+def test_login_remember_device_saves_grant_without_printing_it(
+    auth_config, monkeypatch
+):
+    config, path = auth_config
+    monkeypatch.setattr("bsm_cli.__main__.Config", lambda: config)
+    client = AsyncMock()
+    client.__aenter__.return_value = client
+    client.authenticate.return_value = TokenResponse(
+        access_token="session",
+        token_type="bearer",
+        trusted_device_token="bsm_td_private-device-proof",
+        trusted_device_expires_at=2000000000,
+    )
+    supplied = {}
+
+    def create(**kwargs):
+        supplied.update(kwargs)
+        return client
+
+    monkeypatch.setattr("bsm_cli.auth.BedrockServerManagerApi", create)
+    result = CliRunner().invoke(
+        cli,
+        [
+            "--json",
+            "auth",
+            "login",
+            "--base-url",
+            "https://manager.example",
+            "--no-verify-ssl",
+            "--username",
+            "owner",
+            "--password",
+            "password",
+            "--otp",
+            "recovery-code",
+            "--remember-device",
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    assert supplied["remember_device"] is True
+    saved = json.loads(path.read_text())
+    assert saved["trusted_device_token"] == "bsm_td_private-device-proof"
+    assert saved["trusted_device_owner"] == "owner"
+    assert saved["active_username"] == "owner"
+    assert saved["password"] is None
+    assert "bsm_td_private-device-proof" not in result.output
+    assert "recovery-code" not in path.read_text()

@@ -62,6 +62,8 @@ class BedrockServerManagerApi(DynamicOpenAPIMixin, ClientBase):
         http_client: httpx.AsyncClient | None = None,
         remember_me: bool = False,
         otp: str = "",
+        remember_device: bool = False,
+        trusted_device_token: str | None = None,
     ) -> None:
         """Create the SDK and its domain services without opening a WebSocket.
 
@@ -72,6 +74,8 @@ class BedrockServerManagerApi(DynamicOpenAPIMixin, ClientBase):
         caller-owned; session is used only for WebSockets. remember_me requests
         the backend-configured longer token lifetime for credential login and
         reauthentication. It defaults to False and cannot extend a supplied JWT.
+        remember_device opts into a finite second-factor credential after a fresh OTP.
+        trusted_device_token supplies a previously issued credential; passwords remain required.
         """
         super().__init__(
             base_url=base_url,
@@ -85,6 +89,8 @@ class BedrockServerManagerApi(DynamicOpenAPIMixin, ClientBase):
             http_client=http_client,
             remember_me=remember_me,
             otp=otp,
+            remember_device=remember_device,
+            trusted_device_token=trusted_device_token,
         )
         from .generated.rest import RestClient
 

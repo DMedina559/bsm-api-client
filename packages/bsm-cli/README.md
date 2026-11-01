@@ -342,3 +342,16 @@ bsm-cli api --schema-file saved-openapi.json model SnapshotCreatePayload
 Imported `servers` URLs never change the configured backend or credentials.
 Refresh reloads the selected source. Generic form uploads and streaming downloads
 remain available through `api call --form/--file` and `api download`.
+
+
+### Remembered MFA devices
+
+`bsm-cli auth login --remember-device --mfa` remembers the second factor for
+30 days after a fresh authenticator or recovery code. `auth verify --remember-device
+--mfa` can do the same during security reauthentication. Your password is still
+required; `--remember-me` independently controls the login token lifetime.
+The CLI stores the proof in its protected configuration scoped to the account
+and backend, never prints it, and does not save passwords or one-use codes.
+Logout clears the login while keeping remembered trust for a future password
+login. Use Account Security → Sessions to forget remembered devices; this does
+not sign out existing sessions. Password/MFA changes invalidate remembered trust.

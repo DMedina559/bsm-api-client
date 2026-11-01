@@ -387,8 +387,10 @@ class BodyLogin(ContractModel):
     grant_type: GrantType | None = Field(None, title="Grant Type")
     otp: str | None = Field("", max_length=128, title="Otp")
     password: SecretStr = Field(..., title="Password")
+    remember_device: bool | None = Field(False, title="Remember Device")
     remember_me: bool | None = Field(False, title="Remember Me")
     scope: str | None = Field("", title="Scope")
+    trusted_device_token: SecretStr | None = Field(None, title="Trusted Device Token")
     username: str = Field(..., title="Username")
 
 
@@ -1475,6 +1477,13 @@ class RevokeSessions(ContractModel):
     mode: Literal["others", "all"] = Field(..., title="Mode")
 
 
+class RevokeTrustedDevices(ContractModel):
+    """Validate and serialize the RevokeTrustedDevices contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    mode: Literal["others", "all"] = Field(..., title="Mode")
+
+
 class RuntimeDiagnostics(ContractModel):
     """Validate and serialize the RuntimeDiagnostics contract."""
 
@@ -1608,6 +1617,10 @@ class SecurityStatus(ContractModel):
     recovery_codes_remaining: int = Field(..., title="Recovery Codes Remaining")
     required: bool | None = Field(False, title="Required")
     session_id: str | None = Field(None, title="Session Id")
+    trusted_device: bool | None = Field(False, title="Trusted Device")
+    trusted_device_expires_at: int | None = Field(
+        None, title="Trusted Device Expires At"
+    )
 
 
 class SendCommandResponse(ContractModel):
@@ -1783,6 +1796,14 @@ class SetupAccountResponse(ContractModel):
     message: str = Field(..., title="Message")
     status: Literal["success"] = Field("success", title="Status")
     token_type: Literal["bearer"] = Field("bearer", title="Token Type")
+    trusted_device_expires_at: int | None = Field(
+        None, title="Trusted Device Expires At"
+    )
+    trusted_device_token: str | None = Field(
+        None,
+        description="One-time remembered-device credential; omitted in cookie mode. Store only when explicitly requested.",
+        title="Trusted Device Token",
+    )
 
 
 class SetupStatusResponse(ContractModel):
@@ -2092,6 +2113,14 @@ class TokenResponse(ContractModel):
     )
     message: str | None = Field(None, title="Message")
     token_type: Literal["bearer"] = Field("bearer", title="Token Type")
+    trusted_device_expires_at: int | None = Field(
+        None, title="Trusted Device Expires At"
+    )
+    trusted_device_token: str | None = Field(
+        None,
+        description="One-time remembered-device credential; omitted in cookie mode. Store only when explicitly requested.",
+        title="Trusted Device Token",
+    )
 
 
 class TransportDiagnostics(ContractModel):
@@ -2144,6 +2173,23 @@ class TriggerEventResponse(ContractModel):
     status: Literal["success", "skipped", "partial"] = Field(..., title="Status")
 
 
+class TrustedDeviceInfo(ContractModel):
+    """Validate and serialize the TrustedDeviceInfo contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    created_at: int = Field(..., title="Created At")
+    current: bool = Field(..., title="Current")
+    expires_at: int = Field(..., title="Expires At")
+    id: str = Field(..., pattern="^[a-f0-9]{32}$", title="Id")
+    ip_address: str = Field(..., title="Ip Address")
+    last_used_at: int = Field(..., title="Last Used At")
+    name: str = Field(..., title="Name")
+    status: Literal["active", "revoked", "expired", "invalidated"] = Field(
+        ..., title="Status"
+    )
+    user_agent: str = Field(..., title="User Agent")
+
+
 class UpdateUserRolePayload(ContractModel):
     """Request payload for updating a user's role.
 
@@ -2178,6 +2224,10 @@ class VerifiedSecurity(ContractModel):
     """Validate and serialize the VerifiedSecurity contract."""
 
     model_config = ConfigDict(extra="forbid")
+    trusted_device_expires_at: int | None = Field(
+        None, title="Trusted Device Expires At"
+    )
+    trusted_device_token: str | None = Field(None, title="Trusted Device Token")
     verified_until: int = Field(..., title="Verified Until")
 
 
@@ -2187,6 +2237,8 @@ class VerifySecurity(ContractModel):
     model_config = ConfigDict(extra="forbid")
     otp: str | None = Field("", max_length=128, title="Otp")
     password: SecretStr = Field(..., max_length=1024, min_length=1, title="Password")
+    remember_device: bool | None = Field(False, title="Remember Device")
+    trusted_device_token: SecretStr | None = Field(None, title="Trusted Device Token")
 
 
 class APIErrorResponse(ContractModel):

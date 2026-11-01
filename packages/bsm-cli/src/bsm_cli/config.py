@@ -114,3 +114,22 @@ class Config:
     def jwt_token(self, value: Optional[str]):
         """Sets the JWT."""
         self.set("jwt_token", value)
+
+    def trusted_device(
+        self, username: Optional[str] = None, backend: Optional[str] = None
+    ) -> Optional[str]:
+        """Return a finite remembered factor only for its account and destination."""
+        import time
+
+        owner = username or self.get("active_username")
+        if not owner or owner != self.get("trusted_device_owner"):
+            return None
+        if (backend or self.base_url).rstrip("/") != str(
+            self.get("trusted_device_backend", "")
+        ).rstrip("/"):
+            return None
+        expiry = self.get("trusted_device_expires_at")
+        if not isinstance(expiry, (int, float)) or expiry <= time.time():
+            return None
+        token = self.get("trusted_device_token")
+        return token if isinstance(token, str) and token.startswith("bsm_td_") else None

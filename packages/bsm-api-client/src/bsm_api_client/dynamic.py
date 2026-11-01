@@ -52,6 +52,7 @@ class DynamicOpenAPIMixin(GeneratedOperationMethods):
     if TYPE_CHECKING:
         _default_headers: Mapping[str, str]
         _jwt_token: Optional[str]
+        _trusted_device_token: Optional[str]
         _base_url: str
         _server_root_url: str
         _api_base_segment: str
@@ -472,6 +473,19 @@ class DynamicOpenAPIMixin(GeneratedOperationMethods):
             await response.aclose()
             raise AuthError("Login session expired or revoked; sign in explicitly.")
 
+    def _add_trusted_device_header(self, headers, path, authenticated):
+        """Never disclose the remembered factor to unrelated or plugin operations."""
+        security_path = f"{self._api_base_segment}/account/security"
+        if (
+            authenticated
+            and (path == security_path or path.startswith(security_path + "/"))
+            and not any(part in {".", ".."} for part in httpx.URL(path).path.split("/"))
+            and not (self._jwt_token or "").startswith("bsm_it_")
+            and getattr(self, "_trusted_device_token", None)
+            and not any(key.lower() == "x-bsm-trusted-device-token" for key in headers)
+        ):
+            headers["X-BSM-Trusted-Device-Token"] = self._trusted_device_token
+
     @asynccontextmanager
     async def _open_response(
         self,
@@ -505,6 +519,7 @@ class DynamicOpenAPIMixin(GeneratedOperationMethods):
             token_used = self._jwt_token
             generation_used = getattr(self, "_auth_generation", 0)
             request_headers = self._request_headers(headers, raw_request, authenticated)
+            self._add_trusted_device_header(request_headers, path, authenticated)
             try:
                 upload: list[Any] = [
                     (

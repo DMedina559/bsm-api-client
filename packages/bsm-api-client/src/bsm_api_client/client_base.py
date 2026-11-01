@@ -78,6 +78,8 @@ class ClientBase:
         http_client: Optional[httpx.AsyncClient] = None,
         remember_me: bool = False,
         otp: str = "",
+        remember_device: bool = False,
+        trusted_device_token: Optional[str] = None,
     ):
         """Initializes the base API client.
         :param base_url: The base URL of the Bedrock Server Manager (e.g., http://localhost:8080).
@@ -141,6 +143,8 @@ class ClientBase:
         self._password = password
         self._remember_me = remember_me
         self._otp = otp
+        self._remember_device = remember_device
+        self._trusted_device_token = trusted_device_token
         self._request_timeout = request_timeout
         self._verify_ssl = verify_ssl
 
@@ -390,6 +394,12 @@ class ClientBase:
                 "password": self._password,
                 "remember_me": self._remember_me,
                 **({"otp": proof} if proof else {}),
+                **({"remember_device": True} if self._remember_device else {}),
+                **(
+                    {"trusted_device_token": self._trusted_device_token}
+                    if self._trusted_device_token
+                    else {}
+                ),
             },
             authenticated=False,
         )
@@ -400,6 +410,8 @@ class ClientBase:
             raise AuthError("Authentication response was invalid.") from exc
         self._otp = ""
         self._jwt_token = token.access_token
+        if token.trusted_device_token:
+            self._trusted_device_token = token.trusted_device_token
         self._auth_generation += 1
         return cast(TokenResponse, token)
 

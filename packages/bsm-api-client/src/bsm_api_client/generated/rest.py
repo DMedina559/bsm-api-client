@@ -93,6 +93,7 @@ from .models.restart_server_response import RestartServerResponse
 from .models.restore_action_payload import RestoreActionPayload
 from .models.restore_recovery_response import RestoreRecoveryResponse
 from .models.revoke_sessions import RevokeSessions
+from .models.revoke_trusted_devices import RevokeTrustedDevices
 from .models.rotate_backup_key_response_rotate_backup_key import RotateBackupKeyResponseRotateBackupKey
 from .models.runtime_status import RuntimeStatus
 from .models.scheduled_task import ScheduledTask
@@ -130,6 +131,7 @@ from .models.theme_update_payload import ThemeUpdatePayload
 from .models.token_response import TokenResponse
 from .models.trigger_event_payload import TriggerEventPayload
 from .models.trigger_event_response import TriggerEventResponse
+from .models.trusted_device_info import TrustedDeviceInfo
 from .models.update_user_role_payload import UpdateUserRolePayload
 from .models.user_login_payload import UserLoginPayload
 from .models.user_response import UserResponse
@@ -873,6 +875,14 @@ class RestClient:
         """Generated list_themes operation."""
         return cast(Response[ErrorEnvelope | ThemeListResponse], await self._owner.async_call_generated('list_themes', parameters={}, body=None, authenticated=False, detailed=True))
 
+    async def list_trusted_devices(self) -> ErrorEnvelope | list[TrustedDeviceInfo] | None:
+        """Generated list_trusted_devices operation."""
+        return cast(ErrorEnvelope | list[TrustedDeviceInfo] | None, await self._owner.async_call_generated('list_trusted_devices', parameters={}, body=None, authenticated=True, typed=True))
+
+    async def list_trusted_devices_detailed(self) -> Response[ErrorEnvelope | list[TrustedDeviceInfo]]:
+        """Generated list_trusted_devices operation."""
+        return cast(Response[ErrorEnvelope | list[TrustedDeviceInfo]], await self._owner.async_call_generated('list_trusted_devices', parameters={}, body=None, authenticated=True, detailed=True))
+
     async def list_users(self) -> ErrorEnvelope | list[UserResponse] | None:
         """Generated list_users operation."""
         return cast(ErrorEnvelope | list[UserResponse] | None, await self._owner.async_call_generated('list_users', parameters={}, body=None, authenticated=True, typed=True))
@@ -1112,6 +1122,22 @@ class RestClient:
     async def revoke_login_sessions_detailed(self, *, body: RevokeSessions) -> Response[BaseApiResponse | ErrorEnvelope]:
         """Generated revoke_login_sessions operation."""
         return cast(Response[BaseApiResponse | ErrorEnvelope], await self._owner.async_call_generated('revoke_login_sessions', parameters={}, body=body, authenticated=True, detailed=True))
+
+    async def revoke_trusted_device(self, device_id: str) -> BaseApiResponse | ErrorEnvelope | None:
+        """Generated revoke_trusted_device operation."""
+        return cast(BaseApiResponse | ErrorEnvelope | None, await self._owner.async_call_generated('revoke_trusted_device', parameters={'device_id': device_id}, body=None, authenticated=True, typed=True))
+
+    async def revoke_trusted_device_detailed(self, device_id: str) -> Response[BaseApiResponse | ErrorEnvelope]:
+        """Generated revoke_trusted_device operation."""
+        return cast(Response[BaseApiResponse | ErrorEnvelope], await self._owner.async_call_generated('revoke_trusted_device', parameters={'device_id': device_id}, body=None, authenticated=True, detailed=True))
+
+    async def revoke_trusted_devices(self, *, body: RevokeTrustedDevices) -> BaseApiResponse | ErrorEnvelope | None:
+        """Generated revoke_trusted_devices operation."""
+        return cast(BaseApiResponse | ErrorEnvelope | None, await self._owner.async_call_generated('revoke_trusted_devices', parameters={}, body=body, authenticated=True, typed=True))
+
+    async def revoke_trusted_devices_detailed(self, *, body: RevokeTrustedDevices) -> Response[BaseApiResponse | ErrorEnvelope]:
+        """Generated revoke_trusted_devices operation."""
+        return cast(Response[BaseApiResponse | ErrorEnvelope], await self._owner.async_call_generated('revoke_trusted_devices', parameters={}, body=body, authenticated=True, detailed=True))
 
     async def rotate_account_recovery_codes(self) -> ErrorEnvelope | RecoveryCodes | None:
         """Generated rotate_account_recovery_codes operation."""

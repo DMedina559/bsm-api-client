@@ -63,6 +63,11 @@ async def cli_context(ctx):
         client = BedrockServerManagerApi(
             base_url=config.base_url,
             jwt_token=config.jwt_token,
+            **(
+                {"trusted_device_token": config.trusted_device()}
+                if config.trusted_device()
+                else {}
+            ),
             username=config.username,
             password=config.password,
             verify_ssl=config.verify_ssl,

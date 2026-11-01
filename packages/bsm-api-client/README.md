@@ -262,3 +262,16 @@ print(response["status_code"], response["headers"], response["data"])
 HTTP failures continue to raise the existing API exceptions. Imported `servers`
 entries are ignored; authentication, URL prefixes and cancellation retain the
 client's existing transport behavior.
+
+
+### Remembered MFA devices
+
+Use `remember_device=True` with a fresh `otp` to request a 30-day remembered
+second factor. The authentication response exposes `trusted_device_token` and
+`trusted_device_expires_at`; store them as secrets for that backend and account.
+A later client can pass `trusted_device_token=...` together with username/password.
+The SDK also supplies this proof to authenticated account-security requests;
+it is not attached to unrelated API calls or integration-token requests.
+Passwords remain required, including security reauthentication. Trust cannot
+renew itself: renewal requires a fresh OTP. Device metadata and revocation are
+available through `client.rest.account_security` and the operation explorer.
