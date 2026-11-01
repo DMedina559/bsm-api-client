@@ -526,6 +526,12 @@ def test_accessible_filter_keeps_unavailable_operations_inspectable(client):
     result = run("--json", "api", "operations", "--accessible")
     assert result.exit_code == 0, result.output
     assert [op["operation_id"] for op in json.loads(result.stdout)] == ["info"]
+    result = run("--json", "api", "operations", "--accessible", "--search", "INFO")
+    assert result.exit_code == 0, result.output
+    assert [op["operation_id"] for op in json.loads(result.stdout)] == ["info"]
+    result = run("--json", "api", "operations", "--accessible", "--search", "demo")
+    assert result.exit_code == 0, result.output
+    assert json.loads(result.stdout) == []
     client.async_call_operation.return_value = {"permissions": []}
     result = run("--json", "api", "operations")
     assert result.exit_code == 0, result.output

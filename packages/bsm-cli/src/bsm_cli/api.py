@@ -269,7 +269,9 @@ async def schema(ctx):
     help="Show statically accessible operations; contextual or unknown policies are omitted.",
 )
 @pass_async_context
-async def operations(ctx, tag, method=None, plugin_name=None, search="", accessible=False):
+async def operations(
+    ctx, tag, method=None, plugin_name=None, accessible=False, search=""
+):
     """List HTTP operations advertised by the server."""
     client = await discover(ctx)
     permissions = []
@@ -296,14 +298,19 @@ async def operations(ctx, tag, method=None, plugin_name=None, search="", accessi
 
     table(
         "API operations",
-        ("METHOD", "OPERATION", "SUMMARY", "PATH"),
+        ("METHOD", "OPERATION", "SUMMARY", "PATH", "ACCESS"),
         [
-            (row["method"], row["operation_id"], row.get("summary") or "", row["path"])
+            (
+                row["method"],
+                row["operation_id"],
+                row.get("summary") or "",
+                row["path"],
+                row["access"].get("classification", "unknown"),
+            )
             for row in rows
         ],
     )
     return rows
-
 
 
 @api.command("operation")
