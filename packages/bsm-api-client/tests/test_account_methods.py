@@ -178,3 +178,20 @@ async def test_integration_credentials_never_silently_fall_back_to_password_logi
         assert (await client.async_logout())["status"] == "success"
         operation.assert_not_awaited()
         assert client._jwt_token is None
+
+
+@pytest.mark.asyncio
+async def test_logout_clears_password_fallback_even_when_server_is_unreachable(client):
+    from unittest.mock import AsyncMock, patch
+
+    client._password = "saved-password"
+    client._otp = "one-time-code"
+    with patch.object(
+        client, "async_call_generated", new_callable=AsyncMock
+    ) as operation:
+        operation.side_effect = OSError("offline")
+        with pytest.raises(OSError):
+            await client.async_logout()
+    assert client._jwt_token is None
+    assert client._password == ""
+    assert client._otp == ""

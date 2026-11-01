@@ -11,7 +11,7 @@ except ImportError:
 from contextlib import asynccontextmanager
 
 from bsm_api_client import BedrockServerManagerApi
-from bsm_cli.access import access, tokens
+from bsm_cli.access import access, mfa, sessions, tokens
 from bsm_cli.account import account
 from bsm_cli.addon import addon
 from bsm_cli.allowlist import allowlist
@@ -87,6 +87,8 @@ cli.add_command(diagnostics)
 cli.add_command(api)
 register_plugin_commands(plugin)
 auth.add_command(tokens)
+auth.add_command(sessions)
+auth.add_command(mfa)
 cli.add_command(access)
 cli.add_command(auth)
 cli.add_command(server)

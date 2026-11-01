@@ -77,6 +77,7 @@ class ClientBase:
         verify_ssl: bool = True,
         http_client: Optional[httpx.AsyncClient] = None,
         remember_me: bool = False,
+        otp: str = "",
     ):
         """Initializes the base API client.
         :param base_url: The base URL of the Bedrock Server Manager (e.g., http://localhost:8080).
@@ -139,6 +140,7 @@ class ClientBase:
         self._username = username
         self._password = password
         self._remember_me = remember_me
+        self._otp = otp
         self._request_timeout = request_timeout
         self._verify_ssl = verify_ssl
 
@@ -378,6 +380,8 @@ class ClientBase:
         """Authenticate against BSM's OpenAPI-described OAuth2 token endpoint."""
         if not self._username or not self._password:
             raise AuthError("Username and password are required to authenticate.")
+        proof = self._otp
+        self._otp = ""
         response_data = await self.async_call_generated(
             "login",
             body={
@@ -385,6 +389,7 @@ class ClientBase:
                 "username": self._username,
                 "password": self._password,
                 "remember_me": self._remember_me,
+                **({"otp": proof} if proof else {}),
             },
             authenticated=False,
         )
@@ -393,6 +398,7 @@ class ClientBase:
         except Exception as exc:
             self._jwt_token = None
             raise AuthError("Authentication response was invalid.") from exc
+        self._otp = ""
         self._jwt_token = token.access_token
         self._auth_generation += 1
         return cast(TokenResponse, token)
@@ -401,6 +407,8 @@ class ClientBase:
         """Log out through the shared REST transport and clear the local token."""
         if (self._jwt_token or "").startswith("bsm_it_"):
             self._jwt_token = None
+            self._password = ""
+            self._otp = ""
             return {
                 "status": "success",
                 "message": "Integration credential cleared locally.",
@@ -412,6 +420,8 @@ class ClientBase:
             return cast(Dict[str, Any], response or {})
         finally:
             self._jwt_token = None
+            self._password = ""
+            self._otp = ""
 
     async def websocket_connect(self) -> WebSocketClient:
         """Connects to the WebSocket endpoint.
