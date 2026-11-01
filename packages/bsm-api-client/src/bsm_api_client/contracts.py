@@ -500,7 +500,9 @@ class CurrentAccountResponse(ContractModel):
     """Current account with sorted role-derived HTTP capabilities."""
 
     model_config = ConfigDict(extra="forbid")
+    credential_expires_at: int | None = Field(None, title="Credential Expires At")
     credential_id: str | None = Field(None, title="Credential Id")
+    credential_name: str | None = Field(None, title="Credential Name")
     id: int = Field(..., title="Id")
     identity_type: str | None = Field(None, title="Identity Type")
     is_active: bool = Field(..., title="Is Active")
