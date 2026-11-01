@@ -37,6 +37,7 @@ from .contracts import (
     CommandPayload,
     CompareDiagnosticSnapshotsRequest,
     CompletedItem,
+    CompletePasskeyRegistration,
     ContentListResponse,
     ControlSchedulePayload,
     CpuPercent,
@@ -100,6 +101,10 @@ from .contracts import (
     NetTxKibS,
     OperationActivity,
     OperationSnapshot,
+    PasskeyInfo,
+    PasskeyLoginOptionsRequest,
+    PasskeyLoginVerifyRequest,
+    PasskeyOptionsResponse,
     PermissionsSetPayload,
     PermissionsUpdateResponse,
     PersistenceDiagnostics,
@@ -131,6 +136,7 @@ from .contracts import (
     RegistryDiagnostics,
     RemoveFromAllowlistResponse,
     RemoveServerBanResponse,
+    RenamePasskey,
     RestartServerResponse,
     RestoreActionPayload,
     Revision,
@@ -185,6 +191,7 @@ from .contracts import (
     UserLoginPayload,
     UserResponse,
     Uuid,
+    VerifyPasskeyAssertion,
 )
 
 AddonSchemaResponse = InstalledAddon
@@ -433,4 +440,11 @@ __all__ += [
     "ScheduledTask",
     "ControlSchedulePayload",
     "SuccessResponse",
+    "CompletePasskeyRegistration",
+    "PasskeyInfo",
+    "PasskeyLoginOptionsRequest",
+    "PasskeyLoginVerifyRequest",
+    "PasskeyOptionsResponse",
+    "RenamePasskey",
+    "VerifyPasskeyAssertion",
 ]

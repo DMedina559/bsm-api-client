@@ -344,3 +344,53 @@ def test_device_forget_modes_are_explicit(auth_config, monkeypatch):
     client.async_call_operation.assert_awaited_once_with(
         "revoke_trusted_devices", json_data={"mode": "others"}
     )
+
+
+def test_passkey_and_admin_mfa_commands_call_expected_operations(
+    auth_config, monkeypatch
+):
+    config, _ = auth_config
+    monkeypatch.setattr("bsm_cli.__main__.Config", lambda: config)
+    client = AsyncMock()
+    client.async_call_operation.return_value = []
+    monkeypatch.setattr(
+        "bsm_cli.__main__.BedrockServerManagerApi", lambda **kwargs: client
+    )
+    result = CliRunner().invoke(cli, ["--json", "auth", "passkeys", "list"])
+    assert result.exit_code == 0, result.output
+    client.async_call_operation.assert_awaited_once_with("list_account_passkeys")
+
+    client.async_call_operation.reset_mock()
+    client.async_call_operation.return_value = {"status": "success"}
+    result = CliRunner().invoke(
+        cli, ["--json", "auth", "passkeys", "rename", "pk-1", "YubiKey"]
+    )
+    assert result.exit_code == 0, result.output
+    client.async_call_operation.assert_awaited_once_with(
+        "rename_account_passkey",
+        path_params={"passkey_id": "pk-1"},
+        json_data={"name": "YubiKey"},
+    )
+
+    client.async_call_operation.reset_mock()
+    result = CliRunner().invoke(cli, ["--json", "auth", "passkeys", "revoke", "pk-1"])
+    assert result.exit_code == 0, result.output
+    client.async_call_operation.assert_awaited_once_with(
+        "revoke_account_passkey", path_params={"passkey_id": "pk-1"}
+    )
+
+    client.async_call_operation.reset_mock()
+    client.async_call_operation.return_value = []
+    result = CliRunner().invoke(cli, ["--json", "access", "passkeys", "2"])
+    assert result.exit_code == 0, result.output
+    client.async_call_operation.assert_awaited_once_with(
+        "list_user_passkeys", path_params={"user_id": 2}
+    )
+
+    client.async_call_operation.reset_mock()
+    client.async_call_operation.return_value = {"status": "success"}
+    result = CliRunner().invoke(cli, ["--json", "access", "reset-mfa", "2", "--yes"])
+    assert result.exit_code == 0, result.output
+    client.async_call_operation.assert_awaited_once_with(
+        "reset_account_mfa", path_params={"user_id": 2}
+    )

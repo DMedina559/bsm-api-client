@@ -288,6 +288,97 @@ async def account_signout(ctx, user_id, session_id, all_sessions):
     )
 
 
+@access.command("passkeys")
+@click.argument("user_id", type=int)
+@pass_async_context
+async def account_passkeys(ctx, user_id):
+    """List WebAuthn passkeys registered on an account (administrator only)."""
+    return emit(
+        ctx,
+        await get_client(ctx).async_call_operation(
+            "list_user_passkeys", path_params={"user_id": user_id}
+        ),
+        columns=(
+            "id",
+            "name",
+            "active",
+            "user_verified",
+            "backup_state",
+            "last_used_at",
+            "created_at",
+        ),
+    )
+
+
+@access.command("reset-mfa")
+@click.argument("user_id", type=int)
+@click.confirmation_option(
+    prompt="Reset all MFA factors, recovery codes, passkeys, and sessions for this account?"
+)
+@pass_async_context
+async def account_reset_mfa(ctx, user_id):
+    """Reset an account's second factor, passkeys, and active sessions (administrator only)."""
+    return emit(
+        ctx,
+        await get_client(ctx).async_call_operation(
+            "reset_account_mfa", path_params={"user_id": user_id}
+        ),
+    )
+
+
+@click.group()
+def passkeys():
+    """Inspect, rename, or revoke registered WebAuthn passkeys."""
+
+
+@passkeys.command("list")
+@pass_async_context
+async def list_passkeys(ctx):
+    """List WebAuthn passkeys registered on your account."""
+    return emit(
+        ctx,
+        await get_client(ctx).async_call_operation("list_account_passkeys"),
+        columns=(
+            "id",
+            "name",
+            "active",
+            "user_verified",
+            "backup_state",
+            "last_used_at",
+            "created_at",
+        ),
+    )
+
+
+@passkeys.command("rename")
+@click.argument("passkey_id")
+@click.argument("name")
+@pass_async_context
+async def rename_passkey(ctx, passkey_id, name):
+    """Rename a passkey on your account."""
+    return emit(
+        ctx,
+        await get_client(ctx).async_call_operation(
+            "rename_account_passkey",
+            path_params={"passkey_id": passkey_id},
+            json_data={"name": name},
+        ),
+    )
+
+
+@passkeys.command("revoke")
+@click.argument("passkey_id")
+@pass_async_context
+async def revoke_passkey(ctx, passkey_id):
+    """Revoke a passkey on your account."""
+    return emit(
+        ctx,
+        await get_client(ctx).async_call_operation(
+            "revoke_account_passkey", path_params={"passkey_id": passkey_id}
+        ),
+    )
+
+
 @click.group()
 def devices():
     """List and forget remembered second-factor devices; login sessions remain signed in."""

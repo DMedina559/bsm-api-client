@@ -475,6 +475,18 @@ class CommandPayload(ContractModel):
     )
 
 
+Name = Annotated[str, Field(max_length=100, min_length=1, title="Name")]
+
+
+class CompletePasskeyRegistration(ContractModel):
+    """Validate and serialize the CompletePasskeyRegistration contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    challenge_id: str = Field(..., pattern="^[a-f0-9]{32}$", title="Challenge Id")
+    credential: dict[str, Any] = Field(..., title="Credential")
+    name: Name | None = Field(None, title="Name")
+
+
 class CompletedItem(ContractModel):
     """Validate and serialize the CompletedItem contract."""
 
@@ -1048,6 +1060,56 @@ class OperationSnapshot(ContractModel):
     )
 
 
+class PasskeyInfo(ContractModel):
+    """Validate and serialize the PasskeyInfo contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    aaguid: str | None = Field(None, title="Aaguid")
+    active: bool = Field(..., title="Active")
+    backup_eligible: bool | None = Field(False, title="Backup Eligible")
+    backup_state: bool | None = Field(False, title="Backup State")
+    created_at: int = Field(..., title="Created At")
+    id: str = Field(..., pattern="^[a-f0-9]{32}$", title="Id")
+    last_used_at: int | None = Field(None, title="Last Used At")
+    name: str = Field(..., title="Name")
+    revoked_at: int | None = Field(None, title="Revoked At")
+    transports: list[str] | None = Field(None, title="Transports")
+    user_verified: bool | None = Field(False, title="User Verified")
+
+
+Username = Annotated[str, Field(max_length=80, title="Username")]
+
+
+class PasskeyLoginOptionsRequest(ContractModel):
+    """Optional username hint when requesting WebAuthn authentication options."""
+
+    model_config = ConfigDict(extra="forbid")
+    username: Username | None = Field(None, title="Username")
+
+
+class PasskeyLoginVerifyRequest(ContractModel):
+    """WebAuthn assertion payload for passwordless passkey login."""
+
+    model_config = ConfigDict(extra="forbid")
+    challenge_id: str = Field(
+        ...,
+        max_length=32,
+        min_length=32,
+        pattern="^[0-9a-f]{32}$",
+        title="Challenge Id",
+    )
+    credential: dict[str, Any] = Field(..., title="Credential")
+    remember_me: bool | None = Field(False, title="Remember Me")
+
+
+class PasskeyOptionsResponse(ContractModel):
+    """Validate and serialize the PasskeyOptionsResponse contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    challenge_id: str = Field(..., pattern="^[a-f0-9]{32}$", title="Challenge Id")
+    public_key: dict[str, Any] = Field(..., title="Public Key")
+
+
 class PersistenceDiagnostics(ContractModel):
     """Validate and serialize the PersistenceDiagnostics contract."""
 
@@ -1437,6 +1499,15 @@ class RemoveServerBanResponse(ContractModel):
     )
 
 
+class RenamePasskey(ContractModel):
+    """Validate and serialize the RenamePasskey contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    name: str = Field(
+        ..., max_length=100, min_length=1, pattern=".*\\S.*", title="Name"
+    )
+
+
 class RenameSession(ContractModel):
     """Validate and serialize the RenameSession contract."""
 
@@ -1640,6 +1711,8 @@ class SecurityStatus(ContractModel):
     enabled: bool = Field(..., title="Enabled")
     idle_timeout_seconds: int = Field(..., title="Idle Timeout Seconds")
     max_session_days: int = Field(..., title="Max Session Days")
+    passkey_count: int | None = Field(0, title="Passkey Count")
+    passkeys_enabled: bool | None = Field(False, title="Passkeys Enabled")
     recent_until: int = Field(..., title="Recent Until")
     recovery_codes_remaining: int = Field(..., title="Recovery Codes Remaining")
     required: bool | None = Field(False, title="Required")
@@ -2256,6 +2329,14 @@ class VerifiedSecurity(ContractModel):
     )
     trusted_device_token: str | None = Field(None, title="Trusted Device Token")
     verified_until: int = Field(..., title="Verified Until")
+
+
+class VerifyPasskeyAssertion(ContractModel):
+    """Validate and serialize the VerifyPasskeyAssertion contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    challenge_id: str = Field(..., pattern="^[a-f0-9]{32}$", title="Challenge Id")
+    credential: dict[str, Any] = Field(..., title="Credential")
 
 
 class VerifySecurity(ContractModel):

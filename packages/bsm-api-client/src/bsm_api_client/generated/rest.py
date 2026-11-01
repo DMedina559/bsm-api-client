@@ -30,6 +30,7 @@ from .models.body_login import BodyLogin
 from .models.change_password_payload import ChangePasswordPayload
 from .models.command_payload import CommandPayload
 from .models.compare_diagnostic_snapshots_request import CompareDiagnosticSnapshotsRequest
+from .models.complete_passkey_registration import CompletePasskeyRegistration
 from .models.content_list_response import ContentListResponse
 from .models.control_schedule_payload import ControlSchedulePayload
 from .models.create_integration_token import CreateIntegrationToken
@@ -76,6 +77,10 @@ from .models.list_schedules_response import ListSchedulesResponse
 from .models.list_snapshots_response import ListSnapshotsResponse
 from .models.log_history_page import LogHistoryPage
 from .models.login_session_info import LoginSessionInfo
+from .models.passkey_info import PasskeyInfo
+from .models.passkey_login_options_request import PasskeyLoginOptionsRequest
+from .models.passkey_login_verify_request import PasskeyLoginVerifyRequest
+from .models.passkey_options_response import PasskeyOptionsResponse
 from .models.permissions_set_payload import PermissionsSetPayload
 from .models.permissions_update_response import PermissionsUpdateResponse
 from .models.player_list_response import PlayerListResponse
@@ -92,6 +97,7 @@ from .models.recovery_report_response import RecoveryReportResponse
 from .models.registration_response import RegistrationResponse
 from .models.remove_from_allowlist_response import RemoveFromAllowlistResponse
 from .models.remove_server_ban_response import RemoveServerBanResponse
+from .models.rename_passkey import RenamePasskey
 from .models.rename_session import RenameSession
 from .models.restart_server_response import RestartServerResponse
 from .models.restore_action_payload import RestoreActionPayload
@@ -139,6 +145,7 @@ from .models.update_user_role_payload import UpdateUserRolePayload
 from .models.user_login_payload import UserLoginPayload
 from .models.user_response import UserResponse
 from .models.verified_security import VerifiedSecurity
+from .models.verify_passkey_assertion import VerifyPasskeyAssertion
 from .models.verify_security import VerifySecurity
 from .types import File, Response, UNSET, Unset
 from http import HTTPStatus
@@ -174,6 +181,22 @@ class RestClient:
         """Generated add_server_ban operation."""
         return cast(Response[AddServerBanResponse | ErrorEnvelope], await self._owner.async_call_generated('add_server_ban', parameters={'server_name': server_name}, body=body, authenticated=True, detailed=True))
 
+    async def begin_passkey_registration(self) -> ErrorEnvelope | PasskeyOptionsResponse | None:
+        """Generated begin_passkey_registration operation."""
+        return cast(ErrorEnvelope | PasskeyOptionsResponse | None, await self._owner.async_call_generated('begin_passkey_registration', parameters={}, body=None, authenticated=True, typed=True))
+
+    async def begin_passkey_registration_detailed(self) -> Response[ErrorEnvelope | PasskeyOptionsResponse]:
+        """Generated begin_passkey_registration operation."""
+        return cast(Response[ErrorEnvelope | PasskeyOptionsResponse], await self._owner.async_call_generated('begin_passkey_registration', parameters={}, body=None, authenticated=True, detailed=True))
+
+    async def begin_passkey_step_up(self) -> ErrorEnvelope | PasskeyOptionsResponse | None:
+        """Generated begin_passkey_step_up operation."""
+        return cast(ErrorEnvelope | PasskeyOptionsResponse | None, await self._owner.async_call_generated('begin_passkey_step_up', parameters={}, body=None, authenticated=True, typed=True))
+
+    async def begin_passkey_step_up_detailed(self) -> Response[ErrorEnvelope | PasskeyOptionsResponse]:
+        """Generated begin_passkey_step_up operation."""
+        return cast(Response[ErrorEnvelope | PasskeyOptionsResponse], await self._owner.async_call_generated('begin_passkey_step_up', parameters={}, body=None, authenticated=True, detailed=True))
+
     async def change_password(self, *, body: ChangePasswordPayload) -> BaseApiResponse | ErrorEnvelope | None:
         """Generated change_password operation."""
         return cast(BaseApiResponse | ErrorEnvelope | None, await self._owner.async_call_generated('change_password', parameters={}, body=body, authenticated=True, typed=True))
@@ -197,6 +220,14 @@ class RestClient:
     async def compare_diagnostic_snapshots_detailed(self, *, body: CompareDiagnosticSnapshotsRequest) -> Response[DiagnosticComparison | ErrorEnvelope]:
         """Generated compare_diagnostic_snapshots operation."""
         return cast(Response[DiagnosticComparison | ErrorEnvelope], await self._owner.async_call_generated('compare_diagnostic_snapshots', parameters={}, body=body, authenticated=True, detailed=True))
+
+    async def complete_passkey_registration(self, *, body: CompletePasskeyRegistration) -> ErrorEnvelope | PasskeyInfo | None:
+        """Generated complete_passkey_registration operation."""
+        return cast(ErrorEnvelope | PasskeyInfo | None, await self._owner.async_call_generated('complete_passkey_registration', parameters={}, body=body, authenticated=True, typed=True))
+
+    async def complete_passkey_registration_detailed(self, *, body: CompletePasskeyRegistration) -> Response[ErrorEnvelope | PasskeyInfo]:
+        """Generated complete_passkey_registration operation."""
+        return cast(Response[ErrorEnvelope | PasskeyInfo], await self._owner.async_call_generated('complete_passkey_registration', parameters={}, body=body, authenticated=True, detailed=True))
 
     async def confirm_account_mfa(self, *, body: FactorCode) -> ErrorEnvelope | RecoveryCodes | None:
         """Generated confirm_account_mfa operation."""
@@ -734,6 +765,14 @@ class RestClient:
         """Generated list_account_login_sessions operation."""
         return cast(Response[ErrorEnvelope | list[LoginSessionInfo]], await self._owner.async_call_generated('list_account_login_sessions', parameters={'user_id': user_id}, body=None, authenticated=True, detailed=True))
 
+    async def list_account_passkeys(self) -> ErrorEnvelope | list[PasskeyInfo] | None:
+        """Generated list_account_passkeys operation."""
+        return cast(ErrorEnvelope | list[PasskeyInfo] | None, await self._owner.async_call_generated('list_account_passkeys', parameters={}, body=None, authenticated=True, typed=True))
+
+    async def list_account_passkeys_detailed(self) -> Response[ErrorEnvelope | list[PasskeyInfo]]:
+        """Generated list_account_passkeys operation."""
+        return cast(Response[ErrorEnvelope | list[PasskeyInfo]], await self._owner.async_call_generated('list_account_passkeys', parameters={}, body=None, authenticated=True, detailed=True))
+
     async def list_application_events(self) -> ErrorEnvelope | EventCatalog | None:
         """Generated list_application_events operation."""
         return cast(ErrorEnvelope | EventCatalog | None, await self._owner.async_call_generated('list_application_events', parameters={}, body=None, authenticated=True, typed=True))
@@ -886,6 +925,14 @@ class RestClient:
         """Generated list_trusted_devices operation."""
         return cast(Response[ErrorEnvelope | list[TrustedDeviceInfo]], await self._owner.async_call_generated('list_trusted_devices', parameters={}, body=None, authenticated=True, detailed=True))
 
+    async def list_user_passkeys(self, user_id: int) -> ErrorEnvelope | list[PasskeyInfo] | None:
+        """Generated list_user_passkeys operation."""
+        return cast(ErrorEnvelope | list[PasskeyInfo] | None, await self._owner.async_call_generated('list_user_passkeys', parameters={'user_id': user_id}, body=None, authenticated=True, typed=True))
+
+    async def list_user_passkeys_detailed(self, user_id: int) -> Response[ErrorEnvelope | list[PasskeyInfo]]:
+        """Generated list_user_passkeys operation."""
+        return cast(Response[ErrorEnvelope | list[PasskeyInfo]], await self._owner.async_call_generated('list_user_passkeys', parameters={'user_id': user_id}, body=None, authenticated=True, detailed=True))
+
     async def list_users(self) -> ErrorEnvelope | list[UserResponse] | None:
         """Generated list_users operation."""
         return cast(ErrorEnvelope | list[UserResponse] | None, await self._owner.async_call_generated('list_users', parameters={}, body=None, authenticated=True, typed=True))
@@ -917,6 +964,22 @@ class RestClient:
     async def manage_server_snapshot_detailed(self, server_name: str, backup_id: str, *, body: SnapshotManagePayload) -> Response[ErrorEnvelope | TaskAcceptedResponse]:
         """Generated manage_server_snapshot operation."""
         return cast(Response[ErrorEnvelope | TaskAcceptedResponse], await self._owner.async_call_generated('manage_server_snapshot', parameters={'server_name': server_name, 'backup_id': backup_id}, body=body, authenticated=True, detailed=True))
+
+    async def passkey_login_options(self, *, body: None | PasskeyLoginOptionsRequest | Unset=UNSET) -> ErrorEnvelope | PasskeyOptionsResponse | None:
+        """Generated passkey_login_options operation."""
+        return cast(ErrorEnvelope | PasskeyOptionsResponse | None, await self._owner.async_call_generated('passkey_login_options', parameters={}, body=body, authenticated=False, typed=True))
+
+    async def passkey_login_options_detailed(self, *, body: None | PasskeyLoginOptionsRequest | Unset=UNSET) -> Response[ErrorEnvelope | PasskeyOptionsResponse]:
+        """Generated passkey_login_options operation."""
+        return cast(Response[ErrorEnvelope | PasskeyOptionsResponse], await self._owner.async_call_generated('passkey_login_options', parameters={}, body=body, authenticated=False, detailed=True))
+
+    async def passkey_login_verify(self, *, body: PasskeyLoginVerifyRequest) -> ErrorEnvelope | TokenResponse | None:
+        """Generated passkey_login_verify operation."""
+        return cast(ErrorEnvelope | TokenResponse | None, await self._owner.async_call_generated('passkey_login_verify', parameters={}, body=body, authenticated=False, typed=True))
+
+    async def passkey_login_verify_detailed(self, *, body: PasskeyLoginVerifyRequest) -> Response[ErrorEnvelope | TokenResponse]:
+        """Generated passkey_login_verify operation."""
+        return cast(Response[ErrorEnvelope | TokenResponse], await self._owner.async_call_generated('passkey_login_verify', parameters={}, body=body, authenticated=False, detailed=True))
 
     async def plan_snapshot_restore(self, server_name: str, backup_id: str, *, body: SnapshotPlanPayload) -> ErrorEnvelope | TaskAcceptedResponse | None:
         """Generated plan_snapshot_restore operation."""
@@ -1030,6 +1093,14 @@ class RestClient:
         """Generated remove_server_ban operation."""
         return cast(Response[ErrorEnvelope | RemoveServerBanResponse], await self._owner.async_call_generated('remove_server_ban', parameters={'server_name': server_name}, body=body, authenticated=True, detailed=True))
 
+    async def rename_account_passkey(self, passkey_id: str, *, body: RenamePasskey) -> ErrorEnvelope | PasskeyInfo | None:
+        """Generated rename_account_passkey operation."""
+        return cast(ErrorEnvelope | PasskeyInfo | None, await self._owner.async_call_generated('rename_account_passkey', parameters={'passkey_id': passkey_id}, body=body, authenticated=True, typed=True))
+
+    async def rename_account_passkey_detailed(self, passkey_id: str, *, body: RenamePasskey) -> Response[ErrorEnvelope | PasskeyInfo]:
+        """Generated rename_account_passkey operation."""
+        return cast(Response[ErrorEnvelope | PasskeyInfo], await self._owner.async_call_generated('rename_account_passkey', parameters={'passkey_id': passkey_id}, body=body, authenticated=True, detailed=True))
+
     async def rename_login_session(self, session_id: str, *, body: RenameSession) -> BaseApiResponse | ErrorEnvelope | None:
         """Generated rename_login_session operation."""
         return cast(BaseApiResponse | ErrorEnvelope | None, await self._owner.async_call_generated('rename_login_session', parameters={'session_id': session_id}, body=body, authenticated=True, typed=True))
@@ -1109,6 +1180,14 @@ class RestClient:
     async def revoke_account_login_sessions_detailed(self, user_id: int) -> Response[BaseApiResponse | ErrorEnvelope]:
         """Generated revoke_account_login_sessions operation."""
         return cast(Response[BaseApiResponse | ErrorEnvelope], await self._owner.async_call_generated('revoke_account_login_sessions', parameters={'user_id': user_id}, body=None, authenticated=True, detailed=True))
+
+    async def revoke_account_passkey(self, passkey_id: str) -> BaseApiResponse | ErrorEnvelope | None:
+        """Generated revoke_account_passkey operation."""
+        return cast(BaseApiResponse | ErrorEnvelope | None, await self._owner.async_call_generated('revoke_account_passkey', parameters={'passkey_id': passkey_id}, body=None, authenticated=True, typed=True))
+
+    async def revoke_account_passkey_detailed(self, passkey_id: str) -> Response[BaseApiResponse | ErrorEnvelope]:
+        """Generated revoke_account_passkey operation."""
+        return cast(Response[BaseApiResponse | ErrorEnvelope], await self._owner.async_call_generated('revoke_account_passkey', parameters={'passkey_id': passkey_id}, body=None, authenticated=True, detailed=True))
 
     async def revoke_all_integration_tokens(self) -> BaseApiResponse | ErrorEnvelope | None:
         """Generated revoke_all_integration_tokens operation."""
@@ -1365,3 +1444,11 @@ class RestClient:
     async def verify_account_security_detailed(self, *, body: VerifySecurity) -> Response[ErrorEnvelope | VerifiedSecurity]:
         """Generated verify_account_security operation."""
         return cast(Response[ErrorEnvelope | VerifiedSecurity], await self._owner.async_call_generated('verify_account_security', parameters={}, body=body, authenticated=True, detailed=True))
+
+    async def verify_account_security_passkey(self, *, body: VerifyPasskeyAssertion) -> ErrorEnvelope | VerifiedSecurity | None:
+        """Generated verify_account_security_passkey operation."""
+        return cast(ErrorEnvelope | VerifiedSecurity | None, await self._owner.async_call_generated('verify_account_security_passkey', parameters={}, body=body, authenticated=True, typed=True))
+
+    async def verify_account_security_passkey_detailed(self, *, body: VerifyPasskeyAssertion) -> Response[ErrorEnvelope | VerifiedSecurity]:
+        """Generated verify_account_security_passkey operation."""
+        return cast(Response[ErrorEnvelope | VerifiedSecurity], await self._owner.async_call_generated('verify_account_security_passkey', parameters={}, body=body, authenticated=True, detailed=True))
