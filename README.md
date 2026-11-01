@@ -56,3 +56,19 @@ CLI equivalents are `events catalog`, `events activity`,
 credentials, not the private local-host control token. Event payloads remain
 separate from metadata-only diagnostics. Custom event emission must follow the
 backend's declared-event and ownership rules.
+
+## Operation access metadata
+
+Discovered operations preserve standard OpenAPI `security` alternatives and
+versioned BSM access metadata in `ApiOperation.access`. Metadata absent from older
+servers is labeled `unknown`. `accessible_with(permissions)` returns a static
+boolean for simple permission policies and `None` for contextual or unknown
+policies. The backend remains authoritative for ownership, custom rules, and 403
+responses.
+
+`bsm-cli api operations` includes access metadata. Add `--accessible` to list
+operations statically permitted by the current account's discovered permissions;
+contextual and unknown policies are omitted from that filter. Without the filter,
+unavailable operations remain inspectable. Account permissions are resolved from
+current roles; endpoint scopes do not narrow an individual JWT. CLI and integration
+credentials remain bearer tokens.

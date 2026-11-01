@@ -218,6 +218,13 @@ class HTTPValidationError(BaseModel):
 # Compatibility with clients using the former backend request-model name.
 SettingItemResponse = SettingItemPayload
 
+
+class CurrentAccountResponse(UserResponse):
+    """Account details with optional capabilities from newer backends."""
+
+    permissions: list[str] | None = None
+
+
 __all__ = [
     "BackupSummary",
     "BackupManifest",
@@ -362,6 +369,7 @@ __all__ = [
     "UptimeSeconds",
     "UserLoginPayload",
     "UserResponse",
+    "CurrentAccountResponse",
     "Uuid",
     "ValidationError",
 ]

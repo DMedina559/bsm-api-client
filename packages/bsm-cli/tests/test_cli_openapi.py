@@ -507,3 +507,29 @@ def test_diagnostic_report_missing_operation_does_not_create_file(client, tmp_pa
     output = tmp_path / "support.json"
     result = run("diagnostics", "report", "--output", str(output))
     assert result.exit_code != 0 and not output.exists()
+
+
+def test_accessible_filter_keeps_unavailable_operations_inspectable(client):
+    import copy
+
+    schema = copy.deepcopy(SCHEMA)
+    schema["paths"]["/api/info"]["get"]["x-bsm-access"] = {
+        "version": 1,
+        "classification": "permission",
+        "authentication": "required",
+        "required_permissions": ["servers:read"],
+        "allowed_roles": ["user", "moderator", "admin"],
+        "additional_checks": [],
+    }
+    client._fetch_openapi_schema.return_value = schema
+    client.async_call_operation.return_value = {"permissions": ["servers:read"]}
+    result = run("--json", "api", "operations", "--accessible")
+    assert result.exit_code == 0, result.output
+    assert [op["operation_id"] for op in json.loads(result.stdout)] == ["info"]
+    client.async_call_operation.return_value = {"permissions": []}
+    result = run("--json", "api", "operations")
+    assert result.exit_code == 0, result.output
+    assert {op["operation_id"] for op in json.loads(result.stdout)} == {
+        "info",
+        "demo_action",
+    }
