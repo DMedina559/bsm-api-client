@@ -401,7 +401,9 @@ class ChangePasswordPayload(ContractModel):
 
     model_config = ConfigDict(extra="forbid")
     current_password: SecretStr = Field(..., min_length=1, title="Current Password")
-    new_password: SecretStr = Field(..., min_length=1, title="New Password")
+    new_password: SecretStr = Field(
+        ..., max_length=1024, min_length=15, title="New Password"
+    )
 
 
 class CollectionDiagnostics(ContractModel):
@@ -502,6 +504,7 @@ class CurrentAccountResponse(ContractModel):
     id: int = Field(..., title="Id")
     identity_type: str | None = Field(None, title="Identity Type")
     is_active: bool = Field(..., title="Is Active")
+    mfa_enrollment_required: bool | None = Field(False, title="Mfa Enrollment Required")
     permissions: list[str] | None = Field(None, title="Permissions")
     policy_revision: str | None = Field(None, title="Policy Revision")
     role: Literal["admin", "moderator", "user"] = Field(..., title="Role")
@@ -937,6 +940,9 @@ class LoginSessionInfo(ContractModel):
     connected: bool = Field(..., title="Connected")
     created_at: int = Field(..., title="Created At")
     current: bool = Field(..., title="Current")
+    expired_reason: Literal["absolute", "idle"] | None = Field(
+        None, title="Expired Reason"
+    )
     expires_at: int = Field(..., title="Expires At")
     id: str = Field(..., pattern="^[a-f0-9]{32}$", title="Id")
     ip_address: str = Field(..., title="Ip Address")
@@ -1598,6 +1604,7 @@ class SecurityStatus(ContractModel):
     max_session_days: int = Field(..., title="Max Session Days")
     recent_until: int = Field(..., title="Recent Until")
     recovery_codes_remaining: int = Field(..., title="Recovery Codes Remaining")
+    required: bool | None = Field(False, title="Required")
     session_id: str | None = Field(None, title="Session Id")
 
 
@@ -2148,7 +2155,7 @@ class UserLoginPayload(ContractModel):
     """Request model for user login credentials."""
 
     model_config = ConfigDict(extra="forbid")
-    password: SecretStr = Field(..., min_length=1, title="Password")
+    password: SecretStr = Field(..., max_length=1024, min_length=15, title="Password")
     remember_me: bool | None = Field(False, title="Remember Me")
     username: str = Field(..., max_length=80, min_length=1, title="Username")
 

@@ -134,3 +134,10 @@ integration credential without a deadline. The API represents this as
 `expires_in_days: null`, with `expires_at: null` in metadata. Omitting the option
 retains the 30-day default. Rotation preserves the original expiry choice, and
 revocation/account access checks still apply. Login-session expiry is unchanged.
+
+New and reset passwords require at least 15 characters and reject locally known
+common or highly repetitive values. Existing login passwords remain accepted.
+Generated password-validation errors hide input values. Account/security models
+include administrator MFA-enrollment requirements and session expiry reasons.
+Local lost-factor recovery uses the backend's `reset-mfa USER` command, not a
+remote SDK operation.

@@ -2,11 +2,13 @@
 
 from typing import Any, Mapping, Self, cast
 
-from pydantic import BaseModel, SecretBytes, SecretStr, TypeAdapter
+from pydantic import BaseModel, ConfigDict, SecretBytes, SecretStr, TypeAdapter
 
 
 class ContractModel(BaseModel):
     """Canonical Pydantic fields with mapping access for SDK and CLI consumers."""
+
+    model_config = ConfigDict(hide_input_in_errors=True)
 
     def get(self, key: str, default: Any = None) -> Any:
         """Read a model field by name, using the default when absent."""

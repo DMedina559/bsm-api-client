@@ -504,7 +504,7 @@ async def test_password_change_preserves_secret_values_on_the_wire():
     from bsm_api_client.models import ChangePasswordPayload
 
     payload = ChangePasswordPayload(
-        current_password="old-secret", new_password="new-secret"
+        current_password="old-secret", new_password="new secret passphrase"
     )
     assert "old-secret" not in repr(payload)
     assert "new-secret" not in payload.model_dump_json()
@@ -514,7 +514,7 @@ async def test_password_change_preserves_secret_values_on_the_wire():
 
         assert json.loads(request.content) == {
             "current_password": "old-secret",
-            "new_password": "new-secret",
+            "new_password": "new secret passphrase",
         }
         return httpx.Response(
             200, json={"status": "success", "message": "Password changed."}

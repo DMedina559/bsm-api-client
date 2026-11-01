@@ -230,7 +230,7 @@ CASES = [
         "--current-password",
         "old-password",
         "--new-password",
-        "new-password",
+        "new secure passphrase",
     ),
     ("users", "list"),
     ("users", "delete", "1", "--yes"),
