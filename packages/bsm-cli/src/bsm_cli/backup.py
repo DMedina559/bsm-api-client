@@ -258,6 +258,30 @@ async def prune_backups(ctx, server_name):
         fail(error)
 
 
+@backup.command("delete")
+@server_option
+@archive_option
+@click.option("-y", "--yes", is_flag=True, help="Bypass the confirmation prompt.")
+@pass_async_context
+async def delete_backup(ctx, server_name, backup_id, yes):
+    """Delete an unpinned local backup archive."""
+    try:
+        client = get_client(ctx)
+        identifier = await choose_archive(client, server_name, backup_id)
+        if (
+            not yes
+            and not await questionary.confirm(
+                f"Permanently delete backup '{identifier}' from '{server_name}'?",
+                default=False,
+            ).ask_async()
+        ):
+            raise click.Abort()
+        result = await client.backups.async_delete(server_name, identifier)
+        click.echo(json.dumps(result, indent=2))
+    except Exception as error:
+        fail(error)
+
+
 @backup.command("download")
 @server_option
 @archive_option

@@ -2,6 +2,7 @@
 
 import json
 import re
+from pathlib import Path
 
 import click
 import questionary
@@ -207,7 +208,83 @@ async def _prompt_scalar(document, spec, name):
         raise ValueError("Enter a valid JSON value for this type.") from None
 
 
-async def build_request(document, operation):
+def _is_binary_field(document, raw):
+    spec = _input_spec(document, raw)
+    return (
+        spec.get("format") == "binary"
+        or spec.get("contentMediaType") == "application/octet-stream"
+    )
+
+
+def _is_binary_response(document, operation):
+    for status, raw in (operation.responses or {}).items():
+        if not str(status).startswith("2"):
+            continue
+        response = resolve(document, raw)
+        for media, content in (response.get("content") or {}).items():
+            if media == "application/octet-stream" or media.startswith("image/"):
+                return True
+            if resolve(document, content.get("schema", {})).get("format") == "binary":
+                return True
+    return False
+
+
+async def _prompt_file_path(name, *, required=True):
+    if not required:
+        if not await _answer(
+            questionary.confirm(f"Attach file for {name}? (optional)", default=False)
+        ):
+            return OMIT
+    while True:
+        path_text = await _answer(questionary.text(f"{name} (local file path):"))
+        candidate = Path(path_text).expanduser()
+        if candidate.is_file():
+            return str(candidate)
+        click.secho(f"File not found: {path_text}", fg="yellow")
+
+
+async def _prompt_form_body(document, operation, form_spec):
+    form = []
+    files = []
+    if not operation.request_body.get("required") and not await _answer(
+        questionary.confirm("Provide form/multipart body?", default=True)
+    ):
+        return (), ()
+    model = fields(document, form_spec)
+    for key, raw_prop in model.get("properties", {}).items():
+        if resolve(document, raw_prop).get("readOnly"):
+            continue
+        req = key in model.get("required", [])
+        if _is_binary_field(document, raw_prop):
+            file_path = await _prompt_file_path(key, required=req)
+            if file_path is not OMIT:
+                files.append(f"{key}={file_path}")
+        else:
+            val = await prompt_value(document, raw_prop, key, required=req)
+            if val is not OMIT:
+                form.append(f"{key}={val if isinstance(val, str) else json.dumps(val)}")
+    return tuple(form), tuple(files)
+
+
+async def _prompt_json_body(document, operation, spec):
+    mode = await _answer(
+        questionary.select(
+            "Request body",
+            choices=[
+                "Guided fields",
+                "Raw JSON",
+                *([] if operation.request_body.get("required") else ["Omit body"]),
+            ],
+        )
+    )
+    if mode == "Guided fields":
+        return json.dumps(await prompt_value(document, spec, "body"))
+    if mode == "Raw JSON":
+        return await _raw_body(document, spec)
+    return None
+
+
+async def build_request_parts(document, operation):
     parameters = []
     for parameter in operation.parameters:
         if parameter["in"] not in {"path", "query", "header"}:
@@ -233,26 +310,30 @@ async def build_request(document, operation):
         ),
         None,
     )
+    form_spec = next(
+        (
+            item.get("schema", {})
+            for kind, item in content.items()
+            if kind in ("multipart/form-data", "application/x-www-form-urlencoded")
+        ),
+        None,
+    )
     body = None
+    form: tuple[str, ...] = ()
+    files: tuple[str, ...] = ()
     if spec is not None:
-        mode = await _answer(
-            questionary.select(
-                "Request body",
-                choices=[
-                    "Guided fields",
-                    "Raw JSON",
-                    *([] if operation.request_body.get("required") else ["Omit body"]),
-                ],
-            )
-        )
-        if mode == "Guided fields":
-            body = json.dumps(await prompt_value(document, spec, "body"))
-        elif mode == "Raw JSON":
-            body = await _raw_body(document, spec)
+        body = await _prompt_json_body(document, operation, spec)
+    elif form_spec is not None:
+        form, files = await _prompt_form_body(document, operation, form_spec)
     elif operation.request_body.get("required"):
         raise InvalidInputError(
             "Use api call --form/--file for this request media type."
         )
+    return parameters, body, form, files
+
+
+async def build_request(document, operation):
+    parameters, body, _form, _files = await build_request_parts(document, operation)
     return parameters, body
 
 
@@ -267,21 +348,51 @@ async def _raw_body(document, spec):
             click.secho(str(error), fg="yellow")
 
 
+def _suggested_filename(headers):
+    disposition = ""
+    for key, val in (headers or {}).items():
+        if key.lower() == "content-disposition":
+            disposition = str(val)
+            break
+    match = re.search(r'filename="?([^";]+)"?', disposition)
+    return match.group(1) if match else ""
+
+
+def _render_response_view(ctx, mode, data, headers, page, query):
+    if mode == "Raw JSON":
+        emit(ctx, data)
+    elif mode == "Headers":
+        show_data(headers, page=page, query=query)
+    elif isinstance(data, bytes):
+        show_data(
+            {
+                "binary": True,
+                "bytes": len(data),
+                "content_type": next(
+                    (v for k, v in headers.items() if k.lower() == "content-type"),
+                    "application/octet-stream",
+                ),
+                "filename": _suggested_filename(headers) or None,
+            },
+            page=page,
+            query=query,
+        )
+    else:
+        show_data(data, page=page, query=query)
+
+
 async def response_menu(ctx, result):
+    from bsm_cli.api import _write_output_file
+
     page, query, mode = 1, "", "Body"
     while True:
         click.secho(
             f"HTTP {result.get('status_code', 'complete')} · {result.get('duration_ms', 0)} ms",
             bold=True,
         )
-        if mode == "Raw JSON":
-            emit(ctx, result.get("data"))
-        else:
-            show_data(
-                result.get("headers", {}) if mode == "Headers" else result.get("data"),
-                page=page,
-                query=query,
-            )
+        data = result.get("data")
+        headers = result.get("headers", {})
+        _render_response_view(ctx, mode, data, headers, page, query)
         choice = await _answer(
             questionary.select(
                 "Response view",
@@ -289,6 +400,7 @@ async def response_menu(ctx, result):
                     "Body",
                     "Headers",
                     "Raw JSON",
+                    "Save to file",
                     "Filter items",
                     "Next page",
                     "Previous page",
@@ -298,14 +410,22 @@ async def response_menu(ctx, result):
         )
         if choice == "Back":
             return
-        if choice == "Filter items":
+        if choice == "Save to file":
+            default_name = _suggested_filename(headers) or "response.bin"
+            target_text = await _answer(
+                questionary.text("Save response to file:", default=default_name)
+            )
+            if target_text:
+                target = Path(target_text).expanduser()
+                written = _write_output_file(target, data)
+                click.secho(f"Saved {written} bytes to {target}", fg="green")
+        elif choice == "Filter items":
             query = await _answer(
                 questionary.text("Filter response items:", default=query)
             )
             page, mode = 1, "Body"
         elif choice == "Next page":
-            page += 1
-            mode = "Body"
+            page, mode = page + 1, "Body"
         elif choice == "Previous page":
             page, mode = max(1, page - 1), "Body"
         else:
@@ -356,23 +476,60 @@ async def operation_menu(ctx, client, operation):
         elif choice == "Raw contract":
             emit(ctx, operation.to_dict())
         else:
-            parameters, body = await build_request(client.schema, operation)
+            parameters, body, form, files = await build_request_parts(
+                client.schema, operation
+            )
             await invoke(
-                ctx, operation.operation_id, parameters, body, (), dry_run=True
+                ctx,
+                operation.operation_id,
+                parameters,
+                body,
+                form,
+                file=files,
+                dry_run=True,
             )
+            can_stream_download = operation.method == "GET" and _is_binary_response(
+                client.schema, operation
+            )
+            preview_choices = [
+                "Execute",
+                *(["Download to file"] if can_stream_download else []),
+                "Edit request",
+                "Back",
+            ]
             action = await _answer(
-                questionary.select(
-                    "Request preview", choices=["Execute", "Edit request", "Back"]
-                )
+                questionary.select("Request preview", choices=preview_choices)
             )
-            if action == "Execute":
+            if action == "Download to file":
+                target_text = await _answer(
+                    questionary.text(
+                        "Save download to file:",
+                        default=f"{operation.operation_id}.bin",
+                    )
+                )
+                if target_text:
+                    saved = await menu_action(
+                        invoke(
+                            ctx,
+                            operation.operation_id,
+                            parameters,
+                            body,
+                            form,
+                            file=files,
+                            output=Path(target_text).expanduser(),
+                            render=False,
+                        )
+                    )
+                    show_data(saved, title="Download complete")
+            elif action == "Execute":
                 result = await menu_action(
                     invoke(
                         ctx,
                         operation.operation_id,
                         parameters,
                         body,
-                        (),
+                        form,
+                        file=files,
                         details=True,
                         render=False,
                     )

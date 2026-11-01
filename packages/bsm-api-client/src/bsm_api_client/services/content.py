@@ -1,6 +1,8 @@
 import logging
-from typing import Any, Dict, cast
+from pathlib import Path
+from typing import Any, Dict, Literal, cast
 
+from ..exceptions import OperationFailedError
 from ..models import (
     AddonActionPayload,
     AddonListResponse,
@@ -8,6 +10,7 @@ from ..models import (
     AddonSubpackPayload,
     BackupActionPayload,
     BackupFilesResponse,
+    BaseApiResponse,
     ContentListResponse,
     FileNamePayload,
     ListAvailableAddonsResponse,
@@ -19,6 +22,7 @@ from .base import Service
 
 _LOGGER = logging.getLogger(__name__.split(".")[0] + ".client.content")
 ALLOWED_BACKUP_LIST_TYPES = ["world", "properties", "allowlist", "permissions"]
+ALLOWED_CONTENT_CATEGORIES = ("worlds", "addons")
 
 
 class ContentService(Service):
@@ -317,7 +321,7 @@ class ContentService(Service):
         )
 
     async def async_upload_content(self, file_path: str) -> Dict[str, Any]:
-        """Stream a local content file to the advertised upload_content plugin operation.
+        """Stream a local content file to the content upload endpoint.
 
         The file is read in bounded chunks and closed on success or failure.
         Uploads are not automatically replayed after authentication failures.
@@ -326,30 +330,118 @@ class ContentService(Service):
 
         :returns: `Dict[str, Any]`.
 
-        :raises NotFoundError: If the upload plugin operation is unavailable.
+        :raises NotFoundError: If the upload operation is unavailable.
         :raises OSError: If the local file cannot be opened or read.
 
         .. code-block:: python
 
             response = await client.content.async_upload_content("world.mcworld")
         """
-        from pathlib import Path
-
         from ..exceptions import NotFoundError
 
         dynamic = self._owner
         await dynamic.async_discover_api()
-        if "upload_content" not in dynamic.operations:
+        operation_id = (
+            "upload_content_file"
+            if "upload_content_file" in dynamic.operations
+            else "upload_content" if "upload_content" in dynamic.operations else None
+        )
+        if operation_id is None:
             raise NotFoundError(
-                "This server does not advertise an upload_content operation in OpenAPI."
+                "This server does not advertise an upload_content_file operation in OpenAPI."
             )
         path = Path(file_path)
         with path.open("rb") as handle:
             response = await dynamic.async_call_operation(
-                "upload_content",
+                operation_id,
                 files={"file": (path.name, handle, "application/octet-stream")},
             )
         return cast(Dict[str, Any], response)
+
+    async def async_download_content(
+        self, category: Literal["worlds", "addons"], filename: str
+    ) -> bytes:
+        """Download a world or addon file from the content library.
+
+        :param category: Content category ('worlds' or 'addons').
+        :param filename: File name inside the category.
+        :returns: File bytes.
+        """
+        if category not in ALLOWED_CONTENT_CATEGORIES:
+            raise ValueError(
+                f"Invalid content category '{category}'. Allowed: {', '.join(ALLOWED_CONTENT_CATEGORIES)}"
+            )
+        data = await self.async_call_generated(
+            "download_content_file",
+            parameters={"category": category, "filename": filename},
+            authenticated=True,
+        )
+        if not isinstance(data, bytes):
+            raise OperationFailedError("Content download returned invalid content.")
+        return data
+
+    async def async_download_content_to(
+        self,
+        category: Literal["worlds", "addons"],
+        filename: str,
+        destination: str | Path,
+    ) -> Path:
+        """Stream a content file to a new local file with bounded memory use.
+
+        :param category: Content category ('worlds' or 'addons').
+        :param filename: File name inside the category.
+        :param destination: New local destination path.
+        :returns: The completed destination path.
+        """
+        import os
+        import tempfile
+
+        if category not in ALLOWED_CONTENT_CATEGORIES:
+            raise ValueError(
+                f"Invalid content category '{category}'. Allowed: {', '.join(ALLOWED_CONTENT_CATEGORIES)}"
+            )
+        target = Path(destination)
+        if target.exists():
+            raise ValueError("Download destination already exists.")
+        target.parent.mkdir(parents=True, exist_ok=True)
+        descriptor, temporary = tempfile.mkstemp(
+            prefix=".bsm-download-", dir=target.parent
+        )
+        try:
+            with os.fdopen(descriptor, "wb") as output:
+                async with self._owner.async_stream_operation(
+                    "download_content_file",
+                    path_params={"category": category, "filename": filename},
+                ) as response:
+                    async for chunk in response.aiter_bytes(65536):
+                        output.write(chunk)
+                output.flush()
+                os.fsync(output.fileno())
+            os.replace(temporary, target)
+        finally:
+            Path(temporary).unlink(missing_ok=True)
+        return target
+
+    async def async_delete_content(
+        self, category: Literal["worlds", "addons"], filename: str
+    ) -> BaseApiResponse:
+        """Delete a world or addon file from the content library.
+
+        :param category: Content category ('worlds' or 'addons').
+        :param filename: File name inside the category.
+        :returns: `BaseApiResponse`.
+        """
+        if category not in ALLOWED_CONTENT_CATEGORIES:
+            raise ValueError(
+                f"Invalid content category '{category}'. Allowed: {', '.join(ALLOWED_CONTENT_CATEGORIES)}"
+            )
+        response = await self.async_call_generated(
+            "delete_content_file",
+            parameters={"category": category, "filename": filename},
+            authenticated=True,
+            typed=True,
+        )
+        return cast(BaseApiResponse, parse_response(BaseApiResponse, response))
 
     async def async_reset_server_world(self, server_name: str) -> TaskAcceptedResponse:
         """Resets the current world of a server.

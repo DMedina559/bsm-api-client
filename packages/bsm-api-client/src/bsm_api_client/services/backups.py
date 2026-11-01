@@ -239,6 +239,15 @@ class BackupsService(Service):
         """
         return await self._call("get_backup_health", server_name)
 
+    async def async_delete(self, server_name: str, backup_id: str) -> Any:
+        """Delete an unpinned local backup archive and its catalog metadata.
+
+        :param server_name: Archive owner.
+        :param backup_id: Local archive identifier.
+        :returns: Accepted operation task.
+        """
+        return await self._call("delete_server_snapshot", server_name, backup_id)
+
     async def async_manage(
         self,
         server_name: str,
