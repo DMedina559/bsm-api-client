@@ -473,6 +473,7 @@ class ControlSchedulePayload(ContractModel):
     revision: str | None = Field(None, title="Revision")
 
 
+ExpiresInDays = Annotated[int, Field(ge=1, le=365, title="Expires In Days")]
 ServerId = Annotated[str, Field(pattern="^[a-f0-9]{32}$")]
 ServerIds = Annotated[list[ServerId], Field(max_length=1000, title="Server Ids")]
 
@@ -481,7 +482,9 @@ class CreateIntegrationToken(ContractModel):
     """Validate and serialize the CreateIntegrationToken contract."""
 
     model_config = ConfigDict(extra="forbid")
-    expires_in_days: int | None = Field(30, ge=1, le=365, title="Expires In Days")
+    expires_in_days: ExpiresInDays | None = Field(
+        30, title="Expires In Days", validate_default=True
+    )
     name: str = Field(
         ..., max_length=100, min_length=1, pattern=".*\\S.*", title="Name"
     )
@@ -869,7 +872,7 @@ class IntegrationTokenInfo(ContractModel):
 
     model_config = ConfigDict(extra="forbid")
     created_at: int = Field(..., title="Created At")
-    expires_at: int = Field(..., title="Expires At")
+    expires_at: int | None = Field(..., title="Expires At")
     id: str = Field(..., pattern="^[a-f0-9]{32}$", title="Id")
     last_used_at: int | None = Field(None, title="Last Used At")
     name: str = Field(..., title="Name")

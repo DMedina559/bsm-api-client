@@ -92,8 +92,9 @@ async def list_tokens(ctx):
 @click.option(
     "--expires-days", type=click.IntRange(1, 365), default=30, show_default=True
 )
+@click.option("--never-expire", is_flag=True, help="Remain valid until revoked.")
 @pass_async_context
-async def create_token(ctx, name, permission, server_id, expires_days):
+async def create_token(ctx, name, permission, server_id, expires_days, never_expire):
     """Create a credential and print its secret once. Store the output securely."""
     result = await get_client(ctx).async_call_operation(
         "create_integration_token",
@@ -101,7 +102,7 @@ async def create_token(ctx, name, permission, server_id, expires_days):
             "name": name,
             "permissions": list(permission),
             "server_ids": list(server_id) if server_id else None,
-            "expires_in_days": expires_days,
+            "expires_in_days": None if never_expire else expires_days,
         },
     )
     return emit(ctx, result)

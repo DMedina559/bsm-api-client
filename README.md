@@ -128,3 +128,9 @@ recovery commands print secrets once; save them securely. The SDK accepts a
 one-use `otp=` argument for password authentication. Sensitive operations require
 recent password/factor verification; refresh does not extend that verification.
 Integration credentials remain independent from login-session revocation.
+
+Use `bsm-cli auth tokens create --name "Home Assistant" --never-expire` for an
+integration credential without a deadline. The API represents this as
+`expires_in_days: null`, with `expires_at: null` in metadata. Omitting the option
+retains the 30-day default. Rotation preserves the original expiry choice, and
+revocation/account access checks still apply. Login-session expiry is unchanged.

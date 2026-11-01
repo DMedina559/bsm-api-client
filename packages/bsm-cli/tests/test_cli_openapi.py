@@ -573,3 +573,20 @@ def test_named_credential_commands_forward_explicit_scope_and_resource_limits(cl
     assert client.async_call_operation.call_args.kwargs["json_data"]["grants"] == [
         {"server_id": "a" * 32, "permissions": ["servers:read"]}
     ]
+
+
+def test_never_expiring_integration_token_is_explicit(client):
+    result = run(
+        "--json",
+        "auth",
+        "tokens",
+        "create",
+        "--name",
+        "Home Assistant",
+        "--never-expire",
+    )
+    assert result.exit_code == 0, result.output
+    assert (
+        client.async_call_operation.call_args.kwargs["json_data"]["expires_in_days"]
+        is None
+    )
