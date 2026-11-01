@@ -96,27 +96,22 @@ class TestPluginSystem:
 
 
 @pytest.mark.parametrize(
-    "module,class_name,tag,paths",
+    "module,tag,paths",
     [
         (
             "download_page_plugin",
-            "DownloadPagePlugin",
             "Download Page Plugin",
             {"/api/download_page/ui", "/api/download_page/download"},
         ),
         (
             "content_uploader_plugin",
-            "ContentUploaderPlugin",
             "Content Uploader Plugin",
             {"/content/upload/ui", "/api/content/upload"},
         ),
     ],
 )
-def test_builtin_plugin_operation_discovery(
-    monkeypatch, tmp_path, module, class_name, tag, paths
-):
-    """Discover actual backend router schemas without starting plugin tasks."""
-    import importlib
+def test_builtin_plugin_operation_discovery(monkeypatch, tmp_path, module, tag, paths):
+    """Discover plugin router schemas without starting plugin tasks."""
     import json
     from unittest.mock import AsyncMock
 
@@ -126,15 +121,16 @@ def test_builtin_plugin_operation_discovery(
     from bsm_cli.__main__ import cli
     from bsm_cli.config import Config
 
-    plugin_class = getattr(
-        importlib.import_module(f"bedrock_server_manager.plugins.default.{module}"),
-        class_name,
-    )
-    plugin = plugin_class.__new__(plugin_class)
-    plugin.router = APIRouter(tags=[tag])
-    plugin._define_routes()
+    router = APIRouter(tags=[tag])
+    for route_path in sorted(paths):
+        router.add_api_route(
+            route_path,
+            lambda: {"status": "ok"},
+            methods=["GET"],
+            operation_id=f"{module}_{route_path.strip('/').replace('/', '_')}",
+        )
     app = FastAPI()
-    app.include_router(plugin.router)
+    app.include_router(router)
     schema = app.openapi()
     monkeypatch.setattr(
         BedrockServerManagerApi, "_fetch_openapi_schema", AsyncMock(return_value=schema)

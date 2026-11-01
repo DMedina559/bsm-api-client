@@ -87,6 +87,85 @@ def parameter_value(schema, parameter, value):
     return parsed
 
 
+def _write_output_file(output: Path, payload: Any) -> int:
+    output.parent.mkdir(parents=True, exist_ok=True)
+    temporary = None
+    try:
+        if isinstance(payload, bytes):
+            raw = payload
+        elif isinstance(payload, str):
+            raw = payload.encode("utf-8")
+        else:
+            from bsm_cli.output import serializable
+
+            raw = (
+                json.dumps(payload, default=serializable, indent=2, ensure_ascii=False)
+                + "\n"
+            ).encode("utf-8")
+        with tempfile.NamedTemporaryFile(
+            dir=output.parent, prefix=".bsm-output-", delete=False
+        ) as handle:
+            temporary = Path(handle.name)
+            handle.write(raw)
+        os.replace(temporary, output)
+        return len(raw)
+    except OSError as exc:
+        raise click.BadParameter(
+            "Cannot write the output destination.", param_hint="--output"
+        ) from exc
+    finally:
+        if temporary is not None:
+            temporary.unlink(missing_ok=True)
+
+
+async def _stream_operation_to_file(
+    client, operation_id: str, locations: dict[str, dict[str, Any]], output: Path
+) -> dict[str, Any]:
+    output.parent.mkdir(parents=True, exist_ok=True)
+    temporary = None
+    size = 0
+    try:
+        async with client.async_stream_operation(
+            operation_id,
+            path_params=locations["path"],
+            query=locations["query"],
+            headers=locations["header"],
+        ) as response:
+            with tempfile.NamedTemporaryFile(
+                dir=output.parent, prefix=".bsm-download-", delete=False
+            ) as handle:
+                temporary = Path(handle.name)
+                async for chunk in response.aiter_bytes(65536):
+                    handle.write(chunk)
+                    size += len(chunk)
+            os.replace(temporary, output)
+    except OSError as exc:
+        raise click.BadParameter(
+            "Cannot write the download destination.", param_hint="--output"
+        ) from exc
+    finally:
+        if temporary is not None:
+            temporary.unlink(missing_ok=True)
+    return {"output": str(output), "bytes": size}
+
+
+def _open_file_uploads(stack: ExitStack, file) -> dict[str, Any]:
+    files = {}
+    for name, path in assignments(file).items():
+        try:
+            stream = stack.enter_context(Path(path).open("rb"))
+            files[name] = (
+                Path(path).name,
+                stream,
+                mimetypes.guess_type(path)[0] or "application/octet-stream",
+            )
+        except OSError as exc:
+            raise click.BadParameter(
+                f"Cannot read file '{path}': {exc}", param_hint="--file"
+            ) from exc
+    return files
+
+
 async def invoke(
     ctx,
     operation_id,
@@ -95,6 +174,7 @@ async def invoke(
     form,
     plugin_name=None,
     file=(),
+    output: Path | None = None,
     *,
     dry_run=False,
     raw=False,
@@ -116,27 +196,29 @@ async def invoke(
     assignments(file)
     if dry_run:
         preview = preview_request(client.schema, operation, locations, body, form, file)
+        if output is not None:
+            preview = {**preview, "output": str(output)}
         if ctx.obj.get("json_output") or raw:
             return emit(ctx, preview)
         from bsm_cli.api_presentation import show_data
 
         show_data(preview, title="Request preview")
         return preview
+    if (
+        output is not None
+        and operation.method == "GET"
+        and body is None
+        and not form
+        and not file
+        and not details
+    ):
+        saved_result = await _stream_operation_to_file(
+            client, operation_id, locations, output
+        )
+        return emit(ctx, saved_result) if render else saved_result
     started = time.perf_counter()
     with ExitStack() as stack:
-        files = {}
-        for name, path in assignments(file).items():
-            try:
-                stream = stack.enter_context(Path(path).open("rb"))
-                files[name] = (
-                    Path(path).name,
-                    stream,
-                    mimetypes.guess_type(path)[0] or "application/octet-stream",
-                )
-            except OSError as exc:
-                raise click.BadParameter(
-                    f"Cannot read file '{path}': {exc}", param_hint="--file"
-                ) from exc
+        files = _open_file_uploads(stack, file)
         result = await client.async_call_operation(
             operation_id,
             path_params=locations["path"],
@@ -153,6 +235,14 @@ async def invoke(
             **result,
             "duration_ms": round((time.perf_counter() - started) * 1000),
         }
+    if output is not None:
+        payload = result.get("data") if details and isinstance(result, dict) else result
+        size = _write_output_file(output, payload)
+        result = (
+            {**result, "output": str(output), "bytes": size}
+            if details and isinstance(result, dict)
+            else {"output": str(output), "bytes": size}
+        )
     if not render:
         return result
     return _emit_result(ctx, result, raw=raw, details=details)
@@ -165,7 +255,11 @@ def _emit_result(ctx, result, *, raw, details):
         return emit(ctx, result)
     if details:
         click.echo(f"HTTP {result['status_code']} · {result['duration_ms']} ms")
-    show_data(result.get("data") if details else result)
+    payload = result.get("data") if details else result
+    if isinstance(payload, bytes):
+        show_data({"binary": True, "bytes": len(payload)})
+    else:
+        show_data(payload)
     return result
 
 
@@ -350,6 +444,7 @@ async def call(
     json_body,
     form,
     file,
+    output=None,
     dry_run=False,
     raw=False,
     details=False,
@@ -362,6 +457,7 @@ async def call(
         json_body,
         form,
         file=file,
+        output=output,
         dry_run=dry_run,
         raw=raw,
         details=details,
@@ -574,7 +670,9 @@ def register_plugin_commands(plugin):
     @click.argument("plugin_name", shell_complete=complete_plugin)
     @call_options
     @pass_async_context
-    async def plugin_call(ctx, plugin_name, operation_id, param, json_body, form, file):
+    async def plugin_call(
+        ctx, plugin_name, operation_id, param, json_body, form, file, output=None
+    ):
         return await invoke(
             ctx,
             operation_id,
@@ -583,4 +681,5 @@ def register_plugin_commands(plugin):
             form,
             plugin_name=plugin_name,
             file=file,
+            output=output,
         )

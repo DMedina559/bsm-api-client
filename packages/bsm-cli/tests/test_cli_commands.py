@@ -72,6 +72,9 @@ def shape(document, spec, values):
 
 SUCCESS = {
     "backups": [],
+    "files": ["world.mcworld"],
+    "filename": "world.mcworld",
+    "content_type": "worlds",
     "instance_id": "test-instance",
     "pid": 123,
     "phase": "ready",
@@ -294,6 +297,10 @@ CASES = [
     ("world", "export", "-s", "test"),
     ("world", "reset", "-s", "test", "--yes"),
     ("addon", "install", "-s", "test", "-f", "addon.mcaddon"),
+    ("content", "list"),
+    ("content", "list", "-c", "worlds"),
+    ("content", "delete", "-c", "worlds", "-f", "world.mcworld", "--yes"),
+    ("backup", "delete", "-s", "test", "-f", "backup-1", "--yes"),
     ("api", "call", "list_passkeys"),
     ("api", "call", "list_account_passkeys", "--param", "user_id=2"),
     (
@@ -365,7 +372,7 @@ def command_client(monkeypatch, tmp_path):
                     "id": "test-task",
                     "status": "completed",
                     "message": "Done",
-                    "result": None,
+                    "result": {"status": "success", "deleted": True},
                     "error": None,
                 }
             else:
@@ -491,22 +498,26 @@ def test_interactive_workflows(
     assert command_client[0]._dynamic_request.await_count
 
 
-def test_content_upload_requires_advertised_endpoint(command_client, tmp_path):
+def test_content_upload_requires_advertised_endpoint(
+    command_client, monkeypatch, tmp_path
+):
+    import copy
+
     from bsm_api_client.openapi import generated_schema
 
     file = tmp_path / "world.mcworld"
     file.write_bytes(b"content")
-    # The pinned backend has no public upload endpoint. Report that explicitly.
-    original = BedrockServerManagerApi._fetch_openapi_schema
-    try:
-        BedrockServerManagerApi._fetch_openapi_schema = AsyncMock(
-            return_value=generated_schema()
-        )
-        result = CliRunner().invoke(cli, ["--json", "content", "upload", str(file)])
-    finally:
-        BedrockServerManagerApi._fetch_openapi_schema = original
+    # Default backend advertises upload_content_file in core OpenAPI.
+    ok_result = CliRunner().invoke(cli, ["--json", "content", "upload", str(file)])
+    assert ok_result.exit_code == 0, ok_result.output
+
+    # Simulate an older backend without a public upload endpoint.
+    schema = copy.deepcopy(generated_schema())
+    schema["paths"].pop("/api/content/upload", None)
+    monkeypatch.setattr("bsm_api_client.openapi.generated_schema", lambda: schema)
+    result = CliRunner().invoke(cli, ["--json", "content", "upload", str(file)])
     assert result.exit_code == 5, result.output
-    assert "upload_content" in json.loads(result.stderr)["error"]
+    assert "upload_content_file" in json.loads(result.stderr)["error"]
 
 
 def test_server_install_interactive(command_client, monkeypatch):

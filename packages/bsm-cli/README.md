@@ -135,9 +135,8 @@ bsm-cli backup restore --server survival --file MyWorld_backup_20261007_120000.m
 bsm-cli backup restore --server survival --file custom-backup.zip --type world
 ```
 
-`content upload LOCAL_FILE` works only when the server advertises an
-`upload_content` operation. The current backend does not advertise one.
-Place content files in the backend's content directories, then select them by name.
+Use `content list`, `content upload LOCAL_FILE`, `content download`, and `content delete`
+to manage `.mcworld`, `.mcpack`, and `.mcaddon` files in the backend's content library.
 
 Background commands subscribe to the task's WebSocket topic and check its REST
 snapshot after subscribing, covering tasks that finish before monitoring starts.

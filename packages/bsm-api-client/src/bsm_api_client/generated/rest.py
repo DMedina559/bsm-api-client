@@ -27,16 +27,19 @@ from .models.ban_remove_request import BanRemoveRequest
 from .models.base_api_response import BaseApiResponse
 from .models.body_import_server_snapshot import BodyImportServerSnapshot
 from .models.body_login import BodyLogin
+from .models.body_upload_content_file import BodyUploadContentFile
 from .models.change_password_payload import ChangePasswordPayload
 from .models.command_payload import CommandPayload
 from .models.compare_diagnostic_snapshots_request import CompareDiagnosticSnapshotsRequest
 from .models.complete_passkey_registration import CompletePasskeyRegistration
 from .models.content_list_response import ContentListResponse
+from .models.content_upload_response import ContentUploadResponse
 from .models.control_schedule_payload import ControlSchedulePayload
 from .models.create_integration_token import CreateIntegrationToken
 from .models.created_integration_token import CreatedIntegrationToken
 from .models.current_account_response import CurrentAccountResponse
 from .models.custom_zips_response import CustomZipsResponse
+from .models.delete_content_file_category import DeleteContentFileCategory
 from .models.destination_cleanup_payload import DestinationCleanupPayload
 from .models.diagnostic_activity import DiagnosticActivity
 from .models.diagnostic_comparison import DiagnosticComparison
@@ -45,6 +48,7 @@ from .models.diagnostic_report import DiagnosticReport
 from .models.diagnostic_runs import DiagnosticRuns
 from .models.diagnostic_snapshot import DiagnosticSnapshot
 from .models.diagnostic_trace import DiagnosticTrace
+from .models.download_content_file_category import DownloadContentFileCategory
 from .models.error_envelope import ErrorEnvelope
 from .models.event_catalog import EventCatalog
 from .models.event_diagnostics import EventDiagnostics
@@ -77,6 +81,7 @@ from .models.list_schedules_response import ListSchedulesResponse
 from .models.list_snapshots_response import ListSnapshotsResponse
 from .models.log_history_page import LogHistoryPage
 from .models.login_session_info import LoginSessionInfo
+from .models.manage_snapshot_response import ManageSnapshotResponse
 from .models.passkey_info import PasskeyInfo
 from .models.passkey_login_options_request import PasskeyLoginOptionsRequest
 from .models.passkey_login_verify_request import PasskeyLoginVerifyRequest
@@ -293,6 +298,14 @@ class RestClient:
         """Generated create_server_snapshot operation."""
         return cast(Response[ErrorEnvelope | TaskAcceptedResponse], await self._owner.async_call_generated('create_server_snapshot', parameters={'server_name': server_name}, body=body, authenticated=True, detailed=True))
 
+    async def delete_content_file(self, category: DeleteContentFileCategory, filename: str) -> BaseApiResponse | ErrorEnvelope | None:
+        """Generated delete_content_file operation."""
+        return cast(BaseApiResponse | ErrorEnvelope | None, await self._owner.async_call_generated('delete_content_file', parameters={'category': category, 'filename': filename}, body=None, authenticated=True, typed=True))
+
+    async def delete_content_file_detailed(self, category: DeleteContentFileCategory, filename: str) -> Response[BaseApiResponse | ErrorEnvelope]:
+        """Generated delete_content_file operation."""
+        return cast(Response[BaseApiResponse | ErrorEnvelope], await self._owner.async_call_generated('delete_content_file', parameters={'category': category, 'filename': filename}, body=None, authenticated=True, detailed=True))
+
     async def delete_schedule(self, schedule_id: str) -> ErrorEnvelope | SuccessResponse | None:
         """Generated delete_schedule operation."""
         return cast(ErrorEnvelope | SuccessResponse | None, await self._owner.async_call_generated('delete_schedule', parameters={'schedule_id': schedule_id}, body=None, authenticated=True, typed=True))
@@ -308,6 +321,14 @@ class RestClient:
     async def delete_server_detailed(self, server_name: str) -> Response[ErrorEnvelope | TaskAcceptedResponse]:
         """Generated delete_server operation."""
         return cast(Response[ErrorEnvelope | TaskAcceptedResponse], await self._owner.async_call_generated('delete_server', parameters={'server_name': server_name}, body=None, authenticated=True, detailed=True))
+
+    async def delete_server_snapshot(self, server_name: str, backup_id: str) -> ErrorEnvelope | ManageSnapshotResponse | None:
+        """Generated delete_server_snapshot operation."""
+        return cast(ErrorEnvelope | ManageSnapshotResponse | None, await self._owner.async_call_generated('delete_server_snapshot', parameters={'server_name': server_name, 'backup_id': backup_id}, body=None, authenticated=True, typed=True))
+
+    async def delete_server_snapshot_detailed(self, server_name: str, backup_id: str) -> Response[ErrorEnvelope | ManageSnapshotResponse]:
+        """Generated delete_server_snapshot operation."""
+        return cast(Response[ErrorEnvelope | ManageSnapshotResponse], await self._owner.async_call_generated('delete_server_snapshot', parameters={'server_name': server_name, 'backup_id': backup_id}, body=None, authenticated=True, detailed=True))
 
     async def delete_user(self, user_id: int) -> BaseApiResponse | ErrorEnvelope | None:
         """Generated delete_user operation."""
@@ -356,6 +377,14 @@ class RestClient:
     async def download_backup_recovery_report_detailed(self, server_name: str) -> Response[ErrorEnvelope | RecoveryReportResponse]:
         """Generated download_backup_recovery_report operation."""
         return cast(Response[ErrorEnvelope | RecoveryReportResponse], await self._owner.async_call_generated('download_backup_recovery_report', parameters={'server_name': server_name}, body=None, authenticated=True, detailed=True))
+
+    async def download_content_file(self, category: DownloadContentFileCategory, filename: str) -> ErrorEnvelope | File | None:
+        """Generated download_content_file operation."""
+        return cast(ErrorEnvelope | File | None, await self._owner.async_call_generated('download_content_file', parameters={'category': category, 'filename': filename}, body=None, authenticated=True, typed=True))
+
+    async def download_content_file_detailed(self, category: DownloadContentFileCategory, filename: str) -> Response[ErrorEnvelope | File]:
+        """Generated download_content_file operation."""
+        return cast(Response[ErrorEnvelope | File], await self._owner.async_call_generated('download_content_file', parameters={'category': category, 'filename': filename}, body=None, authenticated=True, detailed=True))
 
     async def download_server_snapshot(self, server_name: str, backup_id: str) -> ErrorEnvelope | File | None:
         """Generated download_server_snapshot operation."""
@@ -1420,6 +1449,14 @@ class RestClient:
     async def update_user_role_detailed(self, user_id: int, *, body: UpdateUserRolePayload) -> Response[BaseApiResponse | ErrorEnvelope]:
         """Generated update_user_role operation."""
         return cast(Response[BaseApiResponse | ErrorEnvelope], await self._owner.async_call_generated('update_user_role', parameters={'user_id': user_id}, body=body, authenticated=True, detailed=True))
+
+    async def upload_content_file(self, *, body: BodyUploadContentFile) -> ContentUploadResponse | ErrorEnvelope | None:
+        """Generated upload_content_file operation."""
+        return cast(ContentUploadResponse | ErrorEnvelope | None, await self._owner.async_call_generated('upload_content_file', parameters={}, body=body, authenticated=True, typed=True))
+
+    async def upload_content_file_detailed(self, *, body: BodyUploadContentFile) -> Response[ContentUploadResponse | ErrorEnvelope]:
+        """Generated upload_content_file operation."""
+        return cast(Response[ContentUploadResponse | ErrorEnvelope], await self._owner.async_call_generated('upload_content_file', parameters={}, body=body, authenticated=True, detailed=True))
 
     async def validate_registration_token(self, token: str) -> BaseApiResponse | ErrorEnvelope | None:
         """Generated validate_registration_token operation."""

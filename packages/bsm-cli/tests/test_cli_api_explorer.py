@@ -55,6 +55,66 @@ SCHEMA = {
                 "responses": {"200": {"description": "Rows"}},
             }
         },
+        "/api/upload": {
+            "post": {
+                "operationId": "upload_fixture",
+                "tags": ["Fixture"],
+                "summary": "Upload file",
+                "requestBody": {
+                    "required": True,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "type": "object",
+                                "required": ["file"],
+                                "properties": {
+                                    "file": {"type": "string", "format": "binary"},
+                                    "label": {"type": "string"},
+                                },
+                            }
+                        }
+                    },
+                },
+                "responses": {
+                    "200": {
+                        "description": "Uploaded",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {"uploaded": {"type": "boolean"}},
+                                }
+                            }
+                        },
+                    }
+                },
+            }
+        },
+        "/api/download/{filename}": {
+            "get": {
+                "operationId": "download_fixture",
+                "tags": ["Fixture"],
+                "summary": "Download file",
+                "parameters": [
+                    {
+                        "name": "filename",
+                        "in": "path",
+                        "required": True,
+                        "schema": {"type": "string"},
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Binary payload",
+                        "content": {
+                            "application/octet-stream": {
+                                "schema": {"type": "string", "format": "binary"}
+                            }
+                        },
+                    }
+                },
+            }
+        },
     },
     "components": {
         "schemas": {
@@ -86,6 +146,17 @@ def transport(monkeypatch):
             return httpx.Response(
                 200,
                 json=[{"name": f"row-{i}", "enabled": i % 2 == 0} for i in range(60)],
+            )
+        if request.url.path == "/api/upload":
+            return httpx.Response(200, json={"uploaded": True})
+        if request.url.path.startswith("/api/download/"):
+            return httpx.Response(
+                200,
+                content=b"binary-content-payload",
+                headers={
+                    "content-type": "application/octet-stream",
+                    "content-disposition": 'attachment; filename="world.mcworld"',
+                },
             )
         return httpx.Response(
             201, json={"enabled": False}, headers={"x-test": "metadata"}
@@ -336,3 +407,74 @@ def test_searchable_pickers_accept_j_and_k(destination, transport, monkeypatch):
     else:
         assert shown == ["JkModel"]
     assert not transport
+
+
+def test_interactive_multipart_upload_and_binary_download_workflow(
+    transport, monkeypatch, tmp_path
+):
+    upload_file = tmp_path / "pack.mcpack"
+    upload_file.write_bytes(b"pack-bytes")
+    download_out = tmp_path / "downloaded.mcworld"
+    saved_out = tmp_path / "saved.mcworld"
+
+    selections = iter(
+        [
+            "Operations",
+            "upload_fixture",
+            "Build request",
+            "Execute",
+            "Back",
+            "Back",
+            "Operations",
+            "download_fixture",
+            "Build request",
+            "Download to file",
+            "Build request",
+            "Execute",
+            "Save to file",
+            "Back",
+            "Back",
+            "Back",
+        ]
+    )
+    texts = iter(
+        [
+            str(upload_file),
+            "world.mcworld",
+            str(download_out),
+            "world.mcworld",
+            str(saved_out),
+        ]
+    )
+    monkeypatch.setattr(
+        "bsm_cli.api_explorer.questionary.select",
+        lambda *a, **k: Answer(next(selections)),
+    )
+    monkeypatch.setattr(
+        "bsm_cli.api_explorer.questionary.confirm", lambda *a, **k: Answer(False)
+    )
+    monkeypatch.setattr(
+        "bsm_cli.api_explorer.questionary.text", lambda *a, **k: Answer(next(texts))
+    )
+    result = run("api", "explore")
+    assert result.exit_code == 0, result.output
+    assert download_out.read_bytes() == b"binary-content-payload"
+    assert saved_out.read_bytes() == b"binary-content-payload"
+    assert any(req.url.path == "/api/upload" for req in transport)
+
+
+def test_api_download_streams_binary_payload(transport, tmp_path):
+    target = tmp_path / "out.mcworld"
+    result = run(
+        "--json",
+        "api",
+        "download",
+        "download_fixture",
+        str(target),
+        "--param",
+        "filename=world.mcworld",
+    )
+    assert result.exit_code == 0, result.output
+    data = json.loads(result.stdout)
+    assert data["bytes"] == len(b"binary-content-payload")
+    assert target.read_bytes() == b"binary-content-payload"

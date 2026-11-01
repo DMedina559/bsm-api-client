@@ -421,6 +421,14 @@ class BodyLogin(ContractModel):
     username: str = Field(..., title="Username")
 
 
+class BodyUploadContentFile(ContractModel):
+    file: bytes = Field(
+        ...,
+        json_schema_extra={"contentMediaType": "application/octet-stream"},
+        title="File",
+    )
+
+
 class ChangePasswordPayload(ContractModel):
     """Request payload for changing the user's password.
 
@@ -506,6 +514,17 @@ class ContentListResponse(ContractModel):
     files: list[str] | None = Field(None, title="Files")
     message: str | None = Field(None, title="Message")
     status: Literal["success", "skipped", "partial"] = Field(..., title="Status")
+
+
+class ContentUploadResponse(ContractModel):
+    """Validate and serialize the ContentUploadResponse contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    category: Literal["worlds", "addons"] = Field(..., title="Category")
+    destination: str = Field(..., title="Destination")
+    filename: str = Field(..., title="Filename")
+    message: str = Field(..., title="Message")
+    status: Literal["success"] = Field("success", title="Status")
 
 
 class ControlSchedulePayload(ContractModel):
@@ -993,6 +1012,14 @@ class LoginSessionInfo(ContractModel):
     name: str = Field(..., title="Name")
     revoked_at: int | None = Field(None, title="Revoked At")
     user_agent: str = Field(..., title="User Agent")
+
+
+class ManageSnapshotResponse(ContractModel):
+    """Validate and serialize the ManageSnapshotResponse contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    message: str = Field(..., title="Message")
+    status: Literal["success"] = Field("success", title="Status")
 
 
 class MetricsDiagnostics(ContractModel):
