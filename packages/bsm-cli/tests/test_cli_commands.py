@@ -668,3 +668,33 @@ def test_scheduler_save_json(command_client, tmp_path):
     assert result.exit_code == 0, result.output
     request = command_client[0]._dynamic_request.call_args
     assert request.args[:2] == ("PUT", "/api/scheduler/schedules/weekly")
+
+
+@pytest.mark.parametrize("machine", [False, True])
+def test_audit_page_flags_are_serialized(command_client, machine, monkeypatch):
+    for key, value in {
+        "action": "login",
+        "timestamp": "2026-10-31T12:00:00Z",
+        "user_id": 1,
+    }.items():
+        monkeypatch.setitem(SUCCESS, key, value)
+    result = CliRunner().invoke(
+        cli,
+        (["--json"] if machine else []) + ["audit", "--limit", "25", "--offset", "100"],
+    )
+    assert result.exit_code == 0, result.output
+    call = command_client[0]._dynamic_request.call_args
+    assert call.args[:2] == ("GET", "/audit-log/list")
+    assert str(call.kwargs["raw_request"].url).endswith("?limit=25&offset=100")
+    if machine:
+        assert isinstance(json.loads(result.stdout), list)
+
+
+@pytest.mark.parametrize(
+    "flag, value", [("--limit", "501"), ("--limit", "0"), ("--offset", "-1")]
+)
+def test_audit_invalid_pages_are_rejected(command_client, flag, value):
+    result = CliRunner().invoke(cli, ["audit", flag, value])
+    assert result.exit_code != 0
+    assert "Invalid value" in result.output
+    assert not command_client or command_client[0]._dynamic_request.await_count == 0

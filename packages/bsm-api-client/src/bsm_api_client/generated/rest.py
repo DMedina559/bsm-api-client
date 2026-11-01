@@ -561,13 +561,13 @@ class RestClient:
         """Generated get_restore_recovery operation."""
         return cast(Response[ErrorEnvelope | RestoreRecoveryResponse], await self._owner.async_call_generated('get_restore_recovery', parameters={'server_name': server_name}, body=None, authenticated=True, detailed=True))
 
-    async def get_server_addon_icon(self, server_name: str, *, pack_type: str, uuid: str) -> Any | ErrorEnvelope | None:
+    async def get_server_addon_icon(self, server_name: str, *, pack_type: str, uuid: str) -> ErrorEnvelope | File | None:
         """Generated get_server_addon_icon operation."""
-        return cast(Any | ErrorEnvelope | None, await self._owner.async_call_generated('get_server_addon_icon', parameters={'server_name': server_name, 'pack_type': pack_type, 'uuid': uuid}, body=None, authenticated=False, typed=True))
+        return cast(ErrorEnvelope | File | None, await self._owner.async_call_generated('get_server_addon_icon', parameters={'server_name': server_name, 'pack_type': pack_type, 'uuid': uuid}, body=None, authenticated=True, typed=True))
 
-    async def get_server_addon_icon_detailed(self, server_name: str, *, pack_type: str, uuid: str) -> Response[Any | ErrorEnvelope]:
+    async def get_server_addon_icon_detailed(self, server_name: str, *, pack_type: str, uuid: str) -> Response[ErrorEnvelope | File]:
         """Generated get_server_addon_icon operation."""
-        return cast(Response[Any | ErrorEnvelope], await self._owner.async_call_generated('get_server_addon_icon', parameters={'server_name': server_name, 'pack_type': pack_type, 'uuid': uuid}, body=None, authenticated=False, detailed=True))
+        return cast(Response[ErrorEnvelope | File], await self._owner.async_call_generated('get_server_addon_icon', parameters={'server_name': server_name, 'pack_type': pack_type, 'uuid': uuid}, body=None, authenticated=True, detailed=True))
 
     async def get_server_bans(self, server_name: str) -> ErrorEnvelope | GetServerBansResponse | None:
         """Generated get_server_bans operation."""
@@ -657,13 +657,13 @@ class RestClient:
         """Generated get_web_runtime operation."""
         return cast(Response[ErrorEnvelope | RuntimeStatus], await self._owner.async_call_generated('get_web_runtime', parameters={}, body=None, authenticated=True, detailed=True))
 
-    async def get_world_icon(self, server_name: str) -> Any | ErrorEnvelope | None:
+    async def get_world_icon(self, server_name: str) -> ErrorEnvelope | File | None:
         """Generated get_world_icon operation."""
-        return cast(Any | ErrorEnvelope | None, await self._owner.async_call_generated('get_world_icon', parameters={'server_name': server_name}, body=None, authenticated=False, typed=True))
+        return cast(ErrorEnvelope | File | None, await self._owner.async_call_generated('get_world_icon', parameters={'server_name': server_name}, body=None, authenticated=True, typed=True))
 
-    async def get_world_icon_detailed(self, server_name: str) -> Response[Any | ErrorEnvelope]:
+    async def get_world_icon_detailed(self, server_name: str) -> Response[ErrorEnvelope | File]:
         """Generated get_world_icon operation."""
-        return cast(Response[Any | ErrorEnvelope], await self._owner.async_call_generated('get_world_icon', parameters={'server_name': server_name}, body=None, authenticated=False, detailed=True))
+        return cast(Response[ErrorEnvelope | File], await self._owner.async_call_generated('get_world_icon', parameters={'server_name': server_name}, body=None, authenticated=True, detailed=True))
 
     async def import_server_snapshot(self, server_name: str, *, body: BodyImportServerSnapshot) -> ErrorEnvelope | ListSnapshotsResponse | None:
         """Generated import_server_snapshot operation."""
@@ -737,13 +737,13 @@ class RestClient:
         """Generated list_application_events operation."""
         return cast(Response[ErrorEnvelope | EventCatalog], await self._owner.async_call_generated('list_application_events', parameters={}, body=None, authenticated=True, detailed=True))
 
-    async def list_audit_logs(self) -> ErrorEnvelope | list[AuditLogResponse] | None:
+    async def list_audit_logs(self, *, limit: int | Unset=100, offset: int | Unset=0) -> ErrorEnvelope | list[AuditLogResponse] | None:
         """Generated list_audit_logs operation."""
-        return cast(ErrorEnvelope | list[AuditLogResponse] | None, await self._owner.async_call_generated('list_audit_logs', parameters={}, body=None, authenticated=True, typed=True))
+        return cast(ErrorEnvelope | list[AuditLogResponse] | None, await self._owner.async_call_generated('list_audit_logs', parameters={'limit': limit, 'offset': offset}, body=None, authenticated=True, typed=True))
 
-    async def list_audit_logs_detailed(self) -> Response[ErrorEnvelope | list[AuditLogResponse]]:
+    async def list_audit_logs_detailed(self, *, limit: int | Unset=100, offset: int | Unset=0) -> Response[ErrorEnvelope | list[AuditLogResponse]]:
         """Generated list_audit_logs operation."""
-        return cast(Response[ErrorEnvelope | list[AuditLogResponse]], await self._owner.async_call_generated('list_audit_logs', parameters={}, body=None, authenticated=True, detailed=True))
+        return cast(Response[ErrorEnvelope | list[AuditLogResponse]], await self._owner.async_call_generated('list_audit_logs', parameters={'limit': limit, 'offset': offset}, body=None, authenticated=True, detailed=True))
 
     async def list_available_addons(self) -> ErrorEnvelope | ListAvailableAddonsResponse | None:
         """Generated list_available_addons operation."""

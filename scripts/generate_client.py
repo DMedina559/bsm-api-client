@@ -47,6 +47,16 @@ def generate(schema: dict[str, Any], output: Path) -> None:
                     "project_name_override": "bsm-api-client-generated",
                     # Generation must not depend on formatters available in PATH.
                     "post_hooks": [],
+                    # These are binary bodies even when the server labels their
+                    # actual image format. Preserve the wire content type.
+                    "content_type_overrides": {
+                        media: "application/octet-stream"
+                        for media in (
+                            "image/jpeg",
+                            "image/png",
+                            "image/vnd.microsoft.icon",
+                        )
+                    },
                 }
             ),
             encoding="utf-8",

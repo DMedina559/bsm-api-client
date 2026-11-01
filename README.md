@@ -141,3 +141,16 @@ Generated password-validation errors hide input values. Account/security models
 include administrator MFA-enrollment requirements and session expiry reasons.
 Local lost-factor recovery uses the backend's `reset-mfa USER` command, not a
 remote SDK operation.
+
+
+### Audit-history pagination and private images
+
+`bsm-cli audit --limit 100 --offset 100` reads the next audit page. The backend
+returns at most 500 records per request and defaults to 100; the JSON array shape
+is unchanged. The typed SDK exposes `client.rest.list_audit_logs(limit=100,
+offset=100)`. New records can shift offsets; restart at offset zero for the
+newest history.
+
+World and addon icons require account/server permissions. Fetch them with the
+same credential as the corresponding server resource; do not embed credentials
+in image URLs. Generated image operations return binary `File` payloads.

@@ -92,6 +92,16 @@ def _add_runtime_routes(app, seen):
     app.router.add_get("/api/events/activity", activity)
 
 
+def _add_audit_route(app, seen):
+    async def audit_page(request):
+        seen.append(
+            ("audit-page", dict(request.query), request.headers.get("Authorization"))
+        )
+        return web.json_response([])
+
+    app.router.add_get("/audit-log/list", audit_page)
+
+
 @pytest_asyncio.fixture
 async def local_api():
     seen = []
@@ -144,6 +154,7 @@ async def local_api():
         return web.json_response(dict(request.query))
 
     app = web.Application()
+    _add_audit_route(app, seen)
     _add_runtime_routes(app, seen)
     app.router.add_post("/auth/token", login)
     app.router.add_post("/api/server/{server_name}/start", action)
@@ -689,3 +700,27 @@ async def test_revoked_session_never_silently_logs_in_again(local_api):
     with pytest.raises(AuthError, match="sign in explicitly"):
         await client.servers.async_start_server("example")
     client.authenticate.assert_not_awaited()
+
+
+def test_generated_image_operations_parse_binary_responses():
+    import httpx
+
+    from bsm_api_client.generated.api.addon_management import get_server_addon_icon
+    from bsm_api_client.generated.api.world_management import get_world_icon
+    from bsm_api_client.generated.client import AuthenticatedClient
+
+    response = httpx.Response(
+        200, content=b"synthetic-image", headers={"Content-Type": "image/png"}
+    )
+    client = AuthenticatedClient(base_url="http://localhost", token="synthetic-token")
+    for operation in (get_server_addon_icon, get_world_icon):
+        parsed = operation._parse_response(client=client, response=response)
+        assert parsed.payload.read() == b"synthetic-image"
+
+
+@pytest.mark.asyncio
+async def test_typed_audit_pagination_serializes_both_query_parameters(local_api):
+    client, seen = local_api
+    records = await client.rest.list_audit_logs(limit=25, offset=100)
+    assert records == []
+    assert ("audit-page", {"limit": "25", "offset": "100"}, "Bearer expired") in seen

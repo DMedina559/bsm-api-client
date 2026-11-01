@@ -269,18 +269,41 @@ async def settings(ctx):
 
 
 @manager.command("audit")
+@click.option(
+    "--limit",
+    type=click.IntRange(1, 500),
+    default=100,
+    show_default=True,
+    help="Maximum audit records per page.",
+)
+@click.option(
+    "--offset",
+    type=click.IntRange(min=0),
+    default=0,
+    show_default=True,
+    help="Skip this many newest records.",
+)
 @click.pass_context
-async def audit(ctx):
+async def audit(ctx, limit, offset):
     """Show audit records with time, actor, action, and structured details."""
     records = await get_client(ctx).async_call_generated(
-        "list_audit_logs", authenticated=True
+        "list_audit_logs",
+        parameters={"limit": limit, "offset": offset},
+        authenticated=True,
     )
+    if ctx.obj.get("json_output"):
+        return records
     for record in records:
         click.echo(
             f"{record['timestamp']} | User {record['user_id']} | {record['action']}"
         )
         if record.get("details"):
             outcome(record["details"])
+    if len(records) == limit:
+        click.echo(
+            f"More records may be available: bsm-cli audit --limit {limit} --offset {offset + limit}",
+            err=True,
+        )
 
 
 @manager.command("logs")

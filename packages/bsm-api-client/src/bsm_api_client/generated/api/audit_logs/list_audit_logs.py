@@ -10,22 +10,35 @@ from ... import errors
 
 from ...models.audit_log_response import AuditLogResponse
 from ...models.error_envelope import ErrorEnvelope
+from ...types import UNSET, Unset
 from typing import cast
 
 
 
 def _get_kwargs(
-    
+    *,
+    limit: int | Unset = 100,
+    offset: int | Unset = 0,
+
 ) -> dict[str, Any]:
     
 
     
 
-    
+    params: dict[str, Any] = {}
+
+    params["limit"] = limit
+
+    params["offset"] = offset
+
+
+    params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
+
 
     _kwargs: dict[str, Any] = {
         "method": "get",
         "url": "/audit-log/list",
+        "params": params,
     }
 
 
@@ -127,11 +140,19 @@ def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Res
 def sync_detailed(
     *,
     client: AuthenticatedClient,
+    limit: int | Unset = 100,
+    offset: int | Unset = 0,
 
 ) -> Response[ErrorEnvelope | list[AuditLogResponse]]:
     """List Audit Logs Api
     
-     Return audit logs as JSON.
+     Return a bounded page of audit logs, newest first.
+    
+    Defaults to 100 records; request subsequent pages with offset. Ordering uses
+    timestamp and ID descending. Concurrent new entries can shift offset pages.
+    
+    :param limit: Default: 100.
+    :param offset: Default: 0.
     
     :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
     :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
@@ -140,7 +161,9 @@ def sync_detailed(
 
 
     kwargs = _get_kwargs(
-        
+        limit=limit,
+offset=offset,
+
     )
 
     response = client.get_httpx_client().request(
@@ -152,11 +175,19 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
+    limit: int | Unset = 100,
+    offset: int | Unset = 0,
 
 ) -> ErrorEnvelope | list[AuditLogResponse] | None:
     """List Audit Logs Api
     
-     Return audit logs as JSON.
+     Return a bounded page of audit logs, newest first.
+    
+    Defaults to 100 records; request subsequent pages with offset. Ordering uses
+    timestamp and ID descending. Concurrent new entries can shift offset pages.
+    
+    :param limit: Default: 100.
+    :param offset: Default: 0.
     
     :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
     :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
@@ -166,17 +197,27 @@ def sync(
 
     return sync_detailed(
         client=client,
+limit=limit,
+offset=offset,
 
     ).parsed
 
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
+    limit: int | Unset = 100,
+    offset: int | Unset = 0,
 
 ) -> Response[ErrorEnvelope | list[AuditLogResponse]]:
     """List Audit Logs Api
     
-     Return audit logs as JSON.
+     Return a bounded page of audit logs, newest first.
+    
+    Defaults to 100 records; request subsequent pages with offset. Ordering uses
+    timestamp and ID descending. Concurrent new entries can shift offset pages.
+    
+    :param limit: Default: 100.
+    :param offset: Default: 0.
     
     :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
     :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
@@ -185,7 +226,9 @@ async def asyncio_detailed(
 
 
     kwargs = _get_kwargs(
-        
+        limit=limit,
+offset=offset,
+
     )
 
     response = await client.get_async_httpx_client().request(
@@ -197,11 +240,19 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
+    limit: int | Unset = 100,
+    offset: int | Unset = 0,
 
 ) -> ErrorEnvelope | list[AuditLogResponse] | None:
     """List Audit Logs Api
     
-     Return audit logs as JSON.
+     Return a bounded page of audit logs, newest first.
+    
+    Defaults to 100 records; request subsequent pages with offset. Ordering uses
+    timestamp and ID descending. Concurrent new entries can shift offset pages.
+    
+    :param limit: Default: 100.
+    :param offset: Default: 0.
     
     :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
     :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
@@ -211,5 +262,7 @@ async def asyncio(
 
     return (await asyncio_detailed(
         client=client,
+limit=limit,
+offset=offset,
 
     )).parsed
