@@ -20,6 +20,17 @@ class AccessPolicyInfo(ContractModel):
     token_permissions: list[str] = Field(..., title="Token Permissions")
 
 
+class AccessPreview(ContractModel):
+    """Validate and serialize the AccessPreview contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    effective_permissions: list[str] = Field(..., title="Effective Permissions")
+    policy_revision: str = Field(..., title="Policy Revision")
+    requested_permissions: list[str] = Field(..., title="Requested Permissions")
+    server_permissions: dict[str, list[str]] = Field(..., title="Server Permissions")
+    unavailable_permissions: list[str] = Field(..., title="Unavailable Permissions")
+
+
 class AccessServerInfo(ContractModel):
     """Validate and serialize the AccessServerInfo contract."""
 
@@ -404,7 +415,7 @@ class ChangePasswordPayload(ContractModel):
     model_config = ConfigDict(extra="forbid")
     current_password: SecretStr = Field(..., min_length=1, title="Current Password")
     new_password: SecretStr = Field(
-        ..., max_length=1024, min_length=15, title="New Password"
+        ..., max_length=1024, min_length=8, title="New Password"
     )
 
 
@@ -2203,7 +2214,7 @@ class UserLoginPayload(ContractModel):
     """Request model for user login credentials."""
 
     model_config = ConfigDict(extra="forbid")
-    password: SecretStr = Field(..., max_length=1024, min_length=15, title="Password")
+    password: SecretStr = Field(..., max_length=1024, min_length=8, title="Password")
     remember_me: bool | None = Field(False, title="Remember Me")
     username: str = Field(..., max_length=80, min_length=1, title="Username")
 

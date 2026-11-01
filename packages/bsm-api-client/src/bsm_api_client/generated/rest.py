@@ -1,6 +1,7 @@
 """Typed REST interface generated from the bundled OpenAPI contract."""
 
 from .models.access_policy_info import AccessPolicyInfo
+from .models.access_preview import AccessPreview
 from .models.access_server_info import AccessServerInfo
 from .models.account_server_access_info import AccountServerAccessInfo
 from .models.action_response import ActionResponse
@@ -715,13 +716,13 @@ class RestClient:
         """Generated list_access_servers operation."""
         return cast(Response[ErrorEnvelope | list[AccessServerInfo]], await self._owner.async_call_generated('list_access_servers', parameters={}, body=None, authenticated=True, detailed=True))
 
-    async def list_account_integration_tokens(self, user_id: int) -> ErrorEnvelope | list[IntegrationTokenInfo] | None:
+    async def list_account_integration_tokens(self, user_id: int, *, limit: int | Unset=100, offset: int | Unset=0) -> ErrorEnvelope | list[IntegrationTokenInfo] | None:
         """Generated list_account_integration_tokens operation."""
-        return cast(ErrorEnvelope | list[IntegrationTokenInfo] | None, await self._owner.async_call_generated('list_account_integration_tokens', parameters={'user_id': user_id}, body=None, authenticated=True, typed=True))
+        return cast(ErrorEnvelope | list[IntegrationTokenInfo] | None, await self._owner.async_call_generated('list_account_integration_tokens', parameters={'user_id': user_id, 'limit': limit, 'offset': offset}, body=None, authenticated=True, typed=True))
 
-    async def list_account_integration_tokens_detailed(self, user_id: int) -> Response[ErrorEnvelope | list[IntegrationTokenInfo]]:
+    async def list_account_integration_tokens_detailed(self, user_id: int, *, limit: int | Unset=100, offset: int | Unset=0) -> Response[ErrorEnvelope | list[IntegrationTokenInfo]]:
         """Generated list_account_integration_tokens operation."""
-        return cast(Response[ErrorEnvelope | list[IntegrationTokenInfo]], await self._owner.async_call_generated('list_account_integration_tokens', parameters={'user_id': user_id}, body=None, authenticated=True, detailed=True))
+        return cast(Response[ErrorEnvelope | list[IntegrationTokenInfo]], await self._owner.async_call_generated('list_account_integration_tokens', parameters={'user_id': user_id, 'limit': limit, 'offset': offset}, body=None, authenticated=True, detailed=True))
 
     async def list_account_login_sessions(self, user_id: int) -> ErrorEnvelope | list[LoginSessionInfo] | None:
         """Generated list_account_login_sessions operation."""
@@ -779,13 +780,13 @@ class RestClient:
         """Generated list_downloads operation."""
         return cast(Response[CustomZipsResponse | ErrorEnvelope], await self._owner.async_call_generated('list_downloads', parameters={}, body=None, authenticated=True, detailed=True))
 
-    async def list_integration_tokens(self) -> ErrorEnvelope | list[IntegrationTokenInfo] | None:
+    async def list_integration_tokens(self, *, limit: int | Unset=100, offset: int | Unset=0) -> ErrorEnvelope | list[IntegrationTokenInfo] | None:
         """Generated list_integration_tokens operation."""
-        return cast(ErrorEnvelope | list[IntegrationTokenInfo] | None, await self._owner.async_call_generated('list_integration_tokens', parameters={}, body=None, authenticated=True, typed=True))
+        return cast(ErrorEnvelope | list[IntegrationTokenInfo] | None, await self._owner.async_call_generated('list_integration_tokens', parameters={'limit': limit, 'offset': offset}, body=None, authenticated=True, typed=True))
 
-    async def list_integration_tokens_detailed(self) -> Response[ErrorEnvelope | list[IntegrationTokenInfo]]:
+    async def list_integration_tokens_detailed(self, *, limit: int | Unset=100, offset: int | Unset=0) -> Response[ErrorEnvelope | list[IntegrationTokenInfo]]:
         """Generated list_integration_tokens operation."""
-        return cast(Response[ErrorEnvelope | list[IntegrationTokenInfo]], await self._owner.async_call_generated('list_integration_tokens', parameters={}, body=None, authenticated=True, detailed=True))
+        return cast(Response[ErrorEnvelope | list[IntegrationTokenInfo]], await self._owner.async_call_generated('list_integration_tokens', parameters={'limit': limit, 'offset': offset}, body=None, authenticated=True, detailed=True))
 
     async def list_login_sessions(self) -> ErrorEnvelope | list[LoginSessionInfo] | None:
         """Generated list_login_sessions operation."""
@@ -930,6 +931,22 @@ class RestClient:
     async def prepare_backup_copy_detailed(self, server_name: str, backup_id: str, *, body: SnapshotCopyPayload) -> Response[ErrorEnvelope | TaskAcceptedResponse]:
         """Generated prepare_backup_copy operation."""
         return cast(Response[ErrorEnvelope | TaskAcceptedResponse], await self._owner.async_call_generated('prepare_backup_copy', parameters={'server_name': server_name, 'backup_id': backup_id}, body=body, authenticated=True, detailed=True))
+
+    async def preview_account_server_access(self, user_id: int, *, body: SetServerAccess) -> AccessPreview | ErrorEnvelope | None:
+        """Generated preview_account_server_access operation."""
+        return cast(AccessPreview | ErrorEnvelope | None, await self._owner.async_call_generated('preview_account_server_access', parameters={'user_id': user_id}, body=body, authenticated=True, typed=True))
+
+    async def preview_account_server_access_detailed(self, user_id: int, *, body: SetServerAccess) -> Response[AccessPreview | ErrorEnvelope]:
+        """Generated preview_account_server_access operation."""
+        return cast(Response[AccessPreview | ErrorEnvelope], await self._owner.async_call_generated('preview_account_server_access', parameters={'user_id': user_id}, body=body, authenticated=True, detailed=True))
+
+    async def preview_integration_token(self, *, body: CreateIntegrationToken) -> AccessPreview | ErrorEnvelope | None:
+        """Generated preview_integration_token operation."""
+        return cast(AccessPreview | ErrorEnvelope | None, await self._owner.async_call_generated('preview_integration_token', parameters={}, body=body, authenticated=True, typed=True))
+
+    async def preview_integration_token_detailed(self, *, body: CreateIntegrationToken) -> Response[AccessPreview | ErrorEnvelope]:
+        """Generated preview_integration_token operation."""
+        return cast(Response[AccessPreview | ErrorEnvelope], await self._owner.async_call_generated('preview_integration_token', parameters={}, body=body, authenticated=True, detailed=True))
 
     async def prune_backups(self, server_name: str) -> ErrorEnvelope | TaskAcceptedResponse | None:
         """Generated prune_backups operation."""

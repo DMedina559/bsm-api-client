@@ -10,23 +10,36 @@ from ... import errors
 
 from ...models.error_envelope import ErrorEnvelope
 from ...models.integration_token_info import IntegrationTokenInfo
+from ...types import UNSET, Unset
 from typing import cast
 
 
 
 def _get_kwargs(
     user_id: int,
+    *,
+    limit: int | Unset = 100,
+    offset: int | Unset = 0,
 
 ) -> dict[str, Any]:
     
 
     
 
-    
+    params: dict[str, Any] = {}
+
+    params["limit"] = limit
+
+    params["offset"] = offset
+
+
+    params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
+
 
     _kwargs: dict[str, Any] = {
         "method": "get",
         "url": "/api/access/users/{user_id}/tokens".format(user_id=quote(str(user_id), safe=""),),
+        "params": params,
     }
 
 
@@ -129,11 +142,15 @@ def sync_detailed(
     user_id: int,
     *,
     client: AuthenticatedClient,
+    limit: int | Unset = 100,
+    offset: int | Unset = 0,
 
 ) -> Response[ErrorEnvelope | list[IntegrationTokenInfo]]:
     """List User Tokens
     
     :param user_id: Value supplied to the operation.
+    :param limit: Default: 100.
+    :param offset: Default: 0.
     
     :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
     :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
@@ -143,6 +160,8 @@ def sync_detailed(
 
     kwargs = _get_kwargs(
         user_id=user_id,
+limit=limit,
+offset=offset,
 
     )
 
@@ -156,11 +175,15 @@ def sync(
     user_id: int,
     *,
     client: AuthenticatedClient,
+    limit: int | Unset = 100,
+    offset: int | Unset = 0,
 
 ) -> ErrorEnvelope | list[IntegrationTokenInfo] | None:
     """List User Tokens
     
     :param user_id: Value supplied to the operation.
+    :param limit: Default: 100.
+    :param offset: Default: 0.
     
     :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
     :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
@@ -171,6 +194,8 @@ def sync(
     return sync_detailed(
         user_id=user_id,
 client=client,
+limit=limit,
+offset=offset,
 
     ).parsed
 
@@ -178,11 +203,15 @@ async def asyncio_detailed(
     user_id: int,
     *,
     client: AuthenticatedClient,
+    limit: int | Unset = 100,
+    offset: int | Unset = 0,
 
 ) -> Response[ErrorEnvelope | list[IntegrationTokenInfo]]:
     """List User Tokens
     
     :param user_id: Value supplied to the operation.
+    :param limit: Default: 100.
+    :param offset: Default: 0.
     
     :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
     :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
@@ -192,6 +221,8 @@ async def asyncio_detailed(
 
     kwargs = _get_kwargs(
         user_id=user_id,
+limit=limit,
+offset=offset,
 
     )
 
@@ -205,11 +236,15 @@ async def asyncio(
     user_id: int,
     *,
     client: AuthenticatedClient,
+    limit: int | Unset = 100,
+    offset: int | Unset = 0,
 
 ) -> ErrorEnvelope | list[IntegrationTokenInfo] | None:
     """List User Tokens
     
     :param user_id: Value supplied to the operation.
+    :param limit: Default: 100.
+    :param offset: Default: 0.
     
     :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
     :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
@@ -220,5 +255,7 @@ async def asyncio(
     return (await asyncio_detailed(
         user_id=user_id,
 client=client,
+limit=limit,
+offset=offset,
 
     )).parsed

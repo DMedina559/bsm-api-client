@@ -97,6 +97,8 @@
   "manage_server_snapshot": "api.backup_restore.manage_server_snapshot",
   "plan_snapshot_restore": "api.backup_restore.plan_snapshot_restore",
   "prepare_backup_copy": "api.backup_restore.prepare_backup_copy",
+  "preview_account_server_access": "api.access_management.preview_account_server_access",
+  "preview_integration_token": "api.access_management.preview_integration_token",
   "prune_backups": "api.backup_restore.prune_backups",
   "prune_downloads": "api.downloads.prune_downloads",
   "reauthenticate": "api.authentication.reauthenticate",
