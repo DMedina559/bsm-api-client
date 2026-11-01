@@ -44,6 +44,8 @@ async def test_remembered_factor_login_and_scoped_transport():
                 ("/api/account/security/mfa/recovery-codes", True, "replacement-proof"),
                 ("/api/account/security/devices", True, "replacement-proof"),
                 ("/api/account/security-extra", True, None),
+                ("/api/account/security/../extension", True, None),
+                ("/api/account/security/%2e%2e/extension", True, None),
                 ("/api/servers", True, None),
                 ("/api/account/security", False, None),
             ]:

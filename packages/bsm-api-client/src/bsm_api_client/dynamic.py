@@ -476,10 +476,15 @@ class DynamicOpenAPIMixin(GeneratedOperationMethods):
     def _add_trusted_device_header(self, headers, path, authenticated):
         """Never disclose the remembered factor to unrelated or plugin operations."""
         security_path = f"{self._api_base_segment}/account/security"
+        operation = httpx.URL(path)
         if (
             authenticated
-            and (path == security_path or path.startswith(security_path + "/"))
-            and not any(part in {".", ".."} for part in httpx.URL(path).path.split("/"))
+            and operation.is_relative_url
+            and (
+                operation.path == security_path
+                or operation.path.startswith(security_path + "/")
+            )
+            and not any(part in {".", ".."} for part in operation.path.split("/"))
             and not (self._jwt_token or "").startswith("bsm_it_")
             and getattr(self, "_trusted_device_token", None)
             and not any(key.lower() == "x-bsm-trusted-device-token" for key in headers)
