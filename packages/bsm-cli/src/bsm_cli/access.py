@@ -296,7 +296,7 @@ async def account_passkeys(ctx, user_id):
     return emit(
         ctx,
         await get_client(ctx).async_call_operation(
-            "list_user_passkeys", path_params={"user_id": user_id}
+            "list_account_passkeys", path_params={"user_id": user_id}
         ),
         columns=(
             "id",
@@ -337,7 +337,7 @@ async def list_passkeys(ctx):
     """List WebAuthn passkeys registered on your account."""
     return emit(
         ctx,
-        await get_client(ctx).async_call_operation("list_account_passkeys"),
+        await get_client(ctx).async_call_operation("list_passkeys"),
         columns=(
             "id",
             "name",
@@ -359,7 +359,7 @@ async def rename_passkey(ctx, passkey_id, name):
     return emit(
         ctx,
         await get_client(ctx).async_call_operation(
-            "rename_account_passkey",
+            "rename_passkey",
             path_params={"passkey_id": passkey_id},
             json_data={"name": name},
         ),
@@ -374,7 +374,7 @@ async def revoke_passkey(ctx, passkey_id):
     return emit(
         ctx,
         await get_client(ctx).async_call_operation(
-            "revoke_account_passkey", path_params={"passkey_id": passkey_id}
+            "revoke_passkey", path_params={"passkey_id": passkey_id}
         ),
     )
 

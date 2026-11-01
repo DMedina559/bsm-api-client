@@ -358,7 +358,7 @@ def test_passkey_and_admin_mfa_commands_call_expected_operations(
     )
     result = CliRunner().invoke(cli, ["--json", "auth", "passkeys", "list"])
     assert result.exit_code == 0, result.output
-    client.async_call_operation.assert_awaited_once_with("list_account_passkeys")
+    client.async_call_operation.assert_awaited_once_with("list_passkeys")
 
     client.async_call_operation.reset_mock()
     client.async_call_operation.return_value = {"status": "success"}
@@ -367,7 +367,7 @@ def test_passkey_and_admin_mfa_commands_call_expected_operations(
     )
     assert result.exit_code == 0, result.output
     client.async_call_operation.assert_awaited_once_with(
-        "rename_account_passkey",
+        "rename_passkey",
         path_params={"passkey_id": "pk-1"},
         json_data={"name": "YubiKey"},
     )
@@ -376,7 +376,7 @@ def test_passkey_and_admin_mfa_commands_call_expected_operations(
     result = CliRunner().invoke(cli, ["--json", "auth", "passkeys", "revoke", "pk-1"])
     assert result.exit_code == 0, result.output
     client.async_call_operation.assert_awaited_once_with(
-        "revoke_account_passkey", path_params={"passkey_id": "pk-1"}
+        "revoke_passkey", path_params={"passkey_id": "pk-1"}
     )
 
     client.async_call_operation.reset_mock()
@@ -384,7 +384,7 @@ def test_passkey_and_admin_mfa_commands_call_expected_operations(
     result = CliRunner().invoke(cli, ["--json", "access", "passkeys", "2"])
     assert result.exit_code == 0, result.output
     client.async_call_operation.assert_awaited_once_with(
-        "list_user_passkeys", path_params={"user_id": 2}
+        "list_account_passkeys", path_params={"user_id": 2}
     )
 
     client.async_call_operation.reset_mock()

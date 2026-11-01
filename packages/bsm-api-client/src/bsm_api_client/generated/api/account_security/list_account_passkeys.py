@@ -15,7 +15,8 @@ from typing import cast
 
 
 def _get_kwargs(
-    
+    user_id: int,
+
 ) -> dict[str, Any]:
     
 
@@ -25,7 +26,7 @@ def _get_kwargs(
 
     _kwargs: dict[str, Any] = {
         "method": "get",
-        "url": "/api/account/security/passkeys",
+        "url": "/api/access/users/{user_id}/passkeys".format(user_id=quote(str(user_id), safe=""),),
     }
 
 
@@ -125,11 +126,14 @@ def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Res
 
 
 def sync_detailed(
+    user_id: int,
     *,
     client: AuthenticatedClient,
 
 ) -> Response[ErrorEnvelope | list[PasskeyInfo]]:
-    """List Passkeys
+    """Admin List Passkeys
+    
+    :param user_id: Value supplied to the operation.
     
     :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
     :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
@@ -138,7 +142,8 @@ def sync_detailed(
 
 
     kwargs = _get_kwargs(
-        
+        user_id=user_id,
+
     )
 
     response = client.get_httpx_client().request(
@@ -148,11 +153,14 @@ def sync_detailed(
     return _build_response(client=client, response=response)
 
 def sync(
+    user_id: int,
     *,
     client: AuthenticatedClient,
 
 ) -> ErrorEnvelope | list[PasskeyInfo] | None:
-    """List Passkeys
+    """Admin List Passkeys
+    
+    :param user_id: Value supplied to the operation.
     
     :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
     :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
@@ -161,16 +169,20 @@ def sync(
 
 
     return sync_detailed(
-        client=client,
+        user_id=user_id,
+client=client,
 
     ).parsed
 
 async def asyncio_detailed(
+    user_id: int,
     *,
     client: AuthenticatedClient,
 
 ) -> Response[ErrorEnvelope | list[PasskeyInfo]]:
-    """List Passkeys
+    """Admin List Passkeys
+    
+    :param user_id: Value supplied to the operation.
     
     :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
     :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
@@ -179,7 +191,8 @@ async def asyncio_detailed(
 
 
     kwargs = _get_kwargs(
-        
+        user_id=user_id,
+
     )
 
     response = await client.get_async_httpx_client().request(
@@ -189,11 +202,14 @@ async def asyncio_detailed(
     return _build_response(client=client, response=response)
 
 async def asyncio(
+    user_id: int,
     *,
     client: AuthenticatedClient,
 
 ) -> ErrorEnvelope | list[PasskeyInfo] | None:
-    """List Passkeys
+    """Admin List Passkeys
+    
+    :param user_id: Value supplied to the operation.
     
     :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
     :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
@@ -202,6 +218,7 @@ async def asyncio(
 
 
     return (await asyncio_detailed(
-        client=client,
+        user_id=user_id,
+client=client,
 
     )).parsed

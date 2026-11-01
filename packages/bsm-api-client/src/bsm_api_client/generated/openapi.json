@@ -11290,6 +11290,7 @@
         ],
         "x-bsm-access": {
           "additional_checks": [
+            "other-account-only",
             "recent-interactive-verification"
           ],
           "allowed_roles": [
@@ -11297,6 +11298,7 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "credential_alternatives": [],
           "integration_tokens": "unsupported",
           "required_permissions": [
             "sessions:admin"
@@ -11308,7 +11310,7 @@
     },
     "/api/access/users/{user_id}/passkeys": {
       "get": {
-        "operationId": "list_user_passkeys",
+        "operationId": "list_account_passkeys",
         "parameters": [
           {
             "in": "path",
@@ -11328,7 +11330,7 @@
                   "items": {
                     "$ref": "#/components/schemas/PasskeyInfo"
                   },
-                  "title": "Response List User Passkeys",
+                  "title": "Response List Account Passkeys",
                   "type": "array"
                 }
               }
@@ -13288,7 +13290,9 @@
           "Account Management"
         ],
         "x-bsm-access": {
-          "additional_checks": [],
+          "additional_checks": [
+            "account-owner"
+          ],
           "allowed_roles": [
             "user",
             "moderator",
@@ -13296,6 +13300,7 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "credential_alternatives": [],
           "integration_tokens": "unsupported",
           "required_permissions": [
             "account:manage"
@@ -13425,7 +13430,9 @@
           "Account Security"
         ],
         "x-bsm-access": {
-          "additional_checks": [],
+          "additional_checks": [
+            "account-owner"
+          ],
           "allowed_roles": [
             "user",
             "moderator",
@@ -13433,6 +13440,7 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "credential_alternatives": [],
           "integration_tokens": "unsupported",
           "required_permissions": [
             "sessions:manage"
@@ -13566,7 +13574,9 @@
           "Account Security"
         ],
         "x-bsm-access": {
-          "additional_checks": [],
+          "additional_checks": [
+            "account-owner"
+          ],
           "allowed_roles": [
             "user",
             "moderator",
@@ -13574,6 +13584,7 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "credential_alternatives": [],
           "integration_tokens": "unsupported",
           "required_permissions": [
             "sessions:manage"
@@ -13707,7 +13718,9 @@
           "Account Security"
         ],
         "x-bsm-access": {
-          "additional_checks": [],
+          "additional_checks": [
+            "account-owner"
+          ],
           "allowed_roles": [
             "user",
             "moderator",
@@ -13715,6 +13728,7 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "credential_alternatives": [],
           "integration_tokens": "unsupported",
           "required_permissions": [
             "sessions:manage"
@@ -13854,7 +13868,9 @@
           "Account Security"
         ],
         "x-bsm-access": {
-          "additional_checks": [],
+          "additional_checks": [
+            "account-owner"
+          ],
           "allowed_roles": [
             "user",
             "moderator",
@@ -13862,6 +13878,7 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "credential_alternatives": [],
           "integration_tokens": "unsupported",
           "required_permissions": [
             "sessions:manage"
@@ -14002,7 +14019,9 @@
           "Account Security"
         ],
         "x-bsm-access": {
-          "additional_checks": [],
+          "additional_checks": [
+            "account-owner"
+          ],
           "allowed_roles": [
             "user",
             "moderator",
@@ -14010,6 +14029,7 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "credential_alternatives": [],
           "integration_tokens": "unsupported",
           "required_permissions": [
             "sessions:manage"
@@ -14596,7 +14616,7 @@
     },
     "/api/account/security/passkeys": {
       "get": {
-        "operationId": "list_account_passkeys",
+        "operationId": "list_passkeys",
         "responses": {
           "200": {
             "content": {
@@ -14605,7 +14625,7 @@
                   "items": {
                     "$ref": "#/components/schemas/PasskeyInfo"
                   },
-                  "title": "Response List Account Passkeys",
+                  "title": "Response List Passkeys",
                   "type": "array"
                 }
               }
@@ -14718,7 +14738,9 @@
           "Account Security"
         ],
         "x-bsm-access": {
-          "additional_checks": [],
+          "additional_checks": [
+            "account-owner"
+          ],
           "allowed_roles": [
             "user",
             "moderator",
@@ -14726,6 +14748,7 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "credential_alternatives": [],
           "integration_tokens": "unsupported",
           "required_permissions": [
             "sessions:manage"
@@ -15319,7 +15342,7 @@
     },
     "/api/account/security/passkeys/{passkey_id}": {
       "delete": {
-        "operationId": "revoke_account_passkey",
+        "operationId": "revoke_passkey",
         "parameters": [
           {
             "in": "path",
@@ -15470,7 +15493,7 @@
         }
       },
       "patch": {
-        "operationId": "rename_account_passkey",
+        "operationId": "rename_passkey",
         "parameters": [
           {
             "in": "path",
@@ -15759,7 +15782,9 @@
           "Account Security"
         ],
         "x-bsm-access": {
-          "additional_checks": [],
+          "additional_checks": [
+            "account-owner"
+          ],
           "allowed_roles": [
             "user",
             "moderator",
@@ -15767,6 +15792,7 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "credential_alternatives": [],
           "integration_tokens": "unsupported",
           "required_permissions": [
             "sessions:manage"
@@ -15900,7 +15926,9 @@
           "Account Security"
         ],
         "x-bsm-access": {
-          "additional_checks": [],
+          "additional_checks": [
+            "account-owner"
+          ],
           "allowed_roles": [
             "user",
             "moderator",
@@ -15908,6 +15936,7 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "credential_alternatives": [],
           "integration_tokens": "unsupported",
           "required_permissions": [
             "sessions:manage"
@@ -16510,7 +16539,9 @@
           "Account Management"
         ],
         "x-bsm-access": {
-          "additional_checks": [],
+          "additional_checks": [
+            "account-owner"
+          ],
           "allowed_roles": [
             "user",
             "moderator",
@@ -16518,6 +16549,7 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "credential_alternatives": [],
           "integration_tokens": "unsupported",
           "required_permissions": [
             "account:manage"
@@ -17129,7 +17161,7 @@
         ],
         "summary": "Revoke Credentials",
         "tags": [
-          "Account Security"
+          "Access Management"
         ],
         "x-bsm-access": {
           "additional_checks": [
@@ -35573,7 +35605,7 @@
     "/auth/passkey/options": {
       "post": {
         "description": "Issue a single-use WebAuthn authentication challenge for passkey sign-in.",
-        "operationId": "passkey_login_options",
+        "operationId": "begin_passkey_login",
         "requestBody": {
           "content": {
             "application/json": {
@@ -35714,7 +35746,7 @@
     "/auth/passkey/verify": {
       "post": {
         "description": "Verify a WebAuthn passkey assertion and establish an authenticated session.",
-        "operationId": "passkey_login_verify",
+        "operationId": "complete_passkey_login",
         "requestBody": {
           "content": {
             "application/json": {
