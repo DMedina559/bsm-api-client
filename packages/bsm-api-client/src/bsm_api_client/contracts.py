@@ -9,6 +9,26 @@ from pydantic import AwareDatetime, ConfigDict, Field, JsonValue, SecretStr
 from bsm_api_client.contract_base import ContractModel
 
 
+class AccessPolicyInfo(ContractModel):
+    """Validate and serialize the AccessPolicyInfo contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    permissions: dict[str, str] = Field(..., title="Permissions")
+    revision: str = Field(..., title="Revision")
+    role_permissions: dict[str, list[str]] = Field(..., title="Role Permissions")
+    server_permissions: list[str] = Field(..., title="Server Permissions")
+    token_permissions: list[str] = Field(..., title="Token Permissions")
+
+
+class AccessServerInfo(ContractModel):
+    """Validate and serialize the AccessServerInfo contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    id: str = Field(..., pattern="^[a-f0-9]{32}$", title="Id")
+    name: str = Field(..., title="Name")
+    permissions: list[str] = Field(..., title="Permissions")
+
+
 class ActionResponse(ContractModel):
     """Validate and serialize the ActionResponse contract."""
 
@@ -452,15 +472,39 @@ class ControlSchedulePayload(ContractModel):
     revision: str | None = Field(None, title="Revision")
 
 
+ServerId = Annotated[str, Field(pattern="^[a-f0-9]{32}$")]
+ServerIds = Annotated[list[ServerId], Field(max_length=1000, title="Server Ids")]
+
+
+class CreateIntegrationToken(ContractModel):
+    """Validate and serialize the CreateIntegrationToken contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    expires_in_days: int | None = Field(30, ge=1, le=365, title="Expires In Days")
+    name: str = Field(
+        ..., max_length=100, min_length=1, pattern=".*\\S.*", title="Name"
+    )
+    permissions: list[str] = Field(
+        ..., max_length=256, min_length=1, title="Permissions"
+    )
+    server_ids: ServerIds | None = Field(None, title="Server Ids")
+
+
 class CurrentAccountResponse(ContractModel):
     """Current account with sorted role-derived HTTP capabilities."""
 
     model_config = ConfigDict(extra="forbid")
+    credential_id: str | None = Field(None, title="Credential Id")
     id: int = Field(..., title="Id")
     identity_type: str | None = Field(None, title="Identity Type")
     is_active: bool = Field(..., title="Is Active")
     permissions: list[str] | None = Field(None, title="Permissions")
+    policy_revision: str | None = Field(None, title="Policy Revision")
     role: Literal["admin", "moderator", "user"] = Field(..., title="Role")
+    server_access: str | None = Field("all", title="Server Access")
+    server_permissions: dict[str, list[str]] | None = Field(
+        None, title="Server Permissions"
+    )
     theme: str | None = Field("default", title="Theme")
     username: str = Field(..., title="Username")
 
@@ -800,6 +844,20 @@ class InstallationAcceptedResponse(ContractModel):
     server_name: str = Field(..., title="Server Name")
     status: Literal["accepted"] = Field("accepted", title="Status")
     task_id: str = Field(..., title="Task Id")
+
+
+class IntegrationTokenInfo(ContractModel):
+    """Validate and serialize the IntegrationTokenInfo contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    created_at: int = Field(..., title="Created At")
+    expires_at: int = Field(..., title="Expires At")
+    id: str = Field(..., pattern="^[a-f0-9]{32}$", title="Id")
+    last_used_at: int | None = Field(None, title="Last Used At")
+    name: str = Field(..., title="Name")
+    permissions: list[str] = Field(..., title="Permissions")
+    revoked_at: int | None = Field(None, title="Revoked At")
+    server_ids: list[ServerId] | None = Field(None, title="Server Ids")
 
 
 class ListAvailableAddonsResponse(ContractModel):
@@ -1477,6 +1535,16 @@ class SendCommandResponse(ContractModel):
     )
 
 
+class ServerGrant(ContractModel):
+    """Validate and serialize the ServerGrant contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    permissions: list[str] = Field(
+        ..., max_length=256, min_length=1, title="Permissions"
+    )
+    server_id: str = Field(..., pattern="^[a-f0-9]{32}$", title="Server Id")
+
+
 CpuPercent = Annotated[float, Field(ge=0.0, title="Cpu Percent")]
 MemoryMb = Annotated[float, Field(ge=0.0, title="Memory Mb")]
 Pid = Annotated[int, Field(gt=0, title="Pid")]
@@ -1577,6 +1645,14 @@ class SetPropertiesResponse(ContractModel):
     status: Literal["success", "skipped", "partial"] | None = Field(
         "success", title="Status"
     )
+
+
+class SetServerAccess(ContractModel):
+    """Validate and serialize the SetServerAccess contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    grants: list[ServerGrant] | None = Field(None, max_length=1000, title="Grants")
+    mode: Literal["all", "assigned"] = Field(..., title="Mode")
 
 
 class SettingItemPayload(ContractModel):
@@ -2028,6 +2104,16 @@ class APIErrorResponse(ContractModel):
     message: str = Field(..., title="Message")
 
 
+class AccountServerAccessInfo(ContractModel):
+    """Validate and serialize the AccountServerAccessInfo contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    grants: list[ServerGrant] = Field(..., title="Grants")
+    mode: Literal["all", "assigned"] = Field(..., title="Mode")
+    policy_revision: str = Field(..., title="Policy Revision")
+    user_id: int = Field(..., title="User Id")
+
+
 class AppInfoResponse(ContractModel):
     """Response model for app/system info."""
 
@@ -2108,6 +2194,14 @@ class BackupSummary(ContractModel):
         None, title="Stage Durations Ms"
     )
     verification: BackupVerification | None = None
+
+
+class CreatedIntegrationToken(ContractModel):
+    """Validate and serialize the CreatedIntegrationToken contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    credential: IntegrationTokenInfo
+    token: str = Field(..., title="Token")
 
 
 class DiagnosticFinding(ContractModel):

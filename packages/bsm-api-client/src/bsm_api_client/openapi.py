@@ -95,7 +95,11 @@ class ApiOperation:
         classification = self.access.get("classification")
         if classification == "public":
             return True
-        if classification != "permission" or self.access.get("additional_checks"):
+        if (
+            classification != "permission"
+            or self.access.get("additional_checks")
+            or self.access.get("resource_scope") in {"server", "collection"}
+        ):
             return None
         return set(self.access.get("required_permissions", ())) <= set(permissions)
 

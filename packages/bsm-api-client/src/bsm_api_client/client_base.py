@@ -399,6 +399,12 @@ class ClientBase:
 
     async def async_logout(self) -> Dict[str, Any]:
         """Log out through the shared REST transport and clear the local token."""
+        if (self._jwt_token or "").startswith("bsm_it_"):
+            self._jwt_token = None
+            return {
+                "status": "success",
+                "message": "Integration credential cleared locally.",
+            }
         try:
             response = await self.async_call_generated(
                 "logout", authenticated=bool(self._jwt_token)

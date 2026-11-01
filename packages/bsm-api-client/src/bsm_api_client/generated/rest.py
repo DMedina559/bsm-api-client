@@ -1,5 +1,8 @@
 """Typed REST interface generated from the bundled OpenAPI contract."""
 
+from .models.access_policy_info import AccessPolicyInfo
+from .models.access_server_info import AccessServerInfo
+from .models.account_server_access_info import AccountServerAccessInfo
 from .models.action_response import ActionResponse
 from .models.add_players_payload import AddPlayersPayload
 from .models.add_players_response import AddPlayersResponse
@@ -26,6 +29,8 @@ from .models.command_payload import CommandPayload
 from .models.compare_diagnostic_snapshots_request import CompareDiagnosticSnapshotsRequest
 from .models.content_list_response import ContentListResponse
 from .models.control_schedule_payload import ControlSchedulePayload
+from .models.create_integration_token import CreateIntegrationToken
+from .models.created_integration_token import CreatedIntegrationToken
 from .models.current_account_response import CurrentAccountResponse
 from .models.custom_zips_response import CustomZipsResponse
 from .models.destination_cleanup_payload import DestinationCleanupPayload
@@ -58,6 +63,7 @@ from .models.get_server_bans_response import GetServerBansResponse
 from .models.install_confirmation_response import InstallConfirmationResponse
 from .models.install_server_payload import InstallServerPayload
 from .models.installation_accepted_response import InstallationAcceptedResponse
+from .models.integration_token_info import IntegrationTokenInfo
 from .models.list_available_addons_response import ListAvailableAddonsResponse
 from .models.list_backup_keys_response_list_backup_keys import ListBackupKeysResponseListBackupKeys
 from .models.list_schedules_response import ListSchedulesResponse
@@ -93,6 +99,7 @@ from .models.server_summary import ServerSummary
 from .models.servers_list_response import ServersListResponse
 from .models.set_plugin_setting_response import SetPluginSettingResponse
 from .models.set_properties_response import SetPropertiesResponse
+from .models.set_server_access import SetServerAccess
 from .models.setting_item_payload import SettingItemPayload
 from .models.settings_response import SettingsResponse
 from .models.setup_account_response import SetupAccountResponse
@@ -199,6 +206,14 @@ class RestClient:
     async def create_first_user_detailed(self, *, body: UserLoginPayload) -> Response[ErrorEnvelope | SetupAccountResponse]:
         """Generated create_first_user operation."""
         return cast(Response[ErrorEnvelope | SetupAccountResponse], await self._owner.async_call_generated('create_first_user', parameters={}, body=body, authenticated=False, detailed=True))
+
+    async def create_integration_token(self, *, body: CreateIntegrationToken) -> CreatedIntegrationToken | ErrorEnvelope | None:
+        """Generated create_integration_token operation."""
+        return cast(CreatedIntegrationToken | ErrorEnvelope | None, await self._owner.async_call_generated('create_integration_token', parameters={}, body=body, authenticated=True, typed=True))
+
+    async def create_integration_token_detailed(self, *, body: CreateIntegrationToken) -> Response[CreatedIntegrationToken | ErrorEnvelope]:
+        """Generated create_integration_token operation."""
+        return cast(Response[CreatedIntegrationToken | ErrorEnvelope], await self._owner.async_call_generated('create_integration_token', parameters={}, body=body, authenticated=True, detailed=True))
 
     async def create_server_snapshot(self, server_name: str, *, body: SnapshotCreatePayload) -> ErrorEnvelope | TaskAcceptedResponse | None:
         """Generated create_server_snapshot operation."""
@@ -320,6 +335,14 @@ class RestClient:
         """Generated generate_registration_token operation."""
         return cast(Response[ErrorEnvelope | RegistrationResponse], await self._owner.async_call_generated('generate_registration_token', parameters={}, body=body, authenticated=True, detailed=True))
 
+    async def get_access_policy(self) -> AccessPolicyInfo | ErrorEnvelope | None:
+        """Generated get_access_policy operation."""
+        return cast(AccessPolicyInfo | ErrorEnvelope | None, await self._owner.async_call_generated('get_access_policy', parameters={}, body=None, authenticated=True, typed=True))
+
+    async def get_access_policy_detailed(self) -> Response[AccessPolicyInfo | ErrorEnvelope]:
+        """Generated get_access_policy operation."""
+        return cast(Response[AccessPolicyInfo | ErrorEnvelope], await self._owner.async_call_generated('get_access_policy', parameters={}, body=None, authenticated=True, detailed=True))
+
     async def get_account(self) -> CurrentAccountResponse | ErrorEnvelope | None:
         """Generated get_account operation."""
         return cast(CurrentAccountResponse | ErrorEnvelope | None, await self._owner.async_call_generated('get_account', parameters={}, body=None, authenticated=True, typed=True))
@@ -335,6 +358,14 @@ class RestClient:
     async def get_account_permissions_detailed(self) -> Response[ErrorEnvelope | list[str]]:
         """Generated get_account_permissions operation."""
         return cast(Response[ErrorEnvelope | list[str]], await self._owner.async_call_generated('get_account_permissions', parameters={}, body=None, authenticated=True, detailed=True))
+
+    async def get_account_server_access(self, user_id: int) -> AccountServerAccessInfo | ErrorEnvelope | None:
+        """Generated get_account_server_access operation."""
+        return cast(AccountServerAccessInfo | ErrorEnvelope | None, await self._owner.async_call_generated('get_account_server_access', parameters={'user_id': user_id}, body=None, authenticated=True, typed=True))
+
+    async def get_account_server_access_detailed(self, user_id: int) -> Response[AccountServerAccessInfo | ErrorEnvelope]:
+        """Generated get_account_server_access operation."""
+        return cast(Response[AccountServerAccessInfo | ErrorEnvelope], await self._owner.async_call_generated('get_account_server_access', parameters={'user_id': user_id}, body=None, authenticated=True, detailed=True))
 
     async def get_allowlist(self, server_name: str) -> ErrorEnvelope | GetAllowlistResponse | None:
         """Generated get_allowlist operation."""
@@ -632,6 +663,22 @@ class RestClient:
         """Generated install_world operation."""
         return cast(Response[ErrorEnvelope | TaskAcceptedResponse], await self._owner.async_call_generated('install_world', parameters={'server_name': server_name}, body=body, authenticated=True, detailed=True))
 
+    async def list_access_servers(self) -> ErrorEnvelope | list[AccessServerInfo] | None:
+        """Generated list_access_servers operation."""
+        return cast(ErrorEnvelope | list[AccessServerInfo] | None, await self._owner.async_call_generated('list_access_servers', parameters={}, body=None, authenticated=True, typed=True))
+
+    async def list_access_servers_detailed(self) -> Response[ErrorEnvelope | list[AccessServerInfo]]:
+        """Generated list_access_servers operation."""
+        return cast(Response[ErrorEnvelope | list[AccessServerInfo]], await self._owner.async_call_generated('list_access_servers', parameters={}, body=None, authenticated=True, detailed=True))
+
+    async def list_account_integration_tokens(self, user_id: int) -> ErrorEnvelope | list[IntegrationTokenInfo] | None:
+        """Generated list_account_integration_tokens operation."""
+        return cast(ErrorEnvelope | list[IntegrationTokenInfo] | None, await self._owner.async_call_generated('list_account_integration_tokens', parameters={'user_id': user_id}, body=None, authenticated=True, typed=True))
+
+    async def list_account_integration_tokens_detailed(self, user_id: int) -> Response[ErrorEnvelope | list[IntegrationTokenInfo]]:
+        """Generated list_account_integration_tokens operation."""
+        return cast(Response[ErrorEnvelope | list[IntegrationTokenInfo]], await self._owner.async_call_generated('list_account_integration_tokens', parameters={'user_id': user_id}, body=None, authenticated=True, detailed=True))
+
     async def list_application_events(self) -> ErrorEnvelope | EventCatalog | None:
         """Generated list_application_events operation."""
         return cast(ErrorEnvelope | EventCatalog | None, await self._owner.async_call_generated('list_application_events', parameters={}, body=None, authenticated=True, typed=True))
@@ -679,6 +726,14 @@ class RestClient:
     async def list_downloads_detailed(self) -> Response[CustomZipsResponse | ErrorEnvelope]:
         """Generated list_downloads operation."""
         return cast(Response[CustomZipsResponse | ErrorEnvelope], await self._owner.async_call_generated('list_downloads', parameters={}, body=None, authenticated=True, detailed=True))
+
+    async def list_integration_tokens(self) -> ErrorEnvelope | list[IntegrationTokenInfo] | None:
+        """Generated list_integration_tokens operation."""
+        return cast(ErrorEnvelope | list[IntegrationTokenInfo] | None, await self._owner.async_call_generated('list_integration_tokens', parameters={}, body=None, authenticated=True, typed=True))
+
+    async def list_integration_tokens_detailed(self) -> Response[ErrorEnvelope | list[IntegrationTokenInfo]]:
+        """Generated list_integration_tokens operation."""
+        return cast(Response[ErrorEnvelope | list[IntegrationTokenInfo]], await self._owner.async_call_generated('list_integration_tokens', parameters={}, body=None, authenticated=True, detailed=True))
 
     async def list_players(self) -> ErrorEnvelope | PlayerListResponse | None:
         """Generated list_players operation."""
@@ -920,6 +975,22 @@ class RestClient:
         """Generated restore_server_snapshot operation."""
         return cast(Response[ErrorEnvelope | TaskAcceptedResponse], await self._owner.async_call_generated('restore_server_snapshot', parameters={'server_name': server_name, 'backup_id': backup_id}, body=body, authenticated=True, detailed=True))
 
+    async def revoke_account_integration_token(self, user_id: int, token_id: str) -> BaseApiResponse | ErrorEnvelope | None:
+        """Generated revoke_account_integration_token operation."""
+        return cast(BaseApiResponse | ErrorEnvelope | None, await self._owner.async_call_generated('revoke_account_integration_token', parameters={'user_id': user_id, 'token_id': token_id}, body=None, authenticated=True, typed=True))
+
+    async def revoke_account_integration_token_detailed(self, user_id: int, token_id: str) -> Response[BaseApiResponse | ErrorEnvelope]:
+        """Generated revoke_account_integration_token operation."""
+        return cast(Response[BaseApiResponse | ErrorEnvelope], await self._owner.async_call_generated('revoke_account_integration_token', parameters={'user_id': user_id, 'token_id': token_id}, body=None, authenticated=True, detailed=True))
+
+    async def revoke_integration_token(self, token_id: str) -> BaseApiResponse | ErrorEnvelope | None:
+        """Generated revoke_integration_token operation."""
+        return cast(BaseApiResponse | ErrorEnvelope | None, await self._owner.async_call_generated('revoke_integration_token', parameters={'token_id': token_id}, body=None, authenticated=True, typed=True))
+
+    async def revoke_integration_token_detailed(self, token_id: str) -> Response[BaseApiResponse | ErrorEnvelope]:
+        """Generated revoke_integration_token operation."""
+        return cast(Response[BaseApiResponse | ErrorEnvelope], await self._owner.async_call_generated('revoke_integration_token', parameters={'token_id': token_id}, body=None, authenticated=True, detailed=True))
+
     async def rotate_backup_key(self) -> ErrorEnvelope | RotateBackupKeyResponseRotateBackupKey | None:
         """Generated rotate_backup_key operation."""
         return cast(ErrorEnvelope | RotateBackupKeyResponseRotateBackupKey | None, await self._owner.async_call_generated('rotate_backup_key', parameters={}, body=None, authenticated=True, typed=True))
@@ -951,6 +1022,14 @@ class RestClient:
     async def send_command_detailed(self, server_name: str, *, body: CommandPayload) -> Response[ErrorEnvelope | SendCommandResponse]:
         """Generated send_command operation."""
         return cast(Response[ErrorEnvelope | SendCommandResponse], await self._owner.async_call_generated('send_command', parameters={'server_name': server_name}, body=body, authenticated=True, detailed=True))
+
+    async def set_account_server_access(self, user_id: int, *, body: SetServerAccess) -> AccountServerAccessInfo | ErrorEnvelope | None:
+        """Generated set_account_server_access operation."""
+        return cast(AccountServerAccessInfo | ErrorEnvelope | None, await self._owner.async_call_generated('set_account_server_access', parameters={'user_id': user_id}, body=body, authenticated=True, typed=True))
+
+    async def set_account_server_access_detailed(self, user_id: int, *, body: SetServerAccess) -> Response[AccountServerAccessInfo | ErrorEnvelope]:
+        """Generated set_account_server_access operation."""
+        return cast(Response[AccountServerAccessInfo | ErrorEnvelope], await self._owner.async_call_generated('set_account_server_access', parameters={'user_id': user_id}, body=body, authenticated=True, detailed=True))
 
     async def set_permissions(self, server_name: str, *, body: PermissionsSetPayload) -> ErrorEnvelope | PermissionsUpdateResponse | None:
         """Generated set_permissions operation."""

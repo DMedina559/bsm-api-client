@@ -50,6 +50,119 @@
         "title": "APIErrorResponse",
         "type": "object"
       },
+      "AccessPolicyInfo": {
+        "additionalProperties": false,
+        "properties": {
+          "permissions": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Permissions",
+            "type": "object"
+          },
+          "revision": {
+            "title": "Revision",
+            "type": "string"
+          },
+          "role_permissions": {
+            "additionalProperties": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "title": "Role Permissions",
+            "type": "object"
+          },
+          "server_permissions": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Server Permissions",
+            "type": "array"
+          },
+          "token_permissions": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Token Permissions",
+            "type": "array"
+          }
+        },
+        "required": [
+          "revision",
+          "permissions",
+          "server_permissions",
+          "token_permissions",
+          "role_permissions"
+        ],
+        "title": "AccessPolicyInfo",
+        "type": "object"
+      },
+      "AccessServerInfo": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "pattern": "^[a-f0-9]{32}$",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "permissions": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Permissions",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "permissions"
+        ],
+        "title": "AccessServerInfo",
+        "type": "object"
+      },
+      "AccountServerAccessInfo": {
+        "additionalProperties": false,
+        "properties": {
+          "grants": {
+            "items": {
+              "$ref": "#/components/schemas/ServerGrant"
+            },
+            "title": "Grants",
+            "type": "array"
+          },
+          "mode": {
+            "enum": [
+              "all",
+              "assigned"
+            ],
+            "title": "Mode",
+            "type": "string"
+          },
+          "policy_revision": {
+            "title": "Policy Revision",
+            "type": "string"
+          },
+          "user_id": {
+            "title": "User Id",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "user_id",
+          "mode",
+          "grants",
+          "policy_revision"
+        ],
+        "title": "AccountServerAccessInfo",
+        "type": "object"
+      },
       "ActionResponse": {
         "additionalProperties": false,
         "properties": {
@@ -1903,10 +2016,89 @@
         "title": "ControlSchedulePayload",
         "type": "object"
       },
+      "CreateIntegrationToken": {
+        "additionalProperties": false,
+        "properties": {
+          "expires_in_days": {
+            "default": 30,
+            "maximum": 365.0,
+            "minimum": 1.0,
+            "title": "Expires In Days",
+            "type": "integer"
+          },
+          "name": {
+            "maxLength": 100,
+            "minLength": 1,
+            "pattern": ".*\\S.*",
+            "title": "Name",
+            "type": "string"
+          },
+          "permissions": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 256,
+            "minItems": 1,
+            "title": "Permissions",
+            "type": "array"
+          },
+          "server_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "pattern": "^[a-f0-9]{32}$",
+                  "type": "string"
+                },
+                "maxItems": 1000,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Server Ids"
+          }
+        },
+        "required": [
+          "name",
+          "permissions"
+        ],
+        "title": "CreateIntegrationToken",
+        "type": "object"
+      },
+      "CreatedIntegrationToken": {
+        "additionalProperties": false,
+        "properties": {
+          "credential": {
+            "$ref": "#/components/schemas/IntegrationTokenInfo"
+          },
+          "token": {
+            "title": "Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "token",
+          "credential"
+        ],
+        "title": "CreatedIntegrationToken",
+        "type": "object"
+      },
       "CurrentAccountResponse": {
         "additionalProperties": false,
         "description": "Current account with sorted role-derived HTTP capabilities.",
         "properties": {
+          "credential_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Credential Id"
+          },
           "id": {
             "title": "Id",
             "type": "integer"
@@ -1933,6 +2125,17 @@
             "title": "Permissions",
             "type": "array"
           },
+          "policy_revision": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Policy Revision"
+          },
           "role": {
             "enum": [
               "admin",
@@ -1941,6 +2144,21 @@
             ],
             "title": "Role",
             "type": "string"
+          },
+          "server_access": {
+            "default": "all",
+            "title": "Server Access",
+            "type": "string"
+          },
+          "server_permissions": {
+            "additionalProperties": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "title": "Server Permissions",
+            "type": "object"
           },
           "theme": {
             "default": "default",
@@ -4514,6 +4732,81 @@
           }
         },
         "title": "InstalledAddons",
+        "type": "object"
+      },
+      "IntegrationTokenInfo": {
+        "additionalProperties": false,
+        "properties": {
+          "created_at": {
+            "title": "Created At",
+            "type": "integer"
+          },
+          "expires_at": {
+            "title": "Expires At",
+            "type": "integer"
+          },
+          "id": {
+            "pattern": "^[a-f0-9]{32}$",
+            "title": "Id",
+            "type": "string"
+          },
+          "last_used_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Used At"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "permissions": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Permissions",
+            "type": "array"
+          },
+          "revoked_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revoked At"
+          },
+          "server_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "pattern": "^[a-f0-9]{32}$",
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Server Ids"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "permissions",
+          "created_at",
+          "expires_at"
+        ],
+        "title": "IntegrationTokenInfo",
         "type": "object"
       },
       "JsonValue": {},
@@ -7597,6 +7890,31 @@
         "title": "SendCommandResponse",
         "type": "object"
       },
+      "ServerGrant": {
+        "additionalProperties": false,
+        "properties": {
+          "permissions": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 256,
+            "minItems": 1,
+            "title": "Permissions",
+            "type": "array"
+          },
+          "server_id": {
+            "pattern": "^[a-f0-9]{32}$",
+            "title": "Server Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "server_id",
+          "permissions"
+        ],
+        "title": "ServerGrant",
+        "type": "object"
+      },
       "ServerMetrics": {
         "additionalProperties": false,
         "properties": {
@@ -8053,6 +8371,32 @@
           "server_name"
         ],
         "title": "SetPropertiesResponse",
+        "type": "object"
+      },
+      "SetServerAccess": {
+        "additionalProperties": false,
+        "properties": {
+          "grants": {
+            "items": {
+              "$ref": "#/components/schemas/ServerGrant"
+            },
+            "maxItems": 1000,
+            "title": "Grants",
+            "type": "array"
+          },
+          "mode": {
+            "enum": [
+              "all",
+              "assigned"
+            ],
+            "title": "Mode",
+            "type": "string"
+          }
+        },
+        "required": [
+          "mode"
+        ],
+        "title": "SetServerAccess",
         "type": "object"
       },
       "SettingItemPayload": {
@@ -9564,6 +9908,11 @@
         "name": "X-BSM-Shutdown-Token",
         "type": "apiKey"
       },
+      "IntegrationToken": {
+        "description": "Named integration credential, supplied as Bearer bsm_it_...",
+        "scheme": "bearer",
+        "type": "http"
+      },
       "LocalReadiness": {
         "in": "header",
         "name": "X-BSM-Readiness-Token",
@@ -9573,6 +9922,7 @@
         "flows": {
           "password": {
             "scopes": {
+              "access:manage": "Manage account server access",
               "account:manage": "Account manage",
               "account:read": "Account read",
               "allowlist:manage": "Allowlist manage",
@@ -9590,6 +9940,7 @@
               "content:manage": "Content manage",
               "content:read": "Content read",
               "diagnostics:read": "Diagnostics read",
+              "health:read": "Read application readiness",
               "logs:read": "Logs read",
               "logs:read_application": "Logs read application",
               "permissions:manage": "Permissions manage",
@@ -9613,6 +9964,7 @@
               "settings:manage": "Settings manage",
               "settings:read": "Settings read",
               "tasks:read": "Tasks read",
+              "tokens:manage": "Manage your integration credentials",
               "users:manage": "Users manage",
               "users:read": "Users read"
             },
@@ -9629,6 +9981,835 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/access/policy": {
+      "get": {
+        "operationId": "get_access_policy",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccessPolicyInfo"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": [
+              "account:read"
+            ]
+          },
+          {
+            "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
+          }
+        ],
+        "summary": "Get Access Policy",
+        "tags": [
+          "Access Management"
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "user",
+            "moderator",
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "integration_tokens": "supported",
+          "required_permissions": [
+            "account:read"
+          ],
+          "resource_scope": "global",
+          "version": 1
+        }
+      }
+    },
+    "/api/access/servers": {
+      "get": {
+        "operationId": "list_access_servers",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/AccessServerInfo"
+                  },
+                  "title": "Response List Access Servers",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": [
+              "servers:read"
+            ]
+          },
+          {
+            "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
+          }
+        ],
+        "summary": "List Access Servers",
+        "tags": [
+          "Access Management"
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "user",
+            "moderator",
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "integration_tokens": "supported",
+          "required_permissions": [
+            "servers:read"
+          ],
+          "resource_scope": "collection",
+          "version": 1
+        }
+      }
+    },
+    "/api/access/users/{user_id}/servers": {
+      "get": {
+        "operationId": "get_account_server_access",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "title": "User Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountServerAccessInfo"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": [
+              "access:manage"
+            ]
+          },
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "summary": "Get Server Access",
+        "tags": [
+          "Access Management"
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "integration_tokens": "unsupported",
+          "required_permissions": [
+            "access:manage"
+          ],
+          "resource_scope": "global",
+          "version": 1
+        }
+      },
+      "put": {
+        "operationId": "set_account_server_access",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "title": "User Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetServerAccess"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountServerAccessInfo"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": [
+              "access:manage"
+            ]
+          },
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "summary": "Set Server Access",
+        "tags": [
+          "Access Management"
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "integration_tokens": "unsupported",
+          "required_permissions": [
+            "access:manage"
+          ],
+          "resource_scope": "global",
+          "version": 1
+        }
+      }
+    },
+    "/api/access/users/{user_id}/tokens": {
+      "get": {
+        "operationId": "list_account_integration_tokens",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "title": "User Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/IntegrationTokenInfo"
+                  },
+                  "title": "Response List Account Integration Tokens",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": [
+              "access:manage"
+            ]
+          },
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "summary": "List User Tokens",
+        "tags": [
+          "Access Management"
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "integration_tokens": "unsupported",
+          "required_permissions": [
+            "access:manage"
+          ],
+          "resource_scope": "global",
+          "version": 1
+        }
+      }
+    },
+    "/api/access/users/{user_id}/tokens/{token_id}": {
+      "delete": {
+        "operationId": "revoke_account_integration_token",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "title": "User Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "token_id",
+            "required": true,
+            "schema": {
+              "title": "Token Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseApiResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": [
+              "access:manage"
+            ]
+          },
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "summary": "Revoke User Token",
+        "tags": [
+          "Access Management"
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "integration_tokens": "unsupported",
+          "required_permissions": [
+            "access:manage"
+          ],
+          "resource_scope": "global",
+          "version": 1
+        }
+      }
+    },
     "/api/account": {
       "get": {
         "description": "Return the current user's account details and role-derived permissions.",
@@ -9733,6 +10914,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "Get Account Api",
@@ -9748,9 +10932,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "account:read"
           ],
+          "resource_scope": "global",
           "version": 1
         }
       }
@@ -9884,9 +11070,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "unsupported",
           "required_permissions": [
             "account:manage"
           ],
+          "resource_scope": "global",
           "version": 1
         }
       }
@@ -9999,6 +11187,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "Get Account Permissions",
@@ -10014,9 +11205,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "account:read"
           ],
+          "resource_scope": "global",
           "version": 1
         }
       }
@@ -10150,9 +11343,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "unsupported",
           "required_permissions": [
             "account:manage"
           ],
+          "resource_scope": "global",
           "version": 1
         }
       }
@@ -10286,9 +11481,415 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "unsupported",
           "required_permissions": [
             "account:manage"
           ],
+          "resource_scope": "global",
+          "version": 1
+        }
+      }
+    },
+    "/api/account/tokens": {
+      "get": {
+        "operationId": "list_integration_tokens",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/IntegrationTokenInfo"
+                  },
+                  "title": "Response List Integration Tokens",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": [
+              "tokens:manage"
+            ]
+          },
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "summary": "List Tokens",
+        "tags": [
+          "Access Management"
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "user",
+            "moderator",
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "integration_tokens": "unsupported",
+          "required_permissions": [
+            "tokens:manage"
+          ],
+          "resource_scope": "global",
+          "version": 1
+        }
+      },
+      "post": {
+        "operationId": "create_integration_token",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateIntegrationToken"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreatedIntegrationToken"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": [
+              "tokens:manage"
+            ]
+          },
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "summary": "Create Token",
+        "tags": [
+          "Access Management"
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "user",
+            "moderator",
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "integration_tokens": "unsupported",
+          "required_permissions": [
+            "tokens:manage"
+          ],
+          "resource_scope": "global",
+          "version": 1
+        }
+      }
+    },
+    "/api/account/tokens/{token_id}": {
+      "delete": {
+        "operationId": "revoke_integration_token",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "token_id",
+            "required": true,
+            "schema": {
+              "title": "Token Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseApiResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": [
+              "tokens:manage"
+            ]
+          },
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "summary": "Revoke Token",
+        "tags": [
+          "Access Management"
+        ],
+        "x-bsm-access": {
+          "additional_checks": [],
+          "allowed_roles": [
+            "user",
+            "moderator",
+            "admin"
+          ],
+          "authentication": "required",
+          "classification": "permission",
+          "integration_tokens": "unsupported",
+          "required_permissions": [
+            "tokens:manage"
+          ],
+          "resource_scope": "global",
           "version": 1
         }
       }
@@ -10399,6 +12000,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "List Keys",
@@ -10412,9 +12016,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "backups:keys"
           ],
+          "resource_scope": "global",
           "version": 1
         }
       },
@@ -10525,6 +12131,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "Rotate Key",
@@ -10538,9 +12147,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "backups:keys"
           ],
+          "resource_scope": "global",
           "version": 1
         }
       }
@@ -10660,6 +12271,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "Emergency Kit",
@@ -10673,9 +12287,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "backups:keys"
           ],
+          "resource_scope": "global",
           "version": 1
         }
       }
@@ -10784,6 +12400,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "Get Addons",
@@ -10798,9 +12417,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "content:read"
           ],
+          "resource_scope": "global",
           "version": 1
         }
       }
@@ -10909,6 +12530,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "Get Worlds List",
@@ -10923,9 +12547,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "content:read"
           ],
+          "resource_scope": "global",
           "version": 1
         }
       }
@@ -11034,6 +12660,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "Get Application Diagnostics",
@@ -11047,9 +12676,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "diagnostics:read"
           ],
+          "resource_scope": "global",
           "version": 1
         }
       }
@@ -11345,6 +12976,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "Get Diagnostic Activity",
@@ -11358,9 +12992,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "diagnostics:read"
           ],
+          "resource_scope": "global",
           "version": 1
         }
       }
@@ -11479,6 +13115,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "Compare Diagnostic Snapshots",
@@ -11492,9 +13131,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "diagnostics:read"
           ],
+          "resource_scope": "global",
           "version": 1
         }
       }
@@ -11756,6 +13397,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "Get Diagnostic History",
@@ -11769,9 +13413,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "diagnostics:read"
           ],
+          "resource_scope": "global",
           "version": 1
         }
       }
@@ -11880,6 +13526,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "Get Diagnostic Report",
@@ -11893,9 +13542,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "diagnostics:read"
           ],
+          "resource_scope": "global",
           "version": 1
         }
       }
@@ -12017,6 +13668,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "Get Diagnostic Runs",
@@ -12030,9 +13684,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "diagnostics:read"
           ],
+          "resource_scope": "global",
           "version": 1
         }
       }
@@ -12180,6 +13836,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "Get Diagnostic Trace",
@@ -12193,9 +13852,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "diagnostics:read"
           ],
+          "resource_scope": "global",
           "version": 1
         }
       }
@@ -12314,6 +13975,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "Get Subsystem Diagnostics",
@@ -12327,9 +13991,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "diagnostics:read"
           ],
+          "resource_scope": "global",
           "version": 1
         }
       }
@@ -12437,6 +14103,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "Get Custom Zips",
@@ -12451,9 +14120,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "content:read"
           ],
+          "resource_scope": "global",
           "version": 1
         }
       }
@@ -12572,6 +14243,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "Put Prune Downloads",
@@ -12585,9 +14259,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "content:manage"
           ],
+          "resource_scope": "global",
           "version": 1
         }
       }
@@ -12695,6 +14371,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "List Application Events",
@@ -12708,9 +14387,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "diagnostics:read"
           ],
+          "resource_scope": "global",
           "version": 1
         }
       }
@@ -13005,6 +14686,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "Get Event Activity",
@@ -13018,9 +14702,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "diagnostics:read"
           ],
+          "resource_scope": "global",
           "version": 1
         }
       }
@@ -13130,6 +14816,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "Get Application Health",
@@ -13144,7 +14833,9 @@
           "allowed_roles": [],
           "authentication": "required",
           "classification": "custom",
+          "integration_tokens": "supported",
           "required_permissions": [],
+          "resource_scope": "global",
           "version": 1
         }
       }
@@ -13245,6 +14936,7 @@
             "description": "Service Unavailable"
           }
         },
+        "security": [],
         "summary": "Get System Info",
         "tags": [
           "Application"
@@ -13254,7 +14946,9 @@
           "allowed_roles": [],
           "authentication": "none",
           "classification": "public",
+          "integration_tokens": "unsupported",
           "required_permissions": [],
+          "resource_scope": "global",
           "version": 1
         }
       }
@@ -13355,6 +15049,7 @@
             "description": "Service Unavailable"
           }
         },
+        "security": [],
         "summary": "Get Themes",
         "tags": [
           "Appearance"
@@ -13364,7 +15059,9 @@
           "allowed_roles": [],
           "authentication": "none",
           "classification": "public",
+          "integration_tokens": "unsupported",
           "required_permissions": [],
+          "resource_scope": "global",
           "version": 1
         }
       }
@@ -13519,6 +15216,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "Get Log History",
@@ -13535,9 +15235,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "logs:read"
           ],
+          "resource_scope": "collection",
           "version": 1
         }
       }
@@ -13646,6 +15348,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "Get Application Metrics",
@@ -13661,9 +15366,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "runtime:metrics"
           ],
+          "resource_scope": "global",
           "version": 1
         }
       }
@@ -13757,6 +15464,7 @@
             "description": "Service Unavailable"
           }
         },
+        "security": [],
         "summary": "Serve Custom Panorama Api",
         "tags": [
           "Appearance"
@@ -13766,7 +15474,9 @@
           "allowed_roles": [],
           "authentication": "none",
           "classification": "public",
+          "integration_tokens": "unsupported",
           "required_permissions": [],
+          "resource_scope": "global",
           "version": 1
         }
       }
@@ -13885,6 +15595,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "Post Add Players",
@@ -13899,9 +15612,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "players:manage"
           ],
+          "resource_scope": "global",
           "version": 1
         }
       }
@@ -14010,6 +15725,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "Get All Players",
@@ -14024,9 +15742,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "players:read"
           ],
+          "resource_scope": "global",
           "version": 1
         }
       }
@@ -14135,6 +15855,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "Put Scan Players",
@@ -14149,9 +15872,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "players:manage"
           ],
+          "resource_scope": "global",
           "version": 1
         }
       }
@@ -14260,6 +15985,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "Get Plugins Status",
@@ -14273,9 +16001,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "plugins:read"
           ],
+          "resource_scope": "global",
           "version": 1
         }
       }
@@ -14384,6 +16114,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "Get Plugin Pages",
@@ -14399,9 +16132,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "plugins:pages"
           ],
+          "resource_scope": "global",
           "version": 1
         }
       }
@@ -14510,6 +16245,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "Put Reload Plugins",
@@ -14523,9 +16261,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "plugins:manage"
           ],
+          "resource_scope": "global",
           "version": 1
         }
       }
@@ -14644,6 +16384,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "Post Trigger Event",
@@ -14657,9 +16400,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "plugins:manage"
           ],
+          "resource_scope": "global",
           "version": 1
         }
       }
@@ -14789,6 +16534,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "Post Set Plugin Status",
@@ -14802,9 +16550,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "plugins:manage"
           ],
+          "resource_scope": "global",
           "version": 1
         }
       }
@@ -14924,6 +16674,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "Post Reload Single Plugin",
@@ -14937,9 +16690,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "plugins:manage"
           ],
+          "resource_scope": "global",
           "version": 1
         }
       }
@@ -15089,6 +16844,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "Get Plugin Settings",
@@ -15102,9 +16860,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "plugins:read"
           ],
+          "resource_scope": "global",
           "version": 1
         }
       },
@@ -15231,6 +16991,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "Update Plugin Settings",
@@ -15244,9 +17007,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "plugins:manage"
           ],
+          "resource_scope": "global",
           "version": 1
         }
       }
@@ -15378,9 +17143,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "unsupported",
           "required_permissions": [
             "users:manage"
           ],
+          "resource_scope": "global",
           "version": 1
         }
       }
@@ -15490,6 +17257,7 @@
             "description": "Service Unavailable"
           }
         },
+        "security": [],
         "summary": "Validate Token",
         "tags": [
           "Registration"
@@ -15501,7 +17269,9 @@
           "allowed_roles": [],
           "authentication": "none",
           "classification": "custom",
+          "integration_tokens": "unsupported",
           "required_permissions": [],
+          "resource_scope": "global",
           "version": 1
         }
       }
@@ -15621,6 +17391,7 @@
             "description": "Service Unavailable"
           }
         },
+        "security": [],
         "summary": "Register User",
         "tags": [
           "Registration"
@@ -15632,7 +17403,9 @@
           "allowed_roles": [],
           "authentication": "none",
           "classification": "custom",
+          "integration_tokens": "unsupported",
           "required_permissions": [],
+          "resource_scope": "global",
           "version": 1
         }
       }
@@ -15740,6 +17513,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "Runtime Status",
@@ -15753,9 +17529,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "runtime:read"
           ],
+          "resource_scope": "global",
           "version": 1
         }
       }
@@ -15874,6 +17652,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "Shutdown Runtime",
@@ -15889,7 +17670,9 @@
           ],
           "authentication": "required",
           "classification": "custom",
+          "integration_tokens": "supported",
           "required_permissions": [],
+          "resource_scope": "global",
           "version": 1
         }
       }
@@ -16015,6 +17798,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "List Schedules",
@@ -16028,9 +17814,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "scheduler:manage"
           ],
+          "resource_scope": "global",
           "version": 1
         }
       }
@@ -16149,6 +17937,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "Delete Schedule",
@@ -16162,9 +17953,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "scheduler:manage"
           ],
+          "resource_scope": "global",
           "version": 1
         }
       },
@@ -16291,6 +18084,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "Save Schedule",
@@ -16304,9 +18100,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "scheduler:manage"
           ],
+          "resource_scope": "global",
           "version": 1
         }
       }
@@ -16435,6 +18233,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "Control Schedule",
@@ -16448,9 +18249,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "scheduler:manage"
           ],
+          "resource_scope": "global",
           "version": 1
         }
       }
@@ -16576,6 +18379,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "Post Install Server",
@@ -16589,9 +18395,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "servers:manage"
           ],
+          "resource_scope": "global",
           "version": 1
         }
       }
@@ -16722,6 +18530,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "Post Disable Addon",
@@ -16735,9 +18546,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "content:manage"
           ],
+          "resource_scope": "server",
           "version": 1
         }
       }
@@ -16868,6 +18681,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "Post Enable Addon",
@@ -16881,9 +18697,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "content:manage"
           ],
+          "resource_scope": "server",
           "version": 1
         }
       }
@@ -17012,6 +18830,7 @@
             "description": "Service Unavailable"
           }
         },
+        "security": [],
         "summary": "Get Server Addon Icon",
         "tags": [
           "Addon Management"
@@ -17021,7 +18840,9 @@
           "allowed_roles": [],
           "authentication": "none",
           "classification": "public",
+          "integration_tokens": "unsupported",
           "required_permissions": [],
+          "resource_scope": "server",
           "version": 1
         }
       }
@@ -17152,6 +18973,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "Post Install Addon",
@@ -17165,9 +18989,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "content:manage"
           ],
+          "resource_scope": "server",
           "version": 1
         }
       }
@@ -17298,6 +19124,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "Post Reorder Addons",
@@ -17311,9 +19140,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "content:manage"
           ],
+          "resource_scope": "server",
           "version": 1
         }
       }
@@ -17444,6 +19275,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "Post Update Subpack",
@@ -17457,9 +19291,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "content:manage"
           ],
+          "resource_scope": "server",
           "version": 1
         }
       }
@@ -17590,6 +19426,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "Delete Uninstall Addon",
@@ -17603,9 +19442,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "content:manage"
           ],
+          "resource_scope": "server",
           "version": 1
         }
       }
@@ -17726,6 +19567,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "Get Server Addons",
@@ -17739,9 +19583,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "content:manage"
           ],
+          "resource_scope": "server",
           "version": 1
         }
       }
@@ -17871,6 +19717,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "Post Allowlist",
@@ -17885,9 +19734,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "allowlist:manage"
           ],
+          "resource_scope": "server",
           "version": 1
         }
       }
@@ -18007,6 +19858,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "Get Allowlist",
@@ -18021,9 +19875,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "allowlist:read"
           ],
+          "resource_scope": "server",
           "version": 1
         }
       }
@@ -18153,6 +20009,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "Delete Allowlist",
@@ -18167,9 +20026,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "allowlist:manage"
           ],
+          "resource_scope": "server",
           "version": 1
         }
       }
@@ -18309,6 +20170,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "Cleanup Destination",
@@ -18322,9 +20186,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "backups:destinations"
           ],
+          "resource_scope": "server",
           "version": 1
         }
       }
@@ -18455,6 +20321,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "Post Backup Action",
@@ -18469,9 +20338,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "backups:create"
           ],
+          "resource_scope": "server",
           "version": 1
         }
       }
@@ -18601,6 +20472,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "Get List Server Backups",
@@ -18615,9 +20489,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "backups:read"
           ],
+          "resource_scope": "server",
           "version": 1
         }
       }
@@ -18738,6 +20614,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "Get Snapshots",
@@ -18752,9 +20631,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "backups:read"
           ],
+          "resource_scope": "server",
           "version": 1
         }
       },
@@ -18883,6 +20764,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "Post Snapshot",
@@ -18897,9 +20781,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "backups:create"
           ],
+          "resource_scope": "server",
           "version": 1
         }
       }
@@ -19020,6 +20906,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "Backup Health",
@@ -19034,9 +20923,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "backups:read"
           ],
+          "resource_scope": "server",
           "version": 1
         }
       }
@@ -19167,6 +21058,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "Import Snapshot",
@@ -19181,9 +21075,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "backups:manage"
           ],
+          "resource_scope": "server",
           "version": 1
         }
       }
@@ -19304,6 +21200,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "Put Prune Backups",
@@ -19318,9 +21217,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "backups:manage"
           ],
+          "resource_scope": "server",
           "version": 1
         }
       }
@@ -19441,6 +21342,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "Get Recovery",
@@ -19455,9 +21359,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "backups:read"
           ],
+          "resource_scope": "server",
           "version": 1
         }
       },
@@ -19576,6 +21482,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "Retry Recovery",
@@ -19590,9 +21499,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "backups:restore"
           ],
+          "resource_scope": "server",
           "version": 1
         }
       }
@@ -19713,6 +21624,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "Download Recovery Report",
@@ -19727,9 +21641,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "backups:read"
           ],
+          "resource_scope": "server",
           "version": 1
         }
       }
@@ -19860,6 +21776,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "Download Snapshot",
@@ -19874,9 +21793,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "backups:read"
           ],
+          "resource_scope": "server",
           "version": 1
         }
       }
@@ -20016,6 +21937,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "Dry Run Restore",
@@ -20030,9 +21954,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "backups:restore"
           ],
+          "resource_scope": "server",
           "version": 1
         }
       }
@@ -20173,6 +22099,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "Export Snapshot",
@@ -20186,9 +22115,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "backups:export"
           ],
+          "resource_scope": "server",
           "version": 1
         }
       }
@@ -20328,6 +22259,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "Post Inspect",
@@ -20342,9 +22276,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "backups:read"
           ],
+          "resource_scope": "server",
           "version": 1
         }
       }
@@ -20484,6 +22420,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "Manage Snapshot",
@@ -20498,9 +22437,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "backups:manage"
           ],
+          "resource_scope": "server",
           "version": 1
         }
       }
@@ -20640,6 +22581,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "Post Plan",
@@ -20654,9 +22598,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "backups:restore"
           ],
+          "resource_scope": "server",
           "version": 1
         }
       }
@@ -20796,6 +22742,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "Prepare Backup Copy",
@@ -20809,9 +22758,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "backups:destinations"
           ],
+          "resource_scope": "server",
           "version": 1
         }
       }
@@ -20951,6 +22902,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "Post Snapshot Restore",
@@ -20965,9 +22919,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "backups:restore"
           ],
+          "resource_scope": "server",
           "version": 1
         }
       }
@@ -21098,6 +23054,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "Post Add Server Ban",
@@ -21111,9 +23070,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "bans:manage"
           ],
+          "resource_scope": "server",
           "version": 1
         }
       }
@@ -21234,6 +23195,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "Get Server Bans",
@@ -21247,9 +23211,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "bans:manage"
           ],
+          "resource_scope": "server",
           "version": 1
         }
       }
@@ -21380,6 +23346,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "Delete Remove Server Ban",
@@ -21393,9 +23362,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "bans:manage"
           ],
+          "resource_scope": "server",
           "version": 1
         }
       }
@@ -21516,6 +23487,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "Delete Server",
@@ -21529,9 +23503,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "servers:manage"
           ],
+          "resource_scope": "server",
           "version": 1
         }
       }
@@ -21651,6 +23627,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "Get Permissions",
@@ -21665,9 +23644,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "permissions:read"
           ],
+          "resource_scope": "server",
           "version": 1
         }
       }
@@ -21797,6 +23778,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "Post Permissions Set",
@@ -21811,9 +23795,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "permissions:manage"
           ],
+          "resource_scope": "server",
           "version": 1
         }
       }
@@ -21934,6 +23920,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "Get Server Process Info",
@@ -21949,9 +23938,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "servers:read"
           ],
+          "resource_scope": "server",
           "version": 1
         }
       }
@@ -22071,6 +24062,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "Get Properties",
@@ -22085,9 +24079,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "servers:properties"
           ],
+          "resource_scope": "server",
           "version": 1
         }
       }
@@ -22208,6 +24204,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "Get Raw Properties",
@@ -22222,9 +24221,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "servers:properties"
           ],
+          "resource_scope": "server",
           "version": 1
         }
       }
@@ -22354,6 +24355,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "Post Properties Set",
@@ -22368,9 +24372,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "servers:properties"
           ],
+          "resource_scope": "server",
           "version": 1
         }
       }
@@ -22491,6 +24497,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "Post Restart Server",
@@ -22505,9 +24514,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "servers:control"
           ],
+          "resource_scope": "server",
           "version": 1
         }
       }
@@ -22638,6 +24649,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "Post Restore Action",
@@ -22652,9 +24666,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "backups:restore"
           ],
+          "resource_scope": "server",
           "version": 1
         }
       }
@@ -22785,6 +24801,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "Post Send Command",
@@ -22799,9 +24818,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "servers:control"
           ],
+          "resource_scope": "server",
           "version": 1
         }
       }
@@ -22922,6 +24943,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "Get Server Settings",
@@ -22937,9 +24961,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "servers:read"
           ],
+          "resource_scope": "server",
           "version": 1
         }
       }
@@ -23070,6 +25096,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "Post Set Server Setting",
@@ -23083,9 +25112,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "servers:configure"
           ],
+          "resource_scope": "server",
           "version": 1
         }
       }
@@ -23206,6 +25237,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "Post Start Server",
@@ -23220,9 +25254,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "servers:control"
           ],
+          "resource_scope": "server",
           "version": 1
         }
       }
@@ -23343,6 +25379,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "Get Server Running Status",
@@ -23358,9 +25397,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "servers:read"
           ],
+          "resource_scope": "server",
           "version": 1
         }
       }
@@ -23481,6 +25522,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "Post Stop Server",
@@ -23495,9 +25539,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "servers:control"
           ],
+          "resource_scope": "server",
           "version": 1
         }
       }
@@ -23618,6 +25664,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "Get Server Summary",
@@ -23632,9 +25681,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "servers:inspect"
           ],
+          "resource_scope": "server",
           "version": 1
         }
       }
@@ -23755,6 +25806,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "Post Update Server",
@@ -23768,9 +25822,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "servers:manage"
           ],
+          "resource_scope": "server",
           "version": 1
         }
       }
@@ -23890,6 +25946,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "Get Validate Server",
@@ -23905,9 +25964,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "servers:read"
           ],
+          "resource_scope": "server",
           "version": 1
         }
       }
@@ -24028,6 +26089,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "Post World Export",
@@ -24041,9 +26105,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "content:manage"
           ],
+          "resource_scope": "server",
           "version": 1
         }
       }
@@ -24149,6 +26215,7 @@
             "description": "Service Unavailable"
           }
         },
+        "security": [],
         "summary": "Get World Icon",
         "tags": [
           "World Management"
@@ -24158,7 +26225,9 @@
           "allowed_roles": [],
           "authentication": "none",
           "classification": "public",
+          "integration_tokens": "unsupported",
           "required_permissions": [],
+          "resource_scope": "server",
           "version": 1
         }
       }
@@ -24289,6 +26358,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "Post World Install",
@@ -24302,9 +26374,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "content:manage"
           ],
+          "resource_scope": "server",
           "version": 1
         }
       }
@@ -24425,6 +26499,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "Delete World Reset",
@@ -24438,9 +26515,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "content:manage"
           ],
+          "resource_scope": "server",
           "version": 1
         }
       }
@@ -24549,6 +26628,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "Get Servers List",
@@ -24564,9 +26646,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "servers:read"
           ],
+          "resource_scope": "collection",
           "version": 1
         }
       }
@@ -24675,6 +26759,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "Get All Settings",
@@ -24688,9 +26775,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "settings:read"
           ],
+          "resource_scope": "global",
           "version": 1
         }
       }
@@ -24799,6 +26888,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "Put Reload Settings",
@@ -24812,9 +26904,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "settings:manage"
           ],
+          "resource_scope": "global",
           "version": 1
         }
       }
@@ -24933,6 +27027,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "Post Set Setting",
@@ -24946,9 +27043,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "settings:manage"
           ],
+          "resource_scope": "global",
           "version": 1
         }
       }
@@ -25059,6 +27158,7 @@
             "description": "Service Unavailable"
           }
         },
+        "security": [],
         "summary": "Create First User",
         "tags": [
           "Application Setup"
@@ -25070,7 +27170,9 @@
           "allowed_roles": [],
           "authentication": "none",
           "classification": "custom",
+          "integration_tokens": "unsupported",
           "required_permissions": [],
+          "resource_scope": "global",
           "version": 1
         }
       }
@@ -25171,6 +27273,7 @@
             "description": "Service Unavailable"
           }
         },
+        "security": [],
         "summary": "Get Setup Status",
         "tags": [
           "Application Setup"
@@ -25180,7 +27283,9 @@
           "allowed_roles": [],
           "authentication": "none",
           "classification": "public",
+          "integration_tokens": "unsupported",
           "required_permissions": [],
+          "resource_scope": "global",
           "version": 1
         }
       }
@@ -25293,6 +27398,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "List Tasks",
@@ -25310,9 +27418,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "tasks:read"
           ],
+          "resource_scope": "global",
           "version": 1
         }
       }
@@ -25432,6 +27542,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "Get Task Status",
@@ -25449,9 +27562,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "tasks:read"
           ],
+          "resource_scope": "global",
           "version": 1
         }
       }
@@ -25564,6 +27679,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "List Users Api",
@@ -25578,9 +27696,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "users:read"
           ],
+          "resource_scope": "global",
           "version": 1
         }
       }
@@ -25713,9 +27833,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "unsupported",
           "required_permissions": [
             "users:manage"
           ],
+          "resource_scope": "global",
           "version": 1
         }
       }
@@ -25847,9 +27969,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "unsupported",
           "required_permissions": [
             "users:manage"
           ],
+          "resource_scope": "global",
           "version": 1
         }
       }
@@ -25981,9 +28105,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "unsupported",
           "required_permissions": [
             "users:manage"
           ],
+          "resource_scope": "global",
           "version": 1
         }
       }
@@ -26125,9 +28251,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "unsupported",
           "required_permissions": [
             "users:manage"
           ],
+          "resource_scope": "global",
           "version": 1
         }
       }
@@ -26240,6 +28368,9 @@
           },
           {
             "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "List Audit Logs Api",
@@ -26253,9 +28384,11 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "integration_tokens": "supported",
           "required_permissions": [
             "audit:read"
           ],
+          "resource_scope": "global",
           "version": 1
         }
       }
@@ -26375,7 +28508,9 @@
           ],
           "authentication": "required",
           "classification": "authenticated",
+          "integration_tokens": "unsupported",
           "required_permissions": [],
+          "resource_scope": "global",
           "version": 1
         }
       }
@@ -26515,7 +28650,9 @@
           ],
           "authentication": "required",
           "classification": "authenticated",
+          "integration_tokens": "unsupported",
           "required_permissions": [],
+          "resource_scope": "global",
           "version": 1
         }
       }
@@ -26626,6 +28763,7 @@
             "description": "Service Unavailable"
           }
         },
+        "security": [],
         "summary": "Api Login For Access Token",
         "tags": [
           "Authentication"
@@ -26635,7 +28773,9 @@
           "allowed_roles": [],
           "authentication": "none",
           "classification": "public",
+          "integration_tokens": "unsupported",
           "required_permissions": [],
+          "resource_scope": "global",
           "version": 1
         }
       }
