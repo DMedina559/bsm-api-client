@@ -673,6 +673,7 @@ async def test_health_response_preserves_process_identity(
 @pytest.mark.asyncio
 async def test_revoked_session_never_silently_logs_in_again(local_api):
     from unittest.mock import AsyncMock
+
     from bsm_api_client import AuthError
 
     client, _ = local_api
