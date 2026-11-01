@@ -30,7 +30,7 @@ jobs:
         uses: actions/checkout@v7
         with:
           repository: DMedina559/bedrock-server-manager
-          ref: dev
+          ref: ${{ github.event_name == 'pull_request' && github.head_ref == 'feat/http-access-policy' && '228bb84c32b25b005daf1a54cc45406e7ec62ebf' || 'dev' }}
           path: backend-under-test
 
       - name: Set up Python ${{ matrix.python-version }}

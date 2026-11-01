@@ -261,6 +261,22 @@ class BackupFilesResponse(ContractModel):
     status: Literal["success"] = Field("success", title="Status")
 
 
+class BackupKeyInfo(ContractModel):
+    """Validate and serialize the BackupKeyInfo contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    created_at: str = Field(..., title="Created At")
+    key_id: str = Field(..., title="Key Id")
+
+
+class BackupKeysInfo(ContractModel):
+    """Validate and serialize the BackupKeysInfo contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    active: str | None = Field(..., title="Active")
+    keys: list[BackupKeyInfo] = Field(..., title="Keys")
+
+
 class BackupManifest(ContractModel):
     """Validate and serialize the BackupManifest contract."""
 

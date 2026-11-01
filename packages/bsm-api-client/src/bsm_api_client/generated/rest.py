@@ -20,6 +20,8 @@ from .models.audit_log_response import AuditLogResponse
 from .models.backup_action_payload import BackupActionPayload
 from .models.backup_files_response import BackupFilesResponse
 from .models.backup_health_response import BackupHealthResponse
+from .models.backup_key_info import BackupKeyInfo
+from .models.backup_keys_info import BackupKeysInfo
 from .models.ban_add_request import BanAddRequest
 from .models.ban_remove_request import BanRemoveRequest
 from .models.base_api_response import BaseApiResponse
@@ -69,7 +71,6 @@ from .models.installation_accepted_response import InstallationAcceptedResponse
 from .models.integration_token_info import IntegrationTokenInfo
 from .models.list_account_integration_tokens_status import ListAccountIntegrationTokensStatus
 from .models.list_available_addons_response import ListAvailableAddonsResponse
-from .models.list_backup_keys_response_list_backup_keys import ListBackupKeysResponseListBackupKeys
 from .models.list_integration_tokens_status import ListIntegrationTokensStatus
 from .models.list_schedules_response import ListSchedulesResponse
 from .models.list_snapshots_response import ListSnapshotsResponse
@@ -97,7 +98,6 @@ from .models.restore_action_payload import RestoreActionPayload
 from .models.restore_recovery_response import RestoreRecoveryResponse
 from .models.revoke_sessions import RevokeSessions
 from .models.revoke_trusted_devices import RevokeTrustedDevices
-from .models.rotate_backup_key_response_rotate_backup_key import RotateBackupKeyResponseRotateBackupKey
 from .models.runtime_status import RuntimeStatus
 from .models.scheduled_task import ScheduledTask
 from .models.security_event_info import SecurityEventInfo
@@ -510,13 +510,13 @@ class RestClient:
         """Generated get_log_history operation."""
         return cast(Response[ErrorEnvelope | LogHistoryPage], await self._owner.async_call_generated('get_log_history', parameters={'topic': topic, 'before': before, 'file_id': file_id}, body=None, authenticated=True, detailed=True))
 
-    async def get_panorama(self) -> Any | ErrorEnvelope | None:
+    async def get_panorama(self) -> ErrorEnvelope | File | None:
         """Generated get_panorama operation."""
-        return cast(Any | ErrorEnvelope | None, await self._owner.async_call_generated('get_panorama', parameters={}, body=None, authenticated=False, typed=True))
+        return cast(ErrorEnvelope | File | None, await self._owner.async_call_generated('get_panorama', parameters={}, body=None, authenticated=False, typed=True))
 
-    async def get_panorama_detailed(self) -> Response[Any | ErrorEnvelope]:
+    async def get_panorama_detailed(self) -> Response[ErrorEnvelope | File]:
         """Generated get_panorama operation."""
-        return cast(Response[Any | ErrorEnvelope], await self._owner.async_call_generated('get_panorama', parameters={}, body=None, authenticated=False, detailed=True))
+        return cast(Response[ErrorEnvelope | File], await self._owner.async_call_generated('get_panorama', parameters={}, body=None, authenticated=False, detailed=True))
 
     async def get_permissions(self, server_name: str) -> ErrorEnvelope | GetPermissionsResponse | None:
         """Generated get_permissions operation."""
@@ -766,13 +766,13 @@ class RestClient:
         """Generated list_available_worlds operation."""
         return cast(Response[ContentListResponse | ErrorEnvelope], await self._owner.async_call_generated('list_available_worlds', parameters={}, body=None, authenticated=True, detailed=True))
 
-    async def list_backup_keys(self) -> ErrorEnvelope | ListBackupKeysResponseListBackupKeys | None:
+    async def list_backup_keys(self) -> BackupKeysInfo | ErrorEnvelope | None:
         """Generated list_backup_keys operation."""
-        return cast(ErrorEnvelope | ListBackupKeysResponseListBackupKeys | None, await self._owner.async_call_generated('list_backup_keys', parameters={}, body=None, authenticated=True, typed=True))
+        return cast(BackupKeysInfo | ErrorEnvelope | None, await self._owner.async_call_generated('list_backup_keys', parameters={}, body=None, authenticated=True, typed=True))
 
-    async def list_backup_keys_detailed(self) -> Response[ErrorEnvelope | ListBackupKeysResponseListBackupKeys]:
+    async def list_backup_keys_detailed(self) -> Response[BackupKeysInfo | ErrorEnvelope]:
         """Generated list_backup_keys operation."""
-        return cast(Response[ErrorEnvelope | ListBackupKeysResponseListBackupKeys], await self._owner.async_call_generated('list_backup_keys', parameters={}, body=None, authenticated=True, detailed=True))
+        return cast(Response[BackupKeysInfo | ErrorEnvelope], await self._owner.async_call_generated('list_backup_keys', parameters={}, body=None, authenticated=True, detailed=True))
 
     async def list_downloads(self) -> CustomZipsResponse | ErrorEnvelope | None:
         """Generated list_downloads operation."""
@@ -902,13 +902,13 @@ class RestClient:
         """Generated login operation."""
         return cast(Response[ErrorEnvelope | TokenResponse], await self._owner.async_call_generated('login', parameters={}, body=body, authenticated=False, detailed=True))
 
-    async def logout(self) -> Any | ErrorEnvelope | None:
+    async def logout(self) -> BaseApiResponse | ErrorEnvelope | None:
         """Generated logout operation."""
-        return cast(Any | ErrorEnvelope | None, await self._owner.async_call_generated('logout', parameters={}, body=None, authenticated=True, typed=True))
+        return cast(BaseApiResponse | ErrorEnvelope | None, await self._owner.async_call_generated('logout', parameters={}, body=None, authenticated=True, typed=True))
 
-    async def logout_detailed(self) -> Response[Any | ErrorEnvelope]:
+    async def logout_detailed(self) -> Response[BaseApiResponse | ErrorEnvelope]:
         """Generated logout operation."""
-        return cast(Response[Any | ErrorEnvelope], await self._owner.async_call_generated('logout', parameters={}, body=None, authenticated=True, detailed=True))
+        return cast(Response[BaseApiResponse | ErrorEnvelope], await self._owner.async_call_generated('logout', parameters={}, body=None, authenticated=True, detailed=True))
 
     async def manage_server_snapshot(self, server_name: str, backup_id: str, *, body: SnapshotManagePayload) -> ErrorEnvelope | TaskAcceptedResponse | None:
         """Generated manage_server_snapshot operation."""
@@ -982,13 +982,13 @@ class RestClient:
         """Generated recover_server_backup operation."""
         return cast(Response[ErrorEnvelope | TaskAcceptedResponse], await self._owner.async_call_generated('recover_server_backup', parameters={'server_name': server_name}, body=None, authenticated=True, detailed=True))
 
-    async def register_user(self, token: str, *, body: UserLoginPayload) -> Any | ErrorEnvelope | None:
+    async def register_user(self, token: str, *, body: UserLoginPayload) -> BaseApiResponse | ErrorEnvelope | None:
         """Generated register_user operation."""
-        return cast(Any | ErrorEnvelope | None, await self._owner.async_call_generated('register_user', parameters={'token': token}, body=body, authenticated=False, typed=True))
+        return cast(BaseApiResponse | ErrorEnvelope | None, await self._owner.async_call_generated('register_user', parameters={'token': token}, body=body, authenticated=False, typed=True))
 
-    async def register_user_detailed(self, token: str, *, body: UserLoginPayload) -> Response[Any | ErrorEnvelope]:
+    async def register_user_detailed(self, token: str, *, body: UserLoginPayload) -> Response[BaseApiResponse | ErrorEnvelope]:
         """Generated register_user operation."""
-        return cast(Response[Any | ErrorEnvelope], await self._owner.async_call_generated('register_user', parameters={'token': token}, body=body, authenticated=False, detailed=True))
+        return cast(Response[BaseApiResponse | ErrorEnvelope], await self._owner.async_call_generated('register_user', parameters={'token': token}, body=body, authenticated=False, detailed=True))
 
     async def reload_plugin(self, plugin_name: str) -> ActionResponse | ErrorEnvelope | None:
         """Generated reload_plugin operation."""
@@ -1166,13 +1166,13 @@ class RestClient:
         """Generated rotate_account_recovery_codes operation."""
         return cast(Response[ErrorEnvelope | RecoveryCodes], await self._owner.async_call_generated('rotate_account_recovery_codes', parameters={}, body=None, authenticated=True, detailed=True))
 
-    async def rotate_backup_key(self) -> ErrorEnvelope | RotateBackupKeyResponseRotateBackupKey | None:
+    async def rotate_backup_key(self) -> BackupKeyInfo | ErrorEnvelope | None:
         """Generated rotate_backup_key operation."""
-        return cast(ErrorEnvelope | RotateBackupKeyResponseRotateBackupKey | None, await self._owner.async_call_generated('rotate_backup_key', parameters={}, body=None, authenticated=True, typed=True))
+        return cast(BackupKeyInfo | ErrorEnvelope | None, await self._owner.async_call_generated('rotate_backup_key', parameters={}, body=None, authenticated=True, typed=True))
 
-    async def rotate_backup_key_detailed(self) -> Response[ErrorEnvelope | RotateBackupKeyResponseRotateBackupKey]:
+    async def rotate_backup_key_detailed(self) -> Response[BackupKeyInfo | ErrorEnvelope]:
         """Generated rotate_backup_key operation."""
-        return cast(Response[ErrorEnvelope | RotateBackupKeyResponseRotateBackupKey], await self._owner.async_call_generated('rotate_backup_key', parameters={}, body=None, authenticated=True, detailed=True))
+        return cast(Response[BackupKeyInfo | ErrorEnvelope], await self._owner.async_call_generated('rotate_backup_key', parameters={}, body=None, authenticated=True, detailed=True))
 
     async def rotate_integration_token(self, token_id: str) -> CreatedIntegrationToken | ErrorEnvelope | None:
         """Generated rotate_integration_token operation."""
@@ -1342,13 +1342,13 @@ class RestClient:
         """Generated update_user_role operation."""
         return cast(Response[BaseApiResponse | ErrorEnvelope], await self._owner.async_call_generated('update_user_role', parameters={'user_id': user_id}, body=body, authenticated=True, detailed=True))
 
-    async def validate_registration_token(self, token: str) -> Any | ErrorEnvelope | None:
+    async def validate_registration_token(self, token: str) -> BaseApiResponse | ErrorEnvelope | None:
         """Generated validate_registration_token operation."""
-        return cast(Any | ErrorEnvelope | None, await self._owner.async_call_generated('validate_registration_token', parameters={'token': token}, body=None, authenticated=False, typed=True))
+        return cast(BaseApiResponse | ErrorEnvelope | None, await self._owner.async_call_generated('validate_registration_token', parameters={'token': token}, body=None, authenticated=False, typed=True))
 
-    async def validate_registration_token_detailed(self, token: str) -> Response[Any | ErrorEnvelope]:
+    async def validate_registration_token_detailed(self, token: str) -> Response[BaseApiResponse | ErrorEnvelope]:
         """Generated validate_registration_token operation."""
-        return cast(Response[Any | ErrorEnvelope], await self._owner.async_call_generated('validate_registration_token', parameters={'token': token}, body=None, authenticated=False, detailed=True))
+        return cast(Response[BaseApiResponse | ErrorEnvelope], await self._owner.async_call_generated('validate_registration_token', parameters={'token': token}, body=None, authenticated=False, detailed=True))
 
     async def validate_server(self, server_name: str) -> BaseApiResponse | ErrorEnvelope | None:
         """Generated validate_server operation."""

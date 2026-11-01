@@ -8,8 +8,8 @@ from ...client import AuthenticatedClient, Client
 from ...types import Response, UNSET
 from ... import errors
 
+from ...models.backup_keys_info import BackupKeysInfo
 from ...models.error_envelope import ErrorEnvelope
-from ...models.list_backup_keys_response_list_backup_keys import ListBackupKeysResponseListBackupKeys
 from typing import cast
 
 
@@ -33,9 +33,9 @@ def _get_kwargs(
 
 
 
-def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> ErrorEnvelope | ListBackupKeysResponseListBackupKeys | None:
+def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> BackupKeysInfo | ErrorEnvelope | None:
     if response.status_code == 200:
-        response_200 = ListBackupKeysResponseListBackupKeys.from_dict(response.json())
+        response_200 = BackupKeysInfo.from_dict(response.json())
 
 
 
@@ -110,7 +110,7 @@ def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Res
         return None
 
 
-def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[ErrorEnvelope | ListBackupKeysResponseListBackupKeys]:
+def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[BackupKeysInfo | ErrorEnvelope]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -123,7 +123,7 @@ def sync_detailed(
     *,
     client: AuthenticatedClient,
 
-) -> Response[ErrorEnvelope | ListBackupKeysResponseListBackupKeys]:
+) -> Response[BackupKeysInfo | ErrorEnvelope]:
     """List Keys
     
      List key identifiers without exposing recovery credentials.
@@ -148,7 +148,7 @@ def sync(
     *,
     client: AuthenticatedClient,
 
-) -> ErrorEnvelope | ListBackupKeysResponseListBackupKeys | None:
+) -> BackupKeysInfo | ErrorEnvelope | None:
     """List Keys
     
      List key identifiers without exposing recovery credentials.
@@ -156,7 +156,7 @@ def sync(
     :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
     :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
     
-    :returns: ErrorEnvelope | ListBackupKeysResponseListBackupKeys"""
+    :returns: BackupKeysInfo | ErrorEnvelope"""
 
 
     return sync_detailed(
@@ -168,7 +168,7 @@ async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
 
-) -> Response[ErrorEnvelope | ListBackupKeysResponseListBackupKeys]:
+) -> Response[BackupKeysInfo | ErrorEnvelope]:
     """List Keys
     
      List key identifiers without exposing recovery credentials.
@@ -193,7 +193,7 @@ async def asyncio(
     *,
     client: AuthenticatedClient,
 
-) -> ErrorEnvelope | ListBackupKeysResponseListBackupKeys | None:
+) -> BackupKeysInfo | ErrorEnvelope | None:
     """List Keys
     
      List key identifiers without exposing recovery credentials.
@@ -201,7 +201,7 @@ async def asyncio(
     :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
     :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
     
-    :returns: ErrorEnvelope | ListBackupKeysResponseListBackupKeys"""
+    :returns: BackupKeysInfo | ErrorEnvelope"""
 
 
     return (await asyncio_detailed(

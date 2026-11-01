@@ -1119,6 +1119,54 @@
         "title": "BackupHealthResponse",
         "type": "object"
       },
+      "BackupKeyInfo": {
+        "additionalProperties": false,
+        "properties": {
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "key_id": {
+            "title": "Key Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "key_id",
+          "created_at"
+        ],
+        "title": "BackupKeyInfo",
+        "type": "object"
+      },
+      "BackupKeysInfo": {
+        "additionalProperties": false,
+        "properties": {
+          "active": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Active"
+          },
+          "keys": {
+            "items": {
+              "$ref": "#/components/schemas/BackupKeyInfo"
+            },
+            "title": "Keys",
+            "type": "array"
+          }
+        },
+        "required": [
+          "active",
+          "keys"
+        ],
+        "title": "BackupKeysInfo",
+        "type": "object"
+      },
       "BackupManifest": {
         "additionalProperties": false,
         "properties": {
@@ -11004,7 +11052,9 @@
           "Account Security"
         ],
         "x-bsm-access": {
-          "additional_checks": [],
+          "additional_checks": [
+            "recent-interactive-verification"
+          ],
           "allowed_roles": [
             "admin"
           ],
@@ -11304,7 +11354,9 @@
           "Access Management"
         ],
         "x-bsm-access": {
-          "additional_checks": [],
+          "additional_checks": [
+            "recent-interactive-verification"
+          ],
           "allowed_roles": [
             "admin"
           ],
@@ -11461,12 +11513,15 @@
           "Access Management"
         ],
         "x-bsm-access": {
-          "additional_checks": [],
+          "additional_checks": [
+            "read-only-preview"
+          ],
           "allowed_roles": [
             "admin"
           ],
           "authentication": "required",
           "classification": "permission",
+          "credential_alternatives": [],
           "integration_tokens": "unsupported",
           "required_permissions": [
             "access:manage"
@@ -11757,7 +11812,9 @@
           "Account Security"
         ],
         "x-bsm-access": {
-          "additional_checks": [],
+          "additional_checks": [
+            "recent-interactive-verification"
+          ],
           "allowed_roles": [
             "admin"
           ],
@@ -11912,7 +11969,9 @@
           "Account Security"
         ],
         "x-bsm-access": {
-          "additional_checks": [],
+          "additional_checks": [
+            "recent-interactive-verification"
+          ],
           "allowed_roles": [
             "admin"
           ],
@@ -12255,7 +12314,9 @@
           "Access Management"
         ],
         "x-bsm-access": {
-          "additional_checks": [],
+          "additional_checks": [
+            "recent-interactive-verification"
+          ],
           "allowed_roles": [
             "admin"
           ],
@@ -12542,7 +12603,11 @@
           "Account Management"
         ],
         "x-bsm-access": {
-          "additional_checks": [],
+          "additional_checks": [
+            "account-owner",
+            "recent-interactive-verification",
+            "current-password"
+          ],
           "allowed_roles": [
             "user",
             "moderator",
@@ -12550,6 +12615,7 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "credential_alternatives": [],
           "integration_tokens": "unsupported",
           "required_permissions": [
             "account:manage"
@@ -13686,7 +13752,11 @@
           "Account Security"
         ],
         "x-bsm-access": {
-          "additional_checks": [],
+          "additional_checks": [
+            "account-owner",
+            "recent-interactive-verification",
+            "administrator-mfa-policy"
+          ],
           "allowed_roles": [
             "user",
             "moderator",
@@ -13694,6 +13764,7 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "credential_alternatives": [],
           "integration_tokens": "unsupported",
           "required_permissions": [
             "sessions:manage"
@@ -13833,7 +13904,10 @@
           "Account Security"
         ],
         "x-bsm-access": {
-          "additional_checks": [],
+          "additional_checks": [
+            "account-owner",
+            "recent-interactive-verification"
+          ],
           "allowed_roles": [
             "user",
             "moderator",
@@ -13841,6 +13915,7 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "credential_alternatives": [],
           "integration_tokens": "unsupported",
           "required_permissions": [
             "sessions:manage"
@@ -13970,7 +14045,10 @@
           "Account Security"
         ],
         "x-bsm-access": {
-          "additional_checks": [],
+          "additional_checks": [
+            "account-owner",
+            "recent-interactive-verification"
+          ],
           "allowed_roles": [
             "user",
             "moderator",
@@ -13978,6 +14056,7 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "credential_alternatives": [],
           "integration_tokens": "unsupported",
           "required_permissions": [
             "sessions:manage"
@@ -14107,7 +14186,10 @@
           "Account Security"
         ],
         "x-bsm-access": {
-          "additional_checks": [],
+          "additional_checks": [
+            "account-owner",
+            "recent-interactive-verification"
+          ],
           "allowed_roles": [
             "user",
             "moderator",
@@ -14115,6 +14197,7 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "credential_alternatives": [],
           "integration_tokens": "unsupported",
           "required_permissions": [
             "sessions:manage"
@@ -14542,7 +14625,10 @@
           "Account Security"
         ],
         "x-bsm-access": {
-          "additional_checks": [],
+          "additional_checks": [
+            "account-owner",
+            "recent-interactive-verification"
+          ],
           "allowed_roles": [
             "user",
             "moderator",
@@ -14550,6 +14636,7 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "credential_alternatives": [],
           "integration_tokens": "unsupported",
           "required_permissions": [
             "sessions:manage"
@@ -14690,7 +14777,10 @@
           "Account Security"
         ],
         "x-bsm-access": {
-          "additional_checks": [],
+          "additional_checks": [
+            "session-owner",
+            "recent-verification-unless-current-session"
+          ],
           "allowed_roles": [
             "user",
             "moderator",
@@ -14698,6 +14788,7 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "credential_alternatives": [],
           "integration_tokens": "unsupported",
           "required_permissions": [
             "sessions:manage"
@@ -14846,7 +14937,9 @@
           "Account Security"
         ],
         "x-bsm-access": {
-          "additional_checks": [],
+          "additional_checks": [
+            "session-owner"
+          ],
           "allowed_roles": [
             "user",
             "moderator",
@@ -14854,6 +14947,7 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "credential_alternatives": [],
           "integration_tokens": "unsupported",
           "required_permissions": [
             "sessions:manage"
@@ -15175,7 +15269,9 @@
           "Access Management"
         ],
         "x-bsm-access": {
-          "additional_checks": [],
+          "additional_checks": [
+            "credential-owner"
+          ],
           "allowed_roles": [
             "user",
             "moderator",
@@ -15183,6 +15279,7 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "credential_alternatives": [],
           "integration_tokens": "unsupported",
           "required_permissions": [
             "tokens:manage"
@@ -15320,7 +15417,10 @@
           "Access Management"
         ],
         "x-bsm-access": {
-          "additional_checks": [],
+          "additional_checks": [
+            "credential-owner",
+            "recent-interactive-verification"
+          ],
           "allowed_roles": [
             "user",
             "moderator",
@@ -15328,6 +15428,7 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "credential_alternatives": [],
           "integration_tokens": "unsupported",
           "required_permissions": [
             "tokens:manage"
@@ -15468,7 +15569,10 @@
           "Access Management"
         ],
         "x-bsm-access": {
-          "additional_checks": [],
+          "additional_checks": [
+            "credential-owner",
+            "read-only-preview"
+          ],
           "allowed_roles": [
             "user",
             "moderator",
@@ -15476,6 +15580,7 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "credential_alternatives": [],
           "integration_tokens": "unsupported",
           "required_permissions": [
             "tokens:manage"
@@ -15605,7 +15710,10 @@
           "Account Security"
         ],
         "x-bsm-access": {
-          "additional_checks": [],
+          "additional_checks": [
+            "credential-owner",
+            "recent-interactive-verification"
+          ],
           "allowed_roles": [
             "user",
             "moderator",
@@ -15613,6 +15721,7 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "credential_alternatives": [],
           "integration_tokens": "unsupported",
           "required_permissions": [
             "tokens:manage"
@@ -15753,7 +15862,9 @@
           "Access Management"
         ],
         "x-bsm-access": {
-          "additional_checks": [],
+          "additional_checks": [
+            "credential-owner"
+          ],
           "allowed_roles": [
             "user",
             "moderator",
@@ -15761,6 +15872,7 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "credential_alternatives": [],
           "integration_tokens": "unsupported",
           "required_permissions": [
             "tokens:manage"
@@ -15901,7 +16013,10 @@
           "Access Management"
         ],
         "x-bsm-access": {
-          "additional_checks": [],
+          "additional_checks": [
+            "credential-owner",
+            "recent-interactive-verification"
+          ],
           "allowed_roles": [
             "user",
             "moderator",
@@ -15909,6 +16024,7 @@
           ],
           "authentication": "required",
           "classification": "permission",
+          "credential_alternatives": [],
           "integration_tokens": "unsupported",
           "required_permissions": [
             "tokens:manage"
@@ -15927,9 +16043,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response List Backup Keys",
-                  "type": "object"
+                  "$ref": "#/components/schemas/BackupKeysInfo"
                 }
               }
             },
@@ -16066,11 +16180,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": {
-                    "type": "string"
-                  },
-                  "title": "Response Rotate Backup Key",
-                  "type": "object"
+                  "$ref": "#/components/schemas/BackupKeyInfo"
                 }
               }
             },
@@ -19690,6 +19800,26 @@
         "operationId": "get_panorama",
         "responses": {
           "200": {
+            "content": {
+              "image/jpeg": {
+                "schema": {
+                  "format": "binary",
+                  "type": "string"
+                }
+              },
+              "image/png": {
+                "schema": {
+                  "format": "binary",
+                  "type": "string"
+                }
+              },
+              "image/webp": {
+                "schema": {
+                  "format": "binary",
+                  "type": "string"
+                }
+              }
+            },
             "description": "Successful Response"
           },
           "400": {
@@ -21267,6 +21397,28 @@
           },
           {
             "IntegrationToken": []
+          },
+          {
+            "OAuth2PasswordBearer": [
+              "settings:read"
+            ]
+          },
+          {
+            "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
+          },
+          {
+            "OAuth2PasswordBearer": [
+              "servers:read"
+            ]
+          },
+          {
+            "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "Get Plugin Settings",
@@ -21274,17 +21426,55 @@
           "Plugin Management"
         ],
         "x-bsm-access": {
-          "additional_checks": [],
+          "additional_checks": [
+            "settings-scope",
+            "query-server-access"
+          ],
           "allowed_roles": [
+            "user",
+            "moderator",
             "admin"
           ],
           "authentication": "required",
-          "classification": "permission",
-          "integration_tokens": "supported",
-          "required_permissions": [
-            "plugins:read"
+          "classification": "custom",
+          "credential_alternatives": [
+            {
+              "condition": "scope=plugin",
+              "permissions": [
+                "plugins:read"
+              ],
+              "schemes": [
+                "OAuth2PasswordBearer",
+                "APIKeyCookie",
+                "IntegrationToken"
+              ]
+            },
+            {
+              "condition": "scope=global",
+              "permissions": [
+                "settings:read"
+              ],
+              "schemes": [
+                "OAuth2PasswordBearer",
+                "APIKeyCookie",
+                "IntegrationToken"
+              ]
+            },
+            {
+              "condition": "scope=server",
+              "permissions": [
+                "servers:read"
+              ],
+              "schemes": [
+                "OAuth2PasswordBearer",
+                "APIKeyCookie",
+                "IntegrationToken"
+              ]
+            }
           ],
-          "resource_scope": "global",
+          "integration_tokens": "supported",
+          "required_permissions": [],
+          "resource_scope": "collection",
           "version": 1
         }
       },
@@ -21424,6 +21614,28 @@
           },
           {
             "IntegrationToken": []
+          },
+          {
+            "OAuth2PasswordBearer": [
+              "settings:manage"
+            ]
+          },
+          {
+            "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
+          },
+          {
+            "OAuth2PasswordBearer": [
+              "servers:configure"
+            ]
+          },
+          {
+            "APIKeyCookie": []
+          },
+          {
+            "IntegrationToken": []
           }
         ],
         "summary": "Update Plugin Settings",
@@ -21431,17 +21643,53 @@
           "Plugin Management"
         ],
         "x-bsm-access": {
-          "additional_checks": [],
+          "additional_checks": [
+            "settings-scope",
+            "body-server-access"
+          ],
           "allowed_roles": [
             "admin"
           ],
           "authentication": "required",
-          "classification": "permission",
-          "integration_tokens": "supported",
-          "required_permissions": [
-            "plugins:manage"
+          "classification": "custom",
+          "credential_alternatives": [
+            {
+              "condition": "scope=plugin",
+              "permissions": [
+                "plugins:manage"
+              ],
+              "schemes": [
+                "OAuth2PasswordBearer",
+                "APIKeyCookie",
+                "IntegrationToken"
+              ]
+            },
+            {
+              "condition": "scope=global",
+              "permissions": [
+                "settings:manage"
+              ],
+              "schemes": [
+                "OAuth2PasswordBearer",
+                "APIKeyCookie",
+                "IntegrationToken"
+              ]
+            },
+            {
+              "condition": "scope=server",
+              "permissions": [
+                "servers:configure"
+              ],
+              "schemes": [
+                "OAuth2PasswordBearer",
+                "APIKeyCookie",
+                "IntegrationToken"
+              ]
+            }
           ],
-          "resource_scope": "global",
+          "integration_tokens": "supported",
+          "required_permissions": [],
+          "resource_scope": "collection",
           "version": 1
         }
       }
@@ -21577,7 +21825,9 @@
           "Registration"
         ],
         "x-bsm-access": {
-          "additional_checks": [],
+          "additional_checks": [
+            "recent-interactive-verification"
+          ],
           "allowed_roles": [
             "admin"
           ],
@@ -21612,7 +21862,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/BaseApiResponse"
+                }
               }
             },
             "description": "Successful Response"
@@ -21758,7 +22010,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/BaseApiResponse"
+                }
               }
             },
             "description": "Successful Response"
@@ -24231,7 +24485,7 @@
         "security": [
           {
             "OAuth2PasswordBearer": [
-              "content:manage"
+              "content:read"
             ]
           },
           {
@@ -24248,13 +24502,14 @@
         "x-bsm-access": {
           "additional_checks": [],
           "allowed_roles": [
+            "moderator",
             "admin"
           ],
           "authentication": "required",
           "classification": "permission",
           "integration_tokens": "supported",
           "required_permissions": [
-            "content:manage"
+            "content:read"
           ],
           "resource_scope": "server",
           "version": 1
@@ -33108,7 +33363,9 @@
           "User Management"
         ],
         "x-bsm-access": {
-          "additional_checks": [],
+          "additional_checks": [
+            "recent-interactive-verification"
+          ],
           "allowed_roles": [
             "admin"
           ],
@@ -33254,7 +33511,9 @@
           "User Management"
         ],
         "x-bsm-access": {
-          "additional_checks": [],
+          "additional_checks": [
+            "recent-interactive-verification"
+          ],
           "allowed_roles": [
             "admin"
           ],
@@ -33400,7 +33659,9 @@
           "User Management"
         ],
         "x-bsm-access": {
-          "additional_checks": [],
+          "additional_checks": [
+            "recent-interactive-verification"
+          ],
           "allowed_roles": [
             "admin"
           ],
@@ -33556,7 +33817,9 @@
           "User Management"
         ],
         "x-bsm-access": {
-          "additional_checks": [],
+          "additional_checks": [
+            "recent-interactive-verification"
+          ],
           "allowed_roles": [
             "admin"
           ],
@@ -33747,7 +34010,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/BaseApiResponse"
+                }
               }
             },
             "description": "Successful Response"
@@ -34182,6 +34447,26 @@
     {
       "description": "Your profile, password, and appearance preferences.",
       "name": "Account Management"
+    },
+    {
+      "description": "Effective access, integration credentials, and server grants.",
+      "name": "Access Management"
+    },
+    {
+      "description": "Login sessions, recent verification, MFA, and remembered devices.",
+      "name": "Account Security"
+    },
+    {
+      "description": "Scheduled work and run history.",
+      "name": "Scheduler"
+    },
+    {
+      "description": "Sanitized application observations and support reports.",
+      "name": "Diagnostics"
+    },
+    {
+      "description": "Event catalog and activity diagnostics.",
+      "name": "Application Events"
     },
     {
       "description": "Administrative account and role management.",

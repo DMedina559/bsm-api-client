@@ -8,6 +8,7 @@ from ...client import AuthenticatedClient, Client
 from ...types import Response, UNSET
 from ... import errors
 
+from ...models.base_api_response import BaseApiResponse
 from ...models.error_envelope import ErrorEnvelope
 from ...models.user_login_payload import UserLoginPayload
 from typing import cast
@@ -41,9 +42,12 @@ def _get_kwargs(
 
 
 
-def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Any | ErrorEnvelope | None:
+def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> BaseApiResponse | ErrorEnvelope | None:
     if response.status_code == 200:
-        response_200 = response.json()
+        response_200 = BaseApiResponse.from_dict(response.json())
+
+
+
         return response_200
 
     if response.status_code == 400:
@@ -115,7 +119,7 @@ def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Res
         return None
 
 
-def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[Any | ErrorEnvelope]:
+def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[BaseApiResponse | ErrorEnvelope]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -130,7 +134,7 @@ def sync_detailed(
     client: AuthenticatedClient | Client,
     body: UserLoginPayload,
 
-) -> Response[Any | ErrorEnvelope]:
+) -> Response[BaseApiResponse | ErrorEnvelope]:
     """Register User
     
      Create a new user from a registration token.
@@ -162,7 +166,7 @@ def sync(
     client: AuthenticatedClient | Client,
     body: UserLoginPayload,
 
-) -> Any | ErrorEnvelope | None:
+) -> BaseApiResponse | ErrorEnvelope | None:
     """Register User
     
      Create a new user from a registration token.
@@ -173,7 +177,7 @@ def sync(
     :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
     :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
     
-    :returns: Any | ErrorEnvelope"""
+    :returns: BaseApiResponse | ErrorEnvelope"""
 
 
     return sync_detailed(
@@ -189,7 +193,7 @@ async def asyncio_detailed(
     client: AuthenticatedClient | Client,
     body: UserLoginPayload,
 
-) -> Response[Any | ErrorEnvelope]:
+) -> Response[BaseApiResponse | ErrorEnvelope]:
     """Register User
     
      Create a new user from a registration token.
@@ -221,7 +225,7 @@ async def asyncio(
     client: AuthenticatedClient | Client,
     body: UserLoginPayload,
 
-) -> Any | ErrorEnvelope | None:
+) -> BaseApiResponse | ErrorEnvelope | None:
     """Register User
     
      Create a new user from a registration token.
@@ -232,7 +236,7 @@ async def asyncio(
     :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
     :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
     
-    :returns: Any | ErrorEnvelope"""
+    :returns: BaseApiResponse | ErrorEnvelope"""
 
 
     return (await asyncio_detailed(
