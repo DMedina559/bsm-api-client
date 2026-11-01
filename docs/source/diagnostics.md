@@ -74,23 +74,23 @@ required. The SDK exports `ScheduledTask`, `ScheduleEntry` and `ListSchedulesRes
 from bsm_api_client.models import ScheduledTask
 
 await client.scheduler.async_save_schedule("weekly-verify", ScheduledTask(
-    task="verify", server_name="MyServer", enabled=True,
+    task="backup:verify", server_name="MyServer", enabled=True,
     time="04:00", timezone="UTC", weekdays=[6],
     options={"minimum_age_hours": 168},
 ))
 ```
 
-CLI equivalents are `bsm-cli scheduler list`,
-`bsm-cli scheduler save weekly-verify schedule.json`, and
+CLI equivalents are `bsm-cli scheduler list`, `bsm-cli scheduler tasks`,
+`bsm-cli scheduler save weekly-verify schedule.json` (or `--task backup:verify --server-name MyServer ...`), and
 `bsm-cli scheduler remove weekly-verify` (all support the global `--json` option).
-Saving uses a JSON file with the same `ScheduledTask` fields.
+Saving accepts a JSON file with `ScheduledTask` fields and/or CLI option flags.
 
 Full verification after capture, periodic verification and automatic recovery
 drills default to off on new installations. Existing explicitly configured
 intervals are retained. A new archive is **unverified** until checked. Restore
 integrity validation remains mandatory. Configure `backups.verify_after_create`
 through the existing settings service for immediate verification; alternatively
-create an independent `verify` job. Backup summaries include per-stage durations
+create an independent `backup:verify` job. Backup summaries include per-stage durations
 in `stage_durations_ms`. The existing backup manage method also accepts `delete`
 for unpinned local archives outside their safety protection window.
 

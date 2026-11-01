@@ -351,29 +351,6 @@ class BackupsService(Service):
             {"components": components, "recovery_key": recovery_key},
         )
 
-    async def async_set_schedule(
-        self, server_name: str, schedule: dict[str, Any] | None
-    ) -> Any:
-        """Configure or remove a server schedule using administrator settings.
-
-        :param server_name: Scheduled server.
-        :param schedule: Daily local time, IANA timezone, weekdays, catch_up and stagger_minutes; None removes it.
-        :returns: Updated settings response.
-        """
-        response = await self.async_call_generated("get_settings", authenticated=True)
-        schedules = dict(response["settings"].get("backups", {}).get("schedules", {}))
-        if schedule is None:
-            schedules.pop(server_name, None)
-        else:
-            schedules[server_name] = schedule
-        await self.async_call_generated(
-            "set_setting",
-            body={"key": "backups.schedules", "value": schedules},
-            authenticated=True,
-        )
-
-        return await self.async_call_generated("get_settings", authenticated=True)
-
     async def async_cleanup_destination(
         self, server_name: str, destination: str, token: str | None = None
     ) -> Any:

@@ -13,7 +13,7 @@ from .base import Service
 
 
 class SchedulerService(Service):
-    """Manage independent backup, verification, and plugin-provided schedules."""
+    """Manage scheduled server tasks, built-in operations, and plugin-provided schedules."""
 
     async def async_list_schedules(
         self, server_name: str | None = None

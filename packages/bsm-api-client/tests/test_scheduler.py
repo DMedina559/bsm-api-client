@@ -21,7 +21,17 @@ async def test_schedule_crud():
                 200,
                 json={
                     "schedules": [],
-                    "task_types": ["backup", "verify"],
+                    "task_types": ["backup:create", "backup:verify"],
+                    "task_definitions": {
+                        "backup:create": {
+                            "options_schema": {"type": "object", "properties": {}},
+                            "timeout_seconds": None,
+                            "requires_server_lock": True,
+                            "with_context": True,
+                            "description": "Create a scheduled server snapshot archive.",
+                            "owner": "application",
+                        }
+                    },
                     "timezones": ["UTC", "America/Los_Angeles"],
                     "timezone_database_available": True,
                     "host_timezone": "UTC",
@@ -34,14 +44,17 @@ async def test_schedule_crud():
             "http://test", jwt_token="test", http_client=transport
         ) as client:
             result = await client.scheduler.async_list_schedules("alpha")
-            assert result.task_types == ["backup", "verify"]
+            assert result.task_types == ["backup:create", "backup:verify"]
+            assert result.task_definitions["backup:create"]["timeout_seconds"] is None
             assert result.timezone_database_available
             assert "America/Los_Angeles" in result.timezones
             assert seen[-1].url.params["server_name"] == "alpha"
-            config = ScheduledTask(task="verify", server_name="alpha", enabled=False)
+            config = ScheduledTask(
+                task="backup:verify", server_name="alpha", enabled=False
+            )
             await client.scheduler.async_save_schedule("weekly", config)
             assert seen[-1].method == "PUT"
-            assert json.loads(seen[-1].content)["task"] == "verify"
+            assert json.loads(seen[-1].content)["task"] == "backup:verify"
             assert "timezone" not in json.loads(seen[-1].content)
             await client.scheduler.async_save_schedule(
                 "weekly", config.model_copy(update={"timezone": "America/Los_Angeles"})

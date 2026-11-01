@@ -170,6 +170,7 @@ SUCCESS.update(
 CASES = [
     ("scheduler", "list"),
     ("scheduler", "list", "--server-name", "TestServer"),
+    ("scheduler", "tasks"),
     ("scheduler", "remove", "nightly"),
     (
         "diagnostics",
@@ -357,7 +358,15 @@ def command_client(monkeypatch, tmp_path):
                     "/api/account": {"permissions": ["account:read", "servers:read"]},
                     "/api/scheduler/schedules": {
                         "schedules": [],
-                        "task_types": ["backup", "verify"],
+                        "task_types": ["backup:create", "backup:verify"],
+                        "task_definitions": {
+                            "backup:create": {
+                                "owner": "application",
+                                "timeout_seconds": None,
+                                "requires_server_lock": True,
+                                "description": "Create a scheduled server snapshot archive.",
+                            }
+                        },
                     },
                     "/api/diagnostics/activity": {
                         "events": None,
@@ -727,7 +736,13 @@ def test_recovery_report_writes_new_file_and_preserves_existing(
 def test_scheduler_save_json(command_client, tmp_path):
     config = tmp_path / "schedule.json"
     config.write_text(
-        json.dumps({"task": "verify", "server_name": "TestServer", "enabled": False})
+        json.dumps(
+            {
+                "task": "backup:verify",
+                "server_name": "TestServer",
+                "enabled": False,
+            }
+        )
     )
     result = CliRunner().invoke(
         cli, ["--json", "scheduler", "save", "weekly", str(config)]
@@ -735,6 +750,32 @@ def test_scheduler_save_json(command_client, tmp_path):
     assert result.exit_code == 0, result.output
     request = command_client[0]._dynamic_request.call_args
     assert request.args[:2] == ("PUT", "/api/scheduler/schedules/weekly")
+    assert json.loads(request.kwargs["raw_request"].content)["task"] == "backup:verify"
+
+    result_flags = CliRunner().invoke(
+        cli,
+        [
+            "--json",
+            "scheduler",
+            "save",
+            "nightly",
+            "--task",
+            "backup:create",
+            "--server-name",
+            "TestServer",
+            "--time",
+            "04:00",
+            "--disabled",
+            "--options-json",
+            '{"mode": "world"}',
+        ],
+    )
+    assert result_flags.exit_code == 0, result_flags.output
+    request_flags = command_client[-1]._dynamic_request.call_args
+    assert request_flags.args[:2] == ("PUT", "/api/scheduler/schedules/nightly")
+    sent_flags = json.loads(request_flags.kwargs["raw_request"].content)
+    assert sent_flags["task"] == "backup:create"
+    assert sent_flags["options"] == {"mode": "world"}
 
 
 @pytest.mark.parametrize("machine", [False, True])

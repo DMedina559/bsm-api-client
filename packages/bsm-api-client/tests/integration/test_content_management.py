@@ -137,12 +137,23 @@ class TestContentManagement:
         )
         labelled = await client.backups.async_list(server_name)
         assert any(item["label"] == "Before upgrade" for item in labelled["backups"])
-        scheduled = await client.backups.async_set_schedule(
-            server_name, {"enabled": False, "time": "03:00", "timezone": "UTC"}
+        from bsm_api_client.models import ScheduledTask
+
+        await client.scheduler.async_save_schedule(
+            f"backup-{server_name}",
+            ScheduledTask(
+                task="backup:create",
+                server_name=server_name,
+                enabled=False,
+                time="03:00",
+                timezone="UTC",
+            ),
         )
+        schedules = await client.scheduler.async_list_schedules(server_name)
         assert (
-            scheduled["settings"]["backups"]["schedules"][server_name]["enabled"]
-            is False
+            schedules.schedules
+            and schedules.schedules[0].configuration.enabled is False
+            and schedules.schedules[0].configuration.task == "backup:create"
         )
         health = await client.backups.async_health(server_name)
         assert health["health"]["last_verified_at"]
