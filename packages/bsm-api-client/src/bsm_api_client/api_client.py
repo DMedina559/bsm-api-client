@@ -64,6 +64,7 @@ class BedrockServerManagerApi(DynamicOpenAPIMixin, ClientBase):
         otp: str = "",
         remember_device: bool = False,
         trusted_device_token: str | None = None,
+        client_name: str | None = None,
     ) -> None:
         """Create the SDK and its domain services without opening a WebSocket.
 
@@ -91,6 +92,7 @@ class BedrockServerManagerApi(DynamicOpenAPIMixin, ClientBase):
             otp=otp,
             remember_device=remember_device,
             trusted_device_token=trusted_device_token,
+            client_name=client_name,
         )
         from .generated.rest import RestClient
 

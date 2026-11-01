@@ -80,6 +80,7 @@ class ClientBase:
         otp: str = "",
         remember_device: bool = False,
         trusted_device_token: Optional[str] = None,
+        client_name: Optional[str] = None,
     ):
         """Initializes the base API client.
         :param base_url: The base URL of the Bedrock Server Manager (e.g., http://localhost:8080).
@@ -149,7 +150,10 @@ class ClientBase:
         self._verify_ssl = verify_ssl
 
         self._jwt_token: Optional[str] = jwt_token
-        self._default_headers: Mapping[str, str] = {"Accept": "application/json"}
+        self._default_headers: Mapping[str, str] = {
+            "Accept": "application/json",
+            "X-BSM-Client": client_name or "BSM Python SDK",
+        }
         self._session = session
         self._close_session = session is None
         self._http_client = http_client or httpx.AsyncClient(

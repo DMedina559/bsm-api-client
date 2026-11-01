@@ -11,7 +11,7 @@ except ImportError:
 from contextlib import asynccontextmanager
 
 from bsm_api_client import BedrockServerManagerApi
-from bsm_cli.access import access, mfa, sessions, tokens
+from bsm_cli.access import access, devices, mfa, sessions, tokens
 from bsm_cli.account import account
 from bsm_cli.addon import addon
 from bsm_cli.allowlist import allowlist
@@ -63,6 +63,7 @@ async def cli_context(ctx):
         client = BedrockServerManagerApi(
             base_url=config.base_url,
             jwt_token=config.jwt_token,
+            client_name="BSM CLI",
             **(
                 {"trusted_device_token": config.trusted_device()}
                 if config.trusted_device()
@@ -92,6 +93,7 @@ cli.add_command(diagnostics)
 cli.add_command(api)
 register_plugin_commands(plugin)
 auth.add_command(tokens)
+auth.add_command(devices)
 auth.add_command(sessions)
 auth.add_command(mfa)
 cli.add_command(access)

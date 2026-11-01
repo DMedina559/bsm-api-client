@@ -355,3 +355,10 @@ and backend, never prints it, and does not save passwords or one-use codes.
 Logout clears the login while keeping remembered trust for a future password
 login. Use Account Security → Sessions to forget remembered devices; this does
 not sign out existing sessions. Password/MFA changes invalidate remembered trust.
+
+Integration-token history supports `auth tokens list --status active|inactive|all
+--limit 50 --offset 0`. `auth devices list` shows remembered second-factor devices;
+`auth devices forget <id>`, `--others`, or `--all` removes their trust without signing
+out login sessions. Reauthentication saves newly remembered trust for the account
+returned by the backend, rather than an old local username label. An environment
+credential override does not automatically receive another saved account's proof.

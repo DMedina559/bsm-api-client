@@ -10,6 +10,7 @@ from ... import errors
 
 from ...models.error_envelope import ErrorEnvelope
 from ...models.integration_token_info import IntegrationTokenInfo
+from ...models.list_integration_tokens_status import ListIntegrationTokensStatus
 from ...types import UNSET, Unset
 from typing import cast
 
@@ -19,6 +20,7 @@ def _get_kwargs(
     *,
     limit: int | Unset = 100,
     offset: int | Unset = 0,
+    status: ListIntegrationTokensStatus | Unset = ListIntegrationTokensStatus.ALL,
 
 ) -> dict[str, Any]:
     
@@ -30,6 +32,12 @@ def _get_kwargs(
     params["limit"] = limit
 
     params["offset"] = offset
+
+    json_status: str | Unset = UNSET
+    if not isinstance(status, Unset):
+        json_status = status.value
+
+    params["status"] = json_status
 
 
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
@@ -142,12 +150,14 @@ def sync_detailed(
     client: AuthenticatedClient,
     limit: int | Unset = 100,
     offset: int | Unset = 0,
+    status: ListIntegrationTokensStatus | Unset = ListIntegrationTokensStatus.ALL,
 
 ) -> Response[ErrorEnvelope | list[IntegrationTokenInfo]]:
     """List Tokens
     
     :param limit: Default: 100.
     :param offset: Default: 0.
+    :param status: Default: ListIntegrationTokensStatus.ALL.
     
     :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
     :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
@@ -158,6 +168,7 @@ def sync_detailed(
     kwargs = _get_kwargs(
         limit=limit,
 offset=offset,
+status=status,
 
     )
 
@@ -172,12 +183,14 @@ def sync(
     client: AuthenticatedClient,
     limit: int | Unset = 100,
     offset: int | Unset = 0,
+    status: ListIntegrationTokensStatus | Unset = ListIntegrationTokensStatus.ALL,
 
 ) -> ErrorEnvelope | list[IntegrationTokenInfo] | None:
     """List Tokens
     
     :param limit: Default: 100.
     :param offset: Default: 0.
+    :param status: Default: ListIntegrationTokensStatus.ALL.
     
     :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
     :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
@@ -189,6 +202,7 @@ def sync(
         client=client,
 limit=limit,
 offset=offset,
+status=status,
 
     ).parsed
 
@@ -197,12 +211,14 @@ async def asyncio_detailed(
     client: AuthenticatedClient,
     limit: int | Unset = 100,
     offset: int | Unset = 0,
+    status: ListIntegrationTokensStatus | Unset = ListIntegrationTokensStatus.ALL,
 
 ) -> Response[ErrorEnvelope | list[IntegrationTokenInfo]]:
     """List Tokens
     
     :param limit: Default: 100.
     :param offset: Default: 0.
+    :param status: Default: ListIntegrationTokensStatus.ALL.
     
     :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
     :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
@@ -213,6 +229,7 @@ async def asyncio_detailed(
     kwargs = _get_kwargs(
         limit=limit,
 offset=offset,
+status=status,
 
     )
 
@@ -227,12 +244,14 @@ async def asyncio(
     client: AuthenticatedClient,
     limit: int | Unset = 100,
     offset: int | Unset = 0,
+    status: ListIntegrationTokensStatus | Unset = ListIntegrationTokensStatus.ALL,
 
 ) -> ErrorEnvelope | list[IntegrationTokenInfo] | None:
     """List Tokens
     
     :param limit: Default: 100.
     :param offset: Default: 0.
+    :param status: Default: ListIntegrationTokensStatus.ALL.
     
     :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
     :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
@@ -244,5 +263,6 @@ async def asyncio(
         client=client,
 limit=limit,
 offset=offset,
+status=status,
 
     )).parsed

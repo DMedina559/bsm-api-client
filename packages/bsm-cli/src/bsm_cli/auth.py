@@ -105,6 +105,7 @@ async def _login(
             username=username,
             password=password,
             verify_ssl=verify_ssl,
+            client_name="BSM CLI",
             remember_me=remember_me,
             **({"otp": otp} if otp else {}),
             **({"remember_device": True} if remember_device else {}),
@@ -167,7 +168,10 @@ async def logout(ctx):
             await client.async_logout()
         elif token:
             async with BedrockServerManagerApi(
-                base_url=config.base_url, jwt_token=token, verify_ssl=config.verify_ssl
+                base_url=config.base_url,
+                jwt_token=token,
+                verify_ssl=config.verify_ssl,
+                client_name="BSM CLI",
             ) as temporary:
                 await temporary.async_logout()
     finally:
@@ -193,7 +197,11 @@ async def setup(ctx, base_url, verify_ssl, username, password):
 
     url = _validate_and_get_url(base_url)
     async with BedrockServerManagerApi(
-        url, username=username, password=password, verify_ssl=verify_ssl
+        url,
+        username=username,
+        password=password,
+        verify_ssl=verify_ssl,
+        client_name="BSM CLI",
     ) as client:
         if not (await client.application.async_get_setup_status()).needs_setup:
             raise click.ClickException("Setup is already complete. Use auth login.")
@@ -204,6 +212,7 @@ async def setup(ctx, base_url, verify_ssl, username, password):
         base_url=url,
         verify_ssl=verify_ssl,
         jwt_token=response.access_token,
+        active_username=username,
         username=None,
         password=None,
         openapi_cache=None,
@@ -232,6 +241,11 @@ async def verify(ctx, password, otp, mfa, remember_device):
     """Verify the existing session for five minutes of security management."""
     if mfa:
         otp = click.prompt("Authenticator or recovery code", hide_input=True)
+    account = (
+        await get_client(ctx).async_call_operation("get_account")
+        if remember_device
+        else None
+    )
     result = await get_client(ctx).async_call_operation(
         "verify_account_security",
         json_data={
@@ -241,12 +255,9 @@ async def verify(ctx, password, otp, mfa, remember_device):
         },
     )
     credential = result.pop("trusted_device_token", None)
-    if credential:
+    if credential and account:
         config = ctx.obj["config"]
-        username = config.get("active_username")
-        if not username:
-            account = await get_client(ctx).async_call_operation("get_account")
-            username = account["username"]
+        username = account["username"]
         config.update(
             trusted_device_token=credential,
             trusted_device_expires_at=result.get("trusted_device_expires_at"),

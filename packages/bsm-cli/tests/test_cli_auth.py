@@ -194,3 +194,153 @@ def test_login_remember_device_saves_grant_without_printing_it(
     assert saved["password"] is None
     assert "bsm_td_private-device-proof" not in result.output
     assert "recovery-code" not in path.read_text()
+
+
+def test_remembering_reauthentication_uses_authenticated_account_not_stale_label(
+    auth_config, monkeypatch
+):
+    config, path = auth_config
+    config.update(active_username="previous-owner")
+    monkeypatch.setattr("bsm_cli.__main__.Config", lambda: config)
+    client = AsyncMock()
+    proof = "bsm_td_" + "a" * 32 + "." + "s" * 43
+
+    async def operation(name, **kwargs):
+        if name == "get_account":
+            return {"username": "current-owner"}
+        assert name == "verify_account_security"
+        return {
+            "verified_until": 2000000000,
+            "trusted_device_token": proof,
+            "trusted_device_expires_at": 2000000000,
+        }
+
+    client.async_call_operation.side_effect = operation
+    monkeypatch.setattr(
+        "bsm_cli.__main__.BedrockServerManagerApi", lambda **kwargs: client
+    )
+    result = CliRunner().invoke(
+        cli,
+        [
+            "--json",
+            "auth",
+            "verify",
+            "--password",
+            "password",
+            "--otp",
+            "one-use-code",
+            "--remember-device",
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    saved = json.loads(path.read_text())
+    assert saved["trusted_device_owner"] == saved["active_username"] == "current-owner"
+    assert proof not in result.output and "one-use-code" not in path.read_text()
+    assert client.async_call_operation.await_args_list[0].args == ("get_account",)
+
+
+def test_setup_replaces_active_username_when_switching_installations(
+    auth_config, monkeypatch
+):
+    config, path = auth_config
+    config.update(active_username="previous-owner")
+    monkeypatch.setattr("bsm_cli.__main__.Config", lambda: config)
+    client = AsyncMock()
+    client.__aenter__.return_value = client
+    client.application.async_get_setup_status.return_value.needs_setup = True
+    client.application.async_create_first_user.return_value = TokenResponse(
+        access_token="new-session", token_type="bearer"
+    )
+    monkeypatch.setattr(
+        "bsm_cli.auth.BedrockServerManagerApi", lambda *args, **kwargs: client
+    )
+    result = CliRunner().invoke(
+        cli,
+        [
+            "--json",
+            "auth",
+            "setup",
+            "--base-url",
+            "https://new.example",
+            "--username",
+            "new-owner",
+            "--password",
+            "Otter42!",
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    saved = json.loads(path.read_text())
+    assert (
+        saved["active_username"] == "new-owner"
+        and saved["base_url"] == "https://new.example"
+    )
+    assert "Otter42!" not in path.read_text()
+
+
+def test_environment_credential_override_does_not_send_saved_owner_proof(
+    auth_config, monkeypatch
+):
+    config, _ = auth_config
+    config.update(
+        active_username="owner",
+        trusted_device_owner="owner",
+        trusted_device_backend=config.base_url,
+        trusted_device_token="bsm_td_proof",
+        trusted_device_expires_at=2000000000,
+    )
+    assert config.trusted_device() == "bsm_td_proof"
+    monkeypatch.setenv("BSM_JWT_TOKEN", "another-account-session")
+    assert config.trusted_device() is None
+    assert config.trusted_device("owner", config.base_url) == "bsm_td_proof"
+
+
+def test_token_history_flags_are_sent_to_backend(auth_config, monkeypatch):
+    config, _ = auth_config
+    monkeypatch.setattr("bsm_cli.__main__.Config", lambda: config)
+    client = AsyncMock()
+    client.async_call_operation.return_value = []
+    monkeypatch.setattr(
+        "bsm_cli.__main__.BedrockServerManagerApi", lambda **kwargs: client
+    )
+    result = CliRunner().invoke(
+        cli,
+        [
+            "--json",
+            "auth",
+            "tokens",
+            "list",
+            "--limit",
+            "50",
+            "--offset",
+            "100",
+            "--status",
+            "inactive",
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    client.async_call_operation.assert_awaited_once_with(
+        "list_integration_tokens",
+        query={"limit": 50, "offset": 100, "status": "inactive"},
+    )
+
+
+def test_device_forget_modes_are_explicit(auth_config, monkeypatch):
+    config, _ = auth_config
+    monkeypatch.setattr("bsm_cli.__main__.Config", lambda: config)
+    client = AsyncMock()
+    client.async_call_operation.return_value = {"status": "success"}
+    monkeypatch.setattr(
+        "bsm_cli.__main__.BedrockServerManagerApi", lambda **kwargs: client
+    )
+    result = CliRunner().invoke(
+        cli, ["--json", "auth", "devices", "forget", "--all", "--others"]
+    )
+    assert result.exit_code == 2
+    client.async_call_operation.assert_not_awaited()
+    result = CliRunner().invoke(
+        cli, ["--json", "auth", "devices", "forget", "--others"]
+    )
+    assert result.exit_code == 0, result.output
+    client.async_call_operation.assert_awaited_once_with(
+        "revoke_trusted_devices", json_data={"mode": "others"}
+    )

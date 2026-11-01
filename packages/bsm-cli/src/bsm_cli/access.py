@@ -67,12 +67,20 @@ def tokens():
 
 
 @tokens.command("list")
+@click.option("--limit", type=click.IntRange(1, 500), default=100, show_default=True)
+@click.option("--offset", type=click.IntRange(min=0), default=0, show_default=True)
+@click.option(
+    "--status", type=click.Choice(["all", "active", "inactive"]), default="all"
+)
 @pass_async_context
-async def list_tokens(ctx):
+async def list_tokens(ctx, limit, offset, status):
     """List metadata; credential secrets are never returned again."""
     return emit(
         ctx,
-        await get_client(ctx).async_call_operation("list_integration_tokens"),
+        await get_client(ctx).async_call_operation(
+            "list_integration_tokens",
+            query={"limit": limit, "offset": offset, "status": status},
+        ),
         columns=("id", "name", "expires_at", "revoked_at"),
     )
 
@@ -278,3 +286,49 @@ async def account_signout(ctx, user_id, session_id, all_sessions):
     return emit(
         ctx, await get_client(ctx).async_call_operation(operation, path_params=path)
     )
+
+
+@click.group()
+def devices():
+    """List and forget remembered second-factor devices; login sessions remain signed in."""
+
+
+@devices.command("list")
+@pass_async_context
+async def list_devices(ctx):
+    return emit(
+        ctx,
+        await get_client(ctx).async_call_operation("list_trusted_devices"),
+        columns=("id", "name", "current", "status", "expires_at"),
+    )
+
+
+@devices.command("forget")
+@click.argument("device_id", required=False)
+@click.option("--all", "all_devices", is_flag=True)
+@click.option("--others", is_flag=True)
+@pass_async_context
+async def forget_device(ctx, device_id, all_devices, others):
+    if sum([bool(device_id), all_devices, others]) != 1:
+        raise click.UsageError("Choose a device ID, --all, or --others.")
+    if device_id:
+        result = await get_client(ctx).async_call_operation(
+            "revoke_trusted_device", path_params={"device_id": device_id}
+        )
+    else:
+        result = await get_client(ctx).async_call_operation(
+            "revoke_trusted_devices",
+            json_data={"mode": "all" if all_devices else "others"},
+        )
+    config = ctx.obj["config"]
+    proof = config.trusted_device()
+    if proof and (
+        all_devices or (device_id and proof.split(".")[0] == "bsm_td_" + device_id)
+    ):
+        config.update(
+            trusted_device_token=None,
+            trusted_device_expires_at=None,
+            trusted_device_owner=None,
+            trusted_device_backend=None,
+        )
+    return emit(ctx, result)

@@ -121,6 +121,11 @@ class Config:
         """Return a finite remembered factor only for its account and destination."""
         import time
 
+        if username is None and any(
+            os.environ.get(key)
+            for key in ("BSM_JWT_TOKEN", "BSM_USERNAME", "BSM_PASSWORD")
+        ):
+            return None
         owner = username or self.get("active_username")
         if not owner or owner != self.get("trusted_device_owner"):
             return None

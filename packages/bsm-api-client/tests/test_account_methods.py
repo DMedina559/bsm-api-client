@@ -204,5 +204,5 @@ def test_password_validation_does_not_echo_the_supplied_secret():
     from pydantic import ValidationError
 
     with pytest.raises(ValidationError) as failure:
-        ChangePasswordPayload(current_password="old-secret", new_password="tiny-secret")
-    assert "tiny-secret" not in str(failure.value)
+        ChangePasswordPayload(current_password="old-secret", new_password="shrt42!")
+    assert "shrt42!" not in str(failure.value)

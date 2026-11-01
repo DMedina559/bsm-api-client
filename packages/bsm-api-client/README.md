@@ -275,3 +275,9 @@ it is not attached to unrelated API calls or integration-token requests.
 Passwords remain required, including security reauthentication. Trust cannot
 renew itself: renewal requires a fresh OTP. Device metadata and revocation are
 available through `client.rest.account_security` and the operation explorer.
+
+The optional `client_name` constructor argument labels login/device metadata
+(default `BSM Python SDK`; the CLI uses `BSM CLI`). Labels describe the caller and
+are not hardware identity checks. Typed credential listings expose `limit`,
+`offset` and `status` filters. Access previews are advisory and writes still check
+live policy; never treat a saved preview as an authorization grant.

@@ -67,8 +67,10 @@ from .models.install_confirmation_response import InstallConfirmationResponse
 from .models.install_server_payload import InstallServerPayload
 from .models.installation_accepted_response import InstallationAcceptedResponse
 from .models.integration_token_info import IntegrationTokenInfo
+from .models.list_account_integration_tokens_status import ListAccountIntegrationTokensStatus
 from .models.list_available_addons_response import ListAvailableAddonsResponse
 from .models.list_backup_keys_response_list_backup_keys import ListBackupKeysResponseListBackupKeys
+from .models.list_integration_tokens_status import ListIntegrationTokensStatus
 from .models.list_schedules_response import ListSchedulesResponse
 from .models.list_snapshots_response import ListSnapshotsResponse
 from .models.log_history_page import LogHistoryPage
@@ -716,13 +718,13 @@ class RestClient:
         """Generated list_access_servers operation."""
         return cast(Response[ErrorEnvelope | list[AccessServerInfo]], await self._owner.async_call_generated('list_access_servers', parameters={}, body=None, authenticated=True, detailed=True))
 
-    async def list_account_integration_tokens(self, user_id: int, *, limit: int | Unset=100, offset: int | Unset=0) -> ErrorEnvelope | list[IntegrationTokenInfo] | None:
+    async def list_account_integration_tokens(self, user_id: int, *, limit: int | Unset=100, offset: int | Unset=0, status: ListAccountIntegrationTokensStatus | Unset=ListAccountIntegrationTokensStatus.ALL) -> ErrorEnvelope | list[IntegrationTokenInfo] | None:
         """Generated list_account_integration_tokens operation."""
-        return cast(ErrorEnvelope | list[IntegrationTokenInfo] | None, await self._owner.async_call_generated('list_account_integration_tokens', parameters={'user_id': user_id, 'limit': limit, 'offset': offset}, body=None, authenticated=True, typed=True))
+        return cast(ErrorEnvelope | list[IntegrationTokenInfo] | None, await self._owner.async_call_generated('list_account_integration_tokens', parameters={'user_id': user_id, 'limit': limit, 'offset': offset, 'status': status}, body=None, authenticated=True, typed=True))
 
-    async def list_account_integration_tokens_detailed(self, user_id: int, *, limit: int | Unset=100, offset: int | Unset=0) -> Response[ErrorEnvelope | list[IntegrationTokenInfo]]:
+    async def list_account_integration_tokens_detailed(self, user_id: int, *, limit: int | Unset=100, offset: int | Unset=0, status: ListAccountIntegrationTokensStatus | Unset=ListAccountIntegrationTokensStatus.ALL) -> Response[ErrorEnvelope | list[IntegrationTokenInfo]]:
         """Generated list_account_integration_tokens operation."""
-        return cast(Response[ErrorEnvelope | list[IntegrationTokenInfo]], await self._owner.async_call_generated('list_account_integration_tokens', parameters={'user_id': user_id, 'limit': limit, 'offset': offset}, body=None, authenticated=True, detailed=True))
+        return cast(Response[ErrorEnvelope | list[IntegrationTokenInfo]], await self._owner.async_call_generated('list_account_integration_tokens', parameters={'user_id': user_id, 'limit': limit, 'offset': offset, 'status': status}, body=None, authenticated=True, detailed=True))
 
     async def list_account_login_sessions(self, user_id: int) -> ErrorEnvelope | list[LoginSessionInfo] | None:
         """Generated list_account_login_sessions operation."""
@@ -780,13 +782,13 @@ class RestClient:
         """Generated list_downloads operation."""
         return cast(Response[CustomZipsResponse | ErrorEnvelope], await self._owner.async_call_generated('list_downloads', parameters={}, body=None, authenticated=True, detailed=True))
 
-    async def list_integration_tokens(self, *, limit: int | Unset=100, offset: int | Unset=0) -> ErrorEnvelope | list[IntegrationTokenInfo] | None:
+    async def list_integration_tokens(self, *, limit: int | Unset=100, offset: int | Unset=0, status: ListIntegrationTokensStatus | Unset=ListIntegrationTokensStatus.ALL) -> ErrorEnvelope | list[IntegrationTokenInfo] | None:
         """Generated list_integration_tokens operation."""
-        return cast(ErrorEnvelope | list[IntegrationTokenInfo] | None, await self._owner.async_call_generated('list_integration_tokens', parameters={'limit': limit, 'offset': offset}, body=None, authenticated=True, typed=True))
+        return cast(ErrorEnvelope | list[IntegrationTokenInfo] | None, await self._owner.async_call_generated('list_integration_tokens', parameters={'limit': limit, 'offset': offset, 'status': status}, body=None, authenticated=True, typed=True))
 
-    async def list_integration_tokens_detailed(self, *, limit: int | Unset=100, offset: int | Unset=0) -> Response[ErrorEnvelope | list[IntegrationTokenInfo]]:
+    async def list_integration_tokens_detailed(self, *, limit: int | Unset=100, offset: int | Unset=0, status: ListIntegrationTokensStatus | Unset=ListIntegrationTokensStatus.ALL) -> Response[ErrorEnvelope | list[IntegrationTokenInfo]]:
         """Generated list_integration_tokens operation."""
-        return cast(Response[ErrorEnvelope | list[IntegrationTokenInfo]], await self._owner.async_call_generated('list_integration_tokens', parameters={'limit': limit, 'offset': offset}, body=None, authenticated=True, detailed=True))
+        return cast(Response[ErrorEnvelope | list[IntegrationTokenInfo]], await self._owner.async_call_generated('list_integration_tokens', parameters={'limit': limit, 'offset': offset, 'status': status}, body=None, authenticated=True, detailed=True))
 
     async def list_login_sessions(self) -> ErrorEnvelope | list[LoginSessionInfo] | None:
         """Generated list_login_sessions operation."""
