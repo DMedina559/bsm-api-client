@@ -51,7 +51,7 @@ def auth():
 @click.option(
     "-t",
     "--token",
-    help="A JWT or long-lived integration bearer credential (bsm_it_...).",
+    help="A JWT or long-lived integration bearer credential (``bsm_it_...``).",
 )
 @click.option(
     "--with-token",
@@ -63,7 +63,7 @@ def auth():
     "--long-lived",
     is_flag=True,
     default=False,
-    help="Mint and store a long-lived integration token (bsm_it_...) after password sign-in.",
+    help="Mint and store a long-lived integration token (``bsm_it_...``) after password sign-in.",
 )
 @click.option(
     "--token-name",
@@ -135,8 +135,8 @@ async def login(  # noqa: C901
     """Sign in with username/password or a bearer/integration token.
 
     Use --token or --with-token to authenticate with an existing integration
-    token (bsm_it_...), or --long-lived to mint a new integration token during
-    password login.
+    token (``bsm_it_...``), or --long-lived to mint a new integration token
+    during password login.
     """
     config = ctx.obj["config"]
     if password_stdin and (password or token or with_token):
