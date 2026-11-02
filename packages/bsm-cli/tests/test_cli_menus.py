@@ -350,3 +350,50 @@ def test_command_menu_separates_inspection_and_management():
     assert "── View and inspect ──" in titles
     assert "── Manage ──" in titles
     assert "List" not in titles
+
+
+@pytest.mark.asyncio
+async def test_home_unexpected_error_allows_clean_exit_without_infinite_loop(
+    monkeypatch, capsys
+):
+    from bsm_api_client.exceptions import AuthError
+    from bsm_cli.__main__ import cli
+    from bsm_cli.main_menus import main_menu
+
+    client = AsyncMock()
+    client.servers.async_get_servers.side_effect = AuthError("Session expired")
+    monkeypatch.setattr("click.clear", lambda: None)
+    monkeypatch.setattr("questionary.select", lambda *a, **k: Answer("Exit"))
+    with click.Context(cli, obj={"client": client, "cli": cli}) as ctx:
+        await main_menu(ctx)
+    assert client.servers.async_get_servers.await_count == 1
+    assert "Unable to load servers: Session expired" in capsys.readouterr().out
+
+
+@pytest.mark.asyncio
+async def test_ctrl_c_during_pause_after_menu_action_crash_exits_cleanly(
+    monkeypatch, capsys
+):
+    from bsm_api_client.models import ServersListResponse
+    from bsm_cli.__main__ import cli
+    from bsm_cli.main_menus import main_menu
+
+    client = AsyncMock()
+    client.servers.async_get_servers.return_value = ServersListResponse(
+        status="success", servers=[]
+    )
+    monkeypatch.setattr("click.clear", lambda: None)
+    monkeypatch.setattr("questionary.select", lambda *a, **k: Answer("Overview"))
+    monkeypatch.setattr(
+        "bsm_cli.main_menus._open_destination",
+        AsyncMock(side_effect=RuntimeError("Boom")),
+    )
+
+    def raise_ctrl_c(*args, **kwargs):
+        raise KeyboardInterrupt()
+
+    monkeypatch.setattr("click.pause", raise_ctrl_c)
+    with click.Context(cli, obj={"client": client, "cli": cli}) as ctx:
+        await main_menu(ctx)
+    assert client.servers.async_get_servers.await_count == 1
+    assert "Action failed: Boom" in capsys.readouterr().out

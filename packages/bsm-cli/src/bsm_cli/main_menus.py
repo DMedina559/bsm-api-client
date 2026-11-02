@@ -7,7 +7,7 @@ import questionary
 from questionary import Choice, Separator
 
 from bsm_api_client.exceptions import CannotConnectError
-from bsm_cli.interaction import menu_action
+from bsm_cli.interaction import menu_action, pause_or_exit
 from bsm_cli.menu_registry import command_menu, plugin_api_menu
 from bsm_cli.output import CliConnectionError, get_client
 from bsm_cli.plugins import interactive_plugin_workflow
@@ -25,31 +25,47 @@ def _command(ctx, group, name):
     return root.commands[group].commands[name] if group else root.commands[name]
 
 
-async def operations_menu(ctx):
+async def operations_menu(ctx):  # noqa: C901
     """Choose a retained operation directly to inspect its outcome."""
     from bsm_cli.manager import show_task
 
     while True:
-        screen_header("Operations")
-        tasks = await get_client(ctx).tasks.async_list_tasks()
-        choices = [
-            Choice(
-                f"{task.status.capitalize()} · {task.message} ({task.id})",
-                value=task.id,
+        try:
+            screen_header("Operations")
+            tasks = await get_client(ctx).tasks.async_list_tasks()
+            choices = [
+                Choice(
+                    f"{task.status.capitalize()} · {task.message} ({task.id})",
+                    value=task.id,
+                )
+                for task in tasks
+            ]
+            if not tasks:
+                click.echo("No operations recorded.")
+            choices.extend(
+                [Choice("Refresh", value="refresh"), Choice("Back", value="back")]
             )
-            for task in tasks
-        ]
-        if not tasks:
-            click.echo("No operations recorded.")
-        choices.extend(
-            [Choice("Refresh", value="refresh"), Choice("Back", value="back")]
-        )
-        task_id = await questionary.select("Operations", choices=choices).ask_async()
+            task_id = await questionary.select(
+                "Operations", choices=choices
+            ).ask_async()
+        except (click.Abort, KeyboardInterrupt):
+            return
+        except Exception as error:
+            click.secho(f"Action failed: {error}", fg="red")
+            if not pause_or_exit("Press any key to return..."):
+                return
+            return
         if task_id in (None, "back"):
             return
         if task_id != "refresh":
-            await _invoke(ctx, show_task, task_id=task_id)
-            click.pause("Press any key to return to operations...")
+            try:
+                await _invoke(ctx, show_task, task_id=task_id)
+            except (click.Abort, KeyboardInterrupt):
+                click.echo("Action cancelled.")
+            except Exception as error:
+                click.secho(f"Action failed: {error}", fg="red")
+            if not pause_or_exit("Press any key to return to operations..."):
+                return
 
 
 async def logs_menu(ctx):
@@ -62,16 +78,27 @@ async def logs_menu(ctx):
 
 async def _action_menu(ctx, title, actions, **kwargs):
     while True:
-        screen_header(title)
-        choice = await questionary.select(title, choices=[*actions, "Back"]).ask_async()
+        try:
+            screen_header(title)
+            choice = await questionary.select(
+                title, choices=[*actions, "Back"]
+            ).ask_async()
+        except (click.Abort, KeyboardInterrupt):
+            return
         if choice is None or choice == "Back":
             return
         group, name = actions[choice]
-        await _invoke(ctx, _command(ctx, group, name), **kwargs)
-        click.pause("Press any key to return...")
+        try:
+            await _invoke(ctx, _command(ctx, group, name), **kwargs)
+        except (click.Abort, KeyboardInterrupt):
+            click.echo("Action cancelled.")
+        except Exception as error:
+            click.secho(f"Action failed: {error}", fg="red")
+        if not pause_or_exit("Press any key to return..."):
+            return
 
 
-async def main_menu(ctx):
+async def main_menu(ctx):  # noqa: C901
     client = ctx.obj.get("client")
     if not client:
         click.echo(
@@ -134,20 +161,26 @@ async def main_menu(ctx):
             choice = await questionary.select(
                 "Choose a destination", choices=choices, use_shortcuts=False
             ).ask_async()
-            if choice is None or choice == "Exit":
-                return
-            await menu_action(_open_destination(ctx, choice, routes, groups))
+        except (click.Abort, KeyboardInterrupt):
+            return
+        if choice is None or choice == "Exit":
+            return
+        try:
+            await _open_destination(ctx, choice, routes, groups)
         except (click.Abort, KeyboardInterrupt):
             click.echo("Returned home.")
         except Exception as error:
             click.secho(f"Action failed: {error}", fg="red")
-            click.pause("Press any key to return home...")
+            if not pause_or_exit("Press any key to return home..."):
+                return
 
 
-async def _load_home_fleet(ctx, client):
+async def _load_home_fleet(ctx, client):  # noqa: C901
     while True:
         try:
             return await client.servers.async_get_servers()
+        except (click.Abort, KeyboardInterrupt):
+            return None
         except (CannotConnectError, CliConnectionError):
             config = ctx.obj.get("config")
             endpoint = config.base_url if config else "the configured backend"
@@ -155,19 +188,33 @@ async def _load_home_fleet(ctx, client):
             click.echo(
                 "Check that the backend is running and reachable at this address."
             )
-            choice = await questionary.select(
-                "Connection unavailable", choices=["Retry", "Exit"]
-            ).ask_async()
+            try:
+                choice = await questionary.select(
+                    "Connection unavailable", choices=["Retry", "Exit"]
+                ).ask_async()
+            except (click.Abort, KeyboardInterrupt):
+                return None
+            if choice != "Retry":
+                return None
+        except Exception as error:
+            click.secho(f"Unable to load servers: {error}", fg="red")
+            try:
+                choice = await questionary.select(
+                    "Home screen unavailable", choices=["Retry", "Exit"]
+                ).ask_async()
+            except (click.Abort, KeyboardInterrupt):
+                return None
             if choice != "Retry":
                 return None
 
 
-async def _open_destination(ctx, choice, routes, groups):
+async def _open_destination(ctx, choice, routes, groups):  # noqa: C901
     if isinstance(choice, tuple):
         await manage_server_menu(ctx, choice[1])
     elif choice in routes:
         await _invoke(ctx, _command(ctx, *routes[choice]))
-        click.pause("Press any key to return home...")
+        if not pause_or_exit("Press any key to return home..."):
+            return
     elif choice == "Advanced API":
         from bsm_cli.api_explorer import explore
 
@@ -184,10 +231,11 @@ async def _open_destination(ctx, choice, routes, groups):
         await plugin_api_menu(ctx)
     elif choice == "Install server":
         await _invoke(ctx, _command(ctx, "server", "install"))
-        click.pause("Press any key to return home...")
+        if not pause_or_exit("Press any key to return home..."):
+            return
 
 
-async def manage_server_menu(ctx, server_name):
+async def manage_server_menu(ctx, server_name):  # noqa: C901
     """Keep monitoring, lifecycle, and content actions on one server screen."""
     actions = {
         "Monitor": ("server", "monitor"),
@@ -240,9 +288,17 @@ async def manage_server_menu(ctx, server_name):
         "Back",
     ]
     while True:
-        screen_header(f"Manage server · {server_name}")
-        await _invoke(ctx, list_servers, server_name=server_name)
-        choice = await questionary.select(server_name, choices=choices).ask_async()
+        try:
+            screen_header(f"Manage server · {server_name}")
+            await _invoke(ctx, list_servers, server_name=server_name)
+            choice = await questionary.select(server_name, choices=choices).ask_async()
+        except (click.Abort, KeyboardInterrupt):
+            return
+        except Exception as error:
+            click.secho(f"Action failed: {error}", fg="red")
+            if not pause_or_exit("Press any key to return..."):
+                return
+            return
         if choice is None or choice == "Back":
             return
         try:
@@ -260,14 +316,16 @@ async def manage_server_menu(ctx, server_name):
                     continue
                 kwargs["command_parts"] = (value,)
             await _invoke(ctx, _command(ctx, *actions[choice]), **kwargs)
-            click.pause("Press any key to return to the server...")
+            if not pause_or_exit("Press any key to return to the server..."):
+                return
             if await _deleted_server(ctx, choice, server_name):
                 return
         except (click.Abort, KeyboardInterrupt):
             click.echo("Returned to server.")
         except Exception as error:
             click.secho(f"Action failed: {error}", fg="red")
-            click.pause("Press any key to return to the server...")
+            if not pause_or_exit("Press any key to return to the server..."):
+                return
 
 
 async def _deleted_server(ctx, choice, server_name):

@@ -322,3 +322,129 @@ def test_token_history_flags_are_sent_to_backend(auth_config, monkeypatch):
         "list_integration_tokens",
         query={"limit": 50, "offset": 100, "status": "inactive"},
     )
+
+
+def test_login_with_token_validates_and_does_not_require_url_prompt(
+    auth_config, monkeypatch
+):
+    from types import SimpleNamespace
+
+    config, path = auth_config
+    monkeypatch.setattr("bsm_cli.__main__.Config", lambda: config)
+    client = AsyncMock()
+    client.__aenter__.return_value = client
+    client.account.async_get_account_details.return_value = SimpleNamespace(
+        username="token-owner"
+    )
+    supplied = {}
+
+    def create(**kwargs):
+        supplied.update(kwargs)
+        return client
+
+    monkeypatch.setattr("bsm_cli.auth.BedrockServerManagerApi", create)
+    result = CliRunner().invoke(
+        cli,
+        ["--json", "auth", "login", "--token", "bsm_it_valid_secret"],
+    )
+    assert result.exit_code == 0, result.output
+    assert supplied["jwt_token"] == "bsm_it_valid_secret"
+    assert supplied["base_url"] == "http://old-server"
+    saved = json.loads(path.read_text())
+    assert saved["jwt_token"] == "bsm_it_valid_secret"
+    assert saved["active_username"] == "token-owner"
+
+
+def test_login_with_token_from_stdin_and_mints_long_lived_token(
+    auth_config, monkeypatch
+):
+    config, path = auth_config
+    monkeypatch.setattr("bsm_cli.__main__.Config", lambda: config)
+    client = AsyncMock()
+    client.__aenter__.return_value = client
+    client.authenticate.return_value = TokenResponse(
+        access_token="short-session", token_type="bearer"
+    )
+
+    async def call_op(name, **kwargs):
+        if name == "get_access_policy":
+            return {"token_permissions": ["account:read", "servers:read"]}
+        if name == "create_integration_token":
+            assert kwargs["json_data"]["name"] == "Automation"
+            assert kwargs["json_data"]["expires_in_days"] is None
+            assert kwargs["json_data"]["permissions"] == [
+                "account:read",
+                "servers:read",
+            ]
+            return {"token": "bsm_it_minted_long_lived"}
+        raise AssertionError(name)
+
+    client.async_call_operation.side_effect = call_op
+    monkeypatch.setattr("bsm_cli.auth.BedrockServerManagerApi", lambda **kw: client)
+    result = CliRunner().invoke(
+        cli,
+        [
+            "--json",
+            "auth",
+            "login",
+            "-u",
+            "admin",
+            "--password-stdin",
+            "--long-lived",
+            "--never-expire",
+            "--token-name",
+            "Automation",
+        ],
+        input="super-secret-pass\n",
+    )
+    assert result.exit_code == 0, result.output
+    client.async_logout.assert_awaited_once()
+    saved = json.loads(path.read_text())
+    assert saved["jwt_token"] == "bsm_it_minted_long_lived"
+    assert saved["active_username"] == "admin"
+
+
+def test_os_credential_store_persists_secrets_outside_json_file(tmp_path, monkeypatch):
+    from bsm_cli import config as config_module
+
+    path = tmp_path / "config.json"
+    store = {}
+    monkeypatch.setattr("bsm_cli.config.get_config_path", lambda: path)
+    monkeypatch.setenv("BSM_CREDENTIAL_STORE", "os")
+    monkeypatch.setattr(
+        config_module,
+        "write_secret",
+        lambda key, val, **kw: store.__setitem__(key, val) or True,
+    )
+    monkeypatch.setattr(config_module, "read_secret", lambda key, **kw: store.get(key))
+    monkeypatch.setattr(
+        config_module,
+        "delete_secret",
+        lambda key, **kw: store.pop(key, None) is not None,
+    )
+
+    cfg = Config()
+    cfg.update(
+        base_url="https://secure.example",
+        jwt_token="bsm_it_os_secret",
+        trusted_device_token="bsm_td_os_device",
+        active_username="admin",
+    )
+    disk = json.loads(path.read_text())
+    assert disk["jwt_token"] is None
+    assert disk["trusted_device_token"] is None
+    assert disk["credential_store"] == "os"
+    assert store["jwt_token"] == "bsm_it_os_secret"
+    assert store["trusted_device_token"] == "bsm_td_os_device"
+
+    reloaded = Config()
+    assert reloaded.jwt_token == "bsm_it_os_secret"
+    assert reloaded.credential_store == "os"
+
+    monkeypatch.setattr("bsm_cli.__main__.Config", lambda: reloaded)
+    status_res = CliRunner().invoke(cli, ["--json", "auth", "status"])
+    assert status_res.exit_code == 0, status_res.output
+    status_payload = json.loads(status_res.output)
+    assert status_payload["authenticated"] is True
+    assert status_payload["credential_type"] == "integration_token"
+    assert status_payload["credential_store"] == "os"

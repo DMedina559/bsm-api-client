@@ -82,10 +82,14 @@ async def list_tasks(ctx):
     required=False,
     type=click.Path(exists=True, dir_okay=False, path_type=Path),
 )
-@click.option("--task", help="Task name (e.g. backup:create, backup:verify, server:restart).")
+@click.option(
+    "--task", help="Task name (e.g. backup:create, backup:verify, server:restart)."
+)
 @click.option("--server-name", help="Target server name.")
 @click.option("--time", "run_time", help="24-hour local run time (HH:MM).")
-@click.option("--timezone", help="IANA timezone name (defaults to application timezone).")
+@click.option(
+    "--timezone", help="IANA timezone name (defaults to application timezone)."
+)
 @click.option(
     "--enabled/--disabled",
     default=None,
@@ -106,7 +110,7 @@ async def list_tasks(ctx):
     help="JSON object of task options.",
 )
 @click.pass_context
-async def save_schedule(
+async def save_schedule(  # noqa: C901
     ctx,
     schedule_id,
     configuration,

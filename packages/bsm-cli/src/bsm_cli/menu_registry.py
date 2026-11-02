@@ -7,7 +7,7 @@ import click
 import questionary
 
 from bsm_cli.api import invoke
-from bsm_cli.interaction import menu_action
+from bsm_cli.interaction import menu_action, pause_or_exit
 from bsm_cli.output import get_client
 from bsm_cli.presentation import screen_header
 
@@ -19,10 +19,13 @@ async def command_menu(ctx, group, *, values=None):  # noqa: C901
         screen_header(group.name.replace("-", " ").title())
         if not await _show_menu_list(ctx, group, resource_values):
             return
-        name = await questionary.select(
-            group.help or group.name,
-            choices=_command_choices(group),
-        ).ask_async()
+        try:
+            name = await questionary.select(
+                group.help or group.name,
+                choices=_command_choices(group),
+            ).ask_async()
+        except (click.Abort, KeyboardInterrupt):
+            return
         if not name or name == "Back":
             return
         command = group.commands[name]
@@ -31,16 +34,19 @@ async def command_menu(ctx, group, *, values=None):  # noqa: C901
             continue
         kwargs = {}
         cancelled = False
-        for param in command.params:
-            if param.name in resource_values:
-                kwargs[param.name] = resource_values[param.name]
-                continue
-            value = await _prompt_parameter(ctx, param)
-            if value is _CANCEL:
-                cancelled = True
-                break
-            if value is not _DEFAULT:
-                kwargs[param.name] = value
+        try:
+            for param in command.params:
+                if param.name in resource_values:
+                    kwargs[param.name] = resource_values[param.name]
+                    continue
+                value = await _prompt_parameter(ctx, param)
+                if value is _CANCEL:
+                    cancelled = True
+                    break
+                if value is not _DEFAULT:
+                    kwargs[param.name] = value
+        except (click.Abort, KeyboardInterrupt):
+            return
         if cancelled:
             continue
         try:
@@ -51,7 +57,8 @@ async def command_menu(ctx, group, *, values=None):  # noqa: C901
             click.secho("Action cancelled.", fg="yellow")
         except Exception as exc:
             click.secho(f"Action failed: {exc}", fg="red")
-        click.pause("Press any key to return to the menu...")
+        if not pause_or_exit("Press any key to return to the menu..."):
+            return
 
 
 def _command_choices(group):
@@ -151,6 +158,21 @@ async def _resource_choices(ctx, name):
             )
             for plugin, data in sorted(plugins.items())
         ]
+    if name == "task":
+        response = await client.scheduler.async_list_schedules()
+        definitions = response.task_definitions or {}
+        task_names = sorted(set(response.task_types or []) | set(definitions))
+        return [
+            questionary.Choice(
+                title=(
+                    f"{task_name} · {desc}"
+                    if (desc := (definitions.get(task_name) or {}).get("description"))
+                    else task_name
+                ),
+                value=task_name,
+            )
+            for task_name in task_names
+        ]
     return []
 
 
@@ -161,11 +183,14 @@ async def _prompt_parameter(ctx, param):  # noqa: C901
         prompt += " (one value or a JSON array)"
     prompt += " (blank for default):" if not param.required else ":"
     if isinstance(param, click.Option) and param.is_flag:
+        default_val = param.get_default(ctx)
         answer = await questionary.confirm(
-            prompt, default=bool(param.get_default(ctx))
+            prompt, default=bool(default_val)
         ).ask_async()
         if not param.expose_value:
             return _DEFAULT if answer else _CANCEL
+        if default_val is None and answer is False:
+            return _DEFAULT
         return _CANCEL if answer is None else answer
     if not multiple and not getattr(param, "hide_input", False):
         try:

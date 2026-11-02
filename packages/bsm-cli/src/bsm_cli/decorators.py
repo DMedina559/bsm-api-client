@@ -39,10 +39,15 @@ class AsyncGroup(click.Group):
 
     def invoke(self, ctx):
         ctx.obj = ctx.obj or {}
-        if self.async_context_settings.get("context"):
-            return asyncio.run(self._invoke_context(ctx))
-        result = super().invoke(ctx)
-        return asyncio.run(result) if asyncio.iscoroutine(result) else result
+        try:
+            if self.async_context_settings.get("context"):
+                return asyncio.run(self._invoke_context(ctx))
+            result = super().invoke(ctx)
+            return asyncio.run(result) if asyncio.iscoroutine(result) else result
+        except (click.Abort, KeyboardInterrupt):
+            if ctx.invoked_subcommand is None and not ctx.params.get("json_output"):
+                return None
+            raise
 
     async def _invoke_context(self, ctx):
         import contextlib
