@@ -371,6 +371,14 @@ class BanAddRequest(ContractModel):
     xuid: str = Field(..., title="Xuid")
 
 
+class BanEnforcementStatus(ContractModel):
+    """Validate and serialize the BanEnforcementStatus contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    available: bool = Field(..., title="Available")
+    error: str | None = Field(None, title="Error")
+
+
 class BanInfo(ContractModel):
     """Validate and serialize the BanInfo contract."""
 
@@ -1225,6 +1233,7 @@ class PluginInfo(ContractModel):
     has_global_settings: bool | None = Field(False, title="Has Global Settings")
     has_server_settings: bool | None = Field(False, title="Has Server Settings")
     has_settings: bool | None = Field(False, title="Has Settings")
+    permissions: list[str] | None = Field(None, title="Permissions")
     status: str | None = Field("UNKNOWN", title="Status")
     version: str | None = Field("N/A", title="Version")
 
@@ -1307,12 +1316,45 @@ class ProcessDiagnostic(ContractModel):
     """Validate and serialize the ProcessDiagnostic contract."""
 
     model_config = ConfigDict(extra="forbid")
+    ban_enforcement_available: bool | None = Field(
+        False, title="Ban Enforcement Available"
+    )
+    ban_error: str | None = Field(None, title="Ban Error")
+    command_available: bool | None = Field(False, title="Command Available")
+    cpu_percent: float | None = Field(None, title="Cpu Percent")
+    exit_code: int | None = Field(None, title="Exit Code")
+    exit_reason: str | None = Field(None, title="Exit Reason")
     expected_status: str = Field(..., title="Expected Status")
+    generation: str | None = Field(None, title="Generation")
+    healthy: bool | None = Field(None, title="Healthy")
+    in_restart_backoff: bool | None = Field(False, title="In Restart Backoff")
     last_error_type: str | None = Field(None, title="Last Error Type")
+    memory_mb: float | None = Field(None, title="Memory Mb")
     observed_at: float | None = Field(None, title="Observed At")
     observed_running: bool | None = Field(None, title="Observed Running")
+    output_available: bool | None = Field(False, title="Output Available")
+    output_dropped_bytes: int | None = Field(0, title="Output Dropped Bytes")
+    output_error: str | None = Field(None, title="Output Error")
+    output_queued_bytes: int | None = Field(0, title="Output Queued Bytes")
+    output_source: Literal["file", "pipe", "unknown"] | None = Field(
+        "unknown", title="Output Source"
+    )
+    phase: str | None = Field(None, title="Phase")
     pid: int | None = Field(None, title="Pid")
+    process_owned: bool | None = Field(False, title="Process Owned")
+    ready: bool | None = Field(False, title="Ready")
+    recovered_untracked: bool | None = Field(False, title="Recovered Untracked")
+    recovery_exhausted: bool | None = Field(False, title="Recovery Exhausted")
+    restart_attempts: int | None = Field(0, title="Restart Attempts")
     server_name: str = Field(..., title="Server Name")
+
+
+class ProcessExitStatus(ContractModel):
+    """Validate and serialize the ProcessExitStatus contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    code: int | None = Field(None, title="Code")
+    reason: str | None = Field(None, title="Reason")
 
 
 class ProcessInfo(ContractModel):
@@ -1325,18 +1367,38 @@ class ProcessInfo(ContractModel):
     uptime: str = Field(..., title="Uptime")
 
 
+class ProcessOutputStatus(ContractModel):
+    """Validate and serialize the ProcessOutputStatus contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    available: bool = Field(..., title="Available")
+    dropped_bytes: int = Field(..., ge=0, title="Dropped Bytes")
+    error: str | None = Field(None, title="Error")
+    queued_bytes: int = Field(..., ge=0, title="Queued Bytes")
+    source: Literal["file", "pipe", "unknown"] = Field(..., title="Source")
+
+
 class ProcessesDiagnostics(ContractModel):
     """Validate and serialize the ProcessesDiagnostics contract."""
 
     model_config = ConfigDict(extra="forbid")
+    command_unavailable_count: int | None = Field(0, title="Command Unavailable Count")
+    identity_error: str | None = Field(None, title="Identity Error")
     kind: Literal["processes"] = Field("processes", title="Kind")
     last_monitor_at: float | None = Field(None, title="Last Monitor At")
     monitor_failures: int | None = Field(None, title="Monitor Failures")
     observation_available: bool = Field(..., title="Observation Available")
     observed_running: int = Field(..., title="Observed Running")
+    pending_identities: int | None = Field(0, title="Pending Identities")
     processes: list[ProcessDiagnostic] | None = Field(None, title="Processes")
     registered: int = Field(..., title="Registered")
+    total_cpu_percent: float | None = Field(0.0, title="Total Cpu Percent")
+    total_memory_mb: float | None = Field(0.0, title="Total Memory Mb")
     truncated: bool | None = Field(False, title="Truncated")
+    unhealthy_count: int | None = Field(0, title="Unhealthy Count")
+    untracked_recoveries_count: int | None = Field(
+        0, title="Untracked Recoveries Count"
+    )
 
 
 class ProfileUpdatePayload(ContractModel):
@@ -1801,6 +1863,24 @@ class ServerProcessInfoResponse(ContractModel):
     process_info: ProcessInfo | None = None
     revision: Revision | None = Field(None, title="Revision")
     status: Literal["success", "skipped", "partial"] = Field(..., title="Status")
+
+
+class ServerProcessStatus(ContractModel):
+    """Validate and serialize the ServerProcessStatus contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    bans: BanEnforcementStatus
+    command_available: bool = Field(..., title="Command Available")
+    exit: ProcessExitStatus
+    generation: str | None = Field(None, title="Generation")
+    observed_at: float | None = Field(None, title="Observed At")
+    output: ProcessOutputStatus
+    owned: bool = Field(..., title="Owned")
+    phase: str | None = Field(None, title="Phase")
+    pid: int | None = Field(None, title="Pid")
+    ready: bool = Field(..., title="Ready")
+    recovered: bool = Field(..., title="Recovered")
+    running: bool = Field(..., title="Running")
 
 
 class ServerRunningStatusResponse(ContractModel):
@@ -2635,7 +2715,7 @@ class GetApplicationHealthResponse(ContractModel):
     model_config = ConfigDict(extra="forbid")
     checked_at: float = Field(..., gt=0.0, title="Checked At")
     checks: dict[str, HealthCheck] = Field(..., title="Checks")
-    health: Literal["healthy", "degraded"] = Field(..., title="Health")
+    health: Literal["healthy", "degraded", "unhealthy"] = Field(..., title="Health")
     instance_id: str | None = Field(None, title="Instance Id")
     lifecycle: Literal["starting", "ready", "stopping", "stopped", "failed"] = Field(
         ..., title="LifecyclePhase"
@@ -2663,6 +2743,22 @@ class GetPluginSettingsResponse(ContractModel):
     message: str | None = Field(None, title="Message")
     settings: dict[str, JsonValue] = Field(..., title="Settings")
     settings_schema: dict[str, JsonValue] | None = Field(None, title="Settings Schema")
+    status: Literal["success"] = Field("success", title="Status")
+
+
+class GetServerProcessResponse(ContractModel):
+    """Validate and serialize the GetServerProcessResponse contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    message: str | None = Field(None, title="Message")
+    process: ServerProcessStatus
+    server_name: str = Field(
+        ...,
+        examples=["example"],
+        min_length=1,
+        pattern="^[a-zA-Z0-9_-]+$",
+        title="Server Name",
+    )
     status: Literal["success"] = Field("success", title="Status")
 
 

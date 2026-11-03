@@ -70,6 +70,7 @@ from .models.get_plugin_settings_scope import GetPluginSettingsScope
 from .models.get_properties_response import GetPropertiesResponse
 from .models.get_raw_properties_response import GetRawPropertiesResponse
 from .models.get_server_bans_response import GetServerBansResponse
+from .models.get_server_process_response import GetServerProcessResponse
 from .models.install_confirmation_response import InstallConfirmationResponse
 from .models.install_server_payload import InstallServerPayload
 from .models.installation_accepted_response import InstallationAcceptedResponse
@@ -657,6 +658,14 @@ class RestClient:
     async def get_server_bans_detailed(self, server_name: str) -> Response[ErrorEnvelope | GetServerBansResponse]:
         """Generated get_server_bans operation."""
         return cast(Response[ErrorEnvelope | GetServerBansResponse], await self._owner.async_call_generated('get_server_bans', parameters={'server_name': server_name}, body=None, authenticated=True, detailed=True))
+
+    async def get_server_process(self, server_name: str) -> ErrorEnvelope | GetServerProcessResponse | None:
+        """Generated get_server_process operation."""
+        return cast(ErrorEnvelope | GetServerProcessResponse | None, await self._owner.async_call_generated('get_server_process', parameters={'server_name': server_name}, body=None, authenticated=True, typed=True))
+
+    async def get_server_process_detailed(self, server_name: str) -> Response[ErrorEnvelope | GetServerProcessResponse]:
+        """Generated get_server_process operation."""
+        return cast(Response[ErrorEnvelope | GetServerProcessResponse], await self._owner.async_call_generated('get_server_process', parameters={'server_name': server_name}, body=None, authenticated=True, detailed=True))
 
     async def get_server_process_info(self, server_name: str) -> ErrorEnvelope | ServerProcessInfoResponse | None:
         """Generated get_server_process_info operation."""

@@ -61,6 +61,7 @@
   "get_restore_recovery": "api.backup_restore.get_restore_recovery",
   "get_server_addon_icon": "api.addon_management.get_server_addon_icon",
   "get_server_bans": "api.server_access.get_server_bans",
+  "get_server_process": "api.server_management.get_server_process",
   "get_server_process_info": "api.server_processes.get_server_process_info",
   "get_server_settings": "api.server_settings.get_server_settings",
   "get_server_status": "api.server_processes.get_server_status",
