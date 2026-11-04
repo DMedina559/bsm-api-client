@@ -1,9 +1,9 @@
-from bsm_api_client.models import PluginStatusesResponse
+from bsm_api_client.models import GetPluginStatusesResponse
 from bsm_cli.plugins import _print_plugin_table
 
 
 def test_plugin_permissions_and_runtime_survive_typed_response(capsys):
-    response = PluginStatusesResponse.model_validate(
+    response = GetPluginStatusesResponse.model_validate(
         {
             "status": "success",
             "plugins": {
