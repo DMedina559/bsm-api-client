@@ -37,7 +37,6 @@
   "generate_registration_token": "api.registration.generate_registration_token",
   "get_access_policy": "api.access_management.get_access_policy",
   "get_account": "api.account_management.get_account",
-  "get_account_permissions": "api.account_management.get_account_permissions",
   "get_account_security": "api.account_security.get_account_security",
   "get_account_server_access": "api.access_management.get_account_server_access",
   "get_allowlist": "api.server_access.get_allowlist",

@@ -8,8 +8,8 @@ from ...client import AuthenticatedClient, Client
 from ...types import Response, UNSET
 from ... import errors
 
-from ...models.content_list_response import ContentListResponse
 from ...models.error_envelope import ErrorEnvelope
+from ...models.list_available_worlds_response import ListAvailableWorldsResponse
 from typing import cast
 
 
@@ -33,9 +33,9 @@ def _get_kwargs(
 
 
 
-def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> ContentListResponse | ErrorEnvelope | None:
+def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> ErrorEnvelope | ListAvailableWorldsResponse | None:
     if response.status_code == 200:
-        response_200 = ContentListResponse.from_dict(response.json())
+        response_200 = ListAvailableWorldsResponse.from_dict(response.json())
 
 
 
@@ -110,7 +110,7 @@ def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Res
         return None
 
 
-def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[ContentListResponse | ErrorEnvelope]:
+def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[ErrorEnvelope | ListAvailableWorldsResponse]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -123,7 +123,7 @@ def sync_detailed(
     *,
     client: AuthenticatedClient,
 
-) -> Response[ContentListResponse | ErrorEnvelope]:
+) -> Response[ErrorEnvelope | ListAvailableWorldsResponse]:
     """Get Worlds List
     
      Return a list of available .mcworld template files.
@@ -148,7 +148,7 @@ def sync(
     *,
     client: AuthenticatedClient,
 
-) -> ContentListResponse | ErrorEnvelope | None:
+) -> ErrorEnvelope | ListAvailableWorldsResponse | None:
     """Get Worlds List
     
      Return a list of available .mcworld template files.
@@ -156,7 +156,7 @@ def sync(
     :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
     :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
     
-    :returns: ContentListResponse | ErrorEnvelope"""
+    :returns: ErrorEnvelope | ListAvailableWorldsResponse"""
 
 
     return sync_detailed(
@@ -168,7 +168,7 @@ async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
 
-) -> Response[ContentListResponse | ErrorEnvelope]:
+) -> Response[ErrorEnvelope | ListAvailableWorldsResponse]:
     """Get Worlds List
     
      Return a list of available .mcworld template files.
@@ -193,7 +193,7 @@ async def asyncio(
     *,
     client: AuthenticatedClient,
 
-) -> ContentListResponse | ErrorEnvelope | None:
+) -> ErrorEnvelope | ListAvailableWorldsResponse | None:
     """Get Worlds List
     
      Return a list of available .mcworld template files.
@@ -201,7 +201,7 @@ async def asyncio(
     :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
     :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
     
-    :returns: ContentListResponse | ErrorEnvelope"""
+    :returns: ErrorEnvelope | ListAvailableWorldsResponse"""
 
 
     return (await asyncio_detailed(

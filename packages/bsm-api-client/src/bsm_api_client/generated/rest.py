@@ -4,21 +4,17 @@ from .models.access_policy_info import AccessPolicyInfo
 from .models.access_preview import AccessPreview
 from .models.access_server_info import AccessServerInfo
 from .models.account_server_access_info import AccountServerAccessInfo
-from .models.action_response import ActionResponse
+from .models.add_players_manually_response import AddPlayersManuallyResponse
 from .models.add_players_payload import AddPlayersPayload
-from .models.add_players_response import AddPlayersResponse
 from .models.add_server_ban_response import AddServerBanResponse
 from .models.add_to_allowlist_response import AddToAllowlistResponse
 from .models.addon_action_payload import AddonActionPayload
-from .models.addon_list_response import AddonListResponse
 from .models.addon_reorder_payload import AddonReorderPayload
 from .models.addon_subpack_payload import AddonSubpackPayload
 from .models.allowlist_add_payload import AllowlistAddPayload
 from .models.allowlist_remove_payload import AllowlistRemovePayload
-from .models.app_info_response import AppInfoResponse
 from .models.audit_log_response import AuditLogResponse
 from .models.backup_action_payload import BackupActionPayload
-from .models.backup_files_response import BackupFilesResponse
 from .models.backup_health_response import BackupHealthResponse
 from .models.backup_key_info import BackupKeyInfo
 from .models.backup_keys_info import BackupKeysInfo
@@ -31,8 +27,8 @@ from .models.body_upload_content_file import BodyUploadContentFile
 from .models.change_password_payload import ChangePasswordPayload
 from .models.command_payload import CommandPayload
 from .models.compare_diagnostic_snapshots_request import CompareDiagnosticSnapshotsRequest
+from .models.compare_diagnostic_snapshots_response import CompareDiagnosticSnapshotsResponse
 from .models.complete_passkey_registration import CompletePasskeyRegistration
-from .models.content_list_response import ContentListResponse
 from .models.content_upload_response import ContentUploadResponse
 from .models.control_schedule_payload import ControlSchedulePayload
 from .models.create_integration_token import CreateIntegrationToken
@@ -41,13 +37,6 @@ from .models.current_account_response import CurrentAccountResponse
 from .models.custom_zips_response import CustomZipsResponse
 from .models.delete_content_file_category import DeleteContentFileCategory
 from .models.destination_cleanup_payload import DestinationCleanupPayload
-from .models.diagnostic_activity import DiagnosticActivity
-from .models.diagnostic_comparison import DiagnosticComparison
-from .models.diagnostic_history import DiagnosticHistory
-from .models.diagnostic_report import DiagnosticReport
-from .models.diagnostic_runs import DiagnosticRuns
-from .models.diagnostic_snapshot import DiagnosticSnapshot
-from .models.diagnostic_trace import DiagnosticTrace
 from .models.download_content_file_category import DownloadContentFileCategory
 from .models.error_envelope import ErrorEnvelope
 from .models.event_catalog import EventCatalog
@@ -56,27 +45,44 @@ from .models.factor_code import FactorCode
 from .models.factor_enrollment import FactorEnrollment
 from .models.file_name_payload import FileNamePayload
 from .models.generate_token_payload import GenerateTokenPayload
+from .models.get_all_global_settings_response import GetAllGlobalSettingsResponse
+from .models.get_all_known_players_response import GetAllKnownPlayersResponse
+from .models.get_all_server_settings_response import GetAllServerSettingsResponse
+from .models.get_all_servers_data_response import GetAllServersDataResponse
 from .models.get_allowlist_response import GetAllowlistResponse
+from .models.get_application_diagnostics_response import GetApplicationDiagnosticsResponse
 from .models.get_application_health_response import GetApplicationHealthResponse
 from .models.get_application_metrics_response import GetApplicationMetricsResponse
+from .models.get_bedrock_process_info_response import GetBedrockProcessInfoResponse
 from .models.get_diagnostic_activity_phase_type_0 import GetDiagnosticActivityPhaseType0
+from .models.get_diagnostic_activity_response import GetDiagnosticActivityResponse
 from .models.get_diagnostic_activity_status_type_0 import GetDiagnosticActivityStatusType0
 from .models.get_diagnostic_history_outcome_type_0 import GetDiagnosticHistoryOutcomeType0
+from .models.get_diagnostic_history_response import GetDiagnosticHistoryResponse
+from .models.get_diagnostic_report_response import GetDiagnosticReportResponse
+from .models.get_diagnostic_runs_response import GetDiagnosticRunsResponse
+from .models.get_diagnostic_trace_response import GetDiagnosticTraceResponse
 from .models.get_event_activity_phase_type_0 import GetEventActivityPhaseType0
 from .models.get_event_activity_status_type_0 import GetEventActivityStatusType0
 from .models.get_permissions_response import GetPermissionsResponse
 from .models.get_plugin_settings_response import GetPluginSettingsResponse
 from .models.get_plugin_settings_scope import GetPluginSettingsScope
+from .models.get_plugin_statuses_response import GetPluginStatusesResponse
 from .models.get_properties_response import GetPropertiesResponse
 from .models.get_raw_properties_response import GetRawPropertiesResponse
 from .models.get_server_bans_response import GetServerBansResponse
 from .models.get_server_process_response import GetServerProcessResponse
+from .models.get_server_running_status_response import GetServerRunningStatusResponse
+from .models.get_system_and_app_info_response import GetSystemAndAppInfoResponse
 from .models.install_confirmation_response import InstallConfirmationResponse
 from .models.install_server_payload import InstallServerPayload
 from .models.installation_accepted_response import InstallationAcceptedResponse
 from .models.integration_token_info import IntegrationTokenInfo
 from .models.list_account_integration_tokens_status import ListAccountIntegrationTokensStatus
 from .models.list_available_addons_response import ListAvailableAddonsResponse
+from .models.list_available_worlds_response import ListAvailableWorldsResponse
+from .models.list_backup_files_response import ListBackupFilesResponse
+from .models.list_installed_addons_response import ListInstalledAddonsResponse
 from .models.list_integration_tokens_status import ListIntegrationTokensStatus
 from .models.list_schedules_response import ListSchedulesResponse
 from .models.list_snapshots_response import ListSnapshotsResponse
@@ -89,18 +95,19 @@ from .models.passkey_login_verify_request import PasskeyLoginVerifyRequest
 from .models.passkey_options_response import PasskeyOptionsResponse
 from .models.permissions_set_payload import PermissionsSetPayload
 from .models.permissions_update_response import PermissionsUpdateResponse
-from .models.player_list_response import PlayerListResponse
 from .models.plugin_pages_response import PluginPagesResponse
 from .models.plugin_settings_payload import PluginSettingsPayload
 from .models.plugin_status_set_payload import PluginStatusSetPayload
-from .models.plugin_statuses_response import PluginStatusesResponse
 from .models.profile_update_payload import ProfileUpdatePayload
 from .models.properties_payload import PropertiesPayload
+from .models.prune_download_cache_response import PruneDownloadCacheResponse
 from .models.prune_downloads_payload import PruneDownloadsPayload
-from .models.prune_downloads_response import PruneDownloadsResponse
 from .models.recovery_codes import RecoveryCodes
 from .models.recovery_report_response import RecoveryReportResponse
 from .models.registration_response import RegistrationResponse
+from .models.reload_global_settings_response import ReloadGlobalSettingsResponse
+from .models.reload_plugins_response import ReloadPluginsResponse
+from .models.reload_single_plugin_response import ReloadSinglePluginResponse
 from .models.remove_from_allowlist_response import RemoveFromAllowlistResponse
 from .models.remove_server_ban_response import RemoveServerBanResponse
 from .models.rename_passkey import RenamePasskey
@@ -111,22 +118,20 @@ from .models.restore_recovery_response import RestoreRecoveryResponse
 from .models.revoke_sessions import RevokeSessions
 from .models.revoke_trusted_devices import RevokeTrustedDevices
 from .models.runtime_status import RuntimeStatus
+from .models.scan_and_update_player_db_response import ScanAndUpdatePlayerDbResponse
 from .models.scheduled_task import ScheduledTask
 from .models.security_event_info import SecurityEventInfo
 from .models.security_status import SecurityStatus
 from .models.send_command_response import SendCommandResponse
-from .models.server_process_info_response import ServerProcessInfoResponse
-from .models.server_running_status_response import ServerRunningStatusResponse
 from .models.server_setting_item_payload import ServerSettingItemPayload
-from .models.server_settings_response import ServerSettingsResponse
 from .models.server_summary import ServerSummary
-from .models.servers_list_response import ServersListResponse
+from .models.set_global_setting_response import SetGlobalSettingResponse
 from .models.set_plugin_setting_response import SetPluginSettingResponse
+from .models.set_plugin_status_response import SetPluginStatusResponse
 from .models.set_properties_response import SetPropertiesResponse
 from .models.set_server_access import SetServerAccess
+from .models.set_server_setting_response import SetServerSettingResponse
 from .models.setting_item_payload import SettingItemPayload
-from .models.settings_response import SettingsResponse
-from .models.setup_account_response import SetupAccountResponse
 from .models.setup_status_response import SetupStatusResponse
 from .models.shutdown_request import ShutdownRequest
 from .models.shutdown_response import ShutdownResponse
@@ -145,7 +150,7 @@ from .models.theme_list_response import ThemeListResponse
 from .models.theme_update_payload import ThemeUpdatePayload
 from .models.token_response import TokenResponse
 from .models.trigger_event_payload import TriggerEventPayload
-from .models.trigger_event_response import TriggerEventResponse
+from .models.trigger_external_app_event_response import TriggerExternalAppEventResponse
 from .models.trusted_device_info import TrustedDeviceInfo
 from .models.update_user_role_payload import UpdateUserRolePayload
 from .models.user_login_payload import UserLoginPayload
@@ -171,13 +176,13 @@ class RestClient:
         """Generated add_allowlist_players operation."""
         return cast(Response[AddToAllowlistResponse | ErrorEnvelope], await self._owner.async_call_generated('add_allowlist_players', parameters={'server_name': server_name}, body=body, authenticated=True, detailed=True))
 
-    async def add_players(self, *, body: AddPlayersPayload) -> AddPlayersResponse | ErrorEnvelope | None:
+    async def add_players(self, *, body: AddPlayersPayload) -> AddPlayersManuallyResponse | ErrorEnvelope | None:
         """Generated add_players operation."""
-        return cast(AddPlayersResponse | ErrorEnvelope | None, await self._owner.async_call_generated('add_players', parameters={}, body=body, authenticated=True, typed=True))
+        return cast(AddPlayersManuallyResponse | ErrorEnvelope | None, await self._owner.async_call_generated('add_players', parameters={}, body=body, authenticated=True, typed=True))
 
-    async def add_players_detailed(self, *, body: AddPlayersPayload) -> Response[AddPlayersResponse | ErrorEnvelope]:
+    async def add_players_detailed(self, *, body: AddPlayersPayload) -> Response[AddPlayersManuallyResponse | ErrorEnvelope]:
         """Generated add_players operation."""
-        return cast(Response[AddPlayersResponse | ErrorEnvelope], await self._owner.async_call_generated('add_players', parameters={}, body=body, authenticated=True, detailed=True))
+        return cast(Response[AddPlayersManuallyResponse | ErrorEnvelope], await self._owner.async_call_generated('add_players', parameters={}, body=body, authenticated=True, detailed=True))
 
     async def add_server_ban(self, server_name: str, *, body: BanAddRequest) -> AddServerBanResponse | ErrorEnvelope | None:
         """Generated add_server_ban operation."""
@@ -227,13 +232,13 @@ class RestClient:
         """Generated cleanup_backup_destination operation."""
         return cast(Response[ErrorEnvelope | TaskAcceptedResponse], await self._owner.async_call_generated('cleanup_backup_destination', parameters={'server_name': server_name, 'destination': destination}, body=body, authenticated=True, detailed=True))
 
-    async def compare_diagnostic_snapshots(self, *, body: CompareDiagnosticSnapshotsRequest) -> DiagnosticComparison | ErrorEnvelope | None:
+    async def compare_diagnostic_snapshots(self, *, body: CompareDiagnosticSnapshotsRequest) -> CompareDiagnosticSnapshotsResponse | ErrorEnvelope | None:
         """Generated compare_diagnostic_snapshots operation."""
-        return cast(DiagnosticComparison | ErrorEnvelope | None, await self._owner.async_call_generated('compare_diagnostic_snapshots', parameters={}, body=body, authenticated=True, typed=True))
+        return cast(CompareDiagnosticSnapshotsResponse | ErrorEnvelope | None, await self._owner.async_call_generated('compare_diagnostic_snapshots', parameters={}, body=body, authenticated=True, typed=True))
 
-    async def compare_diagnostic_snapshots_detailed(self, *, body: CompareDiagnosticSnapshotsRequest) -> Response[DiagnosticComparison | ErrorEnvelope]:
+    async def compare_diagnostic_snapshots_detailed(self, *, body: CompareDiagnosticSnapshotsRequest) -> Response[CompareDiagnosticSnapshotsResponse | ErrorEnvelope]:
         """Generated compare_diagnostic_snapshots operation."""
-        return cast(Response[DiagnosticComparison | ErrorEnvelope], await self._owner.async_call_generated('compare_diagnostic_snapshots', parameters={}, body=body, authenticated=True, detailed=True))
+        return cast(Response[CompareDiagnosticSnapshotsResponse | ErrorEnvelope], await self._owner.async_call_generated('compare_diagnostic_snapshots', parameters={}, body=body, authenticated=True, detailed=True))
 
     async def complete_passkey_login(self, *, body: PasskeyLoginVerifyRequest) -> ErrorEnvelope | TokenResponse | None:
         """Generated complete_passkey_login operation."""
@@ -275,13 +280,13 @@ class RestClient:
         """Generated create_backup operation."""
         return cast(Response[ErrorEnvelope | TaskAcceptedResponse], await self._owner.async_call_generated('create_backup', parameters={'server_name': server_name}, body=body, authenticated=True, detailed=True))
 
-    async def create_first_user(self, *, body: UserLoginPayload) -> ErrorEnvelope | SetupAccountResponse | None:
+    async def create_first_user(self, *, body: UserLoginPayload) -> ErrorEnvelope | TokenResponse | None:
         """Generated create_first_user operation."""
-        return cast(ErrorEnvelope | SetupAccountResponse | None, await self._owner.async_call_generated('create_first_user', parameters={}, body=body, authenticated=False, typed=True))
+        return cast(ErrorEnvelope | TokenResponse | None, await self._owner.async_call_generated('create_first_user', parameters={}, body=body, authenticated=False, typed=True))
 
-    async def create_first_user_detailed(self, *, body: UserLoginPayload) -> Response[ErrorEnvelope | SetupAccountResponse]:
+    async def create_first_user_detailed(self, *, body: UserLoginPayload) -> Response[ErrorEnvelope | TokenResponse]:
         """Generated create_first_user operation."""
-        return cast(Response[ErrorEnvelope | SetupAccountResponse], await self._owner.async_call_generated('create_first_user', parameters={}, body=body, authenticated=False, detailed=True))
+        return cast(Response[ErrorEnvelope | TokenResponse], await self._owner.async_call_generated('create_first_user', parameters={}, body=body, authenticated=False, detailed=True))
 
     async def create_integration_token(self, *, body: CreateIntegrationToken) -> CreatedIntegrationToken | ErrorEnvelope | None:
         """Generated create_integration_token operation."""
@@ -467,14 +472,6 @@ class RestClient:
         """Generated get_account operation."""
         return cast(Response[CurrentAccountResponse | ErrorEnvelope], await self._owner.async_call_generated('get_account', parameters={}, body=None, authenticated=True, detailed=True))
 
-    async def get_account_permissions(self) -> ErrorEnvelope | list[str] | None:
-        """Generated get_account_permissions operation."""
-        return cast(ErrorEnvelope | list[str] | None, await self._owner.async_call_generated('get_account_permissions', parameters={}, body=None, authenticated=True, typed=True))
-
-    async def get_account_permissions_detailed(self) -> Response[ErrorEnvelope | list[str]]:
-        """Generated get_account_permissions operation."""
-        return cast(Response[ErrorEnvelope | list[str]], await self._owner.async_call_generated('get_account_permissions', parameters={}, body=None, authenticated=True, detailed=True))
-
     async def get_account_security(self) -> ErrorEnvelope | SecurityStatus | None:
         """Generated get_account_security operation."""
         return cast(ErrorEnvelope | SecurityStatus | None, await self._owner.async_call_generated('get_account_security', parameters={}, body=None, authenticated=True, typed=True))
@@ -499,13 +496,13 @@ class RestClient:
         """Generated get_allowlist operation."""
         return cast(Response[ErrorEnvelope | GetAllowlistResponse], await self._owner.async_call_generated('get_allowlist', parameters={'server_name': server_name}, body=None, authenticated=True, detailed=True))
 
-    async def get_application_diagnostics(self) -> DiagnosticSnapshot | ErrorEnvelope | None:
+    async def get_application_diagnostics(self) -> ErrorEnvelope | GetApplicationDiagnosticsResponse | None:
         """Generated get_application_diagnostics operation."""
-        return cast(DiagnosticSnapshot | ErrorEnvelope | None, await self._owner.async_call_generated('get_application_diagnostics', parameters={}, body=None, authenticated=True, typed=True))
+        return cast(ErrorEnvelope | GetApplicationDiagnosticsResponse | None, await self._owner.async_call_generated('get_application_diagnostics', parameters={}, body=None, authenticated=True, typed=True))
 
-    async def get_application_diagnostics_detailed(self) -> Response[DiagnosticSnapshot | ErrorEnvelope]:
+    async def get_application_diagnostics_detailed(self) -> Response[ErrorEnvelope | GetApplicationDiagnosticsResponse]:
         """Generated get_application_diagnostics operation."""
-        return cast(Response[DiagnosticSnapshot | ErrorEnvelope], await self._owner.async_call_generated('get_application_diagnostics', parameters={}, body=None, authenticated=True, detailed=True))
+        return cast(Response[ErrorEnvelope | GetApplicationDiagnosticsResponse], await self._owner.async_call_generated('get_application_diagnostics', parameters={}, body=None, authenticated=True, detailed=True))
 
     async def get_application_health(self) -> ErrorEnvelope | GetApplicationHealthResponse | None:
         """Generated get_application_health operation."""
@@ -531,45 +528,45 @@ class RestClient:
         """Generated get_backup_health operation."""
         return cast(Response[BackupHealthResponse | ErrorEnvelope], await self._owner.async_call_generated('get_backup_health', parameters={'server_name': server_name}, body=None, authenticated=True, detailed=True))
 
-    async def get_diagnostic_activity(self, *, operation_id: None | str | Unset=UNSET, sequence_id: None | str | Unset=UNSET, operation_name: None | str | Unset=UNSET, server_name: None | str | Unset=UNSET, source: None | str | Unset=UNSET, phase: GetDiagnosticActivityPhaseType0 | None | Unset=UNSET, name: None | str | Unset=UNSET, owner: None | str | Unset=UNSET, correlation_id: None | str | Unset=UNSET, status: GetDiagnosticActivityStatusType0 | None | Unset=UNSET, limit: int | Unset=100) -> DiagnosticActivity | ErrorEnvelope | None:
+    async def get_diagnostic_activity(self, *, operation_id: None | str | Unset=UNSET, sequence_id: None | str | Unset=UNSET, operation_name: None | str | Unset=UNSET, server_name: None | str | Unset=UNSET, source: None | str | Unset=UNSET, phase: GetDiagnosticActivityPhaseType0 | None | Unset=UNSET, name: None | str | Unset=UNSET, owner: None | str | Unset=UNSET, correlation_id: None | str | Unset=UNSET, status: GetDiagnosticActivityStatusType0 | None | Unset=UNSET, limit: int | Unset=100) -> ErrorEnvelope | GetDiagnosticActivityResponse | None:
         """Generated get_diagnostic_activity operation."""
-        return cast(DiagnosticActivity | ErrorEnvelope | None, await self._owner.async_call_generated('get_diagnostic_activity', parameters={'operation_id': operation_id, 'sequence_id': sequence_id, 'operation_name': operation_name, 'server_name': server_name, 'source': source, 'phase': phase, 'name': name, 'owner': owner, 'correlation_id': correlation_id, 'status': status, 'limit': limit}, body=None, authenticated=True, typed=True))
+        return cast(ErrorEnvelope | GetDiagnosticActivityResponse | None, await self._owner.async_call_generated('get_diagnostic_activity', parameters={'operation_id': operation_id, 'sequence_id': sequence_id, 'operation_name': operation_name, 'server_name': server_name, 'source': source, 'phase': phase, 'name': name, 'owner': owner, 'correlation_id': correlation_id, 'status': status, 'limit': limit}, body=None, authenticated=True, typed=True))
 
-    async def get_diagnostic_activity_detailed(self, *, operation_id: None | str | Unset=UNSET, sequence_id: None | str | Unset=UNSET, operation_name: None | str | Unset=UNSET, server_name: None | str | Unset=UNSET, source: None | str | Unset=UNSET, phase: GetDiagnosticActivityPhaseType0 | None | Unset=UNSET, name: None | str | Unset=UNSET, owner: None | str | Unset=UNSET, correlation_id: None | str | Unset=UNSET, status: GetDiagnosticActivityStatusType0 | None | Unset=UNSET, limit: int | Unset=100) -> Response[DiagnosticActivity | ErrorEnvelope]:
+    async def get_diagnostic_activity_detailed(self, *, operation_id: None | str | Unset=UNSET, sequence_id: None | str | Unset=UNSET, operation_name: None | str | Unset=UNSET, server_name: None | str | Unset=UNSET, source: None | str | Unset=UNSET, phase: GetDiagnosticActivityPhaseType0 | None | Unset=UNSET, name: None | str | Unset=UNSET, owner: None | str | Unset=UNSET, correlation_id: None | str | Unset=UNSET, status: GetDiagnosticActivityStatusType0 | None | Unset=UNSET, limit: int | Unset=100) -> Response[ErrorEnvelope | GetDiagnosticActivityResponse]:
         """Generated get_diagnostic_activity operation."""
-        return cast(Response[DiagnosticActivity | ErrorEnvelope], await self._owner.async_call_generated('get_diagnostic_activity', parameters={'operation_id': operation_id, 'sequence_id': sequence_id, 'operation_name': operation_name, 'server_name': server_name, 'source': source, 'phase': phase, 'name': name, 'owner': owner, 'correlation_id': correlation_id, 'status': status, 'limit': limit}, body=None, authenticated=True, detailed=True))
+        return cast(Response[ErrorEnvelope | GetDiagnosticActivityResponse], await self._owner.async_call_generated('get_diagnostic_activity', parameters={'operation_id': operation_id, 'sequence_id': sequence_id, 'operation_name': operation_name, 'server_name': server_name, 'source': source, 'phase': phase, 'name': name, 'owner': owner, 'correlation_id': correlation_id, 'status': status, 'limit': limit}, body=None, authenticated=True, detailed=True))
 
-    async def get_diagnostic_history(self, *, limit: int | Unset=100, subsystem: None | str | Unset=UNSET, instance_id: None | str | Unset=UNSET, correlation_id: None | str | Unset=UNSET, cursor: None | str | Unset=UNSET, owner: None | str | Unset=UNSET, code: None | str | Unset=UNSET, outcome: GetDiagnosticHistoryOutcomeType0 | None | Unset=UNSET, operation_id: None | str | Unset=UNSET) -> DiagnosticHistory | ErrorEnvelope | None:
+    async def get_diagnostic_history(self, *, limit: int | Unset=100, subsystem: None | str | Unset=UNSET, instance_id: None | str | Unset=UNSET, correlation_id: None | str | Unset=UNSET, cursor: None | str | Unset=UNSET, owner: None | str | Unset=UNSET, code: None | str | Unset=UNSET, outcome: GetDiagnosticHistoryOutcomeType0 | None | Unset=UNSET, operation_id: None | str | Unset=UNSET) -> ErrorEnvelope | GetDiagnosticHistoryResponse | None:
         """Generated get_diagnostic_history operation."""
-        return cast(DiagnosticHistory | ErrorEnvelope | None, await self._owner.async_call_generated('get_diagnostic_history', parameters={'limit': limit, 'subsystem': subsystem, 'instance_id': instance_id, 'correlation_id': correlation_id, 'cursor': cursor, 'owner': owner, 'code': code, 'outcome': outcome, 'operation_id': operation_id}, body=None, authenticated=True, typed=True))
+        return cast(ErrorEnvelope | GetDiagnosticHistoryResponse | None, await self._owner.async_call_generated('get_diagnostic_history', parameters={'limit': limit, 'subsystem': subsystem, 'instance_id': instance_id, 'correlation_id': correlation_id, 'cursor': cursor, 'owner': owner, 'code': code, 'outcome': outcome, 'operation_id': operation_id}, body=None, authenticated=True, typed=True))
 
-    async def get_diagnostic_history_detailed(self, *, limit: int | Unset=100, subsystem: None | str | Unset=UNSET, instance_id: None | str | Unset=UNSET, correlation_id: None | str | Unset=UNSET, cursor: None | str | Unset=UNSET, owner: None | str | Unset=UNSET, code: None | str | Unset=UNSET, outcome: GetDiagnosticHistoryOutcomeType0 | None | Unset=UNSET, operation_id: None | str | Unset=UNSET) -> Response[DiagnosticHistory | ErrorEnvelope]:
+    async def get_diagnostic_history_detailed(self, *, limit: int | Unset=100, subsystem: None | str | Unset=UNSET, instance_id: None | str | Unset=UNSET, correlation_id: None | str | Unset=UNSET, cursor: None | str | Unset=UNSET, owner: None | str | Unset=UNSET, code: None | str | Unset=UNSET, outcome: GetDiagnosticHistoryOutcomeType0 | None | Unset=UNSET, operation_id: None | str | Unset=UNSET) -> Response[ErrorEnvelope | GetDiagnosticHistoryResponse]:
         """Generated get_diagnostic_history operation."""
-        return cast(Response[DiagnosticHistory | ErrorEnvelope], await self._owner.async_call_generated('get_diagnostic_history', parameters={'limit': limit, 'subsystem': subsystem, 'instance_id': instance_id, 'correlation_id': correlation_id, 'cursor': cursor, 'owner': owner, 'code': code, 'outcome': outcome, 'operation_id': operation_id}, body=None, authenticated=True, detailed=True))
+        return cast(Response[ErrorEnvelope | GetDiagnosticHistoryResponse], await self._owner.async_call_generated('get_diagnostic_history', parameters={'limit': limit, 'subsystem': subsystem, 'instance_id': instance_id, 'correlation_id': correlation_id, 'cursor': cursor, 'owner': owner, 'code': code, 'outcome': outcome, 'operation_id': operation_id}, body=None, authenticated=True, detailed=True))
 
-    async def get_diagnostic_report(self) -> DiagnosticReport | ErrorEnvelope | None:
+    async def get_diagnostic_report(self) -> ErrorEnvelope | GetDiagnosticReportResponse | None:
         """Generated get_diagnostic_report operation."""
-        return cast(DiagnosticReport | ErrorEnvelope | None, await self._owner.async_call_generated('get_diagnostic_report', parameters={}, body=None, authenticated=True, typed=True))
+        return cast(ErrorEnvelope | GetDiagnosticReportResponse | None, await self._owner.async_call_generated('get_diagnostic_report', parameters={}, body=None, authenticated=True, typed=True))
 
-    async def get_diagnostic_report_detailed(self) -> Response[DiagnosticReport | ErrorEnvelope]:
+    async def get_diagnostic_report_detailed(self) -> Response[ErrorEnvelope | GetDiagnosticReportResponse]:
         """Generated get_diagnostic_report operation."""
-        return cast(Response[DiagnosticReport | ErrorEnvelope], await self._owner.async_call_generated('get_diagnostic_report', parameters={}, body=None, authenticated=True, detailed=True))
+        return cast(Response[ErrorEnvelope | GetDiagnosticReportResponse], await self._owner.async_call_generated('get_diagnostic_report', parameters={}, body=None, authenticated=True, detailed=True))
 
-    async def get_diagnostic_runs(self, *, limit: int | Unset=20) -> DiagnosticRuns | ErrorEnvelope | None:
+    async def get_diagnostic_runs(self, *, limit: int | Unset=20) -> ErrorEnvelope | GetDiagnosticRunsResponse | None:
         """Generated get_diagnostic_runs operation."""
-        return cast(DiagnosticRuns | ErrorEnvelope | None, await self._owner.async_call_generated('get_diagnostic_runs', parameters={'limit': limit}, body=None, authenticated=True, typed=True))
+        return cast(ErrorEnvelope | GetDiagnosticRunsResponse | None, await self._owner.async_call_generated('get_diagnostic_runs', parameters={'limit': limit}, body=None, authenticated=True, typed=True))
 
-    async def get_diagnostic_runs_detailed(self, *, limit: int | Unset=20) -> Response[DiagnosticRuns | ErrorEnvelope]:
+    async def get_diagnostic_runs_detailed(self, *, limit: int | Unset=20) -> Response[ErrorEnvelope | GetDiagnosticRunsResponse]:
         """Generated get_diagnostic_runs operation."""
-        return cast(Response[DiagnosticRuns | ErrorEnvelope], await self._owner.async_call_generated('get_diagnostic_runs', parameters={'limit': limit}, body=None, authenticated=True, detailed=True))
+        return cast(Response[ErrorEnvelope | GetDiagnosticRunsResponse], await self._owner.async_call_generated('get_diagnostic_runs', parameters={'limit': limit}, body=None, authenticated=True, detailed=True))
 
-    async def get_diagnostic_trace(self, correlation_id: str, *, limit: int | Unset=100, cursor: None | str | Unset=UNSET) -> DiagnosticTrace | ErrorEnvelope | None:
+    async def get_diagnostic_trace(self, correlation_id: str, *, limit: int | Unset=100, cursor: None | str | Unset=UNSET) -> ErrorEnvelope | GetDiagnosticTraceResponse | None:
         """Generated get_diagnostic_trace operation."""
-        return cast(DiagnosticTrace | ErrorEnvelope | None, await self._owner.async_call_generated('get_diagnostic_trace', parameters={'correlation_id': correlation_id, 'limit': limit, 'cursor': cursor}, body=None, authenticated=True, typed=True))
+        return cast(ErrorEnvelope | GetDiagnosticTraceResponse | None, await self._owner.async_call_generated('get_diagnostic_trace', parameters={'correlation_id': correlation_id, 'limit': limit, 'cursor': cursor}, body=None, authenticated=True, typed=True))
 
-    async def get_diagnostic_trace_detailed(self, correlation_id: str, *, limit: int | Unset=100, cursor: None | str | Unset=UNSET) -> Response[DiagnosticTrace | ErrorEnvelope]:
+    async def get_diagnostic_trace_detailed(self, correlation_id: str, *, limit: int | Unset=100, cursor: None | str | Unset=UNSET) -> Response[ErrorEnvelope | GetDiagnosticTraceResponse]:
         """Generated get_diagnostic_trace operation."""
-        return cast(Response[DiagnosticTrace | ErrorEnvelope], await self._owner.async_call_generated('get_diagnostic_trace', parameters={'correlation_id': correlation_id, 'limit': limit, 'cursor': cursor}, body=None, authenticated=True, detailed=True))
+        return cast(Response[ErrorEnvelope | GetDiagnosticTraceResponse], await self._owner.async_call_generated('get_diagnostic_trace', parameters={'correlation_id': correlation_id, 'limit': limit, 'cursor': cursor}, body=None, authenticated=True, detailed=True))
 
     async def get_event_activity(self, *, operation_id: None | str | Unset=UNSET, sequence_id: None | str | Unset=UNSET, operation_name: None | str | Unset=UNSET, server_name: None | str | Unset=UNSET, source: None | str | Unset=UNSET, phase: GetEventActivityPhaseType0 | None | Unset=UNSET, name: None | str | Unset=UNSET, owner: None | str | Unset=UNSET, correlation_id: None | str | Unset=UNSET, status: GetEventActivityStatusType0 | None | Unset=UNSET, limit: int | Unset=200) -> ErrorEnvelope | EventDiagnostics | None:
         """Generated get_event_activity operation."""
@@ -667,29 +664,29 @@ class RestClient:
         """Generated get_server_process operation."""
         return cast(Response[ErrorEnvelope | GetServerProcessResponse], await self._owner.async_call_generated('get_server_process', parameters={'server_name': server_name}, body=None, authenticated=True, detailed=True))
 
-    async def get_server_process_info(self, server_name: str) -> ErrorEnvelope | ServerProcessInfoResponse | None:
+    async def get_server_process_info(self, server_name: str) -> ErrorEnvelope | GetBedrockProcessInfoResponse | None:
         """Generated get_server_process_info operation."""
-        return cast(ErrorEnvelope | ServerProcessInfoResponse | None, await self._owner.async_call_generated('get_server_process_info', parameters={'server_name': server_name}, body=None, authenticated=True, typed=True))
+        return cast(ErrorEnvelope | GetBedrockProcessInfoResponse | None, await self._owner.async_call_generated('get_server_process_info', parameters={'server_name': server_name}, body=None, authenticated=True, typed=True))
 
-    async def get_server_process_info_detailed(self, server_name: str) -> Response[ErrorEnvelope | ServerProcessInfoResponse]:
+    async def get_server_process_info_detailed(self, server_name: str) -> Response[ErrorEnvelope | GetBedrockProcessInfoResponse]:
         """Generated get_server_process_info operation."""
-        return cast(Response[ErrorEnvelope | ServerProcessInfoResponse], await self._owner.async_call_generated('get_server_process_info', parameters={'server_name': server_name}, body=None, authenticated=True, detailed=True))
+        return cast(Response[ErrorEnvelope | GetBedrockProcessInfoResponse], await self._owner.async_call_generated('get_server_process_info', parameters={'server_name': server_name}, body=None, authenticated=True, detailed=True))
 
-    async def get_server_settings(self, server_name: str) -> ErrorEnvelope | ServerSettingsResponse | None:
+    async def get_server_settings(self, server_name: str) -> ErrorEnvelope | GetAllServerSettingsResponse | None:
         """Generated get_server_settings operation."""
-        return cast(ErrorEnvelope | ServerSettingsResponse | None, await self._owner.async_call_generated('get_server_settings', parameters={'server_name': server_name}, body=None, authenticated=True, typed=True))
+        return cast(ErrorEnvelope | GetAllServerSettingsResponse | None, await self._owner.async_call_generated('get_server_settings', parameters={'server_name': server_name}, body=None, authenticated=True, typed=True))
 
-    async def get_server_settings_detailed(self, server_name: str) -> Response[ErrorEnvelope | ServerSettingsResponse]:
+    async def get_server_settings_detailed(self, server_name: str) -> Response[ErrorEnvelope | GetAllServerSettingsResponse]:
         """Generated get_server_settings operation."""
-        return cast(Response[ErrorEnvelope | ServerSettingsResponse], await self._owner.async_call_generated('get_server_settings', parameters={'server_name': server_name}, body=None, authenticated=True, detailed=True))
+        return cast(Response[ErrorEnvelope | GetAllServerSettingsResponse], await self._owner.async_call_generated('get_server_settings', parameters={'server_name': server_name}, body=None, authenticated=True, detailed=True))
 
-    async def get_server_status(self, server_name: str) -> ErrorEnvelope | ServerRunningStatusResponse | None:
+    async def get_server_status(self, server_name: str) -> ErrorEnvelope | GetServerRunningStatusResponse | None:
         """Generated get_server_status operation."""
-        return cast(ErrorEnvelope | ServerRunningStatusResponse | None, await self._owner.async_call_generated('get_server_status', parameters={'server_name': server_name}, body=None, authenticated=True, typed=True))
+        return cast(ErrorEnvelope | GetServerRunningStatusResponse | None, await self._owner.async_call_generated('get_server_status', parameters={'server_name': server_name}, body=None, authenticated=True, typed=True))
 
-    async def get_server_status_detailed(self, server_name: str) -> Response[ErrorEnvelope | ServerRunningStatusResponse]:
+    async def get_server_status_detailed(self, server_name: str) -> Response[ErrorEnvelope | GetServerRunningStatusResponse]:
         """Generated get_server_status operation."""
-        return cast(Response[ErrorEnvelope | ServerRunningStatusResponse], await self._owner.async_call_generated('get_server_status', parameters={'server_name': server_name}, body=None, authenticated=True, detailed=True))
+        return cast(Response[ErrorEnvelope | GetServerRunningStatusResponse], await self._owner.async_call_generated('get_server_status', parameters={'server_name': server_name}, body=None, authenticated=True, detailed=True))
 
     async def get_server_summary(self, server_name: str) -> ErrorEnvelope | ServerSummary | None:
         """Generated get_server_summary operation."""
@@ -699,13 +696,13 @@ class RestClient:
         """Generated get_server_summary operation."""
         return cast(Response[ErrorEnvelope | ServerSummary], await self._owner.async_call_generated('get_server_summary', parameters={'server_name': server_name}, body=None, authenticated=True, detailed=True))
 
-    async def get_settings(self) -> ErrorEnvelope | SettingsResponse | None:
+    async def get_settings(self) -> ErrorEnvelope | GetAllGlobalSettingsResponse | None:
         """Generated get_settings operation."""
-        return cast(ErrorEnvelope | SettingsResponse | None, await self._owner.async_call_generated('get_settings', parameters={}, body=None, authenticated=True, typed=True))
+        return cast(ErrorEnvelope | GetAllGlobalSettingsResponse | None, await self._owner.async_call_generated('get_settings', parameters={}, body=None, authenticated=True, typed=True))
 
-    async def get_settings_detailed(self) -> Response[ErrorEnvelope | SettingsResponse]:
+    async def get_settings_detailed(self) -> Response[ErrorEnvelope | GetAllGlobalSettingsResponse]:
         """Generated get_settings operation."""
-        return cast(Response[ErrorEnvelope | SettingsResponse], await self._owner.async_call_generated('get_settings', parameters={}, body=None, authenticated=True, detailed=True))
+        return cast(Response[ErrorEnvelope | GetAllGlobalSettingsResponse], await self._owner.async_call_generated('get_settings', parameters={}, body=None, authenticated=True, detailed=True))
 
     async def get_setup_status(self) -> ErrorEnvelope | SetupStatusResponse | None:
         """Generated get_setup_status operation."""
@@ -715,21 +712,21 @@ class RestClient:
         """Generated get_setup_status operation."""
         return cast(Response[ErrorEnvelope | SetupStatusResponse], await self._owner.async_call_generated('get_setup_status', parameters={}, body=None, authenticated=False, detailed=True))
 
-    async def get_subsystem_diagnostics(self, subsystem: str) -> DiagnosticSnapshot | ErrorEnvelope | None:
+    async def get_subsystem_diagnostics(self, subsystem: str) -> ErrorEnvelope | GetApplicationDiagnosticsResponse | None:
         """Generated get_subsystem_diagnostics operation."""
-        return cast(DiagnosticSnapshot | ErrorEnvelope | None, await self._owner.async_call_generated('get_subsystem_diagnostics', parameters={'subsystem': subsystem}, body=None, authenticated=True, typed=True))
+        return cast(ErrorEnvelope | GetApplicationDiagnosticsResponse | None, await self._owner.async_call_generated('get_subsystem_diagnostics', parameters={'subsystem': subsystem}, body=None, authenticated=True, typed=True))
 
-    async def get_subsystem_diagnostics_detailed(self, subsystem: str) -> Response[DiagnosticSnapshot | ErrorEnvelope]:
+    async def get_subsystem_diagnostics_detailed(self, subsystem: str) -> Response[ErrorEnvelope | GetApplicationDiagnosticsResponse]:
         """Generated get_subsystem_diagnostics operation."""
-        return cast(Response[DiagnosticSnapshot | ErrorEnvelope], await self._owner.async_call_generated('get_subsystem_diagnostics', parameters={'subsystem': subsystem}, body=None, authenticated=True, detailed=True))
+        return cast(Response[ErrorEnvelope | GetApplicationDiagnosticsResponse], await self._owner.async_call_generated('get_subsystem_diagnostics', parameters={'subsystem': subsystem}, body=None, authenticated=True, detailed=True))
 
-    async def get_system_info(self) -> AppInfoResponse | ErrorEnvelope | None:
+    async def get_system_info(self) -> ErrorEnvelope | GetSystemAndAppInfoResponse | None:
         """Generated get_system_info operation."""
-        return cast(AppInfoResponse | ErrorEnvelope | None, await self._owner.async_call_generated('get_system_info', parameters={}, body=None, authenticated=False, typed=True))
+        return cast(ErrorEnvelope | GetSystemAndAppInfoResponse | None, await self._owner.async_call_generated('get_system_info', parameters={}, body=None, authenticated=False, typed=True))
 
-    async def get_system_info_detailed(self) -> Response[AppInfoResponse | ErrorEnvelope]:
+    async def get_system_info_detailed(self) -> Response[ErrorEnvelope | GetSystemAndAppInfoResponse]:
         """Generated get_system_info operation."""
-        return cast(Response[AppInfoResponse | ErrorEnvelope], await self._owner.async_call_generated('get_system_info', parameters={}, body=None, authenticated=False, detailed=True))
+        return cast(Response[ErrorEnvelope | GetSystemAndAppInfoResponse], await self._owner.async_call_generated('get_system_info', parameters={}, body=None, authenticated=False, detailed=True))
 
     async def get_task_status(self, task_id: str) -> ErrorEnvelope | TaskSnapshot | None:
         """Generated get_task_status operation."""
@@ -851,13 +848,13 @@ class RestClient:
         """Generated list_available_addons operation."""
         return cast(Response[ErrorEnvelope | ListAvailableAddonsResponse], await self._owner.async_call_generated('list_available_addons', parameters={}, body=None, authenticated=True, detailed=True))
 
-    async def list_available_worlds(self) -> ContentListResponse | ErrorEnvelope | None:
+    async def list_available_worlds(self) -> ErrorEnvelope | ListAvailableWorldsResponse | None:
         """Generated list_available_worlds operation."""
-        return cast(ContentListResponse | ErrorEnvelope | None, await self._owner.async_call_generated('list_available_worlds', parameters={}, body=None, authenticated=True, typed=True))
+        return cast(ErrorEnvelope | ListAvailableWorldsResponse | None, await self._owner.async_call_generated('list_available_worlds', parameters={}, body=None, authenticated=True, typed=True))
 
-    async def list_available_worlds_detailed(self) -> Response[ContentListResponse | ErrorEnvelope]:
+    async def list_available_worlds_detailed(self) -> Response[ErrorEnvelope | ListAvailableWorldsResponse]:
         """Generated list_available_worlds operation."""
-        return cast(Response[ContentListResponse | ErrorEnvelope], await self._owner.async_call_generated('list_available_worlds', parameters={}, body=None, authenticated=True, detailed=True))
+        return cast(Response[ErrorEnvelope | ListAvailableWorldsResponse], await self._owner.async_call_generated('list_available_worlds', parameters={}, body=None, authenticated=True, detailed=True))
 
     async def list_backup_keys(self) -> BackupKeysInfo | ErrorEnvelope | None:
         """Generated list_backup_keys operation."""
@@ -899,21 +896,21 @@ class RestClient:
         """Generated list_passkeys operation."""
         return cast(Response[ErrorEnvelope | list[PasskeyInfo]], await self._owner.async_call_generated('list_passkeys', parameters={}, body=None, authenticated=True, detailed=True))
 
-    async def list_players(self) -> ErrorEnvelope | PlayerListResponse | None:
+    async def list_players(self) -> ErrorEnvelope | GetAllKnownPlayersResponse | None:
         """Generated list_players operation."""
-        return cast(ErrorEnvelope | PlayerListResponse | None, await self._owner.async_call_generated('list_players', parameters={}, body=None, authenticated=True, typed=True))
+        return cast(ErrorEnvelope | GetAllKnownPlayersResponse | None, await self._owner.async_call_generated('list_players', parameters={}, body=None, authenticated=True, typed=True))
 
-    async def list_players_detailed(self) -> Response[ErrorEnvelope | PlayerListResponse]:
+    async def list_players_detailed(self) -> Response[ErrorEnvelope | GetAllKnownPlayersResponse]:
         """Generated list_players operation."""
-        return cast(Response[ErrorEnvelope | PlayerListResponse], await self._owner.async_call_generated('list_players', parameters={}, body=None, authenticated=True, detailed=True))
+        return cast(Response[ErrorEnvelope | GetAllKnownPlayersResponse], await self._owner.async_call_generated('list_players', parameters={}, body=None, authenticated=True, detailed=True))
 
-    async def list_plugins(self) -> ErrorEnvelope | PluginStatusesResponse | None:
+    async def list_plugins(self) -> ErrorEnvelope | GetPluginStatusesResponse | None:
         """Generated list_plugins operation."""
-        return cast(ErrorEnvelope | PluginStatusesResponse | None, await self._owner.async_call_generated('list_plugins', parameters={}, body=None, authenticated=True, typed=True))
+        return cast(ErrorEnvelope | GetPluginStatusesResponse | None, await self._owner.async_call_generated('list_plugins', parameters={}, body=None, authenticated=True, typed=True))
 
-    async def list_plugins_detailed(self) -> Response[ErrorEnvelope | PluginStatusesResponse]:
+    async def list_plugins_detailed(self) -> Response[ErrorEnvelope | GetPluginStatusesResponse]:
         """Generated list_plugins operation."""
-        return cast(Response[ErrorEnvelope | PluginStatusesResponse], await self._owner.async_call_generated('list_plugins', parameters={}, body=None, authenticated=True, detailed=True))
+        return cast(Response[ErrorEnvelope | GetPluginStatusesResponse], await self._owner.async_call_generated('list_plugins', parameters={}, body=None, authenticated=True, detailed=True))
 
     async def list_schedules(self, *, server_name: None | str | Unset=UNSET) -> ErrorEnvelope | ListSchedulesResponse | None:
         """Generated list_schedules operation."""
@@ -931,21 +928,21 @@ class RestClient:
         """Generated list_security_activity operation."""
         return cast(Response[ErrorEnvelope | list[SecurityEventInfo]], await self._owner.async_call_generated('list_security_activity', parameters={}, body=None, authenticated=True, detailed=True))
 
-    async def list_server_addons(self, server_name: str) -> AddonListResponse | ErrorEnvelope | None:
+    async def list_server_addons(self, server_name: str) -> ErrorEnvelope | ListInstalledAddonsResponse | None:
         """Generated list_server_addons operation."""
-        return cast(AddonListResponse | ErrorEnvelope | None, await self._owner.async_call_generated('list_server_addons', parameters={'server_name': server_name}, body=None, authenticated=True, typed=True))
+        return cast(ErrorEnvelope | ListInstalledAddonsResponse | None, await self._owner.async_call_generated('list_server_addons', parameters={'server_name': server_name}, body=None, authenticated=True, typed=True))
 
-    async def list_server_addons_detailed(self, server_name: str) -> Response[AddonListResponse | ErrorEnvelope]:
+    async def list_server_addons_detailed(self, server_name: str) -> Response[ErrorEnvelope | ListInstalledAddonsResponse]:
         """Generated list_server_addons operation."""
-        return cast(Response[AddonListResponse | ErrorEnvelope], await self._owner.async_call_generated('list_server_addons', parameters={'server_name': server_name}, body=None, authenticated=True, detailed=True))
+        return cast(Response[ErrorEnvelope | ListInstalledAddonsResponse], await self._owner.async_call_generated('list_server_addons', parameters={'server_name': server_name}, body=None, authenticated=True, detailed=True))
 
-    async def list_server_backups(self, server_name: str, backup_type: str) -> BackupFilesResponse | ErrorEnvelope | None:
+    async def list_server_backups(self, server_name: str, backup_type: str) -> ErrorEnvelope | ListBackupFilesResponse | None:
         """Generated list_server_backups operation."""
-        return cast(BackupFilesResponse | ErrorEnvelope | None, await self._owner.async_call_generated('list_server_backups', parameters={'server_name': server_name, 'backup_type': backup_type}, body=None, authenticated=True, typed=True))
+        return cast(ErrorEnvelope | ListBackupFilesResponse | None, await self._owner.async_call_generated('list_server_backups', parameters={'server_name': server_name, 'backup_type': backup_type}, body=None, authenticated=True, typed=True))
 
-    async def list_server_backups_detailed(self, server_name: str, backup_type: str) -> Response[BackupFilesResponse | ErrorEnvelope]:
+    async def list_server_backups_detailed(self, server_name: str, backup_type: str) -> Response[ErrorEnvelope | ListBackupFilesResponse]:
         """Generated list_server_backups operation."""
-        return cast(Response[BackupFilesResponse | ErrorEnvelope], await self._owner.async_call_generated('list_server_backups', parameters={'server_name': server_name, 'backup_type': backup_type}, body=None, authenticated=True, detailed=True))
+        return cast(Response[ErrorEnvelope | ListBackupFilesResponse], await self._owner.async_call_generated('list_server_backups', parameters={'server_name': server_name, 'backup_type': backup_type}, body=None, authenticated=True, detailed=True))
 
     async def list_server_snapshots(self, server_name: str) -> ErrorEnvelope | ListSnapshotsResponse | None:
         """Generated list_server_snapshots operation."""
@@ -955,13 +952,13 @@ class RestClient:
         """Generated list_server_snapshots operation."""
         return cast(Response[ErrorEnvelope | ListSnapshotsResponse], await self._owner.async_call_generated('list_server_snapshots', parameters={'server_name': server_name}, body=None, authenticated=True, detailed=True))
 
-    async def list_servers(self) -> ErrorEnvelope | ServersListResponse | None:
+    async def list_servers(self) -> ErrorEnvelope | GetAllServersDataResponse | None:
         """Generated list_servers operation."""
-        return cast(ErrorEnvelope | ServersListResponse | None, await self._owner.async_call_generated('list_servers', parameters={}, body=None, authenticated=True, typed=True))
+        return cast(ErrorEnvelope | GetAllServersDataResponse | None, await self._owner.async_call_generated('list_servers', parameters={}, body=None, authenticated=True, typed=True))
 
-    async def list_servers_detailed(self) -> Response[ErrorEnvelope | ServersListResponse]:
+    async def list_servers_detailed(self) -> Response[ErrorEnvelope | GetAllServersDataResponse]:
         """Generated list_servers operation."""
-        return cast(Response[ErrorEnvelope | ServersListResponse], await self._owner.async_call_generated('list_servers', parameters={}, body=None, authenticated=True, detailed=True))
+        return cast(Response[ErrorEnvelope | GetAllServersDataResponse], await self._owner.async_call_generated('list_servers', parameters={}, body=None, authenticated=True, detailed=True))
 
     async def list_tasks(self) -> ErrorEnvelope | list[TaskSnapshot] | None:
         """Generated list_tasks operation."""
@@ -1059,13 +1056,13 @@ class RestClient:
         """Generated prune_backups operation."""
         return cast(Response[ErrorEnvelope | TaskAcceptedResponse], await self._owner.async_call_generated('prune_backups', parameters={'server_name': server_name}, body=None, authenticated=True, detailed=True))
 
-    async def prune_downloads(self, *, body: PruneDownloadsPayload) -> ErrorEnvelope | PruneDownloadsResponse | None:
+    async def prune_downloads(self, *, body: PruneDownloadsPayload) -> ErrorEnvelope | PruneDownloadCacheResponse | None:
         """Generated prune_downloads operation."""
-        return cast(ErrorEnvelope | PruneDownloadsResponse | None, await self._owner.async_call_generated('prune_downloads', parameters={}, body=body, authenticated=True, typed=True))
+        return cast(ErrorEnvelope | PruneDownloadCacheResponse | None, await self._owner.async_call_generated('prune_downloads', parameters={}, body=body, authenticated=True, typed=True))
 
-    async def prune_downloads_detailed(self, *, body: PruneDownloadsPayload) -> Response[ErrorEnvelope | PruneDownloadsResponse]:
+    async def prune_downloads_detailed(self, *, body: PruneDownloadsPayload) -> Response[ErrorEnvelope | PruneDownloadCacheResponse]:
         """Generated prune_downloads operation."""
-        return cast(Response[ErrorEnvelope | PruneDownloadsResponse], await self._owner.async_call_generated('prune_downloads', parameters={}, body=body, authenticated=True, detailed=True))
+        return cast(Response[ErrorEnvelope | PruneDownloadCacheResponse], await self._owner.async_call_generated('prune_downloads', parameters={}, body=body, authenticated=True, detailed=True))
 
     async def reauthenticate(self, *, remember_me: bool | None | Unset=UNSET) -> ErrorEnvelope | TokenResponse | None:
         """Generated reauthenticate operation."""
@@ -1091,29 +1088,29 @@ class RestClient:
         """Generated register_user operation."""
         return cast(Response[BaseApiResponse | ErrorEnvelope], await self._owner.async_call_generated('register_user', parameters={'token': token}, body=body, authenticated=False, detailed=True))
 
-    async def reload_plugin(self, plugin_name: str) -> ActionResponse | ErrorEnvelope | None:
+    async def reload_plugin(self, plugin_name: str) -> ErrorEnvelope | ReloadSinglePluginResponse | None:
         """Generated reload_plugin operation."""
-        return cast(ActionResponse | ErrorEnvelope | None, await self._owner.async_call_generated('reload_plugin', parameters={'plugin_name': plugin_name}, body=None, authenticated=True, typed=True))
+        return cast(ErrorEnvelope | ReloadSinglePluginResponse | None, await self._owner.async_call_generated('reload_plugin', parameters={'plugin_name': plugin_name}, body=None, authenticated=True, typed=True))
 
-    async def reload_plugin_detailed(self, plugin_name: str) -> Response[ActionResponse | ErrorEnvelope]:
+    async def reload_plugin_detailed(self, plugin_name: str) -> Response[ErrorEnvelope | ReloadSinglePluginResponse]:
         """Generated reload_plugin operation."""
-        return cast(Response[ActionResponse | ErrorEnvelope], await self._owner.async_call_generated('reload_plugin', parameters={'plugin_name': plugin_name}, body=None, authenticated=True, detailed=True))
+        return cast(Response[ErrorEnvelope | ReloadSinglePluginResponse], await self._owner.async_call_generated('reload_plugin', parameters={'plugin_name': plugin_name}, body=None, authenticated=True, detailed=True))
 
-    async def reload_plugins(self) -> ActionResponse | ErrorEnvelope | None:
+    async def reload_plugins(self) -> ErrorEnvelope | ReloadPluginsResponse | None:
         """Generated reload_plugins operation."""
-        return cast(ActionResponse | ErrorEnvelope | None, await self._owner.async_call_generated('reload_plugins', parameters={}, body=None, authenticated=True, typed=True))
+        return cast(ErrorEnvelope | ReloadPluginsResponse | None, await self._owner.async_call_generated('reload_plugins', parameters={}, body=None, authenticated=True, typed=True))
 
-    async def reload_plugins_detailed(self) -> Response[ActionResponse | ErrorEnvelope]:
+    async def reload_plugins_detailed(self) -> Response[ErrorEnvelope | ReloadPluginsResponse]:
         """Generated reload_plugins operation."""
-        return cast(Response[ActionResponse | ErrorEnvelope], await self._owner.async_call_generated('reload_plugins', parameters={}, body=None, authenticated=True, detailed=True))
+        return cast(Response[ErrorEnvelope | ReloadPluginsResponse], await self._owner.async_call_generated('reload_plugins', parameters={}, body=None, authenticated=True, detailed=True))
 
-    async def reload_settings(self) -> ErrorEnvelope | SettingsResponse | None:
+    async def reload_settings(self) -> ErrorEnvelope | ReloadGlobalSettingsResponse | None:
         """Generated reload_settings operation."""
-        return cast(ErrorEnvelope | SettingsResponse | None, await self._owner.async_call_generated('reload_settings', parameters={}, body=None, authenticated=True, typed=True))
+        return cast(ErrorEnvelope | ReloadGlobalSettingsResponse | None, await self._owner.async_call_generated('reload_settings', parameters={}, body=None, authenticated=True, typed=True))
 
-    async def reload_settings_detailed(self) -> Response[ErrorEnvelope | SettingsResponse]:
+    async def reload_settings_detailed(self) -> Response[ErrorEnvelope | ReloadGlobalSettingsResponse]:
         """Generated reload_settings operation."""
-        return cast(Response[ErrorEnvelope | SettingsResponse], await self._owner.async_call_generated('reload_settings', parameters={}, body=None, authenticated=True, detailed=True))
+        return cast(Response[ErrorEnvelope | ReloadGlobalSettingsResponse], await self._owner.async_call_generated('reload_settings', parameters={}, body=None, authenticated=True, detailed=True))
 
     async def remove_allowlist_players(self, server_name: str, *, body: AllowlistRemovePayload) -> ErrorEnvelope | RemoveFromAllowlistResponse | None:
         """Generated remove_allowlist_players operation."""
@@ -1307,13 +1304,13 @@ class RestClient:
         """Generated save_schedule operation."""
         return cast(Response[ErrorEnvelope | SuccessResponse], await self._owner.async_call_generated('save_schedule', parameters={'schedule_id': schedule_id}, body=body, authenticated=True, detailed=True))
 
-    async def scan_players(self) -> AddPlayersResponse | ErrorEnvelope | None:
+    async def scan_players(self) -> ErrorEnvelope | ScanAndUpdatePlayerDbResponse | None:
         """Generated scan_players operation."""
-        return cast(AddPlayersResponse | ErrorEnvelope | None, await self._owner.async_call_generated('scan_players', parameters={}, body=None, authenticated=True, typed=True))
+        return cast(ErrorEnvelope | ScanAndUpdatePlayerDbResponse | None, await self._owner.async_call_generated('scan_players', parameters={}, body=None, authenticated=True, typed=True))
 
-    async def scan_players_detailed(self) -> Response[AddPlayersResponse | ErrorEnvelope]:
+    async def scan_players_detailed(self) -> Response[ErrorEnvelope | ScanAndUpdatePlayerDbResponse]:
         """Generated scan_players operation."""
-        return cast(Response[AddPlayersResponse | ErrorEnvelope], await self._owner.async_call_generated('scan_players', parameters={}, body=None, authenticated=True, detailed=True))
+        return cast(Response[ErrorEnvelope | ScanAndUpdatePlayerDbResponse], await self._owner.async_call_generated('scan_players', parameters={}, body=None, authenticated=True, detailed=True))
 
     async def send_command(self, server_name: str, *, body: CommandPayload) -> ErrorEnvelope | SendCommandResponse | None:
         """Generated send_command operation."""
@@ -1339,13 +1336,13 @@ class RestClient:
         """Generated set_permissions operation."""
         return cast(Response[ErrorEnvelope | PermissionsUpdateResponse], await self._owner.async_call_generated('set_permissions', parameters={'server_name': server_name}, body=body, authenticated=True, detailed=True))
 
-    async def set_plugin_status(self, plugin_name: str, *, body: PluginStatusSetPayload) -> ActionResponse | ErrorEnvelope | None:
+    async def set_plugin_status(self, plugin_name: str, *, body: PluginStatusSetPayload) -> ErrorEnvelope | SetPluginStatusResponse | None:
         """Generated set_plugin_status operation."""
-        return cast(ActionResponse | ErrorEnvelope | None, await self._owner.async_call_generated('set_plugin_status', parameters={'plugin_name': plugin_name}, body=body, authenticated=True, typed=True))
+        return cast(ErrorEnvelope | SetPluginStatusResponse | None, await self._owner.async_call_generated('set_plugin_status', parameters={'plugin_name': plugin_name}, body=body, authenticated=True, typed=True))
 
-    async def set_plugin_status_detailed(self, plugin_name: str, *, body: PluginStatusSetPayload) -> Response[ActionResponse | ErrorEnvelope]:
+    async def set_plugin_status_detailed(self, plugin_name: str, *, body: PluginStatusSetPayload) -> Response[ErrorEnvelope | SetPluginStatusResponse]:
         """Generated set_plugin_status operation."""
-        return cast(Response[ActionResponse | ErrorEnvelope], await self._owner.async_call_generated('set_plugin_status', parameters={'plugin_name': plugin_name}, body=body, authenticated=True, detailed=True))
+        return cast(Response[ErrorEnvelope | SetPluginStatusResponse], await self._owner.async_call_generated('set_plugin_status', parameters={'plugin_name': plugin_name}, body=body, authenticated=True, detailed=True))
 
     async def set_properties(self, server_name: str, *, body: PropertiesPayload) -> ErrorEnvelope | SetPropertiesResponse | None:
         """Generated set_properties operation."""
@@ -1355,21 +1352,21 @@ class RestClient:
         """Generated set_properties operation."""
         return cast(Response[ErrorEnvelope | SetPropertiesResponse], await self._owner.async_call_generated('set_properties', parameters={'server_name': server_name}, body=body, authenticated=True, detailed=True))
 
-    async def set_server_setting(self, server_name: str, *, body: ServerSettingItemPayload) -> ErrorEnvelope | ServerSettingsResponse | None:
+    async def set_server_setting(self, server_name: str, *, body: ServerSettingItemPayload) -> ErrorEnvelope | SetServerSettingResponse | None:
         """Generated set_server_setting operation."""
-        return cast(ErrorEnvelope | ServerSettingsResponse | None, await self._owner.async_call_generated('set_server_setting', parameters={'server_name': server_name}, body=body, authenticated=True, typed=True))
+        return cast(ErrorEnvelope | SetServerSettingResponse | None, await self._owner.async_call_generated('set_server_setting', parameters={'server_name': server_name}, body=body, authenticated=True, typed=True))
 
-    async def set_server_setting_detailed(self, server_name: str, *, body: ServerSettingItemPayload) -> Response[ErrorEnvelope | ServerSettingsResponse]:
+    async def set_server_setting_detailed(self, server_name: str, *, body: ServerSettingItemPayload) -> Response[ErrorEnvelope | SetServerSettingResponse]:
         """Generated set_server_setting operation."""
-        return cast(Response[ErrorEnvelope | ServerSettingsResponse], await self._owner.async_call_generated('set_server_setting', parameters={'server_name': server_name}, body=body, authenticated=True, detailed=True))
+        return cast(Response[ErrorEnvelope | SetServerSettingResponse], await self._owner.async_call_generated('set_server_setting', parameters={'server_name': server_name}, body=body, authenticated=True, detailed=True))
 
-    async def set_setting(self, *, body: SettingItemPayload) -> ErrorEnvelope | SettingsResponse | None:
+    async def set_setting(self, *, body: SettingItemPayload) -> ErrorEnvelope | SetGlobalSettingResponse | None:
         """Generated set_setting operation."""
-        return cast(ErrorEnvelope | SettingsResponse | None, await self._owner.async_call_generated('set_setting', parameters={}, body=body, authenticated=True, typed=True))
+        return cast(ErrorEnvelope | SetGlobalSettingResponse | None, await self._owner.async_call_generated('set_setting', parameters={}, body=body, authenticated=True, typed=True))
 
-    async def set_setting_detailed(self, *, body: SettingItemPayload) -> Response[ErrorEnvelope | SettingsResponse]:
+    async def set_setting_detailed(self, *, body: SettingItemPayload) -> Response[ErrorEnvelope | SetGlobalSettingResponse]:
         """Generated set_setting operation."""
-        return cast(Response[ErrorEnvelope | SettingsResponse], await self._owner.async_call_generated('set_setting', parameters={}, body=body, authenticated=True, detailed=True))
+        return cast(Response[ErrorEnvelope | SetGlobalSettingResponse], await self._owner.async_call_generated('set_setting', parameters={}, body=body, authenticated=True, detailed=True))
 
     async def shutdown_web_runtime(self, *, body: ShutdownRequest) -> ErrorEnvelope | ShutdownResponse | None:
         """Generated shutdown_web_runtime operation."""
@@ -1395,13 +1392,13 @@ class RestClient:
         """Generated stop_server operation."""
         return cast(Response[ErrorEnvelope | StopServerResponse], await self._owner.async_call_generated('stop_server', parameters={'server_name': server_name}, body=None, authenticated=True, detailed=True))
 
-    async def trigger_plugin_event(self, *, body: TriggerEventPayload) -> ErrorEnvelope | TriggerEventResponse | None:
+    async def trigger_plugin_event(self, *, body: TriggerEventPayload) -> ErrorEnvelope | TriggerExternalAppEventResponse | None:
         """Generated trigger_plugin_event operation."""
-        return cast(ErrorEnvelope | TriggerEventResponse | None, await self._owner.async_call_generated('trigger_plugin_event', parameters={}, body=body, authenticated=True, typed=True))
+        return cast(ErrorEnvelope | TriggerExternalAppEventResponse | None, await self._owner.async_call_generated('trigger_plugin_event', parameters={}, body=body, authenticated=True, typed=True))
 
-    async def trigger_plugin_event_detailed(self, *, body: TriggerEventPayload) -> Response[ErrorEnvelope | TriggerEventResponse]:
+    async def trigger_plugin_event_detailed(self, *, body: TriggerEventPayload) -> Response[ErrorEnvelope | TriggerExternalAppEventResponse]:
         """Generated trigger_plugin_event operation."""
-        return cast(Response[ErrorEnvelope | TriggerEventResponse], await self._owner.async_call_generated('trigger_plugin_event', parameters={}, body=body, authenticated=True, detailed=True))
+        return cast(Response[ErrorEnvelope | TriggerExternalAppEventResponse], await self._owner.async_call_generated('trigger_plugin_event', parameters={}, body=body, authenticated=True, detailed=True))
 
     async def uninstall_addon(self, server_name: str, *, body: AddonActionPayload) -> ErrorEnvelope | TaskAcceptedResponse | None:
         """Generated uninstall_addon operation."""

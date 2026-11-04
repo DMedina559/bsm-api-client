@@ -9,7 +9,7 @@ from ...types import Response, UNSET
 from ... import errors
 
 from ...models.error_envelope import ErrorEnvelope
-from ...models.server_running_status_response import ServerRunningStatusResponse
+from ...models.get_server_running_status_response import GetServerRunningStatusResponse
 from typing import cast
 
 
@@ -34,9 +34,9 @@ def _get_kwargs(
 
 
 
-def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> ErrorEnvelope | ServerRunningStatusResponse | None:
+def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> ErrorEnvelope | GetServerRunningStatusResponse | None:
     if response.status_code == 200:
-        response_200 = ServerRunningStatusResponse.from_dict(response.json())
+        response_200 = GetServerRunningStatusResponse.from_dict(response.json())
 
 
 
@@ -111,7 +111,7 @@ def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Res
         return None
 
 
-def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[ErrorEnvelope | ServerRunningStatusResponse]:
+def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[ErrorEnvelope | GetServerRunningStatusResponse]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -125,7 +125,7 @@ def sync_detailed(
     *,
     client: AuthenticatedClient,
 
-) -> Response[ErrorEnvelope | ServerRunningStatusResponse]:
+) -> Response[ErrorEnvelope | GetServerRunningStatusResponse]:
     """Get Server Running Status
     
      Check if a specific server's process is currently running.
@@ -154,7 +154,7 @@ def sync(
     *,
     client: AuthenticatedClient,
 
-) -> ErrorEnvelope | ServerRunningStatusResponse | None:
+) -> ErrorEnvelope | GetServerRunningStatusResponse | None:
     """Get Server Running Status
     
      Check if a specific server's process is currently running.
@@ -164,7 +164,7 @@ def sync(
     :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
     :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
     
-    :returns: ErrorEnvelope | ServerRunningStatusResponse"""
+    :returns: ErrorEnvelope | GetServerRunningStatusResponse"""
 
 
     return sync_detailed(
@@ -178,7 +178,7 @@ async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
 
-) -> Response[ErrorEnvelope | ServerRunningStatusResponse]:
+) -> Response[ErrorEnvelope | GetServerRunningStatusResponse]:
     """Get Server Running Status
     
      Check if a specific server's process is currently running.
@@ -207,7 +207,7 @@ async def asyncio(
     *,
     client: AuthenticatedClient,
 
-) -> ErrorEnvelope | ServerRunningStatusResponse | None:
+) -> ErrorEnvelope | GetServerRunningStatusResponse | None:
     """Get Server Running Status
     
      Check if a specific server's process is currently running.
@@ -217,7 +217,7 @@ async def asyncio(
     :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
     :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
     
-    :returns: ErrorEnvelope | ServerRunningStatusResponse"""
+    :returns: ErrorEnvelope | GetServerRunningStatusResponse"""
 
 
     return (await asyncio_detailed(

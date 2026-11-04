@@ -154,7 +154,7 @@ async def test_get_server_running_status(client):
     with patch.object(
         client, "async_call_generated", new_callable=AsyncMock
     ) as mock_request:
-        mock_request.return_value = {"status": "success", "running": True}
+        mock_request.return_value = {"status": "success", "is_running": True}
         result = await client.servers.async_get_server_running_status("test-server")
         mock_request.assert_called_once_with(
             "get_server_status",
@@ -162,7 +162,7 @@ async def test_get_server_running_status(client):
             authenticated=True,
             typed=True,
         )
-        assert result.running is True
+        assert result.is_running is True
 
 
 @pytest.mark.asyncio

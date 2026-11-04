@@ -8,8 +8,8 @@ from ...client import AuthenticatedClient, Client
 from ...types import Response, UNSET
 from ... import errors
 
-from ...models.action_response import ActionResponse
 from ...models.error_envelope import ErrorEnvelope
+from ...models.reload_single_plugin_response import ReloadSinglePluginResponse
 from typing import cast
 
 
@@ -34,9 +34,9 @@ def _get_kwargs(
 
 
 
-def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> ActionResponse | ErrorEnvelope | None:
+def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> ErrorEnvelope | ReloadSinglePluginResponse | None:
     if response.status_code == 200:
-        response_200 = ActionResponse.from_dict(response.json())
+        response_200 = ReloadSinglePluginResponse.from_dict(response.json())
 
 
 
@@ -111,7 +111,7 @@ def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Res
         return None
 
 
-def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[ActionResponse | ErrorEnvelope]:
+def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[ErrorEnvelope | ReloadSinglePluginResponse]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -125,7 +125,7 @@ def sync_detailed(
     *,
     client: AuthenticatedClient,
 
-) -> Response[ActionResponse | ErrorEnvelope]:
+) -> Response[ErrorEnvelope | ReloadSinglePluginResponse]:
     """Post Reload Single Plugin
     
      Reloads a single plugin by name.
@@ -154,7 +154,7 @@ def sync(
     *,
     client: AuthenticatedClient,
 
-) -> ActionResponse | ErrorEnvelope | None:
+) -> ErrorEnvelope | ReloadSinglePluginResponse | None:
     """Post Reload Single Plugin
     
      Reloads a single plugin by name.
@@ -164,7 +164,7 @@ def sync(
     :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
     :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
     
-    :returns: ActionResponse | ErrorEnvelope"""
+    :returns: ErrorEnvelope | ReloadSinglePluginResponse"""
 
 
     return sync_detailed(
@@ -178,7 +178,7 @@ async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
 
-) -> Response[ActionResponse | ErrorEnvelope]:
+) -> Response[ErrorEnvelope | ReloadSinglePluginResponse]:
     """Post Reload Single Plugin
     
      Reloads a single plugin by name.
@@ -207,7 +207,7 @@ async def asyncio(
     *,
     client: AuthenticatedClient,
 
-) -> ActionResponse | ErrorEnvelope | None:
+) -> ErrorEnvelope | ReloadSinglePluginResponse | None:
     """Post Reload Single Plugin
     
      Reloads a single plugin by name.
@@ -217,7 +217,7 @@ async def asyncio(
     :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
     :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
     
-    :returns: ActionResponse | ErrorEnvelope"""
+    :returns: ErrorEnvelope | ReloadSinglePluginResponse"""
 
 
     return (await asyncio_detailed(

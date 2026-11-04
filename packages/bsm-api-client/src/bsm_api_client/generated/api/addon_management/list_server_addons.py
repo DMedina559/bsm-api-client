@@ -8,8 +8,8 @@ from ...client import AuthenticatedClient, Client
 from ...types import Response, UNSET
 from ... import errors
 
-from ...models.addon_list_response import AddonListResponse
 from ...models.error_envelope import ErrorEnvelope
+from ...models.list_installed_addons_response import ListInstalledAddonsResponse
 from typing import cast
 
 
@@ -34,9 +34,9 @@ def _get_kwargs(
 
 
 
-def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> AddonListResponse | ErrorEnvelope | None:
+def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> ErrorEnvelope | ListInstalledAddonsResponse | None:
     if response.status_code == 200:
-        response_200 = AddonListResponse.from_dict(response.json())
+        response_200 = ListInstalledAddonsResponse.from_dict(response.json())
 
 
 
@@ -111,7 +111,7 @@ def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Res
         return None
 
 
-def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[AddonListResponse | ErrorEnvelope]:
+def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[ErrorEnvelope | ListInstalledAddonsResponse]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -125,7 +125,7 @@ def sync_detailed(
     *,
     client: AuthenticatedClient,
 
-) -> Response[AddonListResponse | ErrorEnvelope]:
+) -> Response[ErrorEnvelope | ListInstalledAddonsResponse]:
     """Get Server Addons
     
      Return a list of addons installed on a server's active world.
@@ -154,7 +154,7 @@ def sync(
     *,
     client: AuthenticatedClient,
 
-) -> AddonListResponse | ErrorEnvelope | None:
+) -> ErrorEnvelope | ListInstalledAddonsResponse | None:
     """Get Server Addons
     
      Return a list of addons installed on a server's active world.
@@ -164,7 +164,7 @@ def sync(
     :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
     :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
     
-    :returns: AddonListResponse | ErrorEnvelope"""
+    :returns: ErrorEnvelope | ListInstalledAddonsResponse"""
 
 
     return sync_detailed(
@@ -178,7 +178,7 @@ async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
 
-) -> Response[AddonListResponse | ErrorEnvelope]:
+) -> Response[ErrorEnvelope | ListInstalledAddonsResponse]:
     """Get Server Addons
     
      Return a list of addons installed on a server's active world.
@@ -207,7 +207,7 @@ async def asyncio(
     *,
     client: AuthenticatedClient,
 
-) -> AddonListResponse | ErrorEnvelope | None:
+) -> ErrorEnvelope | ListInstalledAddonsResponse | None:
     """Get Server Addons
     
      Return a list of addons installed on a server's active world.
@@ -217,7 +217,7 @@ async def asyncio(
     :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
     :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
     
-    :returns: AddonListResponse | ErrorEnvelope"""
+    :returns: ErrorEnvelope | ListInstalledAddonsResponse"""
 
 
     return (await asyncio_detailed(

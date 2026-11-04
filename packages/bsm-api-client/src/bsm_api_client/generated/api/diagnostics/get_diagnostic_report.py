@@ -8,8 +8,8 @@ from ...client import AuthenticatedClient, Client
 from ...types import Response, UNSET
 from ... import errors
 
-from ...models.diagnostic_report import DiagnosticReport
 from ...models.error_envelope import ErrorEnvelope
+from ...models.get_diagnostic_report_response import GetDiagnosticReportResponse
 from typing import cast
 
 
@@ -33,9 +33,9 @@ def _get_kwargs(
 
 
 
-def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> DiagnosticReport | ErrorEnvelope | None:
+def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> ErrorEnvelope | GetDiagnosticReportResponse | None:
     if response.status_code == 200:
-        response_200 = DiagnosticReport.from_dict(response.json())
+        response_200 = GetDiagnosticReportResponse.from_dict(response.json())
 
 
 
@@ -110,7 +110,7 @@ def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Res
         return None
 
 
-def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[DiagnosticReport | ErrorEnvelope]:
+def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[ErrorEnvelope | GetDiagnosticReportResponse]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -123,7 +123,7 @@ def sync_detailed(
     *,
     client: AuthenticatedClient,
 
-) -> Response[DiagnosticReport | ErrorEnvelope]:
+) -> Response[ErrorEnvelope | GetDiagnosticReportResponse]:
     """Get Diagnostic Report
     
      Export typed sanitized metadata with bounded history across application runs.
@@ -148,7 +148,7 @@ def sync(
     *,
     client: AuthenticatedClient,
 
-) -> DiagnosticReport | ErrorEnvelope | None:
+) -> ErrorEnvelope | GetDiagnosticReportResponse | None:
     """Get Diagnostic Report
     
      Export typed sanitized metadata with bounded history across application runs.
@@ -156,7 +156,7 @@ def sync(
     :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
     :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
     
-    :returns: DiagnosticReport | ErrorEnvelope"""
+    :returns: ErrorEnvelope | GetDiagnosticReportResponse"""
 
 
     return sync_detailed(
@@ -168,7 +168,7 @@ async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
 
-) -> Response[DiagnosticReport | ErrorEnvelope]:
+) -> Response[ErrorEnvelope | GetDiagnosticReportResponse]:
     """Get Diagnostic Report
     
      Export typed sanitized metadata with bounded history across application runs.
@@ -193,7 +193,7 @@ async def asyncio(
     *,
     client: AuthenticatedClient,
 
-) -> DiagnosticReport | ErrorEnvelope | None:
+) -> ErrorEnvelope | GetDiagnosticReportResponse | None:
     """Get Diagnostic Report
     
      Export typed sanitized metadata with bounded history across application runs.
@@ -201,7 +201,7 @@ async def asyncio(
     :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
     :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
     
-    :returns: DiagnosticReport | ErrorEnvelope"""
+    :returns: ErrorEnvelope | GetDiagnosticReportResponse"""
 
 
     return (await asyncio_detailed(

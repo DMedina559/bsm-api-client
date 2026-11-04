@@ -8,9 +8,9 @@ from ...client import AuthenticatedClient, Client
 from ...types import Response, UNSET
 from ... import errors
 
-from ...models.action_response import ActionResponse
 from ...models.error_envelope import ErrorEnvelope
 from ...models.plugin_status_set_payload import PluginStatusSetPayload
+from ...models.set_plugin_status_response import SetPluginStatusResponse
 from typing import cast
 
 
@@ -42,9 +42,9 @@ def _get_kwargs(
 
 
 
-def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> ActionResponse | ErrorEnvelope | None:
+def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> ErrorEnvelope | SetPluginStatusResponse | None:
     if response.status_code == 200:
-        response_200 = ActionResponse.from_dict(response.json())
+        response_200 = SetPluginStatusResponse.from_dict(response.json())
 
 
 
@@ -119,7 +119,7 @@ def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Res
         return None
 
 
-def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[ActionResponse | ErrorEnvelope]:
+def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[ErrorEnvelope | SetPluginStatusResponse]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -134,7 +134,7 @@ def sync_detailed(
     client: AuthenticatedClient,
     body: PluginStatusSetPayload,
 
-) -> Response[ActionResponse | ErrorEnvelope]:
+) -> Response[ErrorEnvelope | SetPluginStatusResponse]:
     """Post Set Plugin Status
     
      Set the enabled or disabled status for a specific plugin.
@@ -166,7 +166,7 @@ def sync(
     client: AuthenticatedClient,
     body: PluginStatusSetPayload,
 
-) -> ActionResponse | ErrorEnvelope | None:
+) -> ErrorEnvelope | SetPluginStatusResponse | None:
     """Post Set Plugin Status
     
      Set the enabled or disabled status for a specific plugin.
@@ -177,7 +177,7 @@ def sync(
     :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
     :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
     
-    :returns: ActionResponse | ErrorEnvelope"""
+    :returns: ErrorEnvelope | SetPluginStatusResponse"""
 
 
     return sync_detailed(
@@ -193,7 +193,7 @@ async def asyncio_detailed(
     client: AuthenticatedClient,
     body: PluginStatusSetPayload,
 
-) -> Response[ActionResponse | ErrorEnvelope]:
+) -> Response[ErrorEnvelope | SetPluginStatusResponse]:
     """Post Set Plugin Status
     
      Set the enabled or disabled status for a specific plugin.
@@ -225,7 +225,7 @@ async def asyncio(
     client: AuthenticatedClient,
     body: PluginStatusSetPayload,
 
-) -> ActionResponse | ErrorEnvelope | None:
+) -> ErrorEnvelope | SetPluginStatusResponse | None:
     """Post Set Plugin Status
     
      Set the enabled or disabled status for a specific plugin.
@@ -236,7 +236,7 @@ async def asyncio(
     :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
     :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
     
-    :returns: ActionResponse | ErrorEnvelope"""
+    :returns: ErrorEnvelope | SetPluginStatusResponse"""
 
 
     return (await asyncio_detailed(

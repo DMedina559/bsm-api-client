@@ -8,8 +8,8 @@ from ...client import AuthenticatedClient, Client
 from ...types import Response, UNSET
 from ... import errors
 
+from ...models.add_players_manually_response import AddPlayersManuallyResponse
 from ...models.add_players_payload import AddPlayersPayload
-from ...models.add_players_response import AddPlayersResponse
 from ...models.error_envelope import ErrorEnvelope
 from typing import cast
 
@@ -41,9 +41,9 @@ def _get_kwargs(
 
 
 
-def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> AddPlayersResponse | ErrorEnvelope | None:
+def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> AddPlayersManuallyResponse | ErrorEnvelope | None:
     if response.status_code == 200:
-        response_200 = AddPlayersResponse.from_dict(response.json())
+        response_200 = AddPlayersManuallyResponse.from_dict(response.json())
 
 
 
@@ -118,7 +118,7 @@ def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Res
         return None
 
 
-def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[AddPlayersResponse | ErrorEnvelope]:
+def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[AddPlayersManuallyResponse | ErrorEnvelope]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -132,7 +132,7 @@ def sync_detailed(
     client: AuthenticatedClient,
     body: AddPlayersPayload,
 
-) -> Response[AddPlayersResponse | ErrorEnvelope]:
+) -> Response[AddPlayersManuallyResponse | ErrorEnvelope]:
     """Post Add Players
     
      Manually adds or updates player entries in the central player database.
@@ -161,7 +161,7 @@ def sync(
     client: AuthenticatedClient,
     body: AddPlayersPayload,
 
-) -> AddPlayersResponse | ErrorEnvelope | None:
+) -> AddPlayersManuallyResponse | ErrorEnvelope | None:
     """Post Add Players
     
      Manually adds or updates player entries in the central player database.
@@ -171,7 +171,7 @@ def sync(
     :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
     :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
     
-    :returns: AddPlayersResponse | ErrorEnvelope"""
+    :returns: AddPlayersManuallyResponse | ErrorEnvelope"""
 
 
     return sync_detailed(
@@ -185,7 +185,7 @@ async def asyncio_detailed(
     client: AuthenticatedClient,
     body: AddPlayersPayload,
 
-) -> Response[AddPlayersResponse | ErrorEnvelope]:
+) -> Response[AddPlayersManuallyResponse | ErrorEnvelope]:
     """Post Add Players
     
      Manually adds or updates player entries in the central player database.
@@ -214,7 +214,7 @@ async def asyncio(
     client: AuthenticatedClient,
     body: AddPlayersPayload,
 
-) -> AddPlayersResponse | ErrorEnvelope | None:
+) -> AddPlayersManuallyResponse | ErrorEnvelope | None:
     """Post Add Players
     
      Manually adds or updates player entries in the central player database.
@@ -224,7 +224,7 @@ async def asyncio(
     :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
     :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
     
-    :returns: AddPlayersResponse | ErrorEnvelope"""
+    :returns: AddPlayersManuallyResponse | ErrorEnvelope"""
 
 
     return (await asyncio_detailed(

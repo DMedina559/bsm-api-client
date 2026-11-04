@@ -9,7 +9,7 @@ from ...types import Response, UNSET
 from ... import errors
 
 from ...models.error_envelope import ErrorEnvelope
-from ...models.settings_response import SettingsResponse
+from ...models.reload_global_settings_response import ReloadGlobalSettingsResponse
 from typing import cast
 
 
@@ -33,9 +33,9 @@ def _get_kwargs(
 
 
 
-def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> ErrorEnvelope | SettingsResponse | None:
+def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> ErrorEnvelope | ReloadGlobalSettingsResponse | None:
     if response.status_code == 200:
-        response_200 = SettingsResponse.from_dict(response.json())
+        response_200 = ReloadGlobalSettingsResponse.from_dict(response.json())
 
 
 
@@ -110,7 +110,7 @@ def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Res
         return None
 
 
-def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[ErrorEnvelope | SettingsResponse]:
+def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[ErrorEnvelope | ReloadGlobalSettingsResponse]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -123,7 +123,7 @@ def sync_detailed(
     *,
     client: AuthenticatedClient,
 
-) -> Response[ErrorEnvelope | SettingsResponse]:
+) -> Response[ErrorEnvelope | ReloadGlobalSettingsResponse]:
     """Put Reload Settings
     
      Forces a reload of global application settings and logging configuration.
@@ -148,7 +148,7 @@ def sync(
     *,
     client: AuthenticatedClient,
 
-) -> ErrorEnvelope | SettingsResponse | None:
+) -> ErrorEnvelope | ReloadGlobalSettingsResponse | None:
     """Put Reload Settings
     
      Forces a reload of global application settings and logging configuration.
@@ -156,7 +156,7 @@ def sync(
     :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
     :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
     
-    :returns: ErrorEnvelope | SettingsResponse"""
+    :returns: ErrorEnvelope | ReloadGlobalSettingsResponse"""
 
 
     return sync_detailed(
@@ -168,7 +168,7 @@ async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
 
-) -> Response[ErrorEnvelope | SettingsResponse]:
+) -> Response[ErrorEnvelope | ReloadGlobalSettingsResponse]:
     """Put Reload Settings
     
      Forces a reload of global application settings and logging configuration.
@@ -193,7 +193,7 @@ async def asyncio(
     *,
     client: AuthenticatedClient,
 
-) -> ErrorEnvelope | SettingsResponse | None:
+) -> ErrorEnvelope | ReloadGlobalSettingsResponse | None:
     """Put Reload Settings
     
      Forces a reload of global application settings and logging configuration.
@@ -201,7 +201,7 @@ async def asyncio(
     :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
     :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
     
-    :returns: ErrorEnvelope | SettingsResponse"""
+    :returns: ErrorEnvelope | ReloadGlobalSettingsResponse"""
 
 
     return (await asyncio_detailed(

@@ -44,9 +44,10 @@ async def load_header(ctx, client):
         return
     try:
         response = await client.application.async_get_info()
-        info = response.info
-        if isinstance(info, dict):
-            ctx.obj["app_info"] = info
+        from bsm_api_client.models import GetSystemAndAppInfoResponse
+
+        if isinstance(response, GetSystemAndAppInfoResponse):
+            ctx.obj["app_info"] = response.model_dump()
     except Exception:
         # Header metadata must never prevent access to the menu.
         pass

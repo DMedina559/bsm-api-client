@@ -9,7 +9,7 @@ from ...types import Response, UNSET
 from ... import errors
 
 from ...models.error_envelope import ErrorEnvelope
-from ...models.servers_list_response import ServersListResponse
+from ...models.get_all_servers_data_response import GetAllServersDataResponse
 from typing import cast
 
 
@@ -33,9 +33,9 @@ def _get_kwargs(
 
 
 
-def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> ErrorEnvelope | ServersListResponse | None:
+def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> ErrorEnvelope | GetAllServersDataResponse | None:
     if response.status_code == 200:
-        response_200 = ServersListResponse.from_dict(response.json())
+        response_200 = GetAllServersDataResponse.from_dict(response.json())
 
 
 
@@ -110,7 +110,7 @@ def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Res
         return None
 
 
-def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[ErrorEnvelope | ServersListResponse]:
+def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[ErrorEnvelope | GetAllServersDataResponse]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -123,7 +123,7 @@ def sync_detailed(
     *,
     client: AuthenticatedClient,
 
-) -> Response[ErrorEnvelope | ServersListResponse]:
+) -> Response[ErrorEnvelope | GetAllServersDataResponse]:
     """Get Servers List
     
      Return a list of all detected server instances with their status and version.
@@ -148,7 +148,7 @@ def sync(
     *,
     client: AuthenticatedClient,
 
-) -> ErrorEnvelope | ServersListResponse | None:
+) -> ErrorEnvelope | GetAllServersDataResponse | None:
     """Get Servers List
     
      Return a list of all detected server instances with their status and version.
@@ -156,7 +156,7 @@ def sync(
     :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
     :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
     
-    :returns: ErrorEnvelope | ServersListResponse"""
+    :returns: ErrorEnvelope | GetAllServersDataResponse"""
 
 
     return sync_detailed(
@@ -168,7 +168,7 @@ async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
 
-) -> Response[ErrorEnvelope | ServersListResponse]:
+) -> Response[ErrorEnvelope | GetAllServersDataResponse]:
     """Get Servers List
     
      Return a list of all detected server instances with their status and version.
@@ -193,7 +193,7 @@ async def asyncio(
     *,
     client: AuthenticatedClient,
 
-) -> ErrorEnvelope | ServersListResponse | None:
+) -> ErrorEnvelope | GetAllServersDataResponse | None:
     """Get Servers List
     
      Return a list of all detected server instances with their status and version.
@@ -201,7 +201,7 @@ async def asyncio(
     :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
     :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
     
-    :returns: ErrorEnvelope | ServersListResponse"""
+    :returns: ErrorEnvelope | GetAllServersDataResponse"""
 
 
     return (await asyncio_detailed(

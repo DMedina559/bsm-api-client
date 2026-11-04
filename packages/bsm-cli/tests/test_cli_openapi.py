@@ -226,9 +226,9 @@ def test_human_operations_table_and_machine_curated_response(client):
 
 
 def test_curated_command_has_structured_response(client):
-    from bsm_api_client.models import ServersListResponse
+    from bsm_api_client.models import GetAllServersDataResponse
 
-    client.servers.async_get_servers.return_value = ServersListResponse(
+    client.servers.async_get_servers.return_value = GetAllServersDataResponse(
         status="success", servers=[]
     )
     result = run("--json", "server", "list")

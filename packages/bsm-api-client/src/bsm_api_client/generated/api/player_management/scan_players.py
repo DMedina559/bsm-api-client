@@ -8,8 +8,8 @@ from ...client import AuthenticatedClient, Client
 from ...types import Response, UNSET
 from ... import errors
 
-from ...models.add_players_response import AddPlayersResponse
 from ...models.error_envelope import ErrorEnvelope
+from ...models.scan_and_update_player_db_response import ScanAndUpdatePlayerDbResponse
 from typing import cast
 
 
@@ -33,9 +33,9 @@ def _get_kwargs(
 
 
 
-def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> AddPlayersResponse | ErrorEnvelope | None:
+def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> ErrorEnvelope | ScanAndUpdatePlayerDbResponse | None:
     if response.status_code == 200:
-        response_200 = AddPlayersResponse.from_dict(response.json())
+        response_200 = ScanAndUpdatePlayerDbResponse.from_dict(response.json())
 
 
 
@@ -110,7 +110,7 @@ def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Res
         return None
 
 
-def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[AddPlayersResponse | ErrorEnvelope]:
+def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[ErrorEnvelope | ScanAndUpdatePlayerDbResponse]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -123,7 +123,7 @@ def sync_detailed(
     *,
     client: AuthenticatedClient,
 
-) -> Response[AddPlayersResponse | ErrorEnvelope]:
+) -> Response[ErrorEnvelope | ScanAndUpdatePlayerDbResponse]:
     """Put Scan Players
     
      Scans all server logs to discover and update the central player database.
@@ -148,7 +148,7 @@ def sync(
     *,
     client: AuthenticatedClient,
 
-) -> AddPlayersResponse | ErrorEnvelope | None:
+) -> ErrorEnvelope | ScanAndUpdatePlayerDbResponse | None:
     """Put Scan Players
     
      Scans all server logs to discover and update the central player database.
@@ -156,7 +156,7 @@ def sync(
     :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
     :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
     
-    :returns: AddPlayersResponse | ErrorEnvelope"""
+    :returns: ErrorEnvelope | ScanAndUpdatePlayerDbResponse"""
 
 
     return sync_detailed(
@@ -168,7 +168,7 @@ async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
 
-) -> Response[AddPlayersResponse | ErrorEnvelope]:
+) -> Response[ErrorEnvelope | ScanAndUpdatePlayerDbResponse]:
     """Put Scan Players
     
      Scans all server logs to discover and update the central player database.
@@ -193,7 +193,7 @@ async def asyncio(
     *,
     client: AuthenticatedClient,
 
-) -> AddPlayersResponse | ErrorEnvelope | None:
+) -> ErrorEnvelope | ScanAndUpdatePlayerDbResponse | None:
     """Put Scan Players
     
      Scans all server logs to discover and update the central player database.
@@ -201,7 +201,7 @@ async def asyncio(
     :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
     :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
     
-    :returns: AddPlayersResponse | ErrorEnvelope"""
+    :returns: ErrorEnvelope | ScanAndUpdatePlayerDbResponse"""
 
 
     return (await asyncio_detailed(

@@ -9,7 +9,7 @@ from ...types import Response, UNSET
 from ... import errors
 
 from ...models.error_envelope import ErrorEnvelope
-from ...models.setup_account_response import SetupAccountResponse
+from ...models.token_response import TokenResponse
 from ...models.user_login_payload import UserLoginPayload
 from typing import cast
 
@@ -41,9 +41,9 @@ def _get_kwargs(
 
 
 
-def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> ErrorEnvelope | SetupAccountResponse | None:
+def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> ErrorEnvelope | TokenResponse | None:
     if response.status_code == 200:
-        response_200 = SetupAccountResponse.from_dict(response.json())
+        response_200 = TokenResponse.from_dict(response.json())
 
 
 
@@ -118,7 +118,7 @@ def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Res
         return None
 
 
-def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[ErrorEnvelope | SetupAccountResponse]:
+def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[ErrorEnvelope | TokenResponse]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -132,7 +132,7 @@ def sync_detailed(
     client: AuthenticatedClient | Client,
     body: UserLoginPayload,
 
-) -> Response[ErrorEnvelope | SetupAccountResponse]:
+) -> Response[ErrorEnvelope | TokenResponse]:
     """Create First User
     
      Create the first user (admin) in the database.
@@ -161,7 +161,7 @@ def sync(
     client: AuthenticatedClient | Client,
     body: UserLoginPayload,
 
-) -> ErrorEnvelope | SetupAccountResponse | None:
+) -> ErrorEnvelope | TokenResponse | None:
     """Create First User
     
      Create the first user (admin) in the database.
@@ -171,7 +171,7 @@ def sync(
     :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
     :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
     
-    :returns: ErrorEnvelope | SetupAccountResponse"""
+    :returns: ErrorEnvelope | TokenResponse"""
 
 
     return sync_detailed(
@@ -185,7 +185,7 @@ async def asyncio_detailed(
     client: AuthenticatedClient | Client,
     body: UserLoginPayload,
 
-) -> Response[ErrorEnvelope | SetupAccountResponse]:
+) -> Response[ErrorEnvelope | TokenResponse]:
     """Create First User
     
      Create the first user (admin) in the database.
@@ -214,7 +214,7 @@ async def asyncio(
     client: AuthenticatedClient | Client,
     body: UserLoginPayload,
 
-) -> ErrorEnvelope | SetupAccountResponse | None:
+) -> ErrorEnvelope | TokenResponse | None:
     """Create First User
     
      Create the first user (admin) in the database.
@@ -224,7 +224,7 @@ async def asyncio(
     :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
     :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
     
-    :returns: ErrorEnvelope | SetupAccountResponse"""
+    :returns: ErrorEnvelope | TokenResponse"""
 
 
     return (await asyncio_detailed(

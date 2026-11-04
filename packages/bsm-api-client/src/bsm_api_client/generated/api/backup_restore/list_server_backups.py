@@ -8,8 +8,8 @@ from ...client import AuthenticatedClient, Client
 from ...types import Response, UNSET
 from ... import errors
 
-from ...models.backup_files_response import BackupFilesResponse
 from ...models.error_envelope import ErrorEnvelope
+from ...models.list_backup_files_response import ListBackupFilesResponse
 from typing import cast
 
 
@@ -35,9 +35,9 @@ def _get_kwargs(
 
 
 
-def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> BackupFilesResponse | ErrorEnvelope | None:
+def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> ErrorEnvelope | ListBackupFilesResponse | None:
     if response.status_code == 200:
-        response_200 = BackupFilesResponse.from_dict(response.json())
+        response_200 = ListBackupFilesResponse.from_dict(response.json())
 
 
 
@@ -112,7 +112,7 @@ def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Res
         return None
 
 
-def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[BackupFilesResponse | ErrorEnvelope]:
+def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[ErrorEnvelope | ListBackupFilesResponse]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -127,7 +127,7 @@ def sync_detailed(
     *,
     client: AuthenticatedClient,
 
-) -> Response[BackupFilesResponse | ErrorEnvelope]:
+) -> Response[ErrorEnvelope | ListBackupFilesResponse]:
     """Get List Server Backups
     
      Lists available backup files for a specific server and backup type.
@@ -159,7 +159,7 @@ def sync(
     *,
     client: AuthenticatedClient,
 
-) -> BackupFilesResponse | ErrorEnvelope | None:
+) -> ErrorEnvelope | ListBackupFilesResponse | None:
     """Get List Server Backups
     
      Lists available backup files for a specific server and backup type.
@@ -170,7 +170,7 @@ def sync(
     :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
     :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
     
-    :returns: BackupFilesResponse | ErrorEnvelope"""
+    :returns: ErrorEnvelope | ListBackupFilesResponse"""
 
 
     return sync_detailed(
@@ -186,7 +186,7 @@ async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
 
-) -> Response[BackupFilesResponse | ErrorEnvelope]:
+) -> Response[ErrorEnvelope | ListBackupFilesResponse]:
     """Get List Server Backups
     
      Lists available backup files for a specific server and backup type.
@@ -218,7 +218,7 @@ async def asyncio(
     *,
     client: AuthenticatedClient,
 
-) -> BackupFilesResponse | ErrorEnvelope | None:
+) -> ErrorEnvelope | ListBackupFilesResponse | None:
     """Get List Server Backups
     
      Lists available backup files for a specific server and backup type.
@@ -229,7 +229,7 @@ async def asyncio(
     :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
     :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
     
-    :returns: BackupFilesResponse | ErrorEnvelope"""
+    :returns: ErrorEnvelope | ListBackupFilesResponse"""
 
 
     return (await asyncio_detailed(

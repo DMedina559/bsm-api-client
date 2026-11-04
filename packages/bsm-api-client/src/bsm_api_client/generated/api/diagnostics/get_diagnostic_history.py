@@ -8,9 +8,9 @@ from ...client import AuthenticatedClient, Client
 from ...types import Response, UNSET
 from ... import errors
 
-from ...models.diagnostic_history import DiagnosticHistory
 from ...models.error_envelope import ErrorEnvelope
 from ...models.get_diagnostic_history_outcome_type_0 import GetDiagnosticHistoryOutcomeType0
+from ...models.get_diagnostic_history_response import GetDiagnosticHistoryResponse
 from ...types import UNSET, Unset
 from typing import cast
 
@@ -110,9 +110,9 @@ def _get_kwargs(
 
 
 
-def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> DiagnosticHistory | ErrorEnvelope | None:
+def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> ErrorEnvelope | GetDiagnosticHistoryResponse | None:
     if response.status_code == 200:
-        response_200 = DiagnosticHistory.from_dict(response.json())
+        response_200 = GetDiagnosticHistoryResponse.from_dict(response.json())
 
 
 
@@ -187,7 +187,7 @@ def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Res
         return None
 
 
-def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[DiagnosticHistory | ErrorEnvelope]:
+def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[ErrorEnvelope | GetDiagnosticHistoryResponse]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -209,7 +209,7 @@ def sync_detailed(
     outcome: GetDiagnosticHistoryOutcomeType0 | None | Unset = UNSET,
     operation_id: None | str | Unset = UNSET,
 
-) -> Response[DiagnosticHistory | ErrorEnvelope]:
+) -> Response[ErrorEnvelope | GetDiagnosticHistoryResponse]:
     """Get Diagnostic History
     
     :param limit: Default: 100.
@@ -260,7 +260,7 @@ def sync(
     outcome: GetDiagnosticHistoryOutcomeType0 | None | Unset = UNSET,
     operation_id: None | str | Unset = UNSET,
 
-) -> DiagnosticHistory | ErrorEnvelope | None:
+) -> ErrorEnvelope | GetDiagnosticHistoryResponse | None:
     """Get Diagnostic History
     
     :param limit: Default: 100.
@@ -276,7 +276,7 @@ def sync(
     :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
     :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
     
-    :returns: DiagnosticHistory | ErrorEnvelope"""
+    :returns: ErrorEnvelope | GetDiagnosticHistoryResponse"""
 
 
     return sync_detailed(
@@ -306,7 +306,7 @@ async def asyncio_detailed(
     outcome: GetDiagnosticHistoryOutcomeType0 | None | Unset = UNSET,
     operation_id: None | str | Unset = UNSET,
 
-) -> Response[DiagnosticHistory | ErrorEnvelope]:
+) -> Response[ErrorEnvelope | GetDiagnosticHistoryResponse]:
     """Get Diagnostic History
     
     :param limit: Default: 100.
@@ -357,7 +357,7 @@ async def asyncio(
     outcome: GetDiagnosticHistoryOutcomeType0 | None | Unset = UNSET,
     operation_id: None | str | Unset = UNSET,
 
-) -> DiagnosticHistory | ErrorEnvelope | None:
+) -> ErrorEnvelope | GetDiagnosticHistoryResponse | None:
     """Get Diagnostic History
     
     :param limit: Default: 100.
@@ -373,7 +373,7 @@ async def asyncio(
     :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
     :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
     
-    :returns: DiagnosticHistory | ErrorEnvelope"""
+    :returns: ErrorEnvelope | GetDiagnosticHistoryResponse"""
 
 
     return (await asyncio_detailed(

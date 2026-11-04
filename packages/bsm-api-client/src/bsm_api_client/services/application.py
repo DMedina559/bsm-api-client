@@ -2,19 +2,21 @@ import logging
 from typing import cast
 
 from ..models import (
-    AppInfoResponse,
     CustomZipsResponse,
+    GetAllGlobalSettingsResponse,
     GetApplicationHealthResponse,
     GetApplicationMetricsResponse,
+    GetSystemAndAppInfoResponse,
+    PruneDownloadCacheResponse,
     PruneDownloadsPayload,
-    PruneDownloadsResponse,
+    ReloadGlobalSettingsResponse,
     RuntimeStatus,
+    SetGlobalSettingResponse,
     SettingItemPayload,
-    SettingsResponse,
-    SetupAccountResponse,
     SetupStatusResponse,
     ShutdownResponse,
     ThemeListResponse,
+    TokenResponse,
     UserLoginPayload,
 )
 from ..validation import parse_response
@@ -26,20 +28,22 @@ _LOGGER = logging.getLogger(__name__.split(".")[0] + ".client.manager")
 class ApplicationService(Service):
     """Service for manager-level endpoints."""
 
-    async def async_get_info(self) -> AppInfoResponse:
+    async def async_get_info(self) -> GetSystemAndAppInfoResponse:
         """Gets system and application information from the manager.
 
-        The existing ``info`` dictionary includes ``timezone`` on supporting
-        backends. It is the IANA display and scheduling default; timestamp
-        instants remain UTC. Older servers may omit this key.
+        The response exposes OS, application version, splash text, and the IANA
+        display and scheduling timezone directly. Timestamp instants remain UTC.
 
-        :returns: `AppInfoResponse`.
+        :returns: `GetSystemAndAppInfoResponse`.
         """
         _LOGGER.debug("Fetching manager system and application information from /info")
         response = await self.async_call_generated(
             "get_system_info", authenticated=False, typed=True
         )
-        return cast(AppInfoResponse, parse_response(AppInfoResponse, response))
+        return cast(
+            GetSystemAndAppInfoResponse,
+            parse_response(GetSystemAndAppInfoResponse, response),
+        )
 
     async def async_get_custom_zips(self) -> CustomZipsResponse:
         """Retrieves a list of available custom server ZIP files.
@@ -63,40 +67,50 @@ class ApplicationService(Service):
         )
         return cast(ThemeListResponse, parse_response(ThemeListResponse, result))
 
-    async def async_get_all_settings(self) -> SettingsResponse:
+    async def async_get_all_settings(self) -> GetAllGlobalSettingsResponse:
         """Retrieve all global application settings.
 
-        :returns: `SettingsResponse`.
+        :returns: `GetAllGlobalSettingsResponse`.
         """
         _LOGGER.info("Fetching all global application settings.")
         response = await self.async_call_generated(
             "get_settings", authenticated=True, typed=True
         )
-        return cast(SettingsResponse, parse_response(SettingsResponse, response))
+        return cast(
+            GetAllGlobalSettingsResponse,
+            parse_response(GetAllGlobalSettingsResponse, response),
+        )
 
-    async def async_set_setting(self, payload: SettingItemPayload) -> SettingsResponse:
+    async def async_set_setting(
+        self, payload: SettingItemPayload
+    ) -> SetGlobalSettingResponse:
         """Sets a specific global application setting.
 
         :param payload: The SettingItemPayload request model.
 
-        :returns: `SettingsResponse`.
+        :returns: `SetGlobalSettingResponse`.
         """
         _LOGGER.debug("Updating global application setting '%s'", payload.key)
         response = await self.async_call_generated(
             "set_setting", body=payload.model_dump(), authenticated=True, typed=True
         )
-        return cast(SettingsResponse, parse_response(SettingsResponse, response))
+        return cast(
+            SetGlobalSettingResponse, parse_response(SetGlobalSettingResponse, response)
+        )
 
-    async def async_reload_settings(self) -> SettingsResponse:
+    async def async_reload_settings(self) -> ReloadGlobalSettingsResponse:
         """Forces a reload of global application settings and logging configuration.
 
-        :returns: `SettingsResponse`.
+        :returns: `ReloadGlobalSettingsResponse`.
         """
         _LOGGER.info("Requesting reload of global settings and logging configuration.")
         response = await self.async_call_generated(
             "reload_settings", authenticated=True, typed=True
         )
-        return cast(SettingsResponse, parse_response(SettingsResponse, response))
+        return cast(
+            ReloadGlobalSettingsResponse,
+            parse_response(ReloadGlobalSettingsResponse, response),
+        )
 
     async def async_get_panorama_image(self) -> bytes:
         """Retrieves the panorama background image.
@@ -110,12 +124,12 @@ class ApplicationService(Service):
 
     async def async_prune_downloads(
         self, payload: PruneDownloadsPayload
-    ) -> PruneDownloadsResponse:
+    ) -> PruneDownloadCacheResponse:
         """Triggers pruning of downloaded server archives.
 
         :param payload: The PruneDownloadsPayload request model.
 
-        :returns: `PruneDownloadsResponse`.
+        :returns: `PruneDownloadCacheResponse`.
         """
         _LOGGER.info(
             "Triggering download cache prune for directory '%s', keep: %s",
@@ -126,7 +140,8 @@ class ApplicationService(Service):
             "prune_downloads", body=payload.model_dump(), authenticated=True, typed=True
         )
         return cast(
-            PruneDownloadsResponse, parse_response(PruneDownloadsResponse, response)
+            PruneDownloadCacheResponse,
+            parse_response(PruneDownloadCacheResponse, response),
         )
 
     async def async_get_application_health(self) -> GetApplicationHealthResponse:
@@ -165,17 +180,15 @@ class ApplicationService(Service):
             ),
         )
 
-    async def async_create_first_user(
-        self, payload: UserLoginPayload
-    ) -> SetupAccountResponse:
+    async def async_create_first_user(self, payload: UserLoginPayload) -> TokenResponse:
         """Create the initial administrator on an unconfigured backend.
 
         :param payload: The UserLoginPayload request model.
 
-        :returns: `SetupAccountResponse`.
+        :returns: `TokenResponse`.
         """
         return parse_response(
-            SetupAccountResponse,
+            TokenResponse,
             await self.async_call_generated(
                 "create_first_user",
                 body=payload.model_dump(mode="json"),

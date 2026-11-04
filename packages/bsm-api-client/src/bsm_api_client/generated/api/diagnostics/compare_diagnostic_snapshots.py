@@ -9,7 +9,7 @@ from ...types import Response, UNSET
 from ... import errors
 
 from ...models.compare_diagnostic_snapshots_request import CompareDiagnosticSnapshotsRequest
-from ...models.diagnostic_comparison import DiagnosticComparison
+from ...models.compare_diagnostic_snapshots_response import CompareDiagnosticSnapshotsResponse
 from ...models.error_envelope import ErrorEnvelope
 from typing import cast
 
@@ -41,9 +41,9 @@ def _get_kwargs(
 
 
 
-def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> DiagnosticComparison | ErrorEnvelope | None:
+def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> CompareDiagnosticSnapshotsResponse | ErrorEnvelope | None:
     if response.status_code == 200:
-        response_200 = DiagnosticComparison.from_dict(response.json())
+        response_200 = CompareDiagnosticSnapshotsResponse.from_dict(response.json())
 
 
 
@@ -118,7 +118,7 @@ def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Res
         return None
 
 
-def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[DiagnosticComparison | ErrorEnvelope]:
+def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[CompareDiagnosticSnapshotsResponse | ErrorEnvelope]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -132,7 +132,7 @@ def sync_detailed(
     client: AuthenticatedClient,
     body: CompareDiagnosticSnapshotsRequest,
 
-) -> Response[DiagnosticComparison | ErrorEnvelope]:
+) -> Response[CompareDiagnosticSnapshotsResponse | ErrorEnvelope]:
     """Compare Diagnostic Snapshots
     
      Compare supplied metadata; administrator authentication is required.
@@ -161,7 +161,7 @@ def sync(
     client: AuthenticatedClient,
     body: CompareDiagnosticSnapshotsRequest,
 
-) -> DiagnosticComparison | ErrorEnvelope | None:
+) -> CompareDiagnosticSnapshotsResponse | ErrorEnvelope | None:
     """Compare Diagnostic Snapshots
     
      Compare supplied metadata; administrator authentication is required.
@@ -171,7 +171,7 @@ def sync(
     :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
     :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
     
-    :returns: DiagnosticComparison | ErrorEnvelope"""
+    :returns: CompareDiagnosticSnapshotsResponse | ErrorEnvelope"""
 
 
     return sync_detailed(
@@ -185,7 +185,7 @@ async def asyncio_detailed(
     client: AuthenticatedClient,
     body: CompareDiagnosticSnapshotsRequest,
 
-) -> Response[DiagnosticComparison | ErrorEnvelope]:
+) -> Response[CompareDiagnosticSnapshotsResponse | ErrorEnvelope]:
     """Compare Diagnostic Snapshots
     
      Compare supplied metadata; administrator authentication is required.
@@ -214,7 +214,7 @@ async def asyncio(
     client: AuthenticatedClient,
     body: CompareDiagnosticSnapshotsRequest,
 
-) -> DiagnosticComparison | ErrorEnvelope | None:
+) -> CompareDiagnosticSnapshotsResponse | ErrorEnvelope | None:
     """Compare Diagnostic Snapshots
     
      Compare supplied metadata; administrator authentication is required.
@@ -224,7 +224,7 @@ async def asyncio(
     :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
     :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
     
-    :returns: DiagnosticComparison | ErrorEnvelope"""
+    :returns: CompareDiagnosticSnapshotsResponse | ErrorEnvelope"""
 
 
     return (await asyncio_detailed(

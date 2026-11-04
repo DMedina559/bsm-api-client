@@ -8,8 +8,8 @@ from ...client import AuthenticatedClient, Client
 from ...types import Response, UNSET
 from ... import errors
 
-from ...models.app_info_response import AppInfoResponse
 from ...models.error_envelope import ErrorEnvelope
+from ...models.get_system_and_app_info_response import GetSystemAndAppInfoResponse
 from typing import cast
 
 
@@ -33,9 +33,9 @@ def _get_kwargs(
 
 
 
-def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> AppInfoResponse | ErrorEnvelope | None:
+def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> ErrorEnvelope | GetSystemAndAppInfoResponse | None:
     if response.status_code == 200:
-        response_200 = AppInfoResponse.from_dict(response.json())
+        response_200 = GetSystemAndAppInfoResponse.from_dict(response.json())
 
 
 
@@ -110,7 +110,7 @@ def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Res
         return None
 
 
-def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[AppInfoResponse | ErrorEnvelope]:
+def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[ErrorEnvelope | GetSystemAndAppInfoResponse]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -123,7 +123,7 @@ def sync_detailed(
     *,
     client: AuthenticatedClient | Client,
 
-) -> Response[AppInfoResponse | ErrorEnvelope]:
+) -> Response[ErrorEnvelope | GetSystemAndAppInfoResponse]:
     """Get System Info
     
      Return general system and application information.
@@ -148,7 +148,7 @@ def sync(
     *,
     client: AuthenticatedClient | Client,
 
-) -> AppInfoResponse | ErrorEnvelope | None:
+) -> ErrorEnvelope | GetSystemAndAppInfoResponse | None:
     """Get System Info
     
      Return general system and application information.
@@ -156,7 +156,7 @@ def sync(
     :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
     :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
     
-    :returns: AppInfoResponse | ErrorEnvelope"""
+    :returns: ErrorEnvelope | GetSystemAndAppInfoResponse"""
 
 
     return sync_detailed(
@@ -168,7 +168,7 @@ async def asyncio_detailed(
     *,
     client: AuthenticatedClient | Client,
 
-) -> Response[AppInfoResponse | ErrorEnvelope]:
+) -> Response[ErrorEnvelope | GetSystemAndAppInfoResponse]:
     """Get System Info
     
      Return general system and application information.
@@ -193,7 +193,7 @@ async def asyncio(
     *,
     client: AuthenticatedClient | Client,
 
-) -> AppInfoResponse | ErrorEnvelope | None:
+) -> ErrorEnvelope | GetSystemAndAppInfoResponse | None:
     """Get System Info
     
      Return general system and application information.
@@ -201,7 +201,7 @@ async def asyncio(
     :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
     :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
     
-    :returns: AppInfoResponse | ErrorEnvelope"""
+    :returns: ErrorEnvelope | GetSystemAndAppInfoResponse"""
 
 
     return (await asyncio_detailed(

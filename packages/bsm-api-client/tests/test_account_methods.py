@@ -8,9 +8,9 @@ from bsm_api_client.api_client import BedrockServerManagerApi
 from bsm_api_client.models import (
     BaseApiResponse,
     ChangePasswordPayload,
+    CurrentAccountResponse,
     ProfileUpdatePayload,
     ThemeUpdatePayload,
-    UserResponse,
 )
 
 
@@ -37,7 +37,7 @@ async def test_get_account_details(client):
             "theme": "default",
         }
         result = await client.account.async_get_account_details()
-        assert isinstance(result, UserResponse)
+        assert isinstance(result, CurrentAccountResponse)
         assert result.username == "admin"
         mock_request.assert_called_once_with(
             "get_account", authenticated=True, typed=True

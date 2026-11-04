@@ -9,8 +9,8 @@ from ...types import Response, UNSET
 from ... import errors
 
 from ...models.error_envelope import ErrorEnvelope
+from ...models.set_global_setting_response import SetGlobalSettingResponse
 from ...models.setting_item_payload import SettingItemPayload
-from ...models.settings_response import SettingsResponse
 from typing import cast
 
 
@@ -41,9 +41,9 @@ def _get_kwargs(
 
 
 
-def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> ErrorEnvelope | SettingsResponse | None:
+def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> ErrorEnvelope | SetGlobalSettingResponse | None:
     if response.status_code == 200:
-        response_200 = SettingsResponse.from_dict(response.json())
+        response_200 = SetGlobalSettingResponse.from_dict(response.json())
 
 
 
@@ -118,7 +118,7 @@ def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Res
         return None
 
 
-def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[ErrorEnvelope | SettingsResponse]:
+def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[ErrorEnvelope | SetGlobalSettingResponse]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -132,7 +132,7 @@ def sync_detailed(
     client: AuthenticatedClient,
     body: SettingItemPayload,
 
-) -> Response[ErrorEnvelope | SettingsResponse]:
+) -> Response[ErrorEnvelope | SetGlobalSettingResponse]:
     """Post Set Setting
     
      Set a specific global application setting.
@@ -161,7 +161,7 @@ def sync(
     client: AuthenticatedClient,
     body: SettingItemPayload,
 
-) -> ErrorEnvelope | SettingsResponse | None:
+) -> ErrorEnvelope | SetGlobalSettingResponse | None:
     """Post Set Setting
     
      Set a specific global application setting.
@@ -171,7 +171,7 @@ def sync(
     :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
     :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
     
-    :returns: ErrorEnvelope | SettingsResponse"""
+    :returns: ErrorEnvelope | SetGlobalSettingResponse"""
 
 
     return sync_detailed(
@@ -185,7 +185,7 @@ async def asyncio_detailed(
     client: AuthenticatedClient,
     body: SettingItemPayload,
 
-) -> Response[ErrorEnvelope | SettingsResponse]:
+) -> Response[ErrorEnvelope | SetGlobalSettingResponse]:
     """Post Set Setting
     
      Set a specific global application setting.
@@ -214,7 +214,7 @@ async def asyncio(
     client: AuthenticatedClient,
     body: SettingItemPayload,
 
-) -> ErrorEnvelope | SettingsResponse | None:
+) -> ErrorEnvelope | SetGlobalSettingResponse | None:
     """Post Set Setting
     
      Set a specific global application setting.
@@ -224,7 +224,7 @@ async def asyncio(
     :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
     :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
     
-    :returns: ErrorEnvelope | SettingsResponse"""
+    :returns: ErrorEnvelope | SetGlobalSettingResponse"""
 
 
     return (await asyncio_detailed(

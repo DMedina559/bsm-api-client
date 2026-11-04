@@ -5,15 +5,15 @@ from typing import Any, Dict, Literal, cast
 from ..exceptions import OperationFailedError
 from ..models import (
     AddonActionPayload,
-    AddonListResponse,
     AddonReorderPayload,
     AddonSubpackPayload,
     BackupActionPayload,
-    BackupFilesResponse,
     BaseApiResponse,
-    ContentListResponse,
     FileNamePayload,
     ListAvailableAddonsResponse,
+    ListAvailableWorldsResponse,
+    ListBackupFilesResponse,
+    ListInstalledAddonsResponse,
     RestoreActionPayload,
     TaskAcceptedResponse,
 )
@@ -30,14 +30,14 @@ class ContentService(Service):
 
     async def async_list_server_backups(
         self, server_name: str, backup_type: str
-    ) -> BackupFilesResponse:
+    ) -> ListBackupFilesResponse:
         """Lists backup files for a specific server and backup type.
 
         :param server_name: The name of the server.
 
         :param backup_type: Backup category: world, properties, allowlist, or permissions.
 
-        :returns: `BackupFilesResponse`.
+        :returns: `ListBackupFilesResponse`.
         :raises ValueError: If backup_type is not a supported category.
 
         .. code-block:: python
@@ -63,14 +63,18 @@ class ContentService(Service):
             authenticated=True,
             typed=True,
         )
-        return cast(BackupFilesResponse, parse_response(BackupFilesResponse, response))
+        return cast(
+            ListBackupFilesResponse, parse_response(ListBackupFilesResponse, response)
+        )
 
-    async def async_get_server_addons(self, server_name: str) -> AddonListResponse:
+    async def async_get_server_addons(
+        self, server_name: str
+    ) -> ListInstalledAddonsResponse:
         """Retrieves a list of addons installed on a server's active world.
 
         :param server_name: The server name.
 
-        :returns: `AddonListResponse`.
+        :returns: `ListInstalledAddonsResponse`.
 
         .. code-block:: python
 
@@ -83,7 +87,10 @@ class ContentService(Service):
             authenticated=True,
             typed=True,
         )
-        return cast(AddonListResponse, parse_response(AddonListResponse, response))
+        return cast(
+            ListInstalledAddonsResponse,
+            parse_response(ListInstalledAddonsResponse, response),
+        )
 
     async def async_enable_server_addon(
         self, server_name: str, payload: AddonActionPayload
@@ -232,10 +239,10 @@ class ContentService(Service):
             TaskAcceptedResponse, parse_response(TaskAcceptedResponse, response)
         )
 
-    async def async_get_content_worlds(self) -> ContentListResponse:
+    async def async_get_content_worlds(self) -> ListAvailableWorldsResponse:
         """Lists available world template files (.mcworld).
 
-        :returns: `ContentListResponse`.
+        :returns: `ListAvailableWorldsResponse`.
 
         .. code-block:: python
 
@@ -245,7 +252,10 @@ class ContentService(Service):
         response = await self.async_call_generated(
             "list_available_worlds", authenticated=True, typed=True
         )
-        return cast(ContentListResponse, parse_response(ContentListResponse, response))
+        return cast(
+            ListAvailableWorldsResponse,
+            parse_response(ListAvailableWorldsResponse, response),
+        )
 
     async def async_get_content_addons(self) -> ListAvailableAddonsResponse:
         """Lists available addon files (.mcpack, .mcaddon).

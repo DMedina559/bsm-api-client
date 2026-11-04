@@ -18,7 +18,7 @@ async def client_fixture(server, bedrock_server, wait_for_server_status):
     try:
         # Ensure server is stopped before the test begins
         status_res = await client.servers.async_get_server_running_status(server_name)
-        if status_res.running:
+        if status_res.is_running:
             await client.servers.async_stop_server(server_name)
             await wait_for_server_status(client, server_name, is_running=False)
 
@@ -27,7 +27,7 @@ async def client_fixture(server, bedrock_server, wait_for_server_status):
     finally:
         # Ensure server is stopped after the test
         status_res = await client.servers.async_get_server_running_status(server_name)
-        if status_res.running:
+        if status_res.is_running:
             await client.servers.async_stop_server(server_name)
             await wait_for_server_status(
                 client, server_name, is_running=False, timeout=90
@@ -77,7 +77,7 @@ class TestServerLifecycle:
         client = client_fixture
         server_name = bedrock_server
 
-        # The ActionResponse for this endpoint does not contain a task_id,
+        # The SuccessResponse for this endpoint does not contain a task_id,
         # so we can only verify that the command is accepted.
         update_res = await client.servers.async_update_server(server_name)
         assert update_res.status in ["success", "pending", "accepted"]

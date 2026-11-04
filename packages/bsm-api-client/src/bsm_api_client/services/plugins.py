@@ -3,14 +3,15 @@ from typing import Literal, cast
 
 from ..generated.models.get_plugin_settings_scope import GetPluginSettingsScope
 from ..models import (
-    ActionResponse,
     GetPluginSettingsResponse,
+    GetPluginStatusesResponse,
     PluginSettingsPayload,
-    PluginStatusesResponse,
     PluginStatusSetPayload,
+    ReloadPluginsResponse,
     SetPluginSettingResponse,
+    SetPluginStatusResponse,
     TriggerEventPayload,
-    TriggerEventResponse,
+    TriggerExternalAppEventResponse,
 )
 from ..validation import parse_response
 from .base import Service
@@ -21,10 +22,10 @@ _LOGGER = logging.getLogger(__name__.split(".")[0] + ".client.plugins")
 class PluginsService(Service):
     """Service containing methods for interacting with Plugin Management API endpoints."""
 
-    async def async_get_plugin_statuses(self) -> PluginStatusesResponse:
+    async def async_get_plugin_statuses(self) -> GetPluginStatusesResponse:
         """Retrieves the status of all discovered plugins.
 
-        :returns: `PluginStatusesResponse`.
+        :returns: `GetPluginStatusesResponse`.
 
         .. code-block:: python
 
@@ -35,19 +36,20 @@ class PluginsService(Service):
             "list_plugins", authenticated=True, typed=True
         )
         return cast(
-            PluginStatusesResponse, parse_response(PluginStatusesResponse, response)
+            GetPluginStatusesResponse,
+            parse_response(GetPluginStatusesResponse, response),
         )
 
     async def async_set_plugin_status(
         self, plugin_name: str, payload: PluginStatusSetPayload
-    ) -> ActionResponse:
+    ) -> SetPluginStatusResponse:
         """Enables or disables a specific plugin.
 
         :param plugin_name: The name of the plugin to modify.
 
         :param payload: A `PluginStatusSetPayload` object with the new status.
 
-        :returns: `ActionResponse`.
+        :returns: `SetPluginStatusResponse`.
         :raises ValueError: If plugin_name is empty.
 
         .. code-block:: python
@@ -67,12 +69,14 @@ class PluginsService(Service):
             authenticated=True,
             typed=True,
         )
-        return cast(ActionResponse, parse_response(ActionResponse, response))
+        return cast(
+            SetPluginStatusResponse, parse_response(SetPluginStatusResponse, response)
+        )
 
-    async def async_reload_plugins(self) -> ActionResponse:
+    async def async_reload_plugins(self) -> ReloadPluginsResponse:
         """Triggers a full reload of all plugins.
 
-        :returns: `ActionResponse`.
+        :returns: `ReloadPluginsResponse`.
 
         .. code-block:: python
 
@@ -82,16 +86,18 @@ class PluginsService(Service):
         response = await self.async_call_generated(
             "reload_plugins", authenticated=True, typed=True
         )
-        return cast(ActionResponse, parse_response(ActionResponse, response))
+        return cast(
+            ReloadPluginsResponse, parse_response(ReloadPluginsResponse, response)
+        )
 
     async def async_trigger_plugin_event(
         self, payload: TriggerEventPayload
-    ) -> TriggerEventResponse:
+    ) -> TriggerExternalAppEventResponse:
         """Triggers a custom plugin event.
 
         :param payload: A `TriggerEventPayload` object with the event details.
 
-        :returns: `TriggerEventResponse`.
+        :returns: `TriggerExternalAppEventResponse`.
 
         .. code-block:: python
 
@@ -105,7 +111,8 @@ class PluginsService(Service):
             typed=True,
         )
         return cast(
-            TriggerEventResponse, parse_response(TriggerEventResponse, response)
+            TriggerExternalAppEventResponse,
+            parse_response(TriggerExternalAppEventResponse, response),
         )
 
     async def async_get_plugin_settings(

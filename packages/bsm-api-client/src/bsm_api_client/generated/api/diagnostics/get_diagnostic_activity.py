@@ -8,9 +8,9 @@ from ...client import AuthenticatedClient, Client
 from ...types import Response, UNSET
 from ... import errors
 
-from ...models.diagnostic_activity import DiagnosticActivity
 from ...models.error_envelope import ErrorEnvelope
 from ...models.get_diagnostic_activity_phase_type_0 import GetDiagnosticActivityPhaseType0
+from ...models.get_diagnostic_activity_response import GetDiagnosticActivityResponse
 from ...models.get_diagnostic_activity_status_type_0 import GetDiagnosticActivityStatusType0
 from ...types import UNSET, Unset
 from typing import cast
@@ -129,9 +129,9 @@ def _get_kwargs(
 
 
 
-def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> DiagnosticActivity | ErrorEnvelope | None:
+def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> ErrorEnvelope | GetDiagnosticActivityResponse | None:
     if response.status_code == 200:
-        response_200 = DiagnosticActivity.from_dict(response.json())
+        response_200 = GetDiagnosticActivityResponse.from_dict(response.json())
 
 
 
@@ -206,7 +206,7 @@ def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Res
         return None
 
 
-def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[DiagnosticActivity | ErrorEnvelope]:
+def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[ErrorEnvelope | GetDiagnosticActivityResponse]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -230,7 +230,7 @@ def sync_detailed(
     status: GetDiagnosticActivityStatusType0 | None | Unset = UNSET,
     limit: int | Unset = 100,
 
-) -> Response[DiagnosticActivity | ErrorEnvelope]:
+) -> Response[ErrorEnvelope | GetDiagnosticActivityResponse]:
     """Get Diagnostic Activity
     
      Read global activity, optionally narrowing by event, server, sequence, or correlation.
@@ -289,7 +289,7 @@ def sync(
     status: GetDiagnosticActivityStatusType0 | None | Unset = UNSET,
     limit: int | Unset = 100,
 
-) -> DiagnosticActivity | ErrorEnvelope | None:
+) -> ErrorEnvelope | GetDiagnosticActivityResponse | None:
     """Get Diagnostic Activity
     
      Read global activity, optionally narrowing by event, server, sequence, or correlation.
@@ -309,7 +309,7 @@ def sync(
     :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
     :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
     
-    :returns: DiagnosticActivity | ErrorEnvelope"""
+    :returns: ErrorEnvelope | GetDiagnosticActivityResponse"""
 
 
     return sync_detailed(
@@ -343,7 +343,7 @@ async def asyncio_detailed(
     status: GetDiagnosticActivityStatusType0 | None | Unset = UNSET,
     limit: int | Unset = 100,
 
-) -> Response[DiagnosticActivity | ErrorEnvelope]:
+) -> Response[ErrorEnvelope | GetDiagnosticActivityResponse]:
     """Get Diagnostic Activity
     
      Read global activity, optionally narrowing by event, server, sequence, or correlation.
@@ -402,7 +402,7 @@ async def asyncio(
     status: GetDiagnosticActivityStatusType0 | None | Unset = UNSET,
     limit: int | Unset = 100,
 
-) -> DiagnosticActivity | ErrorEnvelope | None:
+) -> ErrorEnvelope | GetDiagnosticActivityResponse | None:
     """Get Diagnostic Activity
     
      Read global activity, optionally narrowing by event, server, sequence, or correlation.
@@ -422,7 +422,7 @@ async def asyncio(
     :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
     :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
     
-    :returns: DiagnosticActivity | ErrorEnvelope"""
+    :returns: ErrorEnvelope | GetDiagnosticActivityResponse"""
 
 
     return (await asyncio_detailed(

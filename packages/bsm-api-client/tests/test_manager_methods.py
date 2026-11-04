@@ -30,14 +30,17 @@ async def test_get_info(client):
     ) as mock_request:
         mock_request.return_value = {
             "status": "success",
-            "info": {"version": "1.0.0", "timezone": "America/Los_Angeles"},
+            "os_type": "Linux",
+            "app_version": "1.0.0",
+            "splash_text": "Hello",
+            "timezone": "America/Los_Angeles",
         }
         result = await client.application.async_get_info()
         mock_request.assert_called_once_with(
             "get_system_info", authenticated=False, typed=True
         )
-        assert result.info["version"] == "1.0.0"
-        assert result.info["timezone"] == "America/Los_Angeles"
+        assert result.app_version == "1.0.0"
+        assert result.timezone == "America/Los_Angeles"
 
 
 @pytest.mark.asyncio
@@ -46,7 +49,15 @@ async def test_scan_players(client):
     with patch.object(
         client, "async_call_generated", new_callable=AsyncMock
     ) as mock_request:
-        mock_request.return_value = {"status": "success", "message": "Scan complete."}
+        mock_request.return_value = {
+            "status": "success",
+            "message": "Scan complete.",
+            "details": {
+                "total_entries_in_logs": 0,
+                "unique_players_submitted_for_saving": 0,
+                "actually_saved_or_updated_in_db": 0,
+            },
+        }
         result = await client.players.async_scan_players()
         mock_request.assert_called_once_with(
             "scan_players", authenticated=True, typed=True
@@ -82,7 +93,14 @@ async def test_add_players(client):
         client, "async_call_generated", new_callable=AsyncMock
     ) as mock_request:
         payload = AddPlayersPayload(players=["player1:123", "player2:456"])
-        mock_request.return_value = {"status": "success", "message": "Players added."}
+        mock_request.return_value = {
+            "status": "success",
+            "message": "Players added.",
+            "count": 2,
+            "parsed_count": 2,
+            "submitted_count": 2,
+            "unique_count": 2,
+        }
         result = await client.players.async_add_players(payload)
         mock_request.assert_called_once_with(
             "add_players", body=payload.model_dump(), authenticated=True, typed=True

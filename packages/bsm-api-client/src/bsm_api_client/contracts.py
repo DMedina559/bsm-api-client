@@ -40,14 +40,16 @@ class AccessServerInfo(ContractModel):
     permissions: list[str] = Field(..., title="Permissions")
 
 
-class ActionResponse(ContractModel):
-    """Validate and serialize the ActionResponse contract."""
+class AddPlayersManuallyResponse(ContractModel):
+    """Validate and serialize the AddPlayersManuallyResponse contract."""
 
     model_config = ConfigDict(extra="forbid")
-    message: str = Field(..., title="Message")
-    status: Literal["success", "skipped", "partial"] | None = Field(
-        "success", title="Status"
-    )
+    count: int = Field(..., ge=0, title="Count")
+    message: str | None = Field(None, title="Message")
+    parsed_count: int = Field(..., ge=0, title="Parsed Count")
+    status: Literal["success"] = Field("success", title="Status")
+    submitted_count: int = Field(..., ge=0, title="Submitted Count")
+    unique_count: int = Field(..., ge=0, title="Unique Count")
 
 
 Player = Annotated[str, Field(min_length=1, pattern=".*\\S.*")]
@@ -65,11 +67,6 @@ class AddPlayersPayload(ContractModel):
         min_length=1,
         title="Players",
     )
-
-
-ParsedCount = Annotated[int, Field(ge=0, title="Parsed Count")]
-SubmittedCount = Annotated[int, Field(ge=0, title="Submitted Count")]
-UniqueCount = Annotated[int, Field(ge=0, title="Unique Count")]
 
 
 class AddServerBanResponse(ContractModel):
@@ -252,15 +249,6 @@ class BackupFile(ContractModel):
     size: int = Field(..., ge=0, title="Size")
 
 
-class BackupFilesResponse(ContractModel):
-    """Validate and serialize the BackupFilesResponse contract."""
-
-    model_config = ConfigDict(extra="forbid")
-    backups: list[str] | dict[str, list[str]] = Field(..., title="Backups")
-    message: str | None = Field(None, title="Message")
-    status: Literal["success"] = Field("success", title="Status")
-
-
 class BackupKeyInfo(ContractModel):
     """Validate and serialize the BackupKeyInfo contract."""
 
@@ -366,9 +354,9 @@ class BanAddRequest(ContractModel):
     """Validate and serialize the BanAddRequest contract."""
 
     model_config = ConfigDict(extra="forbid")
-    player_name: str = Field(..., title="Player Name")
+    player_name: str = Field(..., min_length=1, pattern=".*\\S.*", title="Player Name")
     reason: str | None = Field(None, title="Reason")
-    xuid: str = Field(..., title="Xuid")
+    xuid: str = Field(..., min_length=1, pattern=".*\\S.*", title="Xuid")
 
 
 class BanEnforcementStatus(ContractModel):
@@ -393,7 +381,7 @@ class BanRemoveRequest(ContractModel):
     """Validate and serialize the BanRemoveRequest contract."""
 
     model_config = ConfigDict(extra="forbid")
-    xuid: str = Field(..., title="Xuid")
+    xuid: str = Field(..., min_length=1, pattern=".*\\S.*", title="Xuid")
 
 
 class BaseApiResponse(ContractModel):
@@ -487,6 +475,7 @@ class CommandPayload(ContractModel):
         ...,
         description="The command to send to the server.",
         min_length=1,
+        pattern=".*\\S.*",
         title="Command",
     )
 
@@ -513,25 +502,14 @@ class CompletedItem(ContractModel):
     reason: None = Field(None, title="Reason")
 
 
-class ContentListResponse(ContractModel):
-    """Response model for content listing endpoints.
-
-    :ivar files: A list of filenames found."""
-
-    model_config = ConfigDict(extra="forbid")
-    files: list[str] | None = Field(None, title="Files")
-    message: str | None = Field(None, title="Message")
-    status: Literal["success", "skipped", "partial"] = Field(..., title="Status")
-
-
 class ContentUploadResponse(ContractModel):
-    """Validate and serialize the ContentUploadResponse contract."""
+    """Response model for uploading a world or addon archive to the content library."""
 
     model_config = ConfigDict(extra="forbid")
     category: Literal["worlds", "addons"] = Field(..., title="Category")
     destination: str = Field(..., title="Destination")
     filename: str = Field(..., title="Filename")
-    message: str = Field(..., title="Message")
+    message: str | None = Field(None, title="Message")
     status: Literal["success"] = Field("success", title="Status")
 
 
@@ -578,7 +556,9 @@ class CurrentAccountResponse(ContractModel):
     permissions: list[str] | None = Field(None, title="Permissions")
     policy_revision: str | None = Field(None, title="Policy Revision")
     role: Literal["admin", "moderator", "user"] = Field(..., title="Role")
-    server_access: str | None = Field("all", title="Server Access")
+    server_access: Literal["all", "assigned"] | None = Field(
+        "all", title="Server Access"
+    )
     server_permissions: dict[str, list[str]] | None = Field(
         None, title="Server Permissions"
     )
@@ -613,20 +593,6 @@ class DiagnosticChange(ContractModel):
     delta: float | None = Field(None, title="Delta")
     field: str = Field(..., title="Field")
     subsystem: str = Field(..., title="Subsystem")
-
-
-class DiagnosticComparison(ContractModel):
-    """Validate and serialize the DiagnosticComparison contract."""
-
-    model_config = ConfigDict(extra="forbid")
-    after_snapshot_id: str = Field(..., title="After Snapshot Id")
-    before_snapshot_id: str = Field(..., title="Before Snapshot Id")
-    changes: list[DiagnosticChange] | None = Field(
-        None, max_length=200, title="Changes"
-    )
-    elapsed_seconds: float | None = Field(..., title="Elapsed Seconds")
-    same_instance: bool = Field(..., title="Same Instance")
-    truncated: bool | None = Field(False, title="Truncated")
 
 
 class DiagnosticEnvironment(ContractModel):
@@ -842,6 +808,9 @@ class GenerateTokenPayload(ContractModel):
     role: Literal["admin", "moderator", "user"] = Field(..., title="Role")
 
 
+Revision = Annotated[int, Field(ge=1, le=9007199254740991, title="Revision")]
+
+
 class GetAllowlistResponse(ContractModel):
     """Validate and serialize the GetAllowlistResponse contract."""
 
@@ -851,7 +820,23 @@ class GetAllowlistResponse(ContractModel):
     status: Literal["success"] = Field("success", title="Status")
 
 
-Revision = Annotated[int, Field(ge=1, le=9007199254740991, title="Revision")]
+class GetDiagnosticHistoryResponse(ContractModel):
+    """Validate and serialize the GetDiagnosticHistoryResponse contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    available: bool = Field(..., title="Available")
+    next_cursor: str | None = Field(None, title="Next Cursor")
+    records: list[DiagnosticRecord] = Field(..., title="Records")
+    truncated: bool = Field(..., title="Truncated")
+
+
+class GetDiagnosticRunsResponse(ContractModel):
+    """Validate and serialize the GetDiagnosticRunsResponse contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    available: bool = Field(..., title="Available")
+    runs: list[DiagnosticRun] = Field(..., title="Runs")
+    truncated: bool = Field(..., title="Truncated")
 
 
 class GetPropertiesResponse(ContractModel):
@@ -880,6 +865,29 @@ class GetServerBansResponse(ContractModel):
     bans: list[BanInfo] = Field(..., title="Bans")
     message: str | None = Field(None, title="Message")
     status: Literal["success"] = Field("success", title="Status")
+
+
+class GetServerRunningStatusResponse(ContractModel):
+    """Validate and serialize the GetServerRunningStatusResponse contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    epoch: str | None = Field(None, title="Epoch")
+    is_running: bool = Field(..., title="Is Running")
+    message: str | None = Field(None, title="Message")
+    revision: Revision | None = Field(None, title="Revision")
+    status: Literal["success"] = Field("success", title="Status")
+
+
+class GetSystemAndAppInfoResponse(ContractModel):
+    """Validate and serialize the GetSystemAndAppInfoResponse contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    app_version: str = Field(..., title="App Version")
+    message: str | None = Field(None, title="Message")
+    os_type: str = Field(..., title="Os Type")
+    splash_text: str = Field(..., title="Splash Text")
+    status: Literal["success"] = Field("success", title="Status")
+    timezone: str | None = Field("UTC", title="Timezone")
 
 
 class HealthCheck(ContractModel):
@@ -959,6 +967,24 @@ class ListAvailableAddonsResponse(ContractModel):
 
     model_config = ConfigDict(extra="forbid")
     files: list[str] = Field(..., title="Files")
+    message: str | None = Field(None, title="Message")
+    status: Literal["success"] = Field("success", title="Status")
+
+
+class ListAvailableWorldsResponse(ContractModel):
+    """Validate and serialize the ListAvailableWorldsResponse contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    files: list[str] = Field(..., title="Files")
+    message: str | None = Field(None, title="Message")
+    status: Literal["success"] = Field("success", title="Status")
+
+
+class ListBackupFilesResponse(ContractModel):
+    """Validate and serialize the ListBackupFilesResponse contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    backups: list[str] | dict[str, list[str]] = Field(..., title="Backups")
     message: str | None = Field(None, title="Message")
     status: Literal["success"] = Field("success", title="Status")
 
@@ -1126,13 +1152,7 @@ class PasskeyLoginVerifyRequest(ContractModel):
     """WebAuthn assertion payload for passwordless passkey login."""
 
     model_config = ConfigDict(extra="forbid")
-    challenge_id: str = Field(
-        ...,
-        max_length=32,
-        min_length=32,
-        pattern="^[0-9a-f]{32}$",
-        title="Challenge Id",
-    )
+    challenge_id: str = Field(..., pattern="^[a-f0-9]{32}$", title="Challenge Id")
     credential: dict[str, Any] = Field(..., title="Credential")
     remember_me: bool | None = Field(False, title="Remember Me")
 
@@ -1172,15 +1192,6 @@ class PlayerInfo(ContractModel):
     model_config = ConfigDict(extra="forbid")
     name: str = Field(..., title="Name")
     xuid: str = Field(..., title="Xuid")
-
-
-class PlayerListResponse(ContractModel):
-    """Response model for player lists."""
-
-    model_config = ConfigDict(extra="forbid")
-    message: str | None = Field(None, title="Message")
-    players: list[PlayerInfo] | None = Field(None, title="Players")
-    status: Literal["success", "skipped", "partial"] = Field(..., title="Status")
 
 
 class PlayerPermission(ContractModel):
@@ -1276,15 +1287,6 @@ class PluginStatusSetPayload(ContractModel):
         description="Set to true to enable the plugin, false to disable.",
         title="Enabled",
     )
-
-
-class PluginStatusesResponse(ContractModel):
-    """Response model for plugin statuses."""
-
-    model_config = ConfigDict(extra="forbid")
-    message: str | None = Field(None, title="Message")
-    plugins: dict[str, PluginInfo] | None = Field(None, title="Plugins")
-    status: Literal["success", "skipped", "partial"] = Field(..., title="Status")
 
 
 class PluginValues(ContractModel):
@@ -1440,6 +1442,7 @@ class PruneDownloadsPayload(ContractModel):
         ...,
         description="The subdirectory within the main download cache to prune (e.g., 'stable' or 'preview').",
         min_length=1,
+        pattern=".*\\S.*",
         title="Directory",
     )
     keep: Keep | None = Field(
@@ -1560,6 +1563,36 @@ class RegistryDiagnostics(ContractModel):
     )
     rejected: int | None = Field(0, title="Rejected")
     timeouts: int | None = Field(0, title="Timeouts")
+
+
+class ReloadGlobalSettingsResponse(ContractModel):
+    """Validate and serialize the ReloadGlobalSettingsResponse contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    message: str = Field(..., title="Message")
+    status: Literal["success", "skipped", "partial"] | None = Field(
+        "success", title="Status"
+    )
+
+
+class ReloadPluginsResponse(ContractModel):
+    """Validate and serialize the ReloadPluginsResponse contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    message: str = Field(..., title="Message")
+    status: Literal["success", "skipped", "partial"] | None = Field(
+        "success", title="Status"
+    )
+
+
+class ReloadSinglePluginResponse(ContractModel):
+    """Validate and serialize the ReloadSinglePluginResponse contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    message: str = Field(..., title="Message")
+    status: Literal["success", "skipped", "partial"] | None = Field(
+        "success", title="Status"
+    )
 
 
 class RemoveFromAllowlistResponse(ContractModel):
@@ -1854,17 +1887,6 @@ class ServerMetrics(ContractModel):
     server_name: str = Field(..., title="Server Name")
 
 
-class ServerProcessInfoResponse(ContractModel):
-    """Response model for server process info."""
-
-    model_config = ConfigDict(extra="forbid")
-    epoch: str | None = Field(None, title="Epoch")
-    message: str | None = Field(None, title="Message")
-    process_info: ProcessInfo | None = None
-    revision: Revision | None = Field(None, title="Revision")
-    status: Literal["success", "skipped", "partial"] = Field(..., title="Status")
-
-
 class ServerProcessStatus(ContractModel):
     """Validate and serialize the ServerProcessStatus contract."""
 
@@ -1883,17 +1905,6 @@ class ServerProcessStatus(ContractModel):
     running: bool = Field(..., title="Running")
 
 
-class ServerRunningStatusResponse(ContractModel):
-    """Response model for server running status."""
-
-    model_config = ConfigDict(extra="forbid")
-    epoch: str | None = Field(None, title="Epoch")
-    message: str | None = Field(None, title="Message")
-    revision: Revision | None = Field(None, title="Revision")
-    running: bool | None = Field(None, title="Running")
-    status: Literal["success", "skipped", "partial"] = Field(..., title="Status")
-
-
 class ServerSettingItemPayload(ContractModel):
     """Request model for a single server setting key-value pair."""
 
@@ -1906,16 +1917,6 @@ class ServerSettingItemPayload(ContractModel):
         title="Key",
     )
     value: JsonValue = Field(..., description="The new value for the setting.")
-
-
-class ServerSettingsResponse(ContractModel):
-    """Response model for server settings operations."""
-
-    model_config = ConfigDict(extra="forbid")
-    message: str | None = Field(None, title="Message")
-    setting: ServerSettingItemPayload | None = None
-    settings: dict[str, JsonValue] | None = Field(None, title="Settings")
-    status: Literal["success", "skipped", "partial"] = Field(..., title="Status")
 
 
 class ServerSummary(ContractModel):
@@ -1932,8 +1933,28 @@ class ServerSummary(ContractModel):
     version: str = Field(..., title="Version")
 
 
+class SetGlobalSettingResponse(ContractModel):
+    """Validate and serialize the SetGlobalSettingResponse contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    message: str = Field(..., title="Message")
+    status: Literal["success", "skipped", "partial"] | None = Field(
+        "success", title="Status"
+    )
+
+
 class SetPluginSettingResponse(ContractModel):
     """Validate and serialize the SetPluginSettingResponse contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    message: str = Field(..., title="Message")
+    status: Literal["success", "skipped", "partial"] | None = Field(
+        "success", title="Status"
+    )
+
+
+class SetPluginStatusResponse(ContractModel):
+    """Validate and serialize the SetPluginStatusResponse contract."""
 
     model_config = ConfigDict(extra="forbid")
     message: str = Field(..., title="Message")
@@ -1967,6 +1988,23 @@ class SetServerAccess(ContractModel):
     mode: Literal["all", "assigned"] = Field(..., title="Mode")
 
 
+class SetServerSettingResponse(ContractModel):
+    """Validate and serialize the SetServerSettingResponse contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    message: str = Field(..., title="Message")
+    server_name: str = Field(
+        ...,
+        examples=["example"],
+        min_length=1,
+        pattern="^[a-zA-Z0-9_-]+$",
+        title="Server Name",
+    )
+    status: Literal["success", "skipped", "partial"] | None = Field(
+        "success", title="Status"
+    )
+
+
 class SettingItemPayload(ContractModel):
     """Request model for a single setting key-value pair."""
 
@@ -1979,38 +2017,6 @@ class SettingItemPayload(ContractModel):
         title="Key",
     )
     value: JsonValue = Field(..., description="The new value for the setting.")
-
-
-class SettingsResponse(ContractModel):
-    """Response model for settings operations."""
-
-    model_config = ConfigDict(extra="forbid")
-    message: str | None = Field(None, title="Message")
-    setting: SettingItemPayload | None = None
-    settings: dict[str, JsonValue] | None = Field(None, title="Settings")
-    status: Literal["success", "skipped", "partial"] = Field(..., title="Status")
-
-
-class SetupAccountResponse(ContractModel):
-    """First account creation returns the same session credentials as login."""
-
-    model_config = ConfigDict(extra="forbid")
-    access_token: str = Field(
-        ...,
-        description="Bearer JWT; empty in explicitly negotiated cookie mode, where the credential is HttpOnly",
-        title="Access Token",
-    )
-    message: str = Field(..., title="Message")
-    status: Literal["success"] = Field("success", title="Status")
-    token_type: Literal["bearer"] = Field("bearer", title="Token Type")
-    trusted_device_expires_at: int | None = Field(
-        None, title="Trusted Device Expires At"
-    )
-    trusted_device_token: str | None = Field(
-        None,
-        description="One-time remembered-device credential; omitted in cookie mode. Store only when explicitly requested.",
-        title="Trusted Device Token",
-    )
 
 
 class SetupStatusResponse(ContractModel):
@@ -2319,6 +2325,7 @@ class TokenResponse(ContractModel):
         title="Access Token",
     )
     message: str | None = Field(None, title="Message")
+    status: Literal["success"] = Field("success", title="Status")
     token_type: Literal["bearer"] = Field("bearer", title="Token Type")
     trusted_device_expires_at: int | None = Field(
         None, title="Trusted Device Expires At"
@@ -2364,20 +2371,12 @@ class TriggerEventPayload(ContractModel):
         ...,
         description="The namespaced name of the event to trigger (e.g., 'myplugin:myevent').",
         min_length=1,
+        pattern=".*\\S.*",
         title="Event Name",
     )
     payload: dict[str, JsonValue] | None = Field(
         None, description="Optional dictionary payload for the event.", title="Payload"
     )
-
-
-class TriggerEventResponse(ContractModel):
-    """Response model for triggering a custom plugin event."""
-
-    model_config = ConfigDict(extra="forbid")
-    details: dict[str, JsonValue] | None = Field(None, title="Details")
-    message: str | None = Field(None, title="Message")
-    status: Literal["success", "skipped", "partial"] = Field(..., title="Status")
 
 
 class TrustedDeviceInfo(ContractModel):
@@ -2496,15 +2495,6 @@ class AccountServerAccessInfo(ContractModel):
     user_id: int = Field(..., title="User Id")
 
 
-class AppInfoResponse(ContractModel):
-    """Response model for app/system info."""
-
-    model_config = ConfigDict(extra="forbid")
-    info: dict[str, JsonValue] | None = Field(None, title="Info")
-    message: str | None = Field(None, title="Message")
-    status: Literal["success", "skipped", "partial"] = Field(..., title="Status")
-
-
 class AuditLogResponse(ContractModel):
     """Validate and serialize the AuditLogResponse contract."""
 
@@ -2578,6 +2568,20 @@ class BackupSummary(ContractModel):
     verification: BackupVerification | None = None
 
 
+class CompareDiagnosticSnapshotsResponse(ContractModel):
+    """Validate and serialize the CompareDiagnosticSnapshotsResponse contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    after_snapshot_id: str = Field(..., title="After Snapshot Id")
+    before_snapshot_id: str = Field(..., title="Before Snapshot Id")
+    changes: list[DiagnosticChange] | None = Field(
+        None, max_length=200, title="Changes"
+    )
+    elapsed_seconds: float | None = Field(..., title="Elapsed Seconds")
+    same_instance: bool = Field(..., title="Same Instance")
+    truncated: bool | None = Field(False, title="Truncated")
+
+
 class CreatedIntegrationToken(ContractModel):
     """Validate and serialize the CreatedIntegrationToken contract."""
 
@@ -2648,6 +2652,15 @@ class EventDefinition(ContractModel):
     public: bool | None = Field(True, title="Public")
 
 
+class EventDispatchSummary(ContractModel):
+    """Validate and serialize the EventDispatchSummary contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    event_id: str = Field(..., title="Event Id")
+    failures: list[ListenerFailure] = Field(..., title="Failures")
+    listeners_called: int = Field(..., title="Listeners Called")
+
+
 class EventRecord(ContractModel):
     """Validate and serialize the EventRecord contract."""
 
@@ -2709,6 +2722,33 @@ class FailureInfo(ContractModel):
     message: str = Field(..., title="Message")
 
 
+class GetAllGlobalSettingsResponse(ContractModel):
+    """Validate and serialize the GetAllGlobalSettingsResponse contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    message: str | None = Field(None, title="Message")
+    settings: dict[str, JsonValue] = Field(..., title="Settings")
+    status: Literal["success"] = Field("success", title="Status")
+
+
+class GetAllKnownPlayersResponse(ContractModel):
+    """Validate and serialize the GetAllKnownPlayersResponse contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    message: str | None = Field(None, title="Message")
+    players: list[PlayerInfo] = Field(..., title="Players")
+    status: Literal["success"] = Field("success", title="Status")
+
+
+class GetAllServerSettingsResponse(ContractModel):
+    """Validate and serialize the GetAllServerSettingsResponse contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    message: str | None = Field(None, title="Message")
+    settings: dict[str, JsonValue] = Field(..., title="Settings")
+    status: Literal["success"] = Field("success", title="Status")
+
+
 class GetApplicationHealthResponse(ContractModel):
     """Validate and serialize the GetApplicationHealthResponse contract."""
 
@@ -2727,6 +2767,17 @@ class GetApplicationHealthResponse(ContractModel):
     version: str = Field(..., title="Version")
 
 
+class GetBedrockProcessInfoResponse(ContractModel):
+    """Validate and serialize the GetBedrockProcessInfoResponse contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    epoch: str | None = Field(None, title="Epoch")
+    message: str | None = Field(None, title="Message")
+    process_info: ProcessInfo | None
+    revision: Revision | None = Field(None, title="Revision")
+    status: Literal["success"] = Field("success", title="Status")
+
+
 class GetPermissionsResponse(ContractModel):
     """Validate and serialize the GetPermissionsResponse contract."""
 
@@ -2743,6 +2794,15 @@ class GetPluginSettingsResponse(ContractModel):
     message: str | None = Field(None, title="Message")
     settings: dict[str, JsonValue] = Field(..., title="Settings")
     settings_schema: dict[str, JsonValue] | None = Field(None, title="Settings Schema")
+    status: Literal["success"] = Field("success", title="Status")
+
+
+class GetPluginStatusesResponse(ContractModel):
+    """Validate and serialize the GetPluginStatusesResponse contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    message: str | None = Field(None, title="Message")
+    plugins: dict[str, PluginInfo] = Field(..., title="Plugins")
     status: Literal["success"] = Field("success", title="Status")
 
 
@@ -2782,6 +2842,15 @@ class InstalledAddons(ContractModel):
     model_config = ConfigDict(extra="forbid")
     behavior_packs: list[InstalledAddon] | None = Field(None, title="Behavior Packs")
     resource_packs: list[InstalledAddon] | None = Field(None, title="Resource Packs")
+
+
+class ListInstalledAddonsResponse(ContractModel):
+    """Validate and serialize the ListInstalledAddonsResponse contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    addons: InstalledAddons
+    message: str | None = Field(None, title="Message")
+    status: Literal["success"] = Field("success", title="Status")
 
 
 class ListSchedulesResponse(ContractModel):
@@ -2866,17 +2935,6 @@ class PlayerScanError(ContractModel):
     server: str = Field(..., title="Server")
 
 
-class PruneDownloadsResponse(ContractModel):
-    """Response model for pruning downloads."""
-
-    model_config = ConfigDict(extra="forbid")
-    failures: dict[str, FailureInfo] | None = Field(None, title="Failures")
-    files_deleted: int | None = Field(None, title="Files Deleted")
-    files_kept: int | None = Field(None, title="Files Kept")
-    message: str | None = Field(None, title="Message")
-    status: Literal["success", "skipped", "partial"] = Field(..., title="Status")
-
-
 class RecoveryReportReview(ContractModel):
     """Validate and serialize the RecoveryReportReview contract."""
 
@@ -2922,18 +2980,6 @@ class RestoreRecoveryResponse(ContractModel):
     status: Literal["success"] = Field("success", title="Status")
 
 
-class ServersListResponse(ContractModel):
-    """Validate and serialize the ServersListResponse contract."""
-
-    model_config = ConfigDict(extra="forbid")
-    epoch: str | None = Field(None, title="Epoch")
-    errors: list[ResourceFailure] | None = Field(None, title="Errors")
-    message: str | None = Field(None, title="Message")
-    revision: Revision | None = Field(None, title="Revision")
-    servers: list[ServerSummary] | None = Field(None, title="Servers")
-    status: Literal["success", "skipped", "partial"] = Field(..., title="Status")
-
-
 class TaskSnapshot(ContractModel):
     """Validate and serialize the TaskSnapshot contract."""
 
@@ -2949,13 +2995,27 @@ class TaskSnapshot(ContractModel):
     ] = Field(..., title="Status")
 
 
-class AddonListResponse(ContractModel):
-    """Response model for retrieving all addons on a server."""
+class TriggerExternalAppEventResponse(ContractModel):
+    """Validate and serialize the TriggerExternalAppEventResponse contract."""
 
     model_config = ConfigDict(extra="forbid")
-    addons: InstalledAddons | None = None
-    message: str | None = Field(None, title="Message")
-    status: Literal["success", "skipped", "partial"] = Field(..., title="Status")
+    details: EventDispatchSummary
+    message: str = Field(..., title="Message")
+    status: Literal["success", "skipped", "partial"] | None = Field(
+        "success", title="Status"
+    )
+
+
+class CleanupResult(ContractModel):
+    """Validate and serialize the CleanupResult contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    deleted: list[str] | None = Field(None, title="Deleted")
+    failures: dict[str, FailureInfo] | None = Field(None, title="Failures")
+    outcome: Literal["completed", "partial", "failed", "noop"] | None = Field(
+        "noop", title="Outcome"
+    )
+    retained: list[str] | None = Field(None, title="Retained")
 
 
 class EventCatalog(ContractModel):
@@ -3019,6 +3079,18 @@ class FailedItem(ContractModel):
     reason: str | None = Field(None, title="Reason")
 
 
+class GetAllServersDataResponse(ContractModel):
+    """Validate and serialize the GetAllServersDataResponse contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    epoch: str | None = Field(None, title="Epoch")
+    errors: list[ResourceFailure] | None = Field(None, title="Errors")
+    message: str | None = Field(None, title="Message")
+    revision: Revision | None = Field(None, title="Revision")
+    servers: list[ServerSummary] = Field(..., title="Servers")
+    status: Literal["success", "partial"] | None = Field("success", title="Status")
+
+
 class GetApplicationMetricsResponse(ContractModel):
     """Validate and serialize the GetApplicationMetricsResponse contract."""
 
@@ -3033,8 +3105,36 @@ class GetApplicationMetricsResponse(ContractModel):
     status: Literal["success"] = Field("success", title="Status")
 
 
+class GetDiagnosticActivityResponse(ContractModel):
+    """Validate and serialize the GetDiagnosticActivityResponse contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    events: EventDiagnostics | None = None
+    issues: list[DiagnosticIssue] | None = Field(None, max_length=3, title="Issues")
+    operations: OperationActivity | None = None
+    scope: Literal["application"] = Field("application", title="Scope")
+    subscriptions: EventSubscriptions | None = None
+    truncated: bool | None = Field(False, title="Truncated")
+
+
+class GetDiagnosticTraceResponse(ContractModel):
+    """Validate and serialize the GetDiagnosticTraceResponse contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    correlation_id: str = Field(..., title="Correlation Id")
+    events: EventDiagnostics | None
+    events_available: bool | None = Field(False, title="Events Available")
+    history: DiagnosticHistory
+    issues: list[DiagnosticIssue] | None = Field(None, max_length=4, title="Issues")
+    operations: OperationActivity | None = None
+    operations_available: bool | None = Field(False, title="Operations Available")
+    tasks: list[TaskDiagnostic] = Field(..., title="Tasks")
+    tasks_available: bool = Field(..., title="Tasks Available")
+    truncated: bool | None = Field(False, title="Truncated")
+
+
 class PermissionsUpdateResponse(ContractModel):
-    """Validate and serialize the PermissionsUpdateResponse contract."""
+    """Response model for permissions update."""
 
     model_config = ConfigDict(extra="forbid")
     errors: dict[str, str] | None = Field(None, title="Errors")
@@ -3057,6 +3157,17 @@ class PlayerScanDetails(ContractModel):
     total_entries_in_logs: int = Field(..., ge=0, title="Total Entries In Logs")
     unique_players_submitted_for_saving: int = Field(
         ..., ge=0, title="Unique Players Submitted For Saving"
+    )
+
+
+class PruneDownloadCacheResponse(ContractModel):
+    """Validate and serialize the PruneDownloadCacheResponse contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    message: str = Field(..., title="Message")
+    result: CleanupResult | None = None
+    status: Literal["success", "skipped", "partial"] | None = Field(
+        "success", title="Status"
     )
 
 
@@ -3089,29 +3200,13 @@ class RecoveryReportResponse(ContractModel):
     status: Literal["success"] = Field("success", title="Status")
 
 
-class AddPlayersResponse(ContractModel):
-    """Validate and serialize the AddPlayersResponse contract."""
+class ScanAndUpdatePlayerDbResponse(ContractModel):
+    """Validate and serialize the ScanAndUpdatePlayerDbResponse contract."""
 
     model_config = ConfigDict(extra="forbid")
-    count: int | None = Field(None, title="Count")
-    details: PlayerScanDetails | None = None
+    details: PlayerScanDetails
     message: str | None = Field(None, title="Message")
-    parsed_count: ParsedCount | None = Field(None, title="Parsed Count")
-    status: Literal["success", "skipped", "partial"] = Field(..., title="Status")
-    submitted_count: SubmittedCount | None = Field(None, title="Submitted Count")
-    unique_count: UniqueCount | None = Field(None, title="Unique Count")
-
-
-class DiagnosticActivity(ContractModel):
-    """Global current-instance metadata; no correlation filter is required."""
-
-    model_config = ConfigDict(extra="forbid")
-    events: EventDiagnostics | None = None
-    issues: list[DiagnosticIssue] | None = Field(None, max_length=3, title="Issues")
-    operations: OperationActivity | None = None
-    scope: Literal["application"] = Field("application", title="Scope")
-    subscriptions: EventSubscriptions | None = None
-    truncated: bool | None = Field(False, title="Truncated")
+    status: Literal["success", "partial"] | None = Field("success", title="Status")
 
 
 class DiagnosticSection(ContractModel):
@@ -3166,20 +3261,35 @@ class DiagnosticSnapshot(ContractModel):
     summary: DiagnosticSummary
 
 
-class DiagnosticTrace(ContractModel):
-    """Validate and serialize the DiagnosticTrace contract."""
+class GetApplicationDiagnosticsResponse(ContractModel):
+    """Validate and serialize the GetApplicationDiagnosticsResponse contract."""
 
     model_config = ConfigDict(extra="forbid")
-    correlation_id: str = Field(..., title="Correlation Id")
-    events: EventDiagnostics | None
-    events_available: bool | None = Field(False, title="Events Available")
+    collected_at: float = Field(..., title="Collected At")
+    collection: CollectionDiagnostics | None = None
+    counter_scope: Literal["current_instance"] = Field(
+        "current_instance", title="Counter Scope"
+    )
+    environment: DiagnosticEnvironment
+    instance_id: str = Field(..., title="Instance Id")
+    persistence: PersistenceDiagnostics
+    recent: RecentDiagnosticWindow | None = None
+    registry: RegistryDiagnostics
+    schema_version: Literal[1] = Field(1, title="Schema Version")
+    sections: list[DiagnosticSection] = Field(..., max_length=1000, title="Sections")
+    snapshot_id: str | None = Field(None, title="Snapshot Id")
+    summary: DiagnosticSummary
+
+
+class GetDiagnosticReportResponse(ContractModel):
+    """Validate and serialize the GetDiagnosticReportResponse contract."""
+
+    model_config = ConfigDict(extra="forbid")
+    generated_at: float | None = Field(None, title="Generated At")
     history: DiagnosticHistory
-    issues: list[DiagnosticIssue] | None = Field(None, max_length=4, title="Issues")
-    operations: OperationActivity | None = None
-    operations_available: bool | None = Field(False, title="Operations Available")
-    tasks: list[TaskDiagnostic] = Field(..., title="Tasks")
-    tasks_available: bool = Field(..., title="Tasks Available")
-    truncated: bool | None = Field(False, title="Truncated")
+    report_id: str | None = Field(None, title="Report Id")
+    runs: DiagnosticRuns | None = None
+    snapshot: DiagnosticSnapshot
 
 
 class CompareDiagnosticSnapshotsRequest(ContractModel):
@@ -3188,14 +3298,3 @@ class CompareDiagnosticSnapshotsRequest(ContractModel):
     model_config = ConfigDict(extra="forbid")
     after: DiagnosticSnapshot
     before: DiagnosticSnapshot
-
-
-class DiagnosticReport(ContractModel):
-    """Validate and serialize the DiagnosticReport contract."""
-
-    model_config = ConfigDict(extra="forbid")
-    generated_at: float | None = Field(None, title="Generated At")
-    history: DiagnosticHistory
-    report_id: str | None = Field(None, title="Report Id")
-    runs: DiagnosticRuns | None = None
-    snapshot: DiagnosticSnapshot

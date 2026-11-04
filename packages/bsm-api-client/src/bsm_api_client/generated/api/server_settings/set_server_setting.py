@@ -10,7 +10,7 @@ from ... import errors
 
 from ...models.error_envelope import ErrorEnvelope
 from ...models.server_setting_item_payload import ServerSettingItemPayload
-from ...models.server_settings_response import ServerSettingsResponse
+from ...models.set_server_setting_response import SetServerSettingResponse
 from typing import cast
 
 
@@ -42,9 +42,9 @@ def _get_kwargs(
 
 
 
-def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> ErrorEnvelope | ServerSettingsResponse | None:
+def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> ErrorEnvelope | SetServerSettingResponse | None:
     if response.status_code == 200:
-        response_200 = ServerSettingsResponse.from_dict(response.json())
+        response_200 = SetServerSettingResponse.from_dict(response.json())
 
 
 
@@ -119,7 +119,7 @@ def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Res
         return None
 
 
-def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[ErrorEnvelope | ServerSettingsResponse]:
+def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[ErrorEnvelope | SetServerSettingResponse]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -134,7 +134,7 @@ def sync_detailed(
     client: AuthenticatedClient,
     body: ServerSettingItemPayload,
 
-) -> Response[ErrorEnvelope | ServerSettingsResponse]:
+) -> Response[ErrorEnvelope | SetServerSettingResponse]:
     """Post Set Server Setting
     
      Set a specific setting for a server.
@@ -166,7 +166,7 @@ def sync(
     client: AuthenticatedClient,
     body: ServerSettingItemPayload,
 
-) -> ErrorEnvelope | ServerSettingsResponse | None:
+) -> ErrorEnvelope | SetServerSettingResponse | None:
     """Post Set Server Setting
     
      Set a specific setting for a server.
@@ -177,7 +177,7 @@ def sync(
     :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
     :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
     
-    :returns: ErrorEnvelope | ServerSettingsResponse"""
+    :returns: ErrorEnvelope | SetServerSettingResponse"""
 
 
     return sync_detailed(
@@ -193,7 +193,7 @@ async def asyncio_detailed(
     client: AuthenticatedClient,
     body: ServerSettingItemPayload,
 
-) -> Response[ErrorEnvelope | ServerSettingsResponse]:
+) -> Response[ErrorEnvelope | SetServerSettingResponse]:
     """Post Set Server Setting
     
      Set a specific setting for a server.
@@ -225,7 +225,7 @@ async def asyncio(
     client: AuthenticatedClient,
     body: ServerSettingItemPayload,
 
-) -> ErrorEnvelope | ServerSettingsResponse | None:
+) -> ErrorEnvelope | SetServerSettingResponse | None:
     """Post Set Server Setting
     
      Set a specific setting for a server.
@@ -236,7 +236,7 @@ async def asyncio(
     :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
     :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
     
-    :returns: ErrorEnvelope | ServerSettingsResponse"""
+    :returns: ErrorEnvelope | SetServerSettingResponse"""
 
 
     return (await asyncio_detailed(

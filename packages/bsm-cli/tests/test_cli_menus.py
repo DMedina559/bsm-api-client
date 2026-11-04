@@ -200,12 +200,12 @@ async def test_menu_lists_before_actions_and_refreshes_after_changes(monkeypatch
 async def test_home_opens_server_directly_and_has_no_duplicate_command_groups(
     monkeypatch,
 ):
-    from bsm_api_client.models import ServersListResponse, ServerSummary
+    from bsm_api_client.models import GetAllServersDataResponse, ServerSummary
     from bsm_cli.__main__ import cli
     from bsm_cli.main_menus import main_menu
 
     client = AsyncMock()
-    client.servers.async_get_servers.return_value = ServersListResponse(
+    client.servers.async_get_servers.return_value = GetAllServersDataResponse(
         status="success",
         servers=[
             ServerSummary(name="alpha", status="STOPPED", version="1", player_count=0)
@@ -295,14 +295,14 @@ async def test_home_connection_failure_can_exit_without_retry_loop(monkeypatch, 
 @pytest.mark.asyncio
 async def test_home_connection_retry_recovers(monkeypatch):
     from bsm_api_client.exceptions import CannotConnectError
-    from bsm_api_client.models import ServersListResponse
+    from bsm_api_client.models import GetAllServersDataResponse
     from bsm_cli.__main__ import cli
     from bsm_cli.main_menus import main_menu
 
     client = AsyncMock()
     client.servers.async_get_servers.side_effect = [
         CannotConnectError("ClientOSError"),
-        ServersListResponse(status="success", servers=[]),
+        GetAllServersDataResponse(status="success", servers=[]),
     ]
     answers = iter(["Retry", "Exit"])
     monkeypatch.setattr("click.clear", lambda: None)
@@ -374,12 +374,12 @@ async def test_home_unexpected_error_allows_clean_exit_without_infinite_loop(
 async def test_ctrl_c_during_pause_after_menu_action_crash_exits_cleanly(
     monkeypatch, capsys
 ):
-    from bsm_api_client.models import ServersListResponse
+    from bsm_api_client.models import GetAllServersDataResponse
     from bsm_cli.__main__ import cli
     from bsm_cli.main_menus import main_menu
 
     client = AsyncMock()
-    client.servers.async_get_servers.return_value = ServersListResponse(
+    client.servers.async_get_servers.return_value = GetAllServersDataResponse(
         status="success", servers=[]
     )
     monkeypatch.setattr("click.clear", lambda: None)

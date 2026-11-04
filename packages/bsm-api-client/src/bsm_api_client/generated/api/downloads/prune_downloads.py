@@ -9,8 +9,8 @@ from ...types import Response, UNSET
 from ... import errors
 
 from ...models.error_envelope import ErrorEnvelope
+from ...models.prune_download_cache_response import PruneDownloadCacheResponse
 from ...models.prune_downloads_payload import PruneDownloadsPayload
-from ...models.prune_downloads_response import PruneDownloadsResponse
 from typing import cast
 
 
@@ -41,9 +41,9 @@ def _get_kwargs(
 
 
 
-def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> ErrorEnvelope | PruneDownloadsResponse | None:
+def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> ErrorEnvelope | PruneDownloadCacheResponse | None:
     if response.status_code == 200:
-        response_200 = PruneDownloadsResponse.from_dict(response.json())
+        response_200 = PruneDownloadCacheResponse.from_dict(response.json())
 
 
 
@@ -118,7 +118,7 @@ def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Res
         return None
 
 
-def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[ErrorEnvelope | PruneDownloadsResponse]:
+def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[ErrorEnvelope | PruneDownloadCacheResponse]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -132,7 +132,7 @@ def sync_detailed(
     client: AuthenticatedClient,
     body: PruneDownloadsPayload,
 
-) -> Response[ErrorEnvelope | PruneDownloadsResponse]:
+) -> Response[ErrorEnvelope | PruneDownloadCacheResponse]:
     """Put Prune Downloads
     
      Prunes old downloaded server archives from a specified cache subdirectory.
@@ -161,7 +161,7 @@ def sync(
     client: AuthenticatedClient,
     body: PruneDownloadsPayload,
 
-) -> ErrorEnvelope | PruneDownloadsResponse | None:
+) -> ErrorEnvelope | PruneDownloadCacheResponse | None:
     """Put Prune Downloads
     
      Prunes old downloaded server archives from a specified cache subdirectory.
@@ -171,7 +171,7 @@ def sync(
     :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
     :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
     
-    :returns: ErrorEnvelope | PruneDownloadsResponse"""
+    :returns: ErrorEnvelope | PruneDownloadCacheResponse"""
 
 
     return sync_detailed(
@@ -185,7 +185,7 @@ async def asyncio_detailed(
     client: AuthenticatedClient,
     body: PruneDownloadsPayload,
 
-) -> Response[ErrorEnvelope | PruneDownloadsResponse]:
+) -> Response[ErrorEnvelope | PruneDownloadCacheResponse]:
     """Put Prune Downloads
     
      Prunes old downloaded server archives from a specified cache subdirectory.
@@ -214,7 +214,7 @@ async def asyncio(
     client: AuthenticatedClient,
     body: PruneDownloadsPayload,
 
-) -> ErrorEnvelope | PruneDownloadsResponse | None:
+) -> ErrorEnvelope | PruneDownloadCacheResponse | None:
     """Put Prune Downloads
     
      Prunes old downloaded server archives from a specified cache subdirectory.
@@ -224,7 +224,7 @@ async def asyncio(
     :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
     :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
     
-    :returns: ErrorEnvelope | PruneDownloadsResponse"""
+    :returns: ErrorEnvelope | PruneDownloadCacheResponse"""
 
 
     return (await asyncio_detailed(

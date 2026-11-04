@@ -9,7 +9,7 @@ from ...types import Response, UNSET
 from ... import errors
 
 from ...models.error_envelope import ErrorEnvelope
-from ...models.server_process_info_response import ServerProcessInfoResponse
+from ...models.get_bedrock_process_info_response import GetBedrockProcessInfoResponse
 from typing import cast
 
 
@@ -34,9 +34,9 @@ def _get_kwargs(
 
 
 
-def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> ErrorEnvelope | ServerProcessInfoResponse | None:
+def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> ErrorEnvelope | GetBedrockProcessInfoResponse | None:
     if response.status_code == 200:
-        response_200 = ServerProcessInfoResponse.from_dict(response.json())
+        response_200 = GetBedrockProcessInfoResponse.from_dict(response.json())
 
 
 
@@ -111,7 +111,7 @@ def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Res
         return None
 
 
-def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[ErrorEnvelope | ServerProcessInfoResponse]:
+def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[ErrorEnvelope | GetBedrockProcessInfoResponse]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -125,7 +125,7 @@ def sync_detailed(
     *,
     client: AuthenticatedClient,
 
-) -> Response[ErrorEnvelope | ServerProcessInfoResponse]:
+) -> Response[ErrorEnvelope | GetBedrockProcessInfoResponse]:
     """Get Server Process Info
     
      Return resource usage information for a running server process.
@@ -154,7 +154,7 @@ def sync(
     *,
     client: AuthenticatedClient,
 
-) -> ErrorEnvelope | ServerProcessInfoResponse | None:
+) -> ErrorEnvelope | GetBedrockProcessInfoResponse | None:
     """Get Server Process Info
     
      Return resource usage information for a running server process.
@@ -164,7 +164,7 @@ def sync(
     :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
     :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
     
-    :returns: ErrorEnvelope | ServerProcessInfoResponse"""
+    :returns: ErrorEnvelope | GetBedrockProcessInfoResponse"""
 
 
     return sync_detailed(
@@ -178,7 +178,7 @@ async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
 
-) -> Response[ErrorEnvelope | ServerProcessInfoResponse]:
+) -> Response[ErrorEnvelope | GetBedrockProcessInfoResponse]:
     """Get Server Process Info
     
      Return resource usage information for a running server process.
@@ -207,7 +207,7 @@ async def asyncio(
     *,
     client: AuthenticatedClient,
 
-) -> ErrorEnvelope | ServerProcessInfoResponse | None:
+) -> ErrorEnvelope | GetBedrockProcessInfoResponse | None:
     """Get Server Process Info
     
      Return resource usage information for a running server process.
@@ -217,7 +217,7 @@ async def asyncio(
     :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
     :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
     
-    :returns: ErrorEnvelope | ServerProcessInfoResponse"""
+    :returns: ErrorEnvelope | GetBedrockProcessInfoResponse"""
 
 
     return (await asyncio_detailed(

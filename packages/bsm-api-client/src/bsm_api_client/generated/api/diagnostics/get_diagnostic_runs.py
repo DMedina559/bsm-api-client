@@ -8,8 +8,8 @@ from ...client import AuthenticatedClient, Client
 from ...types import Response, UNSET
 from ... import errors
 
-from ...models.diagnostic_runs import DiagnosticRuns
 from ...models.error_envelope import ErrorEnvelope
+from ...models.get_diagnostic_runs_response import GetDiagnosticRunsResponse
 from ...types import UNSET, Unset
 from typing import cast
 
@@ -43,9 +43,9 @@ def _get_kwargs(
 
 
 
-def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> DiagnosticRuns | ErrorEnvelope | None:
+def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> ErrorEnvelope | GetDiagnosticRunsResponse | None:
     if response.status_code == 200:
-        response_200 = DiagnosticRuns.from_dict(response.json())
+        response_200 = GetDiagnosticRunsResponse.from_dict(response.json())
 
 
 
@@ -120,7 +120,7 @@ def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Res
         return None
 
 
-def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[DiagnosticRuns | ErrorEnvelope]:
+def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[ErrorEnvelope | GetDiagnosticRunsResponse]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -134,7 +134,7 @@ def sync_detailed(
     client: AuthenticatedClient,
     limit: int | Unset = 20,
 
-) -> Response[DiagnosticRuns | ErrorEnvelope]:
+) -> Response[ErrorEnvelope | GetDiagnosticRunsResponse]:
     """Get Diagnostic Runs
     
     :param limit: Default: 20.
@@ -161,7 +161,7 @@ def sync(
     client: AuthenticatedClient,
     limit: int | Unset = 20,
 
-) -> DiagnosticRuns | ErrorEnvelope | None:
+) -> ErrorEnvelope | GetDiagnosticRunsResponse | None:
     """Get Diagnostic Runs
     
     :param limit: Default: 20.
@@ -169,7 +169,7 @@ def sync(
     :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
     :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
     
-    :returns: DiagnosticRuns | ErrorEnvelope"""
+    :returns: ErrorEnvelope | GetDiagnosticRunsResponse"""
 
 
     return sync_detailed(
@@ -183,7 +183,7 @@ async def asyncio_detailed(
     client: AuthenticatedClient,
     limit: int | Unset = 20,
 
-) -> Response[DiagnosticRuns | ErrorEnvelope]:
+) -> Response[ErrorEnvelope | GetDiagnosticRunsResponse]:
     """Get Diagnostic Runs
     
     :param limit: Default: 20.
@@ -210,7 +210,7 @@ async def asyncio(
     client: AuthenticatedClient,
     limit: int | Unset = 20,
 
-) -> DiagnosticRuns | ErrorEnvelope | None:
+) -> ErrorEnvelope | GetDiagnosticRunsResponse | None:
     """Get Diagnostic Runs
     
     :param limit: Default: 20.
@@ -218,7 +218,7 @@ async def asyncio(
     :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
     :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
     
-    :returns: DiagnosticRuns | ErrorEnvelope"""
+    :returns: ErrorEnvelope | GetDiagnosticRunsResponse"""
 
 
     return (await asyncio_detailed(

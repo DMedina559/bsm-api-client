@@ -4,13 +4,13 @@ from typing import Literal
 
 from ..models import (
     CompareDiagnosticSnapshotsRequest,
-    DiagnosticActivity,
-    DiagnosticComparison,
-    DiagnosticHistory,
-    DiagnosticReport,
-    DiagnosticRuns,
-    DiagnosticSnapshot,
-    DiagnosticTrace,
+    CompareDiagnosticSnapshotsResponse,
+    GetApplicationDiagnosticsResponse,
+    GetDiagnosticActivityResponse,
+    GetDiagnosticHistoryResponse,
+    GetDiagnosticReportResponse,
+    GetDiagnosticRunsResponse,
+    GetDiagnosticTraceResponse,
 )
 from ..validation import parse_response
 from .base import Service
@@ -36,7 +36,7 @@ class DiagnosticsService(Service):
             Literal["dispatching", "completed", "partial", "cancelled", "suppressed"]
             | None
         ) = None,
-    ) -> DiagnosticActivity:
+    ) -> GetDiagnosticActivityResponse:
         """Read bounded global events, operation ancestry/outcomes, and listeners.
 
         Filters narrow current-instance metadata; this does not replay payloads or
@@ -48,7 +48,7 @@ class DiagnosticsService(Service):
             if key != "self" and value is not None
         }
         return parse_response(
-            DiagnosticActivity,
+            GetDiagnosticActivityResponse,
             await self.async_call_generated(
                 "get_diagnostic_activity",
                 parameters=parameters,
@@ -57,10 +57,12 @@ class DiagnosticsService(Service):
             ),
         )
 
-    async def async_get_application_diagnostics(self) -> DiagnosticSnapshot:
+    async def async_get_application_diagnostics(
+        self,
+    ) -> GetApplicationDiagnosticsResponse:
         """Collect application observations; requires an administrator."""
         return parse_response(
-            DiagnosticSnapshot,
+            GetApplicationDiagnosticsResponse,
             await self.async_call_generated(
                 "get_application_diagnostics", authenticated=True, typed=True
             ),
@@ -68,10 +70,10 @@ class DiagnosticsService(Service):
 
     async def async_get_subsystem_diagnostics(
         self, subsystem: str
-    ) -> DiagnosticSnapshot:
+    ) -> GetApplicationDiagnosticsResponse:
         """Inspect one registered subsystem without inventing missing readings."""
         return parse_response(
-            DiagnosticSnapshot,
+            GetApplicationDiagnosticsResponse,
             await self.async_call_generated(
                 "get_subsystem_diagnostics",
                 parameters={"subsystem": subsystem},
@@ -92,7 +94,7 @@ class DiagnosticsService(Service):
         code: str | None = None,
         outcome: Literal["completed", "failed", "cancelled"] | None = None,
         operation_id: str | None = None,
-    ) -> DiagnosticHistory:
+    ) -> GetDiagnosticHistoryResponse:
         """Read one filtered history page; pass its next cursor for continuation."""
         parameters = {
             key: value
@@ -110,7 +112,7 @@ class DiagnosticsService(Service):
             if value is not None
         }
         return parse_response(
-            DiagnosticHistory,
+            GetDiagnosticHistoryResponse,
             await self.async_call_generated(
                 "get_diagnostic_history",
                 parameters=parameters,
@@ -119,10 +121,12 @@ class DiagnosticsService(Service):
             ),
         )
 
-    async def async_get_diagnostic_runs(self, *, limit: int = 20) -> DiagnosticRuns:
+    async def async_get_diagnostic_runs(
+        self, *, limit: int = 20
+    ) -> GetDiagnosticRunsResponse:
         """Read bounded summaries of retained application instances."""
         return parse_response(
-            DiagnosticRuns,
+            GetDiagnosticRunsResponse,
             await self.async_call_generated(
                 "get_diagnostic_runs",
                 parameters={"limit": limit},
@@ -133,13 +137,13 @@ class DiagnosticsService(Service):
 
     async def async_get_diagnostic_trace(
         self, correlation_id: str, *, limit: int = 100, cursor: str | None = None
-    ) -> DiagnosticTrace:
+    ) -> GetDiagnosticTraceResponse:
         """Inspect correlated records with independent source availability."""
         parameters = {"correlation_id": correlation_id, "limit": limit}
         if cursor is not None:
             parameters["cursor"] = cursor
         return parse_response(
-            DiagnosticTrace,
+            GetDiagnosticTraceResponse,
             await self.async_call_generated(
                 "get_diagnostic_trace",
                 parameters=parameters,
@@ -148,10 +152,10 @@ class DiagnosticsService(Service):
             ),
         )
 
-    async def async_get_diagnostic_report(self) -> DiagnosticReport:
+    async def async_get_diagnostic_report(self) -> GetDiagnosticReportResponse:
         """Collect a support report; review metadata before sharing."""
         return parse_response(
-            DiagnosticReport,
+            GetDiagnosticReportResponse,
             await self.async_call_generated(
                 "get_diagnostic_report", authenticated=True, typed=True
             ),
@@ -159,10 +163,10 @@ class DiagnosticsService(Service):
 
     async def async_compare_diagnostic_snapshots(
         self, payload: CompareDiagnosticSnapshotsRequest
-    ) -> DiagnosticComparison:
+    ) -> CompareDiagnosticSnapshotsResponse:
         """Compare validated snapshots; counter deltas depend on instance identity."""
         return parse_response(
-            DiagnosticComparison,
+            CompareDiagnosticSnapshotsResponse,
             await self.async_call_generated(
                 "compare_diagnostic_snapshots",
                 body=payload,

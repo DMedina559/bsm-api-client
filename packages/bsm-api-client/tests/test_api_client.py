@@ -162,7 +162,7 @@ async def test_facade_response_validation_uses_safe_api_errors(client):
         operation.return_value = {"servers": "private-response-value"}
         with pytest.raises(APIError) as error:
             await client.servers.async_get_servers()
-    assert "ServersListResponse" in str(error.value)
+    assert "GetAllServersDataResponse" in str(error.value)
     assert error.value.response_data["validation_errors"]
     assert "private-response-value" not in str(error.value.response_data)
 
@@ -177,7 +177,14 @@ async def test_setting_and_plugin_diagnostics_exclude_payload_secrets(client, ca
     with patch.object(
         client, "async_call_generated", new_callable=AsyncMock
     ) as operation:
-        operation.return_value = {"status": "success"}
+        operation.side_effect = [
+            {"status": "success", "message": "Saved", "server_name": "test"},
+            {
+                "status": "success",
+                "message": "Dispatched",
+                "details": {"event_id": "event", "listeners_called": 0, "failures": []},
+            },
+        ]
         await client.servers.async_set_server_setting(
             "test",
             ServerSettingItemPayload(

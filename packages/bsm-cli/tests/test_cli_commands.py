@@ -355,6 +355,20 @@ def command_client(monkeypatch, tmp_path):
                 body["events"] = None
             body.update(
                 {
+                    "/api/players/scan": {
+                        "details": {
+                            "total_entries_in_logs": 1,
+                            "unique_players_submitted_for_saving": 1,
+                            "actually_saved_or_updated_in_db": 1,
+                            "scan_errors": [],
+                        }
+                    },
+                    "/api/players/add": {
+                        "count": 1,
+                        "submitted_count": 1,
+                        "parsed_count": 1,
+                        "unique_count": 1,
+                    },
                     "/api/account": {"permissions": ["account:read", "servers:read"]},
                     "/api/scheduler/schedules": {
                         "schedules": [],

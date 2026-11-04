@@ -208,7 +208,7 @@ async def bedrock_server(server, server_data_dir):
                 status_res = await client.servers.async_get_server_running_status(
                     server_name
                 )
-                if status_res.running:
+                if status_res.is_running:
                     await client.servers.async_stop_server(server_name)
                     # Give it a moment to stop
                     for _ in range(30):
@@ -218,7 +218,7 @@ async def bedrock_server(server, server_data_dir):
                                 server_name
                             )
                         )
-                        if not status_res.running:
+                        if not status_res.is_running:
                             break
                     else:
                         pytest.fail(
@@ -251,7 +251,7 @@ async def wait_for_server_status(server_data_dir):
             status_res = await client.servers.async_get_server_running_status(
                 server_name
             )
-            if status_res.running == is_running:
+            if status_res.is_running == is_running:
                 if not is_running:
                     return
                 # A spawned process is running before Bedrock accepts commands.

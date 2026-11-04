@@ -42,7 +42,7 @@ async def _never():
 async def test_closing_live_view_cancels_pending_listener(monkeypatch):
     from unittest.mock import AsyncMock
 
-    from bsm_api_client.models import ServersListResponse
+    from bsm_api_client.models import GetAllServersDataResponse
     from bsm_cli.live import watch_resource
 
     class Socket:
@@ -70,7 +70,7 @@ async def test_closing_live_view_cancels_pending_listener(monkeypatch):
     client = AsyncMock()
     client.websocket_connect.return_value = socket
     fetch = AsyncMock(
-        return_value=ServersListResponse(
+        return_value=GetAllServersDataResponse(
             status="success", servers=[], epoch="one", revision=1
         )
     )

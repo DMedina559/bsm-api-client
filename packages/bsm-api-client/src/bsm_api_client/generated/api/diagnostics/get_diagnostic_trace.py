@@ -8,8 +8,8 @@ from ...client import AuthenticatedClient, Client
 from ...types import Response, UNSET
 from ... import errors
 
-from ...models.diagnostic_trace import DiagnosticTrace
 from ...models.error_envelope import ErrorEnvelope
+from ...models.get_diagnostic_trace_response import GetDiagnosticTraceResponse
 from ...types import UNSET, Unset
 from typing import cast
 
@@ -52,9 +52,9 @@ def _get_kwargs(
 
 
 
-def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> DiagnosticTrace | ErrorEnvelope | None:
+def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> ErrorEnvelope | GetDiagnosticTraceResponse | None:
     if response.status_code == 200:
-        response_200 = DiagnosticTrace.from_dict(response.json())
+        response_200 = GetDiagnosticTraceResponse.from_dict(response.json())
 
 
 
@@ -129,7 +129,7 @@ def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Res
         return None
 
 
-def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[DiagnosticTrace | ErrorEnvelope]:
+def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[ErrorEnvelope | GetDiagnosticTraceResponse]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -145,7 +145,7 @@ def sync_detailed(
     limit: int | Unset = 100,
     cursor: None | str | Unset = UNSET,
 
-) -> Response[DiagnosticTrace | ErrorEnvelope]:
+) -> Response[ErrorEnvelope | GetDiagnosticTraceResponse]:
     """Get Diagnostic Trace
     
     :param correlation_id: Value supplied to the operation.
@@ -178,7 +178,7 @@ def sync(
     limit: int | Unset = 100,
     cursor: None | str | Unset = UNSET,
 
-) -> DiagnosticTrace | ErrorEnvelope | None:
+) -> ErrorEnvelope | GetDiagnosticTraceResponse | None:
     """Get Diagnostic Trace
     
     :param correlation_id: Value supplied to the operation.
@@ -188,7 +188,7 @@ def sync(
     :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
     :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
     
-    :returns: DiagnosticTrace | ErrorEnvelope"""
+    :returns: ErrorEnvelope | GetDiagnosticTraceResponse"""
 
 
     return sync_detailed(
@@ -206,7 +206,7 @@ async def asyncio_detailed(
     limit: int | Unset = 100,
     cursor: None | str | Unset = UNSET,
 
-) -> Response[DiagnosticTrace | ErrorEnvelope]:
+) -> Response[ErrorEnvelope | GetDiagnosticTraceResponse]:
     """Get Diagnostic Trace
     
     :param correlation_id: Value supplied to the operation.
@@ -239,7 +239,7 @@ async def asyncio(
     limit: int | Unset = 100,
     cursor: None | str | Unset = UNSET,
 
-) -> DiagnosticTrace | ErrorEnvelope | None:
+) -> ErrorEnvelope | GetDiagnosticTraceResponse | None:
     """Get Diagnostic Trace
     
     :param correlation_id: Value supplied to the operation.
@@ -249,7 +249,7 @@ async def asyncio(
     :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
     :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
     
-    :returns: DiagnosticTrace | ErrorEnvelope"""
+    :returns: ErrorEnvelope | GetDiagnosticTraceResponse"""
 
 
     return (await asyncio_detailed(

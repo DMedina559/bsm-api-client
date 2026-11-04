@@ -5,6 +5,8 @@ from pathlib import Path
 from typing import Any, BinaryIO, Literal
 
 from ..exceptions import OperationFailedError
+from ..models import TaskAcceptedResponse
+from ..validation import parse_response
 from .base import Service
 
 
@@ -353,7 +355,7 @@ class BackupsService(Service):
 
     async def async_cleanup_destination(
         self, server_name: str, destination: str, token: str | None = None
-    ) -> Any:
+    ) -> TaskAcceptedResponse:
         """Preview external cleanup or apply a reviewed, unchanged plan.
 
         :param server_name: Server whose external copies are inspected.
@@ -361,11 +363,15 @@ class BackupsService(Service):
         :param token: Preview token authorizing deletion; None previews only.
         :returns: Accepted task with a destination cleanup plan.
         """
-        return await self.async_call_generated(
-            "cleanup_backup_destination",
-            parameters={"server_name": server_name, "destination": destination},
-            body={"token": token},
-            authenticated=True,
+        return parse_response(
+            TaskAcceptedResponse,
+            await self.async_call_generated(
+                "cleanup_backup_destination",
+                parameters={"server_name": server_name, "destination": destination},
+                body={"token": token},
+                authenticated=True,
+                typed=True,
+            ),
         )
 
     async def async_recovery_report(self, server_name: str) -> Any:

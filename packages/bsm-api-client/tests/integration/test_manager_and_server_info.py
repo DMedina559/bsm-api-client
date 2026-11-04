@@ -24,7 +24,7 @@ class TestManagerAndServerInfo:
         try:
             info = await client.application.async_get_info()
             assert info.status == "success"
-            assert "app_version" in info.info
+            assert info.app_version
 
             themes = await client.application.async_get_themes()
             assert themes is not None
@@ -42,8 +42,9 @@ class TestManagerAndServerInfo:
             payload = PruneDownloadsPayload(directory="stable", keep=1)
             res = await client.application.async_prune_downloads(payload)
             assert res.status == "skipped"
-            assert res.files_deleted == 0
-            assert not res.failures
+            assert res.result is not None
+            assert not res.result.deleted
+            assert not res.result.failures
         finally:
             await client.close()
 
@@ -117,7 +118,7 @@ class TestManagerAndServerInfo:
             status_res = await client.servers.async_get_server_running_status(
                 server_name
             )
-            if status_res.running:
+            if status_res.is_running:
                 await client.servers.async_stop_server(server_name)
                 await wait_for_server_status(client, server_name, is_running=False)
 
@@ -136,8 +137,8 @@ class TestManagerAndServerInfo:
             )
             assert running_status_res.status == "success"
             assert (
-                running_status_res.running is False
-                or running_status_res.running is None
+                running_status_res.is_running is False
+                or running_status_res.is_running is None
             )
 
         finally:

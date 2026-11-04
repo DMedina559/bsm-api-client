@@ -10,7 +10,7 @@ from ... import errors
 
 from ...models.error_envelope import ErrorEnvelope
 from ...models.trigger_event_payload import TriggerEventPayload
-from ...models.trigger_event_response import TriggerEventResponse
+from ...models.trigger_external_app_event_response import TriggerExternalAppEventResponse
 from typing import cast
 
 
@@ -41,9 +41,9 @@ def _get_kwargs(
 
 
 
-def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> ErrorEnvelope | TriggerEventResponse | None:
+def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> ErrorEnvelope | TriggerExternalAppEventResponse | None:
     if response.status_code == 200:
-        response_200 = TriggerEventResponse.from_dict(response.json())
+        response_200 = TriggerExternalAppEventResponse.from_dict(response.json())
 
 
 
@@ -118,7 +118,7 @@ def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Res
         return None
 
 
-def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[ErrorEnvelope | TriggerEventResponse]:
+def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[ErrorEnvelope | TriggerExternalAppEventResponse]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -132,7 +132,7 @@ def sync_detailed(
     client: AuthenticatedClient,
     body: TriggerEventPayload,
 
-) -> Response[ErrorEnvelope | TriggerEventResponse]:
+) -> Response[ErrorEnvelope | TriggerExternalAppEventResponse]:
     """Post Trigger Event
     
      Allows an external source to trigger a custom plugin event within the system.
@@ -161,7 +161,7 @@ def sync(
     client: AuthenticatedClient,
     body: TriggerEventPayload,
 
-) -> ErrorEnvelope | TriggerEventResponse | None:
+) -> ErrorEnvelope | TriggerExternalAppEventResponse | None:
     """Post Trigger Event
     
      Allows an external source to trigger a custom plugin event within the system.
@@ -171,7 +171,7 @@ def sync(
     :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
     :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
     
-    :returns: ErrorEnvelope | TriggerEventResponse"""
+    :returns: ErrorEnvelope | TriggerExternalAppEventResponse"""
 
 
     return sync_detailed(
@@ -185,7 +185,7 @@ async def asyncio_detailed(
     client: AuthenticatedClient,
     body: TriggerEventPayload,
 
-) -> Response[ErrorEnvelope | TriggerEventResponse]:
+) -> Response[ErrorEnvelope | TriggerExternalAppEventResponse]:
     """Post Trigger Event
     
      Allows an external source to trigger a custom plugin event within the system.
@@ -214,7 +214,7 @@ async def asyncio(
     client: AuthenticatedClient,
     body: TriggerEventPayload,
 
-) -> ErrorEnvelope | TriggerEventResponse | None:
+) -> ErrorEnvelope | TriggerExternalAppEventResponse | None:
     """Post Trigger Event
     
      Allows an external source to trigger a custom plugin event within the system.
@@ -224,7 +224,7 @@ async def asyncio(
     :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
     :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
     
-    :returns: ErrorEnvelope | TriggerEventResponse"""
+    :returns: ErrorEnvelope | TriggerExternalAppEventResponse"""
 
 
     return (await asyncio_detailed(

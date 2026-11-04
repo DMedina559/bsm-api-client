@@ -9,7 +9,7 @@ from ...types import Response, UNSET
 from ... import errors
 
 from ...models.error_envelope import ErrorEnvelope
-from ...models.plugin_statuses_response import PluginStatusesResponse
+from ...models.get_plugin_statuses_response import GetPluginStatusesResponse
 from typing import cast
 
 
@@ -33,9 +33,9 @@ def _get_kwargs(
 
 
 
-def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> ErrorEnvelope | PluginStatusesResponse | None:
+def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> ErrorEnvelope | GetPluginStatusesResponse | None:
     if response.status_code == 200:
-        response_200 = PluginStatusesResponse.from_dict(response.json())
+        response_200 = GetPluginStatusesResponse.from_dict(response.json())
 
 
 
@@ -110,7 +110,7 @@ def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Res
         return None
 
 
-def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[ErrorEnvelope | PluginStatusesResponse]:
+def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[ErrorEnvelope | GetPluginStatusesResponse]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -123,7 +123,7 @@ def sync_detailed(
     *,
     client: AuthenticatedClient,
 
-) -> Response[ErrorEnvelope | PluginStatusesResponse]:
+) -> Response[ErrorEnvelope | GetPluginStatusesResponse]:
     """Get Plugins Status
     
      Return the statuses and metadata of all discovered plugins.
@@ -148,7 +148,7 @@ def sync(
     *,
     client: AuthenticatedClient,
 
-) -> ErrorEnvelope | PluginStatusesResponse | None:
+) -> ErrorEnvelope | GetPluginStatusesResponse | None:
     """Get Plugins Status
     
      Return the statuses and metadata of all discovered plugins.
@@ -156,7 +156,7 @@ def sync(
     :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
     :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
     
-    :returns: ErrorEnvelope | PluginStatusesResponse"""
+    :returns: ErrorEnvelope | GetPluginStatusesResponse"""
 
 
     return sync_detailed(
@@ -168,7 +168,7 @@ async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
 
-) -> Response[ErrorEnvelope | PluginStatusesResponse]:
+) -> Response[ErrorEnvelope | GetPluginStatusesResponse]:
     """Get Plugins Status
     
      Return the statuses and metadata of all discovered plugins.
@@ -193,7 +193,7 @@ async def asyncio(
     *,
     client: AuthenticatedClient,
 
-) -> ErrorEnvelope | PluginStatusesResponse | None:
+) -> ErrorEnvelope | GetPluginStatusesResponse | None:
     """Get Plugins Status
     
      Return the statuses and metadata of all discovered plugins.
@@ -201,7 +201,7 @@ async def asyncio(
     :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
     :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
     
-    :returns: ErrorEnvelope | PluginStatusesResponse"""
+    :returns: ErrorEnvelope | GetPluginStatusesResponse"""
 
 
     return (await asyncio_detailed(

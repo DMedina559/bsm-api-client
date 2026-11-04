@@ -8,8 +8,8 @@ from ...client import AuthenticatedClient, Client
 from ...types import Response, UNSET
 from ... import errors
 
-from ...models.diagnostic_snapshot import DiagnosticSnapshot
 from ...models.error_envelope import ErrorEnvelope
+from ...models.get_application_diagnostics_response import GetApplicationDiagnosticsResponse
 from typing import cast
 
 
@@ -33,9 +33,9 @@ def _get_kwargs(
 
 
 
-def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> DiagnosticSnapshot | ErrorEnvelope | None:
+def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> ErrorEnvelope | GetApplicationDiagnosticsResponse | None:
     if response.status_code == 200:
-        response_200 = DiagnosticSnapshot.from_dict(response.json())
+        response_200 = GetApplicationDiagnosticsResponse.from_dict(response.json())
 
 
 
@@ -110,7 +110,7 @@ def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Res
         return None
 
 
-def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[DiagnosticSnapshot | ErrorEnvelope]:
+def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[ErrorEnvelope | GetApplicationDiagnosticsResponse]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -123,7 +123,7 @@ def sync_detailed(
     *,
     client: AuthenticatedClient,
 
-) -> Response[DiagnosticSnapshot | ErrorEnvelope]:
+) -> Response[ErrorEnvelope | GetApplicationDiagnosticsResponse]:
     """Get Application Diagnostics
     
      Collect bounded metadata without probing server processes or database health.
@@ -148,7 +148,7 @@ def sync(
     *,
     client: AuthenticatedClient,
 
-) -> DiagnosticSnapshot | ErrorEnvelope | None:
+) -> ErrorEnvelope | GetApplicationDiagnosticsResponse | None:
     """Get Application Diagnostics
     
      Collect bounded metadata without probing server processes or database health.
@@ -156,7 +156,7 @@ def sync(
     :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
     :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
     
-    :returns: DiagnosticSnapshot | ErrorEnvelope"""
+    :returns: ErrorEnvelope | GetApplicationDiagnosticsResponse"""
 
 
     return sync_detailed(
@@ -168,7 +168,7 @@ async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
 
-) -> Response[DiagnosticSnapshot | ErrorEnvelope]:
+) -> Response[ErrorEnvelope | GetApplicationDiagnosticsResponse]:
     """Get Application Diagnostics
     
      Collect bounded metadata without probing server processes or database health.
@@ -193,7 +193,7 @@ async def asyncio(
     *,
     client: AuthenticatedClient,
 
-) -> DiagnosticSnapshot | ErrorEnvelope | None:
+) -> ErrorEnvelope | GetApplicationDiagnosticsResponse | None:
     """Get Application Diagnostics
     
      Collect bounded metadata without probing server processes or database health.
@@ -201,7 +201,7 @@ async def asyncio(
     :raises errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
     :raises httpx.TimeoutException: If the request takes longer than Client.timeout.
     
-    :returns: DiagnosticSnapshot | ErrorEnvelope"""
+    :returns: ErrorEnvelope | GetApplicationDiagnosticsResponse"""
 
 
     return (await asyncio_detailed(

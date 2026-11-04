@@ -2,11 +2,15 @@
 
 import httpx
 import pytest
+from bedrock_server_manager import models as contracts
 from bedrock_server_manager.diagnostics import models as backend
 
 from bsm_api_client import BedrockServerManagerApi
 from bsm_api_client.exceptions import AuthError, InvalidInputError
-from bsm_api_client.models import CompareDiagnosticSnapshotsRequest, DiagnosticSnapshot
+from bsm_api_client.models import (
+    CompareDiagnosticSnapshotsRequest,
+    GetApplicationDiagnosticsResponse,
+)
 
 
 def snapshot():
@@ -61,17 +65,17 @@ async def test_diagnostics_round_trip_queries_partial_sources_and_comparison():
         "/api/diagnostics/runs": backend.DiagnosticRuns(
             runs=[], available=False, truncated=False
         ),
-        "/api/diagnostics/trace/trace": backend.DiagnosticTrace(
+        "/api/diagnostics/trace/trace": contracts.GetDiagnosticTraceResponse(
             correlation_id="trace",
             events=None,
             tasks=[],
             tasks_available=True,
             history=history,
         ),
-        "/api/diagnostics/report": backend.DiagnosticReport(
+        "/api/diagnostics/report": contracts.GetDiagnosticReportResponse(
             snapshot=observed, history=history
         ),
-        "/api/diagnostics/compare": backend.DiagnosticComparison(
+        "/api/diagnostics/compare": contracts.CompareDiagnosticSnapshotsResponse(
             before_snapshot_id="snapshot",
             after_snapshot_id="snapshot",
             same_instance=True,
@@ -93,7 +97,7 @@ async def test_diagnostics_round_trip_queries_partial_sources_and_comparison():
             "http://backend", jwt_token="test", http_client=http
         ) as client:
             current = await client.diagnostics.async_get_application_diagnostics()
-            assert isinstance(current, DiagnosticSnapshot)
+            assert isinstance(current, GetApplicationDiagnosticsResponse)
             assert current.sections[0].data.ready is True
             assert current.sections[0].data.stage_started_at is None
             assert (
@@ -128,7 +132,9 @@ async def test_diagnostics_round_trip_queries_partial_sources_and_comparison():
             assert seen[-1].url.params["cursor"] == "next"
             report = await client.diagnostics.async_get_diagnostic_report()
             assert report.snapshot.instance_id == current.instance_id
-            payload = CompareDiagnosticSnapshotsRequest(before=current, after=current)
+            payload = CompareDiagnosticSnapshotsRequest(
+                before=current.model_dump(), after=current.model_dump()
+            )
             assert (
                 await client.diagnostics.async_compare_diagnostic_snapshots(payload)
             ).same_instance
@@ -182,9 +188,9 @@ async def test_global_activity_round_trip_filters_operations_and_listener_detail
         OperationSnapshot,
     )
 
-    from bsm_api_client.models import DiagnosticActivity
+    from bsm_api_client.models import GetDiagnosticActivityResponse
 
-    result = backend.DiagnosticActivity(
+    result = contracts.GetDiagnosticActivityResponse(
         operations=OperationActivity(
             recent=[
                 OperationSnapshot(
@@ -241,7 +247,7 @@ async def test_global_activity_round_trip_filters_operations_and_listener_detail
                 phase="before",
                 limit=5,
             )
-            assert isinstance(observed, DiagnosticActivity)
+            assert isinstance(observed, GetDiagnosticActivityResponse)
             assert observed.operations.recent[0].parent_operation_id == "root"
             assert observed.operations.recent[0].outcome == "started"
             assert observed.subscriptions.items[0].unresolved_after == [

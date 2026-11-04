@@ -11,10 +11,14 @@ from ..models import (
     BanRemoveRequest,
     CommandPayload,
     GetAllowlistResponse,
+    GetAllServersDataResponse,
+    GetAllServerSettingsResponse,
+    GetBedrockProcessInfoResponse,
     GetPermissionsResponse,
     GetPropertiesResponse,
     GetRawPropertiesResponse,
     GetServerBansResponse,
+    GetServerRunningStatusResponse,
     InstallServerPayload,
     InstallServerResponse,
     PermissionsSetPayload,
@@ -24,13 +28,10 @@ from ..models import (
     RemoveServerBanResponse,
     RestartServerResponse,
     SendCommandResponse,
-    ServerProcessInfoResponse,
-    ServerRunningStatusResponse,
     ServerSettingItemPayload,
-    ServerSettingsResponse,
-    ServersListResponse,
     ServerSummary,
     SetPropertiesResponse,
+    SetServerSettingResponse,
     StartServerResponse,
     StopServerResponse,
     TaskAcceptedResponse,
@@ -44,10 +45,10 @@ _LOGGER = logging.getLogger(__name__.split(".")[0] + ".client.server_info")
 class ServersService(Service):
     """Server lifecycle, configuration, access control, and installation workflows."""
 
-    async def async_get_servers(self) -> ServersListResponse:
+    async def async_get_servers(self) -> GetAllServersDataResponse:
         """Retrieves a list of all detected server instances with their status and version.
 
-        :returns: `ServersListResponse`.
+        :returns: `GetAllServersDataResponse`.
 
         .. code-block:: python
 
@@ -58,7 +59,8 @@ class ServersService(Service):
             "list_servers", authenticated=True, typed=True
         )
         return cast(
-            ServersListResponse, parse_response(ServersListResponse, response_data)
+            GetAllServersDataResponse,
+            parse_response(GetAllServersDataResponse, response_data),
         )
 
     async def async_get_server_names(self) -> List[str]:
@@ -129,12 +131,12 @@ class ServersService(Service):
 
     async def async_get_server_process_info(
         self, server_name: str
-    ) -> ServerProcessInfoResponse:
+    ) -> GetBedrockProcessInfoResponse:
         """Gets runtime process information for a server.
 
         :param server_name: The name of the server.
 
-        :returns: `ServerProcessInfoResponse`.
+        :returns: `GetBedrockProcessInfoResponse`.
 
         .. code-block:: python
 
@@ -148,8 +150,8 @@ class ServersService(Service):
             typed=True,
         )
         return cast(
-            ServerProcessInfoResponse,
-            parse_response(ServerProcessInfoResponse, response),
+            GetBedrockProcessInfoResponse,
+            parse_response(GetBedrockProcessInfoResponse, response),
         )
 
     async def async_get_world_icon_image(self, server_name: str) -> bytes:
@@ -171,12 +173,12 @@ class ServersService(Service):
 
     async def async_get_server_running_status(
         self, server_name: str
-    ) -> ServerRunningStatusResponse:
+    ) -> GetServerRunningStatusResponse:
         """Checks if the Bedrock server process is currently running.
 
         :param server_name: The name of the server.
 
-        :returns: `ServerRunningStatusResponse`.
+        :returns: `GetServerRunningStatusResponse`.
 
         .. code-block:: python
 
@@ -190,8 +192,8 @@ class ServersService(Service):
             typed=True,
         )
         return cast(
-            ServerRunningStatusResponse,
-            parse_response(ServerRunningStatusResponse, response),
+            GetServerRunningStatusResponse,
+            parse_response(GetServerRunningStatusResponse, response),
         )
 
     async def async_get_server_properties(
@@ -283,12 +285,12 @@ class ServersService(Service):
 
     async def async_get_server_settings(
         self, server_name: str
-    ) -> ServerSettingsResponse:
+    ) -> GetAllServerSettingsResponse:
         """Retrieves all settings for a specific server.
 
         :param server_name: The name of the server.
 
-        :returns: `ServerSettingsResponse`.
+        :returns: `GetAllServerSettingsResponse`.
         """
         _LOGGER.debug("Fetching settings for server '%s'", server_name)
         response = await self.async_call_generated(
@@ -298,19 +300,20 @@ class ServersService(Service):
             typed=True,
         )
         return cast(
-            ServerSettingsResponse, parse_response(ServerSettingsResponse, response)
+            GetAllServerSettingsResponse,
+            parse_response(GetAllServerSettingsResponse, response),
         )
 
     async def async_set_server_setting(
         self, server_name: str, payload: ServerSettingItemPayload
-    ) -> ServerSettingsResponse:
+    ) -> SetServerSettingResponse:
         """Sets a specific setting for a server.
 
         :param server_name: The name of the server.
 
         :param payload: The ServerSettingItemPayload payload.
 
-        :returns: `ServerSettingsResponse`.
+        :returns: `SetServerSettingResponse`.
         """
         _LOGGER.debug("Updating setting '%s' for server '%s'", payload.key, server_name)
         response = await self.async_call_generated(
@@ -321,7 +324,7 @@ class ServersService(Service):
             typed=True,
         )
         return cast(
-            ServerSettingsResponse, parse_response(ServerSettingsResponse, response)
+            SetServerSettingResponse, parse_response(SetServerSettingResponse, response)
         )
 
     async def async_start_server(self, server_name: str) -> StartServerResponse:
