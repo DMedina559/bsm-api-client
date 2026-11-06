@@ -22,29 +22,30 @@ def _print_plugin_table(plugins):
 
     click.secho("BSM API Client - Plugin Statuses & Versions", fg="magenta", bold=True)
 
-    plugin_names = list(plugins.keys())
-    versions = [config.get("version", "N/A") for config in plugins.values()]
-
-    max_name_len = max(len(name) for name in plugin_names) if plugin_names else 20
-    max_version_len = max(
-        (max(len(v) for v in versions) if versions else 0), len("Version")
-    )
-    max_status_len = len("Disabled")
-
-    header = f"{'Plugin Name':<{max_name_len}} | {'Status':<{max_status_len}} | {'Version':<{max_version_len}}"
-    click.secho(header, underline=True)
-    click.secho("-" * len(header))
-
+    rows = []
     for name, config in sorted(plugins.items()):
-        is_enabled = config.get("enabled", False)
-        version = config.get("version", "N/A")
-
-        status_str = "Enabled" if is_enabled else "Disabled"
-        status_color = "green" if is_enabled else "red"
-
-        click.echo(f"{name:<{max_name_len}} | ", nl=False)
-        click.secho(f"{status_str:<{max_status_len}}", fg=status_color, nl=False)
-        click.echo(f" | {version:<{max_version_len}}")
+        rows.append(
+            (
+                name,
+                "Enabled" if config.get("enabled", False) else "Disabled",
+                config.get("status") or "UNKNOWN",
+                config.get("version") or "N/A",
+                ", ".join(config.get("permissions") or []) or "None",
+            )
+        )
+    headings = (
+        "Plugin Name",
+        "Configured",
+        "Runtime",
+        "Version",
+        "Declared Permissions",
+    )
+    widths = [
+        max(len(row[i]) for row in [headings, *rows]) for i in range(len(headings))
+    ]
+    click.echo(" | ".join(value.ljust(width) for value, width in zip(headings, widths)))
+    for row in rows:
+        click.echo(" | ".join(value.ljust(width) for value, width in zip(row, widths)))
 
 
 async def interactive_plugin_workflow(client):  # noqa: C901
@@ -90,7 +91,8 @@ async def interactive_plugin_workflow(client):  # noqa: C901
                 status = "🟢" if is_enabled else "⚪"
                 menu_choices.append(
                     questionary.Choice(
-                        title=f"{status} {name} (v{version})", value=name
+                        title=f"{status} {name} (v{version}) · {config_dict.get('status') or 'UNKNOWN'}",
+                        value=name,
                     )
                 )
 
@@ -132,6 +134,21 @@ async def interactive_plugin_workflow(client):  # noqa: C901
             if not config_dict:
                 continue
 
+            click.echo(f"Runtime: {config_dict.get('status') or 'UNKNOWN'}")
+            click.echo(
+                "Declared permissions: "
+                + (", ".join(config_dict.get("permissions") or []) or "None")
+            )
+            scopes = [
+                label
+                for field, label in (
+                    ("has_settings", "Plugin"),
+                    ("has_global_settings", "Global"),
+                    ("has_server_settings", "Server"),
+                )
+                if config_dict.get(field)
+            ]
+            click.echo("Settings scopes: " + (", ".join(scopes) or "None"))
             is_enabled = config_dict.get("enabled", False)
             pack_menu = []
             if is_enabled:

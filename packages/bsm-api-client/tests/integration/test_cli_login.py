@@ -10,10 +10,12 @@ from bsm_cli.__main__ import cli
 def test_interactive_cli_login(server, tmp_path, monkeypatch):
     config_path = tmp_path / "cli.json"
     monkeypatch.setattr("bsm_cli.config.get_config_path", lambda: config_path)
+    # CliRunner replaces stdin during invoke; simulate a terminal on its wrapper.
+    monkeypatch.setattr("click.testing._NamedTextIOWrapper.isatty", lambda self: True)
     result = CliRunner().invoke(
         cli,
-        ["auth", "login"],
-        input=f"{server}\nn\nadmin\nintegration secure passphrase\n",
+        ["auth", "login", "--no-verify-ssl"],
+        input=f"{server}\npassword\nadmin\nintegration secure passphrase\n",
     )
     assert result.exit_code == 0, result.output
     assert "Login successful" in result.output

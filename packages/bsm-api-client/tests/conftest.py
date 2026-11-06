@@ -18,7 +18,12 @@ def server_data_dir(tmp_path_factory):
 
 
 @pytest.fixture(scope="session")
-def server(server_data_dir):  # noqa: C901
+def server_config_dir(tmp_path_factory):
+    return tmp_path_factory.mktemp("bsm-config")
+
+
+@pytest.fixture(scope="session")
+def server(server_data_dir, server_config_dir):  # noqa: C901
     """
     A pytest fixture that starts the bedrock-server-manager web server
     and sets it up for testing in an isolated temporary directory.
@@ -32,12 +37,9 @@ def server(server_data_dir):  # noqa: C901
     # Use a temporary directory for complete isolation
     with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as temp_dir:
         import socket
-        from pathlib import Path
 
-        root = Path(temp_dir)
-        config_dir = root / "config"
+        config_dir = server_config_dir
         data_dir = server_data_dir
-        config_dir.mkdir()
         with socket.socket() as listener:
             listener.bind(("127.0.0.1", 0))
             port = listener.getsockname()[1]
@@ -242,8 +244,17 @@ async def bedrock_server(server, server_data_dir):
 
 
 @pytest_asyncio.fixture(scope="session")
-async def wait_for_server_status(server_data_dir):
+async def wait_for_server_status(server_config_dir):
     """Provides a helper function to wait for server status."""
+
+    def read_server_output(server_name):
+        log_dir = server_config_dir / "logs" / "servers" / server_name
+        logs = list(log_dir.glob("*.log"))
+        if not logs:
+            return "No output"
+        return max(logs, key=lambda path: path.stat().st_mtime_ns).read_text(
+            errors="replace"
+        )
 
     async def _wait_for_server_status(client, server_name, is_running, timeout=60):
         """Helper to wait for the server to reach a desired running state."""
@@ -255,15 +266,11 @@ async def wait_for_server_status(server_data_dir):
                 if not is_running:
                     return
                 # A spawned process is running before Bedrock accepts commands.
-                log = server_data_dir / "servers" / server_name / "server_output.txt"
-                if log.exists() and "Server started" in log.read_text(errors="replace"):
+                if "Server started" in read_server_output(server_name):
                     return
             await asyncio.sleep(1)
         status_str = "running" if is_running else "stopped"
-        log = server_data_dir / "servers" / server_name / "server_output.txt"
-        output = (
-            log.read_text(errors="replace")[-2000:] if log.exists() else "No output"
-        )
+        output = read_server_output(server_name)[-2000:]
         pytest.fail(
             f"Server did not enter '{status_str}' state within {timeout} seconds.\n{output}"
         )
