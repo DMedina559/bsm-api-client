@@ -163,8 +163,8 @@ async def test_typed_plugin_settings_round_trip(server):
         try:
             updated = {
                 **original.settings,
-                "enable_backup_on_start": not original.settings[
-                    "enable_backup_on_start"
+                "require_complete_backup": not original.settings[
+                    "require_complete_backup"
                 ],
             }
             await client.plugins.async_update_plugin_settings(
