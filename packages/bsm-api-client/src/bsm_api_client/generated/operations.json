@@ -12,7 +12,6 @@
   "complete_passkey_registration": "api.account_security.complete_passkey_registration",
   "confirm_account_mfa": "api.account_security.confirm_account_mfa",
   "control_schedule": "api.scheduler.control_schedule",
-  "create_backup": "api.backup_restore.create_backup",
   "create_first_user": "api.application_setup.create_first_user",
   "create_integration_token": "api.access_management.create_integration_token",
   "create_server_snapshot": "api.backup_restore.create_server_snapshot",

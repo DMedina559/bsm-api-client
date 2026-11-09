@@ -197,22 +197,6 @@ class AllowlistRemovePayload(ContractModel):
     )
 
 
-class BackupActionPayload(ContractModel):
-    """Request model for triggering a backup action."""
-
-    model_config = ConfigDict(extra="forbid")
-    backup_type: str = Field(
-        ...,
-        description="Type of backup: 'world', 'config', or 'all'.",
-        title="Backup Type",
-    )
-    file_to_backup: str | None = Field(
-        None,
-        description="Name of config file if backup_type is 'config' (e.g., 'server.properties').",
-        title="File To Backup",
-    )
-
-
 class BackupCopy(ContractModel):
     """Validate and serialize the BackupCopy contract."""
 

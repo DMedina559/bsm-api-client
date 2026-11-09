@@ -216,7 +216,7 @@ The root Read the Docs configuration is ready for project connection and hosting
 
 ### Portable server backups
 
-`client.backups` creates and restores unified `.bsmbackup` archives. These methods return accepted tasks; `async_wait` returns their structured result.
+`client.backups` creates and restores unified `.bsmbackup` archives. These methods return accepted tasks; `async_wait` returns their structured result. Creation returns a compact backup receipt with included components, file count, size, encryption status, and warnings. Inspect the backup to retrieve its full manifest.
 
 ```python
 created = await client.backups.async_wait(
@@ -237,7 +237,7 @@ result = await client.backups.async_wait(
 )
 ```
 
-Configure the host recovery key before requesting encrypted automatic backups. Imported encrypted archives can receive a recovery key through the optional `recovery_key` argument. Do not log or persist that argument. New typed low-level operations are available through `client.rest`; existing content backup methods remain compatibility adapters.
+Configure the host recovery key before requesting encrypted automatic backups. Imported encrypted archives can receive a recovery key through the optional `recovery_key` argument. Do not log or persist that argument. New typed low-level operations are available through `client.rest`; `client.content.async_trigger_server_backup` accepts `SnapshotCreatePayload` and calls the same snapshot endpoint. The removed `create_backup` operation and `BackupActionPayload` are no longer exported. Legacy listing and restore operations remain available.
 
 Backup recovery management is available through `client.backups.async_health`,
 `async_manage` (`verify`, `pin`, `unpin`, `copy`, `test_key`), and

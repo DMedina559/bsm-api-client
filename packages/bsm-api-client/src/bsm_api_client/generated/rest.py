@@ -14,7 +14,6 @@ from .models.addon_subpack_payload import AddonSubpackPayload
 from .models.allowlist_add_payload import AllowlistAddPayload
 from .models.allowlist_remove_payload import AllowlistRemovePayload
 from .models.audit_log_response import AuditLogResponse
-from .models.backup_action_payload import BackupActionPayload
 from .models.backup_health_response import BackupHealthResponse
 from .models.backup_key_info import BackupKeyInfo
 from .models.backup_keys_info import BackupKeysInfo
@@ -271,14 +270,6 @@ class RestClient:
     async def control_schedule_detailed(self, schedule_id: str, *, body: ControlSchedulePayload) -> Response[ErrorEnvelope | SuccessResponse]:
         """Generated control_schedule operation."""
         return cast(Response[ErrorEnvelope | SuccessResponse], await self._owner.async_call_generated('control_schedule', parameters={'schedule_id': schedule_id}, body=body, authenticated=True, detailed=True))
-
-    async def create_backup(self, server_name: str, *, body: BackupActionPayload) -> ErrorEnvelope | TaskAcceptedResponse | None:
-        """Generated create_backup operation."""
-        return cast(ErrorEnvelope | TaskAcceptedResponse | None, await self._owner.async_call_generated('create_backup', parameters={'server_name': server_name}, body=body, authenticated=True, typed=True))
-
-    async def create_backup_detailed(self, server_name: str, *, body: BackupActionPayload) -> Response[ErrorEnvelope | TaskAcceptedResponse]:
-        """Generated create_backup operation."""
-        return cast(Response[ErrorEnvelope | TaskAcceptedResponse], await self._owner.async_call_generated('create_backup', parameters={'server_name': server_name}, body=body, authenticated=True, detailed=True))
 
     async def create_first_user(self, *, body: UserLoginPayload) -> ErrorEnvelope | TokenResponse | None:
         """Generated create_first_user operation."""

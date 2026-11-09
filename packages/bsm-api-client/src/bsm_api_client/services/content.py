@@ -7,7 +7,6 @@ from ..models import (
     AddonActionPayload,
     AddonReorderPayload,
     AddonSubpackPayload,
-    BackupActionPayload,
     BaseApiResponse,
     FileNamePayload,
     ListAvailableAddonsResponse,
@@ -15,6 +14,7 @@ from ..models import (
     ListBackupFilesResponse,
     ListInstalledAddonsResponse,
     RestoreActionPayload,
+    SnapshotCreatePayload,
     TaskAcceptedResponse,
 )
 from ..validation import parse_response
@@ -276,13 +276,13 @@ class ContentService(Service):
         )
 
     async def async_trigger_server_backup(
-        self, server_name: str, payload: BackupActionPayload
+        self, server_name: str, payload: SnapshotCreatePayload
     ) -> TaskAcceptedResponse:
         """Triggers a backup operation for a specific server.
 
         :param server_name: The name of the server to back up.
 
-        :param payload: A `BackupActionPayload` object specifying the backup details.
+        :param payload: A `SnapshotCreatePayload` object specifying the backup details.
 
         :returns: `TaskAcceptedResponse`.
 
@@ -291,13 +291,12 @@ class ContentService(Service):
             response = await client.content.async_trigger_server_backup("MyServer", payload)
         """
         _LOGGER.info(
-            "Triggering backup for server '%s', type: %s, file: %s",
+            "Creating snapshot for server '%s', mode: %s",
             server_name,
-            payload.backup_type,
-            payload.file_to_backup or "N/A",
+            payload.mode or "default",
         )
         response = await self.async_call_generated(
-            "create_backup",
+            "create_server_snapshot",
             parameters={"server_name": server_name},
             body=payload.model_dump(),
             authenticated=True,
