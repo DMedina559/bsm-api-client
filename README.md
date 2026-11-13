@@ -90,7 +90,7 @@ bsm-cli auth tokens create --name "Home Assistant" --expires-days 30
 bsm-cli auth tokens list
 bsm-cli auth tokens revoke TOKEN_ID
 bsm-cli api call get_account_server_access --param user_id=USER_ID
-bsm-cli api call set_account_server_access --param user_id=USER_ID --json '{"mode":"assigned","grants":[{"server_id":"SERVER_ID","permissions":["servers:read","servers:control"]}]}'
+bsm-cli api call set_account_server_access --param user_id=USER_ID --json '{"mode":"assigned","grants":[{"server_id":"SERVER_ID","permissions":["servers:read","servers:lifecycle"]}]}'
 ```
 
 The create command prints the one-time secret and never saves it as your login
