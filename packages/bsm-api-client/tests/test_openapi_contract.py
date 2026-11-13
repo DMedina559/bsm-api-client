@@ -194,12 +194,12 @@ def test_access_metadata_and_older_backend_fallback(schema):
         "version": 1,
         "classification": "permission",
         "authentication": "required",
-        "required_permissions": ["servers:control"],
+        "required_permissions": ["servers:lifecycle"],
         "allowed_roles": ["moderator", "admin"],
         "additional_checks": [],
     }
     indexed = index_operations(document)[identifier]
-    assert indexed.accessible_with(["servers:control"]) is True
+    assert indexed.accessible_with(["servers:lifecycle"]) is True
     assert indexed.accessible_with([]) is False
     assert indexed.to_dict()["access"] == operation["x-bsm-access"]
     operation["x-bsm-access"]["classification"] = "custom"
