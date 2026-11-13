@@ -110,10 +110,11 @@ def test_plugin_prefix_is_case_insensitive_and_core_management_is_not_a_plugin()
 
 def test_bundled_schema_has_explicit_operation_ids():
     operations = index_operations(generated_schema())
+    assert "create_backup" not in operations
     assert {
         "start_server",
         "list_servers",
-        "create_backup",
+        "create_server_snapshot",
         "login",
     } <= operations.keys()
     assert {

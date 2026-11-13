@@ -9,9 +9,9 @@ from bsm_api_client.models import (
     AddonActionPayload,
     AddonReorderPayload,
     AddonSubpackPayload,
-    BackupActionPayload,
     FileNamePayload,
     RestoreActionPayload,
+    SnapshotCreatePayload,
 )
 
 
@@ -78,7 +78,7 @@ async def test_trigger_server_backup(client):
     with patch.object(
         client, "async_call_generated", new_callable=AsyncMock
     ) as mock_request:
-        payload = BackupActionPayload(backup_type="all")
+        payload = SnapshotCreatePayload(mode="world")
         mock_request.return_value = {
             "status": "accepted",
             "task_id": "test-task",
@@ -88,7 +88,7 @@ async def test_trigger_server_backup(client):
             "test-server", payload
         )
         mock_request.assert_called_once_with(
-            "create_backup",
+            "create_server_snapshot",
             parameters={"server_name": "test-server"},
             body=payload.model_dump(),
             authenticated=True,
@@ -142,7 +142,7 @@ async def test_trigger_server_backup_error(client):
         mock_request.side_effect = Exception("API Error")
         with pytest.raises(Exception) as excinfo:
             await client.content.async_trigger_server_backup(
-                "test-server", BackupActionPayload(backup_type="all")
+                "test-server", SnapshotCreatePayload(mode="world")
             )
         assert "API Error" in str(excinfo.value)
 
