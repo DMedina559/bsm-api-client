@@ -1,25 +1,44 @@
-name: Publish Python Package using OIDC
+name: Publish Package
 
 on:
   release:
     types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
-  deploy:
+  lint:
+    uses: ./.github/workflows/lint.yml
+
+  validate:
+    uses: ./.github/workflows/build-test.yml
+
+  pypi:
+    needs: [lint, validate]
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     environment:
       name: pypi
     permissions:
+      contents: read
       id-token: write
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
 
       - name: Set up Python
         uses: actions/setup-python@v7
         with:
-          python-version: '3.11'
+          python-version: '3.14'
 
       - name: Install build dependencies
         run: |

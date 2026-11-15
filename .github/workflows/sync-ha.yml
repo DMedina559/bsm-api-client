@@ -1,0 +1,50 @@
+name: Sync Home Assistant SDK
+
+on:
+  workflow_dispatch:
+  workflow_run:
+    workflows: ['Build and Test']
+    types: [completed]
+    branches: [dev]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: true
+
+jobs:
+  dispatch-ha:
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Resolve sync token
+        id: auth
+        uses: DMedina559/.github/actions/get-sync-token@main
+        with:
+          app-id: ${{ secrets.SYNC_APP_ID }}
+          private-key: ${{ secrets.SYNC_APP_PRIVATE_KEY }}
+          repositories: bsm-home-assistant-integration
+          fallback-token: ${{ secrets.CROSS_REPO_TOKEN }}
+
+      - name: Validate sync token
+        if: steps.auth.outputs.token == ''
+        run: |
+          echo "Configure SYNC_APP_ID + SYNC_APP_PRIVATE_KEY (recommended) or CROSS_REPO_TOKEN." >&2
+          exit 1
+
+      - name: Dispatch SDK update to bsm-home-assistant-integration
+        uses: actions/github-script@v9
+        with:
+          github-token: ${{ steps.auth.outputs.token }}
+          script: |
+            await github.rest.repos.createDispatchEvent({
+              owner: 'DMedina559',
+              repo: 'bsm-home-assistant-integration',
+              event_type: 'bsm-client-updated',
+              client_payload: {
+                client_sha: '${{ github.event.workflow_run.head_sha || github.sha }}'
+              }
+            });
