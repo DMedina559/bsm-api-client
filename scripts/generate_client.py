@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import ast
 import json
+import re
 import subprocess
 import sys
 import tempfile
@@ -151,6 +152,10 @@ def generate(schema: dict[str, Any], output: Path) -> None:
             "from .rest import RestClient\n\n"
             '__all__ = ("AuthenticatedClient", "Client", "RestClient")\n'
         )
+        # Keep generated endpoints compatible with the SDK's shared HTTPX transport.
+        for module in package.rglob("*.py"):
+            source = module.read_text(encoding="utf-8")
+            module.write_text(re.sub(r"\bhttpx2\b", "httpx", source), encoding="utf-8")
         normalize_package(package)
         publish_package(package, output)
 
