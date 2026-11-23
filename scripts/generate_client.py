@@ -152,12 +152,16 @@ def generate(schema: dict[str, Any], output: Path) -> None:
             "from .rest import RestClient\n\n"
             '__all__ = ("AuthenticatedClient", "Client", "RestClient")\n'
         )
-        # Keep generated endpoints compatible with the SDK's shared HTTPX transport.
-        for module in package.rglob("*.py"):
-            source = module.read_text(encoding="utf-8")
-            module.write_text(re.sub(r"\bhttpx2\b", "httpx", source), encoding="utf-8")
+        preserve_httpx_transport(package)
         normalize_package(package)
         publish_package(package, output)
+
+
+def preserve_httpx_transport(package: Path) -> None:
+    """Keep generated endpoints compatible with the SDK's shared HTTPX transport."""
+    for module in package.rglob("*.py"):
+        source = module.read_text(encoding="utf-8")
+        module.write_text(re.sub(r"\bhttpx2\b", "httpx", source), encoding="utf-8")
 
 
 def share_canonical_models(package: Path) -> None:

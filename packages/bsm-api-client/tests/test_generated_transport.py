@@ -103,6 +103,16 @@ def _add_audit_route(app, seen):
     app.router.add_get("/audit-log/list", audit_page)
 
 
+def _add_generated_upload_route(app, upload):
+    async def upload_content(request):
+        await upload(request)
+        return web.json_response(
+            {"category": "worlds", "destination": "worlds", "filename": "world.mcworld"}
+        )
+
+    app.router.add_post("/api/content/upload", upload_content)
+
+
 @pytest_asyncio.fixture
 async def local_api():
     seen = []
@@ -151,12 +161,6 @@ async def local_api():
         seen.append((field.name, field.filename, bytes(await field.read())))
         return web.json_response({"uploaded": True})
 
-    async def upload_content(request):
-        await upload(request)
-        return web.json_response(
-            {"category": "worlds", "destination": "worlds", "filename": "world.mcworld"}
-        )
-
     async def query(request):
         return web.json_response(dict(request.query))
 
@@ -169,7 +173,7 @@ async def local_api():
     app.router.add_post("/api/server/{server_name}/stop", invalid)
     app.router.add_get("/api/panorama", panorama)
     app.router.add_post("/extension/upload", upload)
-    app.router.add_post("/api/content/upload", upload_content)
+    _add_generated_upload_route(app, upload)
     app.router.add_get("/extra/query", query)
     runner = web.AppRunner(app)
     await runner.setup()
