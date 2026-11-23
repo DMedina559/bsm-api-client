@@ -6456,6 +6456,17 @@
             "title": "Source",
             "type": "string"
           },
+          "stage": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stage"
+          },
           "started_at": {
             "title": "Started At",
             "type": "number"

@@ -1099,6 +1099,7 @@ class OperationSnapshot(ContractModel):
     sequence_id: str = Field(..., title="Sequence Id")
     server_name: str | None = Field(None, title="Server Name")
     source: str | None = Field("application", title="Source")
+    stage: str | None = Field(None, title="Stage")
     started_at: float = Field(..., title="Started At")
     status: Literal["running", "finished", "failed", "cancelled"] | None = Field(
         "running", title="Status"
