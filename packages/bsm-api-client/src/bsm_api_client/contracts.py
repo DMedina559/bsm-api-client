@@ -1,10 +1,11 @@
 # Generated from bundled OpenAPI by scripts/generate_models.py.
 from __future__ import annotations
 
+from datetime import datetime
 from typing import Annotated, Any, Literal
 from uuid import UUID
 
-from pydantic import AwareDatetime, ConfigDict, Field, JsonValue, SecretStr
+from pydantic import ConfigDict, Field, JsonValue, SecretStr
 
 from bsm_api_client.contract_base import ContractModel
 
@@ -256,9 +257,9 @@ class BackupManifest(ContractModel):
     backup_id: UUID = Field(..., title="Backup Id")
     bedrock_version: str = Field(..., title="Bedrock Version")
     bsm_version: str = Field(..., title="Bsm Version")
-    capture_finished_at: AwareDatetime = Field(..., title="Capture Finished At")
+    capture_finished_at: datetime = Field(..., title="Capture Finished At")
     capture_method: Literal["offline", "live"] = Field(..., title="Capture Method")
-    capture_started_at: AwareDatetime = Field(..., title="Capture Started At")
+    capture_started_at: datetime = Field(..., title="Capture Started At")
     components: dict[
         Literal[
             "server_directory",
@@ -275,7 +276,7 @@ class BackupManifest(ContractModel):
         ],
         Literal["included", "absent"],
     ] = Field(..., title="Components")
-    created_at: AwareDatetime = Field(..., title="Created At")
+    created_at: datetime = Field(..., title="Created At")
     directories: list[str] | None = Field(None, title="Directories")
     files: list[BackupFile] = Field(..., title="Files")
     format: Literal["bsmbackup"] = Field("bsmbackup", title="Format")
@@ -2487,7 +2488,7 @@ class AuditLogResponse(ContractModel):
     action: str = Field(..., title="Action")
     details: dict[str, JsonValue] | None = Field(None, title="Details")
     id: int = Field(..., title="Id")
-    timestamp: AwareDatetime = Field(..., title="Timestamp")
+    timestamp: datetime = Field(..., title="Timestamp")
     user_id: int = Field(..., title="User Id")
 
 

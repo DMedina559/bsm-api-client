@@ -96,3 +96,29 @@ async def test_generated_adapter_typed_mode_preserves_parsed_model(monkeypatch):
     assert await generated_adapter.call_generated(owner, "test") == {"status": "ok"}
     with pytest.raises(generated_adapter.InvalidInputError):
         await generated_adapter.call_generated(owner, "test", typed=True, detailed=True)
+
+
+@pytest.mark.parametrize(
+    "timestamp",
+    [
+        "2026-11-23T16:20:29",
+        "2026-11-23T16:20:29.123456",
+        "2026-11-23T16:20:29Z",
+        "2026-11-23T16:20:29+00:00",
+    ],
+)
+def test_audit_log_response_accepts_naive_and_aware_timestamps(timestamp):
+    from datetime import datetime
+
+    from bsm_api_client.models import AuditLogResponse
+
+    record = AuditLogResponse.from_dict(
+        {
+            "id": 1,
+            "user_id": 1,
+            "action": "server_start",
+            "details": None,
+            "timestamp": timestamp,
+        }
+    )
+    assert isinstance(record.timestamp, datetime)

@@ -31,6 +31,8 @@ def generate(source: Path) -> str:  # noqa: C901
                 str(output),
                 "--output-model-type",
                 "pydantic_v2.BaseModel",
+                "--output-datetime-class",
+                "datetime",
                 "--enum-field-as-literal",
                 "all",
                 "--field-constraints",
