@@ -12,7 +12,7 @@
     <img alt="Pre-Release" src="https://img.shields.io/github/v/release/DMedina559/bsm-api-client?include_prereleases&label=Pre-Release&color=red">
   </a>
   <a href="https://github.com/DMedina559/bsm-api-client/actions">
-    <img alt="Tests" src="https://img.shields.io/github/actions/workflow/status/DMedina559/bsm-api-client/build-test.yml?label=Tests&event=push">
+    <img alt="Tests (dev)" src="https://img.shields.io/github/actions/workflow/status/DMedina559/bsm-api-client/build-test.yml?label=Tests%20%28dev%29&branch=dev&event=push">
   </a>
 </p>
 
